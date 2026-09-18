@@ -6,6 +6,7 @@ export function InfrastructureConsole({ game, onFocus, onAction }: { game: Game;
   const activeStage = Math.min(4, game.revealed.length);
   const focused = topology.nodes.find(node => node.id === game.focusedNode) ?? topology.nodes[0];
   const posture = game.nodePosture[focused.id] ?? "normal";
+  const criticalFocus = focused.id === topology.critical;
   return (
     <section className="infrastructure-console" aria-label="Interactive infrastructure map">
       <div className="map-heading"><div><span className="eyebrow">LIVE INFRASTRUCTURE COMMAND</span><h2>{topology.title}</h2></div><span className="focus-instruction"><Activity size={14} /> {game.mapActionsRemaining} command actions</span></div>
@@ -36,10 +37,10 @@ export function InfrastructureConsole({ game, onFocus, onAction }: { game: Game;
       </div>
       <div className="map-command-bar">
         <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{posture === "normal" ? "No active control" : posture}</em></span></div>
-        <button disabled={game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>Improve evidence quality</small></span></button>
-        <button disabled={game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>Reduce risk, disrupt service</small></span></button>
+        <button disabled={game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>Spend 1 action · next procedure +2 · impact −2</small></span></button>
+        <button disabled={game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>Spend 1 · impact −{criticalFocus ? 8 : 5} · continuity −{criticalFocus ? 10 : 5}</small></span></button>
       </div>
-      <p className="map-intel">Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Actions are scarce and their service consequences carry into recovery.</p>
+      <p className="map-intel">Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
     </section>
   );
 }
