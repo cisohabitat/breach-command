@@ -2,7 +2,7 @@
 import { scenarios, difficulties, adversaryProfiles, type Game } from "./advanced-game.ts";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 6;
+export const SESSION_VERSION = 8;
 
 export type SavedSession = {
   version: number;
@@ -50,7 +50,11 @@ export function parseSession(raw: string): SavedSession | null {
       campaignTier: Number.isFinite(game.campaignTier) ? game.campaignTier : 0,
       focusedNode: typeof game.focusedNode === "string" ? game.focusedNode : "boundary",
       evidence: Array.isArray(game.evidence) ? game.evidence : [],
-      correlations: Array.isArray(game.correlations) ? game.correlations : [],
+      correlations: Array.isArray(game.correlations) ? game.correlations.map(record => ({
+        ...record,
+        assessment: record.assessment ?? (record.valid ? "causal" : "coincidental"),
+        correct: record.correct ?? true,
+      })) : [],
       pendingSetPiece: game.pendingSetPiece ?? null,
       setPieceHistory: Array.isArray(game.setPieceHistory) ? game.setPieceHistory : [],
       campaignDoctrine: game.campaignDoctrine ?? "balanced",
@@ -58,6 +62,9 @@ export function parseSession(raw: string): SavedSession | null {
       variant: game.variant ?? { id: `${game.scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 },
       caseTheory: game.caseTheory ?? null,
       caseTheoryHistory: Array.isArray(game.caseTheoryHistory) ? game.caseTheoryHistory : [],
+      nodePosture: game.nodePosture && typeof game.nodePosture === "object" ? game.nodePosture : Object.fromEntries(["user", "boundary", "service", "admin", "data"].map(node => [node, "normal"])),
+      mapActionsRemaining: Number.isFinite(game.mapActionsRemaining) ? game.mapActionsRemaining : 3,
+      mapHistory: Array.isArray(game.mapHistory) ? game.mapHistory : [],
       turns: game.turns.map(turn => ({
         ...turn,
         plan: turn.plan ?? { scope: "focused", intensity: "balanced" },

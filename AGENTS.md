@@ -44,12 +44,16 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - A procedure consumes one turn. Procedure cooldown, difficulty thresholds, turn limits and end-state checks must remain internally consistent.
 - Pending evidence decisions, command events and sector set pieces are blocking states. The player must resolve them before changing hypotheses, infrastructure focus or running another procedure.
 - The response phase begins only after all four stages have been revealed. A completed response requires both containment and recovery choices.
+- Response is a three-stage sequence: containment, assurance, then recovery. Do not bypass the assurance gate.
+- Infrastructure monitoring and isolation consume scarce map actions. Their node posture and action history are persistent game state and must migrate safely.
 - Clamp impact, continuity, sector health and objective progress to their documented ranges.
 - Challenge codes must reproduce the same scenario configuration and random sequence.
 - Any new persistent `Game` field requires a `SESSION_VERSION` increment and a safe migration in `lib/session.ts`.
 - Any new campaign field requires a backward-compatible default in `parseCampaign`.
 - Campaign routes and incident variants must remain deterministic for the same challenge seed and campaign state.
 - Case-theory changes are blocked by every pending decision state and must never reveal the hidden objective.
+- Adversary identity remains progressively attributed. Do not expose the profile name in opening briefings or low-confidence operational text.
+- Evidence correlation records both the player's causal assessment and whether that assessment was correct. Timing alone must not be presented as causation.
 - New scenarios must include a topology, sector system, set piece, adversary profile mapping and complete four-stage choice sets.
 
 ## Experience requirements
@@ -61,6 +65,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Never rely on colour alone to communicate state.
 - Preserve reduced-motion behaviour and high-contrast support.
 - Keep main gameplay readable on phone, iPad and PC. Test start, investigation, decisions, response and debrief surfaces when changing shared layout rules.
+- Preserve the Command, Investigate and Briefing workspace separation. Blocking decisions return focus to Command; routine analytical actions remain in Investigate.
 - Player-facing language should be concise, professional and operationally plausible. Avoid exaggerated claims and unnecessary jargon.
 
 ## Change discipline
