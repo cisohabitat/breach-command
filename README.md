@@ -9,13 +9,13 @@ Play the current release at [breach-command.cfusion2k.chatgpt.site](https://brea
 The player takes command of one of ten fictional cyber incidents. Each operation requires the player to:
 
 1. Form a working hypothesis about the intrusion path.
-2. Focus an infrastructure node and select an evidence procedure.
+2. Focus, monitor or isolate infrastructure nodes while tracing trust relationships.
 3. Choose the scope and intensity of the action.
 4. Reveal four hidden attack stages before the investigation window closes.
 5. Balance evidence preservation, intervention and essential-service continuity.
 6. Assess selected findings as causal or coincidental, then test that judgement.
 7. Declare and revise a case theory for the adversary objective, then test it against causal evidence.
-8. Make containment and recovery decisions, then review the after-action report.
+8. Execute containment, assurance and recovery decisions, then review the reconstructed incident.
 
 Procedure checks use a d20, but evidence-led reasoning now carries more weight than tool familiarity. Correct hypotheses receive a larger bonus than established procedures or specialist familiarity. Used procedures cool down, while failed actions, actor tempo and sector pressure can end an operation before the chain is found.
 
@@ -27,12 +27,14 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Distinct adaptive adversaries:** recurring threat groups have signature mechanics, learn from procedure use, hypotheses and command posture, and can move to less-exposed routes.
 - **Progressive attribution:** threat-group identity is withheld until the evidence supports behavioural, suspected, probable and attributed confidence levels.
 - **Focused command workspace:** Command, Investigate and Briefing views keep the immediate decision, analytical work and supporting context separate without removing information.
-- **Infrastructure command maps:** every incident has a selectable five-node topology. Aligned procedures receive a planning bonus.
+- **Playable infrastructure command maps:** every incident has a five-node topology with scarce monitoring and isolation actions, changing trust routes, service consequences and post-recovery state.
+- **Living incident presentation:** visible propagation, node posture, sector conditions, adaptive specialist transmissions and sector-specific ambient scoring respond to the operation.
 - **Evidence workspace:** successful actions build a timeline. Players declare an objective theory, select findings, judge the relationship as causal or coincidental, and receive consequences for unsupported inference.
 - **Operational decisions:** technique decisions, command events and a unique sector crisis change pressure, continuity, sector condition and actor progress.
 - **Persistent command team:** six named specialists have distinct capabilities, callsigns, fatigue, cohesion and after-action reactions.
 - **Branching campaign director:** command posture, trust and completed operations select Watchtower, Breakwater, Common Ground or Convergence routes. Routes alter starting conditions and mission priorities.
-- **Authored incident variants:** each of the ten scenarios has two operational variants with distinct briefings and starting pressure.
+- **Authored incident variants:** each of the ten scenarios has three operational variants with distinct briefings and starting pressure.
+- **Three-stage response:** containment is followed by an assurance gate and deliberate recovery, with isolated infrastructure restored only after the response completes.
 - **Three-act campaign:** progression tracks experience, trust, readiness, unresolved access, mastery, team cohesion and command doctrine, leading to one of four endings.
 - **Challenge codes:** compact `BC-...` codes reproduce a scenario, difficulty, mode, specialist and random seed.
 - **After-action review:** scoring, timelines, decision quality, evidence reconstruction, actor adaptation and counterfactuals support facilitated learning.

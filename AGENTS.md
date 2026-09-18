@@ -44,6 +44,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - A procedure consumes one turn. Procedure cooldown, difficulty thresholds, turn limits and end-state checks must remain internally consistent.
 - Pending evidence decisions, command events and sector set pieces are blocking states. The player must resolve them before changing hypotheses, infrastructure focus or running another procedure.
 - The response phase begins only after all four stages have been revealed. A completed response requires both containment and recovery choices.
+- Response is a three-stage sequence: containment, assurance, then recovery. Do not bypass the assurance gate.
+- Infrastructure monitoring and isolation consume scarce map actions. Their node posture and action history are persistent game state and must migrate safely.
 - Clamp impact, continuity, sector health and objective progress to their documented ranges.
 - Challenge codes must reproduce the same scenario configuration and random sequence.
 - Any new persistent `Game` field requires a `SESSION_VERSION` increment and a safe migration in `lib/session.ts`.

@@ -93,6 +93,9 @@ export type CommandRecord = { event: CommandEventId; choice: "a" | "b"; title: s
 export type EvidenceItem = { id: string; turn: number; title: string; source: string; system: string; confidence: "LOW" | "MODERATE" | "HIGH"; supports: string | null; detail: string };
 export type CorrelationRecord = { evidence: [string, string]; valid: boolean; assessment: "causal" | "coincidental"; correct: boolean; finding: string };
 export type SetPieceRecord = { event: SetPieceId; choice: "a" | "b"; title: string; quality: number; effect: string };
+export type MapAction = "monitor" | "isolate";
+export type NodePosture = "normal" | "monitored" | "isolated" | "restored";
+export type MapActionRecord = { node: string; action: MapAction; turn: number; effect: string };
 type Inject = typeof injects[number] & { reason: string };
 export type Turn = {
   number: number;
@@ -173,6 +176,9 @@ export type Game = {
   variant: IncidentVariant;
   caseTheory: AdversaryObjectiveId | null;
   caseTheoryHistory: { turn: number; objective: AdversaryObjectiveId }[];
+  nodePosture: Record<string, NodePosture>;
+  mapActionsRemaining: number;
+  mapHistory: MapActionRecord[];
 };
 
 export type GameSetup = {
@@ -214,6 +220,11 @@ export const responseOptions = {
     { id: "isolate", title: "Isolate affected systems", description: "Cuts attacker access quickly, but may interrupt dependent services.", disruption: "High", confidence: "Strong", residual: "Low", impact: -24, continuity: -14, score: 12 },
     { id: "credential", title: "Revoke identities and sessions", description: "Constrains identity-led movement while preserving most service paths.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -17, continuity: -5, score: 11 },
     { id: "monitor", title: "Monitor while mapping scope", description: "Preserves visibility and continuity while accepting further attacker opportunity.", disruption: "Low", confidence: "Developing", residual: "High", impact: 5, continuity: 5, score: 9 },
+  ],
+  assurance: [
+    { id: "verify", title: "Validate the clean boundary", description: "Test identities, routes and dependencies before restoration begins.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
+    { id: "preserve", title: "Preserve forensic state", description: "Retain volatile evidence and trusted copies before systems are changed.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
+    { id: "accelerate", title: "Accept operational assurance", description: "Use current operational checks to shorten the interruption.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
   ],
   recovery: [
     { id: "rebuild", title: "Rebuild from trusted baseline", description: "Provides the highest assurance at the cost of a longer interruption.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -13, score: 14 },
@@ -338,6 +349,9 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     variant,
     caseTheory: null,
     caseTheoryHistory: [],
+    nodePosture: Object.fromEntries(infrastructureTopologies[scenario].nodes.map(node => [node.id, "normal" as NodePosture])),
+    mapActionsRemaining: mode === "expert" ? 2 : 3,
+    mapHistory: [],
   };
 }
 
@@ -367,6 +381,33 @@ export function setInfrastructureFocus(game: Game, nodeId: string): Game {
   if (game.status !== "playing" || game.pendingDecision || game.pendingCommand || game.pendingSetPiece) throw new Error("Infrastructure focus cannot be changed now.");
   if (!infrastructureTopologies[game.scenario].nodes.some(node => node.id === nodeId)) throw new Error("Unknown infrastructure node.");
   return { ...game, focusedNode: nodeId };
+}
+
+export function resolveMapAction(game: Game, nodeId: string, action: MapAction): Game {
+  if (game.status !== "playing") throw new Error("Infrastructure action is not available now.");
+  if (game.pendingDecision || game.pendingCommand || game.pendingSetPiece) throw new Error("Resolve the current decision first.");
+  const topology = infrastructureTopologies[game.scenario];
+  const node = topology.nodes.find(item => item.id === nodeId);
+  if (!node) throw new Error("Unknown infrastructure node.");
+  if (game.mapActionsRemaining <= 0) throw new Error("No infrastructure actions remain.");
+  if (game.nodePosture[nodeId] === "isolated") throw new Error("This node is already isolated.");
+  if (action === "monitor" && game.nodePosture[nodeId] === "monitored") throw new Error("This node is already monitored.");
+  const critical = nodeId === topology.critical;
+  const effect = action === "monitor"
+    ? `Telemetry priority established on ${node.label}. The next aligned procedure gains analytical support.`
+    : `${node.label} isolated. Actor opportunity falls, with an immediate service cost.`;
+  return {
+    ...game,
+    focusedNode: nodeId,
+    nodePosture: { ...game.nodePosture, [nodeId]: action === "monitor" ? "monitored" : "isolated" },
+    mapActionsRemaining: game.mapActionsRemaining - 1,
+    mapHistory: [...game.mapHistory, { node: nodeId, action, turn: game.turns.length, effect }],
+    nextModifier: action === "monitor" ? Math.max(game.nextModifier, 2) : game.nextModifier,
+    impact: clamp(game.impact + (action === "monitor" ? -2 : critical ? -8 : -5)),
+    continuity: clamp(game.continuity + (action === "monitor" ? 0 : critical ? -10 : -5)),
+    sectorHealth: clamp(game.sectorHealth + (action === "monitor" ? 0 : critical ? -7 : -3)),
+    objectiveProgress: clamp(game.objectiveProgress + (action === "monitor" ? -4 : critical ? -12 : -8)),
+  };
 }
 
 export function setCaseTheory(game: Game, objective: AdversaryObjectiveId): Game {
@@ -732,20 +773,23 @@ export function getAdversaryRead(game: Game) {
 
 export function resolveResponse(game: Game, choice: string): Game {
   if (game.status !== "response") throw new Error("The response phase is not active.");
-  const phase = game.responseChoices.length === 0 ? "containment" : "recovery";
+  const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
   const option = responseOptions[phase].find(item => item.id === choice);
   if (!option) throw new Error("Unknown response choice.");
   const g: Game = { ...game, responseChoices: [...game.responseChoices, choice] };
-  const preferred = scenarios[g.scenario].preferred[g.responseChoices.length - 1] === choice;
-  const objectiveResponses: Record<AdversaryObjectiveId, [string, string]> = {
-    exfiltration: ["isolate", "rebuild"], disruption: ["monitor", "restore"], fraud: ["credential", "rebuild"], espionage: ["credential", "rebuild"], preposition: ["isolate", "rebuild"],
+  const preferred = g.responseChoices.length === 2 ? choice !== "accelerate" : scenarios[g.scenario].preferred[g.responseChoices.length === 1 ? 0 : 1] === choice;
+  const objectiveResponses: Record<AdversaryObjectiveId, [string, string, string]> = {
+    exfiltration: ["isolate", "preserve", "rebuild"], disruption: ["monitor", "verify", "restore"], fraud: ["credential", "verify", "rebuild"], espionage: ["credential", "preserve", "rebuild"], preposition: ["isolate", "verify", "rebuild"],
   };
   const objectiveAligned = objectiveResponses[g.objective][g.responseChoices.length - 1] === choice;
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
   g.responseScore += option.score + (preferred ? 4 : 0) + (objectiveAligned ? 4 : 0);
   if (objectiveAligned) g.objectiveProgress = clamp(g.objectiveProgress - 10);
-  if (g.responseChoices.length === 2) g.status = "won";
+  if (g.responseChoices.length === 3) {
+    g.status = "won";
+    g.nodePosture = Object.fromEntries(Object.keys(g.nodePosture).map(node => [node, g.nodePosture[node] === "isolated" ? "restored" : g.nodePosture[node]]));
+  }
   return g;
 }
 
@@ -766,7 +810,7 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   const decisionItems = [...game.decisions.map(item => item.quality), ...game.commandHistory.map(item => item.quality), ...game.setPieceHistory.map(item => item.quality)];
   const decisionQuality = decisionItems.length ? decisionItems.reduce((sum, quality) => sum + quality, 0) / (decisionItems.length * 5) : 0;
   const decisions = Math.round(decisionQuality * 15);
-  const response = Math.round(clamp(game.responseScore, 0, 38) / 38 * 20);
+  const response = Math.round(clamp(game.responseScore, 0, 55) / 55 * 20);
   const aligned = game.turns.filter(turn => turn.revealed && turn.hypothesis === attackVector(turn.revealed)).length;
   const hypothesis = game.revealed.length ? Math.round(aligned / game.revealed.length * 10) : 0;
   return { investigation, impact, continuity, decisions, response, hypothesis, total: investigation + impact + continuity + decisions + response + hypothesis };
@@ -787,6 +831,11 @@ export function getCounterfactuals(game: Game) {
     const containment = responseOptions.containment.find(option => option.id === game.responseChoices[0]);
     items.push(`Containment: ${containment?.title} prioritised ${containment?.disruption.toLowerCase()} disruption and left ${containment?.residual.toLowerCase()} residual risk. ${dynamics.countermeasure}`);
   }
+  if (game.responseChoices.length > 1) {
+    const assurance = responseOptions.assurance.find(option => option.id === game.responseChoices[1]);
+    items.push(`Assurance: ${assurance?.title} established ${assurance?.confidence.toLowerCase()} confidence before restoration.`);
+  }
+  if (game.mapHistory.some(record => record.action === "isolate")) items.push("Infrastructure isolation reduced actor opportunity, but every isolated dependency had to be justified and restored deliberately.");
   const actualChanges = game.hypothesisHistory.reduce((count, entry, index, history) => count + (index > 0 && history[index - 1].id !== entry.id ? 1 : 0), 0);
   if (actualChanges > 2) items.push("The working hypothesis changed several times across turns. Earlier disconfirming evidence could have reduced investigative delay.");
   else if (!game.hypothesisHistory.length) items.push("No working hypothesis was recorded, so the team could not compare its assumptions with the final chain.");

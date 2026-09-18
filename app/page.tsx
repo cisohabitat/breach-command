@@ -57,6 +57,7 @@ import { TutorialCoach } from "@/components/game/tutorial-coach";
 import { InfrastructureConsole } from "@/components/game/infrastructure-console";
 import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
 import { SectorSetPiece } from "@/components/game/sector-set-piece";
+import { SectorSituation, SpecialistTransmission } from "@/components/game/living-incident";
 import {
   attacks,
   procedures,
@@ -71,6 +72,7 @@ import {
   resolveResponse,
   resolveCommand,
   resolveSetPiece,
+  resolveMapAction,
   correlateEvidence,
   setHypothesis,
   setInfrastructureFocus,
@@ -103,6 +105,7 @@ import {
   type Game,
   type Turn,
   type AdversaryObjectiveId,
+  type MapAction,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
 import { campaignAct, campaignEnding, campaignRank, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, unlockedCapabilities, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
@@ -201,7 +204,7 @@ export default function Home() {
     setAnnouncement("New investigation started.");
     setActiveWorkspace("command");
     playFeedback("open", soundEnabled, hapticsEnabled);
-    setAdaptiveScore(musicEnabled, 0.15);
+    setAdaptiveScore(musicEnabled, 0.15, index);
     recordTelemetry("start", { scenario: index });
     setTelemetry(readTelemetry());
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -279,7 +282,7 @@ export default function Home() {
     const next = resolveResponse(current, choice);
     setGame(next);
     playFeedback(next.status === "won" ? "complete" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "won" ? "Response complete. After-action review available." : "Containment decision recorded. Choose a recovery approach.");
+    setAnnouncement(next.status === "won" ? "Response complete. After-action review available." : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
     if (next.status === "won") {
       recordProgress(next);
       setDebrief(true);
@@ -310,6 +313,15 @@ export default function Home() {
     const current = stateRef.current;
     if (!current) return;
     setGame(setInfrastructureFocus(current, nodeId));
+  }
+
+  function mapAction(nodeId: string, action: MapAction) {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = resolveMapAction(current, nodeId, action);
+    setGame(next);
+    playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
+    setAnnouncement(next.mapHistory.at(-1)?.effect ?? "Infrastructure action recorded.");
   }
 
   function correlate(ids: [string, string], assessment: "causal" | "coincidental") {
@@ -432,7 +444,7 @@ export default function Home() {
 
   useEffect(() => {
     stateRef.current = game;
-    if (game && musicEnabled) setAdaptiveScore(true, Math.max(game.impact, game.objectiveProgress, 100 - game.sectorHealth) / 100);
+    if (game && musicEnabled) setAdaptiveScore(true, Math.max(game.impact, game.objectiveProgress, 100 - game.sectorHealth) / 100, game.scenario);
   }, [game, musicEnabled]);
 
   useEffect(() => {
@@ -588,13 +600,13 @@ export default function Home() {
           <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator.</p>
         </main>
       ) : (
-        <main className="game-screen">
+        <main className={`game-screen sector-theme-${game.scenario}`}>
           <section className="game-heading">
             <div><div className="eyebrow">CASE 0{game.scenario + 1} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()} <span className="separator">/</span> {gameModes[game.mode].title.toUpperCase()}</div><h1>{activeScenario.title}</h1></div>
             <div className="case-meters">
               <div className="turn-meter">
                 <span className="mono">{game.status === "response" ? "RESPONSE PHASE" : ended ? "FINAL STATUS" : "INVESTIGATION WINDOW"}</span>
-                <div>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> turns remaining</> : game.status === "response" ? "Contain and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : "Window closed"}</div>
+                <div>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : "Window closed"}</div>
                 <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Turns remaining" />
               </div>
               <div className={`impact-meter ${game.impact >= 70 ? "critical" : ""}`}>
@@ -641,6 +653,7 @@ export default function Home() {
               <section className="director-live" hidden={activeWorkspace !== "command"}><div><span className="eyebrow">{campaignRoutes[game.campaignRoute].title.toUpperCase()} ROUTE · {game.variant.title.toUpperCase()}</span><strong>{game.variant.briefing}</strong><small>{game.variant.modifier}</small></div><div><span className="eyebrow">ATTRIBUTION · {getAttributionRead(game).confidence}</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div></section>
 
               <div hidden={activeWorkspace !== "command"}><SectorBoard game={game} /></div>
+              {activeWorkspace === "command" && <SectorSituation game={game} />}
 
               {activeWorkspace === "command" && tutorial && game.status === "playing" && <TutorialCoach game={game} onDismiss={() => { setTutorial(false); setFastResolve(true); localStorage.setItem("breach-command.tutorial-complete", "true"); }} />}
 
@@ -666,7 +679,8 @@ export default function Home() {
               {activeWorkspace === "investigate" && game.status === "playing" && (
                 <div className="investigation-dashboard">
                   <div className="investigation-context">
-                    <InfrastructureConsole game={game} onFocus={focusInfrastructure} />
+                    <InfrastructureConsole game={game} onFocus={focusInfrastructure} onAction={mapAction} />
+                    <SpecialistTransmission game={game} />
                     {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
                     <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />
                   </div>
@@ -913,9 +927,10 @@ export default function Home() {
                 {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Command event:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
                 {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Sector decision:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
                 {game.responseChoices.map(id => {
-                  const option = [...responseOptions.containment, ...responseOptions.recovery].find(item => item.id === id);
+                  const option = [...responseOptions.containment, ...responseOptions.assurance, ...responseOptions.recovery].find(item => item.id === id);
                   return <p key={id}><strong>Response:</strong> {option?.title}<span>{option?.confidence} confidence · {option?.residual} residual risk</span></p>;
                 })}
+                {game.mapHistory.map((record, index) => <p key={`${record.node}-${index}`}><strong>Infrastructure:</strong> {record.action === "isolate" ? "Isolated" : "Monitored"} {record.node}<span>Map action</span><em>{record.effect}</em></p>)}
               </div>
             )}
             <section className="counterfactuals"><span className="eyebrow">WHAT MIGHT HAVE CHANGED</span>{getCounterfactuals(game).map((item, index) => <p key={index}>{item}</p>)}</section>
@@ -946,7 +961,7 @@ export default function Home() {
           <DialogHeader><div className="eyebrow">GAME SETTINGS</div><DialogTitle>Command interface</DialogTitle><DialogDescription>Adjust feedback, accessibility and display behaviour. Preferences stay on this device.</DialogDescription></DialogHeader>
           <div className="settings-list">
             <label htmlFor="sound-setting"><span><Volume2 size={19} /><b>Sound cues</b><small>Procedural audio for discoveries, warnings and outcomes.</small></span><Switch id="sound-setting" checked={soundEnabled} onCheckedChange={setSoundEnabled} /></label>
-            <label htmlFor="music-setting"><span><Headphones size={19} /><b>Adaptive score</b><small>Ambient command-room audio intensifies as operational pressure rises.</small></span><Switch id="music-setting" checked={musicEnabled} onCheckedChange={value => { setMusicEnabled(value); setAdaptiveScore(value, game ? Math.max(game.impact, game.objectiveProgress) / 100 : 0.1); }} /></label>
+              <label htmlFor="music-setting"><span><Headphones size={19} /><b>Adaptive score</b><small>Sector-specific command ambience intensifies as operational pressure rises.</small></span><Switch id="music-setting" checked={musicEnabled} onCheckedChange={value => { setMusicEnabled(value); setAdaptiveScore(value, game ? Math.max(game.impact, game.objectiveProgress) / 100 : 0.1, game?.scenario ?? scenarioChoice); }} /></label>
             <label htmlFor="haptic-setting"><span><Vibrate size={19} /><b>Haptic feedback</b><small>Short vibration cues on supported mobile devices.</small></span><Switch id="haptic-setting" checked={hapticsEnabled} onCheckedChange={setHapticsEnabled} /></label>
             <label htmlFor="contrast-setting"><span><Contrast size={19} /><b>High contrast</b><small>Strengthens borders, text and interactive states.</small></span><Switch id="contrast-setting" checked={highContrast} onCheckedChange={setHighContrast} /></label>
           </div>
@@ -973,13 +988,16 @@ function BrainLabel({ aligned }: { aligned: boolean }) {
 }
 
 function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choice: string) => void }) {
-  const containment = game.responseChoices.length === 0;
-  const options = containment ? responseOptions.containment : responseOptions.recovery;
+  const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
+  const containment = phase === "containment";
+  const assurance = phase === "assurance";
+  const options = responseOptions[phase];
   return (
     <section className="response-panel">
+      <div className="response-sequence" aria-label="Response sequence"><span className={game.responseChoices.length >= 0 ? "active" : ""}>1 Contain</span><span className={game.responseChoices.length >= 1 ? "active" : ""}>2 Assure</span><span className={game.responseChoices.length >= 2 ? "active" : ""}>3 Recover</span></div>
       <div className="response-heading">
-        <span className="response-icon">{containment ? <Zap size={24} /> : <HeartPulse size={24} />}</span>
-        <div><span className="eyebrow">{containment ? "CONTAINMENT DECISION" : "RECOVERY DECISION"}</span><h2>{containment ? "The chain is known. Stop the active risk." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "There is no perfect choice. Balance attacker access, evidence and operational continuity." : "Choose how much confidence, time and disruption the organisation can accept. Exact scoring is revealed in the review."}</p></div>
+        <span className="response-icon">{containment ? <Zap size={24} /> : assurance ? <ShieldCheck size={24} /> : <HeartPulse size={24} />}</span>
+        <div><span className="eyebrow">{containment ? "CONTAINMENT DECISION" : assurance ? "ASSURANCE GATE" : "RECOVERY DECISION"}</span><h2>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p></div>
       </div>
       <div className="response-options">
         {options.map(option => <button key={option.id} onClick={() => onChoose(option.id)}><strong>{option.title}</strong><span>{option.description}</span><small>DISRUPTION {option.disruption} · CONFIDENCE {option.confidence} · RESIDUAL RISK {option.residual}</small><ArrowRight size={17} /></button>)}
