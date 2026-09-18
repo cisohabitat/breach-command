@@ -37,6 +37,9 @@ import {
   Headphones,
   X,
   Zap,
+  FileDown,
+  FileUp,
+  GitBranch,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -67,6 +70,7 @@ import {
   correlateEvidence,
   setHypothesis,
   setInfrastructureFocus,
+  setCaseTheory,
   availableIn,
   getLead,
   getCoachPrompt,
@@ -93,12 +97,14 @@ import {
   type HypothesisId,
   type Game,
   type Turn,
+  type AdversaryObjectiveId,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
 import { campaignAct, campaignEnding, campaignRank, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, unlockedCapabilities, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
 import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { decodeChallenge, encodeChallenge, namedSpecialists, seededChallengeRandom } from "@/lib/phase8";
+import { campaignRoutes, incidentVariant, routeForCampaign, specialistReaction } from "@/lib/phase9";
 
 const stageIcons = [LockKeyhole, Activity, RotateCcw, Radio];
 
@@ -138,6 +144,8 @@ export default function Home() {
   const [challengeInput, setChallengeInput] = useState("");
   const [challengeMessage, setChallengeMessage] = useState("");
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
+  const [backupInput, setBackupInput] = useState("");
+  const [backupMessage, setBackupMessage] = useState("");
   const stateRef = useRef(game);
   const busyRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -153,6 +161,9 @@ export default function Home() {
   const activeHypothesis = game ? hypotheses.find(item => item.id === game.hypothesis) : null;
   const procedureAligned = !!proc && !!activeHypothesis?.procedures.includes(proc.id);
   const currentAct = campaignAct(campaign.completed.length);
+  const currentRouteId = routeForCampaign(campaign);
+  const currentRoute = campaignRoutes[currentRouteId];
+  const previewVariant = incidentVariant(scenarioChoice, currentRouteId, challengeSeed);
   const finalEnding = campaignEnding(campaign);
   const challengeCode = encodeChallenge({ scenario: scenarioChoice, difficulty, mode, specialist, seed: challengeSeed });
 
@@ -166,7 +177,8 @@ export default function Home() {
     clearStoredSession();
     const random = seededChallengeRandom(challengeSeed);
     const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
-    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture });
+    const route = routeForCampaign(campaign);
+    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, challengeSeed) });
     setGame(next);
     setGuided(mode === "expert" ? false : guided);
     setTutorial(localStorage.getItem("breach-command.tutorial-complete") !== "true");
@@ -293,6 +305,31 @@ export default function Home() {
     const valid = next.correlations.at(-1)?.valid;
     playFeedback(valid ? "success" : "failure", soundEnabled, hapticsEnabled);
     setAnnouncement(valid ? "Causal relationship supported." : "Correlation recorded without sufficient causal support.");
+  }
+
+  function chooseCaseTheory(objective: AdversaryObjectiveId) {
+    const current = stateRef.current;
+    if (!current) return;
+    setGame(setCaseTheory(current, objective));
+    setAnnouncement(`Case theory set to ${adversaryObjectives[objective].title}.`);
+  }
+
+  function exportProgress() {
+    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, session: game && game.mode !== "ironman" ? serialiseSession(game, guided, fastResolve) : null });
+    setBackupInput(payload);
+    navigator.clipboard?.writeText(payload).then(() => setBackupMessage("Backup copied to the clipboard."), () => setBackupMessage("Backup prepared. Copy the text below."));
+  }
+
+  function importProgress() {
+    try {
+      const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null };
+      if (payload.format !== "breach-command-backup") throw new Error("format");
+      const nextCampaign = parseCampaign(JSON.stringify(payload.campaign));
+      setCampaign(nextCampaign);
+      localStorage.setItem(CAMPAIGN_KEY, JSON.stringify(nextCampaign));
+      if (typeof payload.session === "string") localStorage.setItem(SESSION_KEY, payload.session);
+      setBackupMessage("Progress restored. Return to assignments to load any saved operation.");
+    } catch { setBackupMessage("Backup not recognised. Paste a complete Breach Command backup."); }
   }
 
   function loadChallengeCode() {
@@ -474,6 +511,7 @@ export default function Home() {
               <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
             </section>
             <section className="campaign-act-card"><span className="act-number">ACT {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved campaign thread{campaign.unresolvedThreads === 1 ? "" : "s"}</small></div></section>
+            <section className="campaign-route-card"><GitBranch size={19} /><div><span className="eyebrow">CAMPAIGN DIRECTOR · {currentRoute.title.toUpperCase()}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
             {finalEnding && <section className="campaign-ending"><Trophy size={20} /><div><span className="eyebrow">CAMPAIGN CONCLUSION</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
           </div>
           <section className="mission-panel">
@@ -481,6 +519,7 @@ export default function Home() {
             <div className="mission-symbol"><ScenarioIcon size={33} strokeWidth={1.4} /><span>{activeScenario.sector}</span></div>
             <h2>{activeScenario.title}</h2>
             <p>{activeScenario.summary}</p>
+            <div className="variant-brief"><span className="eyebrow">AUTHORED VARIANT</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>
             <div className="mission-selector" aria-label="Select incident">
               {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery stars` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1).padStart(2, "0")}</span>{campaign.completed.includes(index) && <small>{Array.from({ length: campaign.mastery[String(index)] ?? 0 }).map((_, star) => <Star key={star} size={8} fill="currentColor" />)}</small>}</button>)}
             </div>
@@ -498,7 +537,7 @@ export default function Home() {
               <select id="specialist" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
                 {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name} · {specialists[id].title} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
               </select>
-              <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].role}. {specialists[specialist].ability}</p>
+              <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].role}. {specialists[specialist].ability} Cohesion {campaign.specialistBonds[specialist] ?? 35}/100.</p>
             </div>
             <div className="challenge-console">
               <div><span className="eyebrow">SCENARIO CODE</span><button onClick={() => { const seed = 100000 + Math.floor(Math.random() * 900000); setChallengeSeed(seed); setChallengeMessage("New challenge generated."); }}><RefreshCw size={14} /> New seed</button></div>
@@ -575,6 +614,8 @@ export default function Home() {
                 </div>
               </section>
 
+              <section className="director-live"><div><span className="eyebrow">{campaignRoutes[game.campaignRoute].title.toUpperCase()} ROUTE · {game.variant.title.toUpperCase()}</span><strong>{game.variant.briefing}</strong><small>{game.variant.modifier}</small></div><div><span className="eyebrow">ACTOR SIGNATURE</span><strong>{getAdversaryProfile(game).signature}</strong><small>{getAdversaryProfile(game).counterplay}</small></div></section>
+
               <InfrastructureConsole game={game} onFocus={focusInfrastructure} />
 
               <SectorBoard game={game} />
@@ -602,7 +643,7 @@ export default function Home() {
 
               {game.status === "playing" && <SectorSetPiece game={game} onChoose={sectorDecision} />}
 
-              {game.status === "playing" && <EvidenceWorkspace game={game} onCorrelate={correlate} />}
+              {game.status === "playing" && <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />}
 
               {inlineReport && (
                 <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
@@ -714,8 +755,10 @@ export default function Home() {
               <div><span>SECTOR CONDITION</span><strong>{sectorSystems[game.scenario].title}</strong><small>{sectorSystems[game.scenario].rule}</small></div>
               <div><span>DEPLOYED SPECIALIST</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
               <div><span>THREAT GROUP</span><strong>{getAdversaryProfile(game).title}</strong><small>{getAdversaryProfile(game).description}</small></div>
+              <div><span>CAMPAIGN ROUTE</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>
+              <div><span>INCIDENT VARIANT</span><strong>{game.variant.title}</strong><small>{game.variant.briefing}</small></div>
             </div>
-            <div className="director-order"><Radio size={20} /><p><span className="eyebrow">DIRECTOR’S INTENT</span>Establish the attack chain, infer the actor’s objective and preserve the essential service. Report uncertainty before it becomes operational surprise.</p></div>
+            <div className="director-order"><Radio size={20} /><p><span className="eyebrow">DIRECTOR’S INTENT</span>{campaignRoutes[game.campaignRoute].order} Establish the chain, declare an objective theory and preserve the essential service.</p></div>
             <button className="primary-button full" onClick={() => setMissionBriefing(false)}>Assume command <ArrowRight size={18} /></button>
           </>}
         </DialogContent>
@@ -778,6 +821,9 @@ export default function Home() {
               <section><h3>16 / Evidence correlation</h3><p>Successful procedures preserve findings. Test pairs carefully: a shared timestamp is not necessarily a causal relationship.</p></section>
               <section><h3>17 / Sector set pieces</h3><p>Each incident has a unique operational crisis that changes impact, continuity, sector condition and adversary progress.</p></section>
               <section><h3>18 / Campaign acts</h3><p>Ten incidents form three acts. Trust, readiness, unresolved access, team fatigue and command doctrine shape later operations and the final conclusion.</p></section>
+              <section><h3>19 / Case theory</h3><p>Declare what the actor is trying to achieve. A correct theory strengthens valid evidence correlations, but the hidden objective is never revealed early.</p></section>
+              <section><h3>20 / Campaign director</h3><p>Your command posture selects a route that changes later starting conditions. Every scenario also has a deterministic authored operational variant.</p></section>
+              <section><h3>21 / Portable backup</h3><p>Settings can export campaign progress and a non-Ironman session as text for restoration on another device.</p></section>
             </div>
             <section className="attribution"><h3>About this adaptation</h3><p>Inspired by Backdoors &amp; Breaches, created by Black Hills Information Security and Active Countermeasures. This unofficial adaptation is not affiliated with or endorsed by the creators. It uses original wording, fictional settings and a rule-based facilitator. It does not reproduce the commercial deck, official artwork or expansion content.</p><a href="https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf" target="_blank" rel="noreferrer">Read the official classic rules <ArrowRight size={14} /></a></section>
           </div>
@@ -856,10 +902,12 @@ export default function Home() {
             <section className="debrief-learning"><h3>Take this back to your team</h3><p>{game.turns.some(turn => turn.success && !turn.revealed) ? "Some actions passed without finding new evidence. Did each action separate plausible explanations, or simply use an available tool?" : "Which evidence sources or decision authorities would be weakest in a real response?"}</p><p>{activeScenario.lesson}</p></section>
             <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
             <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
+            <section className="specialist-reaction"><span className="eyebrow">TEAM AFTER-ACTION NOTE · COHESION {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status === "won", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
             <section className="mastery-panel"><div><span className="eyebrow">SCENARIO MASTERY</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
+            {finalEnding && <section className="campaign-finale"><Trophy size={23} /><div><span className="eyebrow">FINAL COMMAND BRIEFING</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}
             <div className="debrief-actions">
               <button className="secondary-button" onClick={() => window.print()}><Printer size={17} /> Print review</button>
-              <button className="primary-button" onClick={() => { const nextScenario = (game.scenario + 1) % scenarios.length; resetToBriefing(); setScenarioChoice(nextScenario); }}>Choose next incident <ArrowRight size={18} /></button>
+              <button className="primary-button" onClick={() => { const nextScenario = (game.scenario + 1) % scenarios.length; resetToBriefing(); setScenarioChoice(nextScenario); }}>{finalEnding ? "Return to campaign command" : "Choose next incident"} <ArrowRight size={18} /></button>
             </div>
           </>}
         </DialogContent>
@@ -875,6 +923,7 @@ export default function Home() {
             <label htmlFor="contrast-setting"><span><Contrast size={19} /><b>High contrast</b><small>Strengthens borders, text and interactive states.</small></span><Switch id="contrast-setting" checked={highContrast} onCheckedChange={setHighContrast} /></label>
           </div>
           <section className="local-telemetry"><div><BarChart3 size={18} /><span><b>Local balance record</b><small>Stored only on this device. No gameplay data is transmitted.</small></span></div><p><strong>{telemetry.operationsStarted}</strong> starts <strong>{telemetry.operationsFinished}</strong> completed <strong>{telemetry.wins}</strong> wins <strong>{telemetry.turns}</strong> turns</p><button onClick={() => { clearTelemetry(); setTelemetry(readTelemetry()); }}>Clear local record</button></section>
+          <section className="backup-console"><div><span><b>Portable local backup</b><small>Copy campaign progress and the current non-Ironman operation between devices.</small></span><button onClick={exportProgress}><FileDown size={16} /> Export</button></div><textarea aria-label="Progress backup" value={backupInput} onChange={event => setBackupInput(event.target.value)} placeholder="Export a backup, or paste one here to restore it." /><button className="secondary-button full" onClick={importProgress} disabled={!backupInput.trim()}><FileUp size={16} /> Restore backup</button>{backupMessage && <p aria-live="polite">{backupMessage}</p>}</section>
           <button className="secondary-button full" onClick={() => { localStorage.removeItem("breach-command.tutorial-complete"); setTutorial(true); setSettings(false); }}><GraduationCap size={17} /> Restart command tutorial</button>
           <button className="secondary-button full" onClick={() => { const action = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); Promise.resolve(action).catch(() => {}); }}><Maximize2 size={17} /> Toggle full screen</button>
           <p className="shortcut-note">Keyboard: F field guide · M sound · G guided reflection</p>

@@ -29,6 +29,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `lib/advanced-game.ts`: authoritative game state and transition engine.
 - `lib/command-systems.ts`: modes, specialists, scope, intensity, objectives and sector systems.
 - `lib/phase8.ts`: infrastructure maps, named specialists, sector set pieces and challenge-code encoding.
+- `lib/phase9.ts`: campaign routes, authored incident variants, objective theories and specialist reactions.
 - `lib/campaign.ts`: persistent progression, mastery, acts and campaign endings.
 - `lib/session.ts`: saved-session schema and migration.
 - `lib/feedback.ts`: sound, music and haptic feedback.
@@ -47,6 +48,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Challenge codes must reproduce the same scenario configuration and random sequence.
 - Any new persistent `Game` field requires a `SESSION_VERSION` increment and a safe migration in `lib/session.ts`.
 - Any new campaign field requires a backward-compatible default in `parseCampaign`.
+- Campaign routes and incident variants must remain deterministic for the same challenge seed and campaign state.
+- Case-theory changes are blocked by every pending decision state and must never reveal the hidden objective.
 - New scenarios must include a topology, sector system, set piece, adversary profile mapping and complete four-stage choice sets.
 
 ## Experience requirements

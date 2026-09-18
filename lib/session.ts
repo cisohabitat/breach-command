@@ -2,7 +2,7 @@
 import { scenarios, difficulties, adversaryProfiles, type Game } from "./advanced-game.ts";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 5;
+export const SESSION_VERSION = 6;
 
 export type SavedSession = {
   version: number;
@@ -54,6 +54,10 @@ export function parseSession(raw: string): SavedSession | null {
       pendingSetPiece: game.pendingSetPiece ?? null,
       setPieceHistory: Array.isArray(game.setPieceHistory) ? game.setPieceHistory : [],
       campaignDoctrine: game.campaignDoctrine ?? "balanced",
+      campaignRoute: game.campaignRoute ?? "common-ground",
+      variant: game.variant ?? { id: `${game.scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 },
+      caseTheory: game.caseTheory ?? null,
+      caseTheoryHistory: Array.isArray(game.caseTheoryHistory) ? game.caseTheoryHistory : [],
       turns: game.turns.map(turn => ({
         ...turn,
         plan: turn.plan ?? { scope: "focused", intensity: "balanced" },

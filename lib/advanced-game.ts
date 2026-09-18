@@ -4,6 +4,8 @@ import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scena
 import { adversaryObjectives, gameModes, objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type GameMode, type ProcedureIntensity, type ProcedurePlan, type ProcedureScope, type SpecialistId } from "./command-systems.ts";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
 import { infrastructureTopologies, sectorSetPieces, type SetPieceId } from "./phase8.ts";
+// @ts-expect-error Native Node TypeScript execution requires the source extension.
+import { objectiveTheory, type CampaignRouteId, type IncidentVariant } from "./phase9.ts";
 
 export {
   attacks,
@@ -17,7 +19,7 @@ export {
 };
 export type { Difficulty, HypothesisId };
 export { adversaryObjectives, gameModes, infrastructureTopologies, procedureIntensities, procedureScopes, sectorSetPieces, sectorSystems, specialists };
-export type { GameMode, ProcedureIntensity, ProcedurePlan, ProcedureScope, SpecialistId };
+export type { AdversaryObjectiveId, GameMode, ProcedureIntensity, ProcedurePlan, ProcedureScope, SpecialistId };
 
 const injects = [
   { id: "expert", title: "A specialist joins", text: "A responder helps focus the next investigative plan.", effect: "bonus", effectLabel: "Analytical advantage on the next procedure." },
@@ -39,6 +41,7 @@ export const adversaryProfiles = {
     cadence: 3,
     pressure: 2,
     unverifiedSignal: "A low-confidence identity alert may be operational noise or deliberate distraction.",
+    signature: "Evasion protocol", counterplay: "Rotate evidence sources and avoid repeating the same collection pattern.",
   },
   raider: {
     title: "Red Quarry",
@@ -47,6 +50,7 @@ export const adversaryProfiles = {
     cadence: 2,
     pressure: 3,
     unverifiedSignal: "A burst of endpoint alerts is credible, but its relationship to the original access remains unproven.",
+    signature: "Momentum strike", counterplay: "Reveal a stage or intervene before each second action.",
   },
   broker: {
     title: "Black Relay",
@@ -55,6 +59,7 @@ export const adversaryProfiles = {
     cadence: 3,
     pressure: 1,
     unverifiedSignal: "A partner-originated event overlaps the timeline but has not been causally linked.",
+    signature: "Trust camouflage", counterplay: "Use focused checks on supplier and shared-service boundaries.",
   },
   ledger: {
     title: "Cipher Ledger",
@@ -63,6 +68,7 @@ export const adversaryProfiles = {
     cadence: 2,
     pressure: 2,
     unverifiedSignal: "A suspicious approval pattern may be fraud, process error or deliberate misdirection.",
+    signature: "Approval capture", counterplay: "Maintain a working theory and avoid rapid analysis on approval paths.",
   },
   sentinel: {
     title: "Silent Meridian",
@@ -71,6 +77,7 @@ export const adversaryProfiles = {
     cadence: 3,
     pressure: 2,
     unverifiedSignal: "Low-volume discovery activity suggests mapping, but its intended use remains unclear.",
+    signature: "Dependency mapping", counterplay: "Protect sector health while testing operational dependencies.",
   },
 } as const;
 
@@ -162,6 +169,10 @@ export type Game = {
   pendingSetPiece: SetPieceId | null;
   setPieceHistory: SetPieceRecord[];
   campaignDoctrine: "observe" | "act" | "balanced";
+  campaignRoute: CampaignRouteId;
+  variant: IncidentVariant;
+  caseTheory: AdversaryObjectiveId | null;
+  caseTheoryHistory: { turn: number; objective: AdversaryObjectiveId }[];
 };
 
 export type GameSetup = {
@@ -173,6 +184,8 @@ export type GameSetup = {
   leadershipTrust?: number;
   unresolvedThreads?: number;
   doctrine?: "observe" | "act" | "balanced";
+  campaignRoute?: CampaignRouteId;
+  variant?: IncidentVariant;
 };
 
 export const commandEvents = {
@@ -263,8 +276,13 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   const campaignReadiness = mode === "campaign" ? setup.readiness ?? 50 : 50;
   const campaignTrust = mode === "campaign" ? setup.leadershipTrust ?? 50 : 50;
   const turnLimit = Math.max(5, difficulties[difficulty].maxTurns - (mode === "ironman" ? 1 : 0) + (campaignReadiness >= 75 ? 1 : 0));
-  const startingImpact = difficulties[difficulty].startImpact + (mode === "escalation" ? 12 : 0) - (campaignTier >= 2 ? 5 : 0) + (campaignTrust < 35 ? 5 : campaignTrust >= 75 ? -3 : 0);
-  const startingContinuity = 100 + (campaignTier >= 3 ? 5 : 0) + (campaignReadiness >= 60 ? 3 : campaignReadiness < 30 ? -5 : 0);
+  const variant = setup.variant ?? { id: `${scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 };
+  const campaignRoute = setup.campaignRoute ?? "common-ground";
+  const routeImpact = mode === "campaign" && campaignRoute === "breakwater" ? -4 : 0;
+  const routeContinuity = mode === "campaign" && campaignRoute === "breakwater" ? -4 : campaignRoute === "common-ground" ? 3 : 0;
+  const routeObjective = mode === "campaign" && campaignRoute === "watchtower" ? 5 : 0;
+  const startingImpact = difficulties[difficulty].startImpact + (mode === "escalation" ? 12 : 0) - (campaignTier >= 2 ? 5 : 0) + (campaignTrust < 35 ? 5 : campaignTrust >= 75 ? -3 : 0) + variant.impact + routeImpact;
+  const startingContinuity = 100 + (campaignTier >= 3 ? 5 : 0) + (campaignReadiness >= 60 ? 3 : campaignReadiness < 30 ? -5 : 0) + variant.continuity + routeContinuity;
   return {
     scenario,
     difficulty,
@@ -298,7 +316,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     sectorHealth: mode === "escalation" ? 88 : 100,
     sectorHistory: [],
     objective: objectiveForScenario(scenario, random(2)),
-    objectiveProgress: clamp((mode === "escalation" ? 18 : 5) + (mode === "campaign" ? (setup.unresolvedThreads ?? 0) * 3 : 0)),
+    objectiveProgress: clamp((mode === "escalation" ? 18 : 5) + (mode === "campaign" ? (setup.unresolvedThreads ?? 0) * 3 : 0) + variant.objective + routeObjective),
     campaignTier,
     focusedNode: infrastructureTopologies[scenario].nodes[1].id,
     evidence: [],
@@ -306,6 +324,10 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     pendingSetPiece: null,
     setPieceHistory: [],
     campaignDoctrine: setup.doctrine ?? "balanced",
+    campaignRoute,
+    variant,
+    caseTheory: null,
+    caseTheoryHistory: [],
   };
 }
 
@@ -335,6 +357,13 @@ export function setInfrastructureFocus(game: Game, nodeId: string): Game {
   if (game.status !== "playing" || game.pendingDecision || game.pendingCommand || game.pendingSetPiece) throw new Error("Infrastructure focus cannot be changed now.");
   if (!infrastructureTopologies[game.scenario].nodes.some(node => node.id === nodeId)) throw new Error("Unknown infrastructure node.");
   return { ...game, focusedNode: nodeId };
+}
+
+export function setCaseTheory(game: Game, objective: AdversaryObjectiveId): Game {
+  if (game.status !== "playing" || game.pendingDecision || game.pendingCommand || game.pendingSetPiece) throw new Error("The case theory cannot be changed now.");
+  if (!objectiveTheory[objective]) throw new Error("Unknown case theory.");
+  if (game.caseTheory === objective) return game;
+  return { ...game, caseTheory: objective, caseTheoryHistory: [...game.caseTheoryHistory, { turn: game.turns.length + 1, objective }] };
 }
 
 export function availableIn(game: Game, id: string) {
@@ -403,6 +432,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     evidence: [...game.evidence],
     correlations: [...game.correlations],
     setPieceHistory: [...game.setPieceHistory],
+    caseTheoryHistory: [...game.caseTheoryHistory],
   };
   const config = difficulties[g.difficulty];
   const number = g.turns.length + 1;
@@ -504,6 +534,11 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   const protection = g.specialist === "continuity" ? 3 : g.specialist === "ot" && [2, 8].includes(g.scenario) ? 3 : 0;
   let sectorSpecific = 0;
   let objectiveSpecific = 0;
+  if (g.adversaryProfile === "ghost" && (g.adversaryMemory.procedureCounts[procedure] ?? 0) > 1) impactChange += 3;
+  if (g.adversaryProfile === "raider" && number % 2 === 0 && !revealed) objectiveSpecific += 4;
+  if (g.adversaryProfile === "broker" && plan.scope === "enterprise") sectorSpecific -= 2;
+  if (g.adversaryProfile === "ledger" && (!g.caseTheory || plan.intensity === "rapid")) objectiveSpecific += 3;
+  if (g.adversaryProfile === "sentinel" && !revealed) sectorSpecific -= 2;
   if (g.scenario === 1 && plan.intensity === "exhaustive") continuityChange -= 3;
   if (g.scenario === 3 && number >= 4) sectorSpecific -= 2;
   if (g.scenario === 4 && plan.scope === "enterprise") objectiveSpecific -= 3;
@@ -656,14 +691,15 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string]): Ga
   const firstAttack = first.supports ? attacks.find(item => item.id === first.supports) : null;
   const secondAttack = second.supports ? attacks.find(item => item.id === second.supports) : null;
   const valid = !!firstAttack && !!secondAttack && (Math.abs(firstAttack.stage - secondAttack.stage) <= 1 || attackVector(firstAttack.id) === attackVector(secondAttack.id));
+  const theoryAligned = valid && game.caseTheory === game.objective;
   const finding = valid
     ? `${first.title} and ${second.title} form a credible causal sequence across ${first.system} and ${second.system}.`
     : `${first.title} and ${second.title} are correlated in time, but the available evidence does not establish causation.`;
   return {
     ...game,
-    nextModifier: valid ? Math.max(game.nextModifier, 2) : game.nextModifier,
-    impact: clamp(game.impact + (valid ? -3 : 3)),
-    objectiveProgress: clamp(game.objectiveProgress + (valid ? -6 : 2)),
+    nextModifier: valid ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
+    impact: clamp(game.impact + (valid ? (theoryAligned ? -5 : -3) : 3)),
+    objectiveProgress: clamp(game.objectiveProgress + (valid ? (theoryAligned ? -10 : -6) : 2)),
     correlations: [...game.correlations, { evidence: evidenceIds, valid, finding }],
   };
 }
