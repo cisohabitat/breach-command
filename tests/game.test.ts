@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
-import {newGame,playTurn,resolveDecision,resolveResponse,setHypothesis,availableIn,attacks,procedures,scenarios,getSuggestion,difficulties,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getScoreBreakdown,attackVector,type Difficulty,type Game} from "../lib/advanced-game.ts";
+import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,setHypothesis,availableIn,attacks,procedures,scenarios,getSuggestion,difficulties,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getScoreBreakdown,attackVector,type Difficulty,type Game} from "../lib/advanced-game.ts";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 
@@ -19,7 +19,7 @@ g=baseline();g.injectDeck=[2];g=playTurn(g,"endpoint",20);assert.equal(available
 g=baseline();g.injectDeck=[3];g=playTurn(g,"endpoint",20);assert.equal(g.revealed.length,2);assert.ok(g.pendingDecision);
 g=baseline();g.injectDeck=[8];g=playTurn(g,"email",20);assert.equal(g.status,"exercise");
 g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);assert.ok(g.pendingDecision);g=resolveDecision(g,"act");assert.equal(g.status,"response");g=resolveResponse(g,"credential");assert.equal(g.status,"response");g=resolveResponse(g,"rebuild");assert.equal(g.status,"won");assert.ok(getOutcome(g).grade);assert.ok(getCounterfactuals(g).length);
-g=baseline();for(let i=0;i<10&&g.status==="playing";i++)g=playTurn(g,["email","cloud","dns","intel"][i%4],2);assert.equal(g.status,"lost");
+g=baseline();for(let i=0;i<10&&g.status==="playing";i++){if(g.pendingCommand)g=resolveCommand(g,"a");g=playTurn(g,["email","cloud","dns","intel"][i%4],2);}assert.equal(g.status,"lost");
 assert.equal(getAdversaryState(newGame(0,"crisis",()=>0)),"Maneuvering");assert.equal(difficulties.crisis.maxTurns,9);
 assert.throws(()=>playTurn(baseline(),"unknown",10),/Unknown/);assert.throws(()=>playTurn(baseline(),"endpoint",21),/Invalid/);assert.throws(()=>newGame(-1),/Unknown/);
 
@@ -51,11 +51,13 @@ for(const difficulty of Object.keys(difficulties) as Difficulty[])for(let s=0;s<
   let sim:Game=newGame(s,difficulty);
   while(sim.status==="playing"){
     if(sim.pendingDecision){sim=resolveDecision(sim,sim.impact>52?"act":"observe");continue;}
+    if(sim.pendingCommand){sim=resolveCommand(sim,sim.impact>55?"a":"b");continue;}
     const next=sim.chain.find(id=>!sim.revealed.includes(id));if(next)sim=setHypothesis(sim,attackVector(next));
     const action=getSuggestion(sim);assert.ok(action);sim=playTurn(sim,action.id);assert.ok(sim.turns.length<=difficulties[difficulty].maxTurns);assert.equal(new Set(sim.revealed).size,sim.revealed.length);
   }
   if(sim.status==="response"){sim=resolveResponse(sim,"credential");sim=resolveResponse(sim,"rebuild");}
   totals[sim.status as keyof typeof totals]++;
 }
-assert.equal(Object.values(totals).reduce((a,b)=>a+b,0),540);
-console.log("PASS: adaptive routes, hypotheses, sector pressure, contextual decisions, hidden response tradeoffs, counterfactuals and 540 complete simulations.",totals);
+const simulationCount=Object.keys(difficulties).length*scenarios.length*30;
+assert.equal(Object.values(totals).reduce((a,b)=>a+b,0),simulationCount);
+console.log(`PASS: adaptive routes, hypotheses, command events, sector pressure, contextual decisions, hidden response tradeoffs, counterfactuals and ${simulationCount} complete simulations.`,totals);

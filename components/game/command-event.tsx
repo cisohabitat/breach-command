@@ -1,0 +1,15 @@
+import { commandEvents, type CommandEventId, type Game } from "@/lib/advanced-game";
+import { ArrowRight, RadioTower } from "lucide-react";
+
+export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice: "a" | "b") => void }) {
+  if (!game.pendingCommand) return null;
+  const event = commandEvents[game.pendingCommand as CommandEventId];
+  return (
+    <section className="command-event" aria-labelledby="command-event-title">
+      <div className="command-event-heading"><RadioTower size={22} /><div><span className="eyebrow">COMMAND EVENT</span><h2 id="command-event-title">{event.title}</h2><p>{event.prompt}</p></div></div>
+      <div className="command-options">
+        {(["a", "b"] as const).map(choice => <button key={choice} onClick={() => onChoose(choice)}><strong>{event[choice].title}</strong><span>{event[choice].description}</span><small>{event[choice].signal}</small><ArrowRight size={17} /></button>)}
+      </div>
+    </section>
+  );
+}
