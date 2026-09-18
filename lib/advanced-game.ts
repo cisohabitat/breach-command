@@ -2,6 +2,8 @@
 import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "./game.ts";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
 import { adversaryObjectives, gameModes, objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type GameMode, type ProcedureIntensity, type ProcedurePlan, type ProcedureScope, type SpecialistId } from "./command-systems.ts";
+// @ts-expect-error Native Node TypeScript execution requires the source extension.
+import { infrastructureTopologies, sectorSetPieces, type SetPieceId } from "./phase8.ts";
 
 export {
   attacks,
@@ -14,7 +16,7 @@ export {
   attackVector,
 };
 export type { Difficulty, HypothesisId };
-export { adversaryObjectives, gameModes, procedureIntensities, procedureScopes, sectorSystems, specialists };
+export { adversaryObjectives, gameModes, infrastructureTopologies, procedureIntensities, procedureScopes, sectorSetPieces, sectorSystems, specialists };
 export type { GameMode, ProcedureIntensity, ProcedurePlan, ProcedureScope, SpecialistId };
 
 const injects = [
@@ -31,7 +33,7 @@ const injects = [
 
 export const adversaryProfiles = {
   ghost: {
-    title: "Evasive operator",
+    title: "Glass Viper",
     description: "Avoids recently examined evidence sources and favours identity or cloud trust.",
     preferredVectors: ["identity", "cloud", "application", "endpoint"] as HypothesisId[],
     cadence: 3,
@@ -39,7 +41,7 @@ export const adversaryProfiles = {
     unverifiedSignal: "A low-confidence identity alert may be operational noise or deliberate distraction.",
   },
   raider: {
-    title: "Rapid exploiter",
+    title: "Red Quarry",
     description: "Pushes execution and movement quickly when the response hesitates.",
     preferredVectors: ["endpoint", "application", "identity", "cloud"] as HypothesisId[],
     cadence: 2,
@@ -47,12 +49,28 @@ export const adversaryProfiles = {
     unverifiedSignal: "A burst of endpoint alerts is credible, but its relationship to the original access remains unproven.",
   },
   broker: {
-    title: "Trust-path operator",
+    title: "Black Relay",
     description: "Blends into supplier, application and shared-service relationships.",
     preferredVectors: ["application", "identity", "cloud", "endpoint"] as HypothesisId[],
     cadence: 3,
     pressure: 1,
     unverifiedSignal: "A partner-originated event overlaps the timeline but has not been causally linked.",
+  },
+  ledger: {
+    title: "Cipher Ledger",
+    description: "Targets approval paths, privileged identities and transaction systems for financial effect.",
+    preferredVectors: ["identity", "application", "cloud", "endpoint"] as HypothesisId[],
+    cadence: 2,
+    pressure: 2,
+    unverifiedSignal: "A suspicious approval pattern may be fraud, process error or deliberate misdirection.",
+  },
+  sentinel: {
+    title: "Silent Meridian",
+    description: "Maps operational dependencies and preserves access for a future strategic objective.",
+    preferredVectors: ["application", "endpoint", "identity", "cloud"] as HypothesisId[],
+    cadence: 3,
+    pressure: 2,
+    unverifiedSignal: "Low-volume discovery activity suggests mapping, but its intended use remains unclear.",
   },
 } as const;
 
@@ -65,6 +83,9 @@ export type AdversaryMemory = {
   hypothesisChanges: number;
 };
 export type CommandRecord = { event: CommandEventId; choice: "a" | "b"; title: string; quality: number; effect: string };
+export type EvidenceItem = { id: string; turn: number; title: string; source: string; system: string; confidence: "LOW" | "MODERATE" | "HIGH"; supports: string | null; detail: string };
+export type CorrelationRecord = { evidence: [string, string]; valid: boolean; finding: string };
+export type SetPieceRecord = { event: SetPieceId; choice: "a" | "b"; title: string; quality: number; effect: string };
 type Inject = typeof injects[number] & { reason: string };
 export type Turn = {
   number: number;
@@ -135,6 +156,12 @@ export type Game = {
   objective: AdversaryObjectiveId;
   objectiveProgress: number;
   campaignTier: number;
+  focusedNode: string;
+  evidence: EvidenceItem[];
+  correlations: CorrelationRecord[];
+  pendingSetPiece: SetPieceId | null;
+  setPieceHistory: SetPieceRecord[];
+  campaignDoctrine: "observe" | "act" | "balanced";
 };
 
 export type GameSetup = {
@@ -144,6 +171,8 @@ export type GameSetup = {
   inheritedFatigue?: number;
   readiness?: number;
   leadershipTrust?: number;
+  unresolvedThreads?: number;
+  doctrine?: "observe" | "act" | "balanced";
 };
 
 export const commandEvents = {
@@ -188,16 +217,16 @@ const decisionLanguage = [
 ];
 
 const scenarioProfiles: AdversaryProfileId[][] = [
-  ["ghost", "broker"],
-  ["ghost", "raider"],
-  ["broker", "ghost"],
-  ["raider", "broker"],
-  ["ghost", "raider"],
-  ["broker", "ghost"],
-  ["ghost", "broker"],
-  ["raider", "broker"],
-  ["broker", "raider"],
-  ["ghost", "raider"],
+  ["ghost", "broker", "sentinel"],
+  ["ghost", "raider", "sentinel"],
+  ["broker", "ghost", "sentinel"],
+  ["raider", "broker", "ledger"],
+  ["ghost", "raider", "broker"],
+  ["broker", "ghost", "sentinel"],
+  ["ghost", "broker", "ledger"],
+  ["raider", "broker", "sentinel"],
+  ["broker", "raider", "sentinel"],
+  ["ledger", "ghost", "broker"],
 ];
 
 function shuffle<T>(array: T[], random = (max: number) => randomInt(max)) {
@@ -269,8 +298,14 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     sectorHealth: mode === "escalation" ? 88 : 100,
     sectorHistory: [],
     objective: objectiveForScenario(scenario, random(2)),
-    objectiveProgress: mode === "escalation" ? 18 : 5,
+    objectiveProgress: clamp((mode === "escalation" ? 18 : 5) + (mode === "campaign" ? (setup.unresolvedThreads ?? 0) * 3 : 0)),
     campaignTier,
+    focusedNode: infrastructureTopologies[scenario].nodes[1].id,
+    evidence: [],
+    correlations: [],
+    pendingSetPiece: null,
+    setPieceHistory: [],
+    campaignDoctrine: setup.doctrine ?? "balanced",
   };
 }
 
@@ -287,12 +322,19 @@ export function getObjectiveRead(game: Game) {
 export function setHypothesis(game: Game, id: HypothesisId): Game {
   if (game.status !== "playing" || game.pendingDecision) throw new Error("The hypothesis cannot be changed now.");
   if (game.pendingCommand) throw new Error("Resolve the command event first.");
+  if (game.pendingSetPiece) throw new Error("Resolve the sector decision first.");
   if (!hypotheses.some(h => h.id === id)) throw new Error("Unknown hypothesis.");
   if (game.hypothesis === id) return game;
   const turn = game.turns.length + 1;
   const hypothesisHistory = game.hypothesisHistory.filter(entry => entry.turn !== turn);
   hypothesisHistory.push({ turn, id });
   return { ...game, hypothesis: id, hypothesisHistory, adversaryMemory: { ...game.adversaryMemory, hypothesisChanges: game.adversaryMemory.hypothesisChanges + (game.hypothesis ? 1 : 0) } };
+}
+
+export function setInfrastructureFocus(game: Game, nodeId: string): Game {
+  if (game.status !== "playing" || game.pendingDecision || game.pendingCommand || game.pendingSetPiece) throw new Error("Infrastructure focus cannot be changed now.");
+  if (!infrastructureTopologies[game.scenario].nodes.some(node => node.id === nodeId)) throw new Error("Unknown infrastructure node.");
+  return { ...game, focusedNode: nodeId };
 }
 
 export function availableIn(game: Game, id: string) {
@@ -340,6 +382,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (game.status !== "playing") throw new Error("This investigation has ended.");
   if (game.pendingDecision) throw new Error("Resolve the evidence decision first.");
   if (game.pendingCommand) throw new Error("Resolve the command event first.");
+  if (game.pendingSetPiece) throw new Error("Resolve the sector decision first.");
   if (!procedures.some(item => item.id === procedure)) throw new Error("Unknown procedure.");
   if (availableIn(game, procedure) > 0) throw new Error("This procedure is cooling down.");
 
@@ -357,6 +400,9 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     hypothesisHistory: [...game.hypothesisHistory],
     adversaryMemory: { ...game.adversaryMemory, procedureCounts: { ...game.adversaryMemory.procedureCounts } },
     commandHistory: [...game.commandHistory],
+    evidence: [...game.evidence],
+    correlations: [...game.correlations],
+    setPieceHistory: [...game.setPieceHistory],
   };
   const config = difficulties[g.difficulty];
   const number = g.turns.length + 1;
@@ -368,8 +414,10 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < 5 ? 2 : 0;
   const scope = procedureScopes[plan.scope];
   const intensity = procedureIntensities[plan.intensity];
+  const focusNode = infrastructureTopologies[g.scenario].nodes.find(node => node.id === g.focusedNode)!;
+  const infrastructureBonus = focusNode.procedures.includes(procedure) ? 1 : 0;
   const modeModifier = g.mode === "expert" ? -1 : 0;
-  const modifier = (g.established.includes(procedure) ? 3 : 0) + g.nextModifier + planningBonus + specialistBonus + scope.modifier + intensity.modifier + modeModifier;
+  const modifier = (g.established.includes(procedure) ? 3 : 0) + g.nextModifier + planningBonus + specialistBonus + infrastructureBonus + scope.modifier + intensity.modifier + modeModifier;
   const total = raw + modifier;
   const success = total >= config.threshold;
   g.nextModifier = 0;
@@ -392,6 +440,20 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   } else {
     narrative = "The action did not produce reliable evidence. The actor gains freedom while the team reorients.";
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
+  }
+  if (success) {
+    const source = procedures.find(item => item.id === procedure)!;
+    const evidenceTitle = revealed ? `${attacks.find(item => item.id === revealed)!.title} evidence` : `${source.title} exception`;
+    g.evidence.push({
+      id: `E${number}-${procedure}`,
+      turn: number,
+      title: evidenceTitle,
+      source: source.title,
+      system: focusNode.label,
+      confidence: revealed || plan.intensity === "exhaustive" ? "HIGH" : "MODERATE",
+      supports: revealed,
+      detail: revealed ? narrative : `The finding at ${focusNode.label} is credible but does not yet establish a hidden attack stage.`,
+    });
   }
 
   g.lastUsed[procedure] = number + intensity.cooldown;
@@ -462,6 +524,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
   else if (exerciseEnd && g.revealed.length < 4) g.status = "exercise";
   else if (number >= g.turnLimit && g.revealed.length < 4) g.status = "lost";
+  else if (!g.pendingDecision && number === 2 && g.revealed.length < 4) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {
     const ids = Object.keys(commandEvents) as CommandEventId[];
     g.pendingCommand = ids[(g.scenario + number + g.adversaryTempo) % ids.length];
@@ -547,6 +610,7 @@ export function resolveDecision(game: Game, choice: "observe" | "act"): Game {
   g.pendingDecision = null;
   if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
   else if (g.revealed.length === 4) g.status = "response";
+  else if (g.turns.length === 2 && !g.setPieceHistory.length) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   return g;
 }
 
@@ -567,13 +631,51 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   return g;
 }
 
+export function resolveSetPiece(game: Game, choice: "a" | "b"): Game {
+  if (game.status !== "playing" || !game.pendingSetPiece) throw new Error("No sector decision is pending.");
+  const event = sectorSetPieces[game.scenario];
+  const option = event[choice];
+  const g: Game = { ...game, setPieceHistory: [...game.setPieceHistory] };
+  g.impact = clamp(g.impact + option.impact);
+  g.continuity = clamp(g.continuity + option.continuity);
+  g.sectorHealth = clamp(g.sectorHealth + option.sector);
+  g.objectiveProgress = clamp(g.objectiveProgress + option.objective);
+  g.setPieceHistory.push({ event: event.id, choice, title: option.title, quality: option.quality, effect: option.detail });
+  g.pendingSetPiece = null;
+  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
+  return g;
+}
+
+export function correlateEvidence(game: Game, evidenceIds: [string, string]): Game {
+  if (game.status !== "playing" || game.pendingDecision || game.pendingCommand || game.pendingSetPiece) throw new Error("Evidence cannot be correlated during a pending decision.");
+  if (evidenceIds[0] === evidenceIds[1]) throw new Error("Choose two different findings.");
+  if (game.correlations.some(record => record.evidence.every(id => evidenceIds.includes(id)))) throw new Error("These findings are already correlated.");
+  const items = evidenceIds.map(id => game.evidence.find(item => item.id === id));
+  if (items.some(item => !item)) throw new Error("Unknown evidence finding.");
+  const [first, second] = items as [EvidenceItem, EvidenceItem];
+  const firstAttack = first.supports ? attacks.find(item => item.id === first.supports) : null;
+  const secondAttack = second.supports ? attacks.find(item => item.id === second.supports) : null;
+  const valid = !!firstAttack && !!secondAttack && (Math.abs(firstAttack.stage - secondAttack.stage) <= 1 || attackVector(firstAttack.id) === attackVector(secondAttack.id));
+  const finding = valid
+    ? `${first.title} and ${second.title} form a credible causal sequence across ${first.system} and ${second.system}.`
+    : `${first.title} and ${second.title} are correlated in time, but the available evidence does not establish causation.`;
+  return {
+    ...game,
+    nextModifier: valid ? Math.max(game.nextModifier, 2) : game.nextModifier,
+    impact: clamp(game.impact + (valid ? -3 : 3)),
+    objectiveProgress: clamp(game.objectiveProgress + (valid ? -6 : 2)),
+    correlations: [...game.correlations, { evidence: evidenceIds, valid, finding }],
+  };
+}
+
 export function getAdversaryRead(game: Game) {
   const memory = game.adversaryMemory;
   const favourite = Object.entries(memory.procedureCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
   const source = favourite ? procedures.find(item => item.id === favourite)?.title : null;
   const posture = memory.actChoices > memory.observeChoices ? "expects rapid intervention" : memory.observeChoices > memory.actChoices ? "expects evidence preservation" : "is still learning your command posture";
   const hypothesis = memory.hypothesisChanges >= 3 ? "Your frequent hypothesis changes are creating exploitable uncertainty." : memory.hypothesisChanges ? "The actor has observed changes in your investigative theory." : "Your investigative theory remains difficult to infer.";
-  return `${getAdversaryProfile(game).title} ${posture}${source ? ` and has seen repeated use of ${source}.` : "."} ${hypothesis}`;
+  const campaignRead = game.campaignDoctrine === "balanced" ? "No dominant campaign doctrine is yet visible." : `Across operations, the group expects a predominantly ${game.campaignDoctrine === "act" ? "intervention-led" : "observation-led"} response.`;
+  return `${getAdversaryProfile(game).title} ${posture}${source ? ` and has seen repeated use of ${source}.` : "."} ${hypothesis} ${campaignRead}`;
 }
 
 export function resolveResponse(game: Game, choice: string): Game {
@@ -609,7 +711,7 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   const investigation = clamp(25 - Math.max(0, game.turns.length - 4) * 3, 0, 25);
   const impact = Math.round((100 - game.impact) * 0.15);
   const continuity = Math.round(((game.continuity + game.sectorHealth) / 2) * 0.15);
-  const decisionItems = [...game.decisions.map(item => item.quality), ...game.commandHistory.map(item => item.quality)];
+  const decisionItems = [...game.decisions.map(item => item.quality), ...game.commandHistory.map(item => item.quality), ...game.setPieceHistory.map(item => item.quality)];
   const decisionQuality = decisionItems.length ? decisionItems.reduce((sum, quality) => sum + quality, 0) / (decisionItems.length * 5) : 0;
   const decisions = Math.round(decisionQuality * 15);
   const response = Math.round(clamp(game.responseScore, 0, 38) / 38 * 20);
@@ -636,5 +738,9 @@ export function getCounterfactuals(game: Game) {
   const actualChanges = game.hypothesisHistory.reduce((count, entry, index, history) => count + (index > 0 && history[index - 1].id !== entry.id ? 1 : 0), 0);
   if (actualChanges > 2) items.push("The working hypothesis changed several times across turns. Earlier disconfirming evidence could have reduced investigative delay.");
   else if (!game.hypothesisHistory.length) items.push("No working hypothesis was recorded, so the team could not compare its assumptions with the final chain.");
+  const weakCorrelations = game.correlations.filter(record => !record.valid).length;
+  if (weakCorrelations) items.push(`${weakCorrelations} tested evidence relationship${weakCorrelations === 1 ? " was" : "s were"} temporal rather than causal. A stronger system-to-identity link would have reduced analytical noise.`);
+  if (!game.correlations.length && game.evidence.length >= 2) items.push("Multiple findings were preserved but never correlated. The team left potential causal relationships untested.");
+  if (game.setPieceHistory.some(record => record.quality <= 2)) items.push("The sector crisis decision protected short-term convenience but increased strategic exposure.");
   return items;
 }

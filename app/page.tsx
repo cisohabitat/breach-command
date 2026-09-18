@@ -20,6 +20,7 @@ import {
   Maximize2,
   Printer,
   Radio,
+  RefreshCw,
   RotateCcw,
   Settings2,
   Shield,
@@ -28,6 +29,7 @@ import {
   Sparkles,
   Terminal,
   Trophy,
+  Star,
   Volume2,
   Vibrate,
   Contrast,
@@ -42,10 +44,12 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
-import { OperationsMap } from "@/components/game/operations-map";
 import { CommandEvent } from "@/components/game/command-event";
 import { SectorBoard } from "@/components/game/sector-board";
 import { TutorialCoach } from "@/components/game/tutorial-coach";
+import { InfrastructureConsole } from "@/components/game/infrastructure-console";
+import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
+import { SectorSetPiece } from "@/components/game/sector-set-piece";
 import {
   attacks,
   procedures,
@@ -59,7 +63,10 @@ import {
   resolveDecision,
   resolveResponse,
   resolveCommand,
+  resolveSetPiece,
+  correlateEvidence,
   setHypothesis,
+  setInfrastructureFocus,
   availableIn,
   getLead,
   getCoachPrompt,
@@ -68,6 +75,7 @@ import {
   getDecisionOptions,
   getAdversaryState,
   getAdversaryRead,
+  getAdversaryProfile,
   getOperationalLabel,
   getObjectiveRead,
   getTurnLimit,
@@ -87,10 +95,10 @@ import {
   type Turn,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
-import { campaignRank, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, unlockedCapabilities, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { campaignAct, campaignEnding, campaignRank, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, unlockedCapabilities, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
-import { modeRandom } from "@/lib/command-systems";
 import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
+import { decodeChallenge, encodeChallenge, namedSpecialists, seededChallengeRandom } from "@/lib/phase8";
 
 const stageIcons = [LockKeyhole, Activity, RotateCcw, Radio];
 
@@ -123,6 +131,12 @@ export default function Home() {
   const [missionBriefing, setMissionBriefing] = useState(false);
   const [tutorial, setTutorial] = useState(false);
   const [telemetry, setTelemetry] = useState<BalanceTelemetry>(() => readTelemetry());
+  const [challengeSeed, setChallengeSeed] = useState(() => {
+    const now = new Date();
+    return Number(`${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`);
+  });
+  const [challengeInput, setChallengeInput] = useState("");
+  const [challengeMessage, setChallengeMessage] = useState("");
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   const stateRef = useRef(game);
   const busyRef = useRef(false);
@@ -138,6 +152,9 @@ export default function Home() {
   const outcome = game ? getOutcome(game) : null;
   const activeHypothesis = game ? hypotheses.find(item => item.id === game.hypothesis) : null;
   const procedureAligned = !!proc && !!activeHypothesis?.procedures.includes(proc.id);
+  const currentAct = campaignAct(campaign.completed.length);
+  const finalEnding = campaignEnding(campaign);
+  const challengeCode = encodeChallenge({ scenario: scenarioChoice, difficulty, mode, specialist, seed: challengeSeed });
 
   function clearStoredSession() {
     localStorage.removeItem(SESSION_KEY);
@@ -147,8 +164,9 @@ export default function Home() {
   function start(index = scenarioChoice) {
     if (busyRef.current) return;
     clearStoredSession();
-    const random = modeRandom(mode, index);
-    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust });
+    const random = seededChallengeRandom(challengeSeed);
+    const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
+    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture });
     setGame(next);
     setGuided(mode === "expert" ? false : guided);
     setTutorial(localStorage.getItem("breach-command.tutorial-complete") !== "true");
@@ -182,7 +200,7 @@ export default function Home() {
 
   function run(id: string) {
     const current = stateRef.current;
-    if (!current || busyRef.current || current.status !== "playing" || current.pendingDecision || current.pendingCommand || availableIn(current, id) > 0) return;
+    if (!current || busyRef.current || current.status !== "playing" || current.pendingDecision || current.pendingCommand || current.pendingSetPiece || availableIn(current, id) > 0) return;
     busyRef.current = true;
     const quick = fastResolve && current.turns.length > 0;
     setSelected(null);
@@ -224,7 +242,7 @@ export default function Home() {
 
   function chooseHypothesis(id: HypothesisId) {
     const current = stateRef.current;
-    if (!current || current.pendingDecision) return;
+    if (!current || current.pendingDecision || current.pendingCommand || current.pendingSetPiece) return;
     const next = setHypothesis(current, id);
     setGame(next);
     setAnnouncement(`Working hypothesis set to ${hypotheses.find(item => item.id === id)?.title}.`);
@@ -250,6 +268,38 @@ export default function Home() {
     setGame(next);
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
     setAnnouncement(`Command decision recorded. Business impact is ${next.impact}.`);
+  }
+
+  function sectorDecision(choice: "a" | "b") {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = resolveSetPiece(current, choice);
+    setGame(next);
+    playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
+    setAnnouncement(`Sector decision recorded. ${getOperationalLabel(next)} is ${next.continuity}.`);
+  }
+
+  function focusInfrastructure(nodeId: string) {
+    const current = stateRef.current;
+    if (!current) return;
+    setGame(setInfrastructureFocus(current, nodeId));
+  }
+
+  function correlate(ids: [string, string]) {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = correlateEvidence(current, ids);
+    setGame(next);
+    const valid = next.correlations.at(-1)?.valid;
+    playFeedback(valid ? "success" : "failure", soundEnabled, hapticsEnabled);
+    setAnnouncement(valid ? "Causal relationship supported." : "Correlation recorded without sufficient causal support.");
+  }
+
+  function loadChallengeCode() {
+    const setup = decodeChallenge(challengeInput);
+    if (!setup) { setChallengeMessage("Code not recognised. Check every character and try again."); return; }
+    setScenarioChoice(setup.scenario); setDifficulty(setup.difficulty); setMode(setup.mode); setSpecialist(setup.specialist); setChallengeSeed(setup.seed);
+    setChallengeMessage("Challenge loaded. Review the assignment and begin when ready.");
   }
 
   function recordProgress(result: Game) {
@@ -423,6 +473,8 @@ export default function Home() {
               <b>{campaign.xp}<small> XP</small></b>
               <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
             </section>
+            <section className="campaign-act-card"><span className="act-number">ACT {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved campaign thread{campaign.unresolvedThreads === 1 ? "" : "s"}</small></div></section>
+            {finalEnding && <section className="campaign-ending"><Trophy size={20} /><div><span className="eyebrow">CAMPAIGN CONCLUSION</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
           </div>
           <section className="mission-panel">
             <div className="panel-top"><span className="eyebrow">YOUR NEXT ASSIGNMENT</span><span className="mono muted">{String(scenarioChoice + 1).padStart(2, "0")} / {String(scenarios.length).padStart(2, "0")}</span></div>
@@ -430,7 +482,7 @@ export default function Home() {
             <h2>{activeScenario.title}</h2>
             <p>{activeScenario.summary}</p>
             <div className="mission-selector" aria-label="Select incident">
-              {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? ", completed" : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}>{String(index + 1).padStart(2, "0")}</button>)}
+              {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery stars` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1).padStart(2, "0")}</span>{campaign.completed.includes(index) && <small>{Array.from({ length: campaign.mastery[String(index)] ?? 0 }).map((_, star) => <Star key={star} size={8} fill="currentColor" />)}</small>}</button>)}
             </div>
             <div className="difficulty-picker">
               <span className="eyebrow">DIFFICULTY</span>
@@ -444,9 +496,15 @@ export default function Home() {
             <div className="specialist-picker">
               <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small>Fatigue carries between campaign operations.</small></label>
               <select id="specialist" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
-                {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{specialists[id].title} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
+                {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name} · {specialists[id].title} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
               </select>
-              <p><strong>{specialists[specialist].role}</strong> · {specialists[specialist].ability}</p>
+              <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].role}. {specialists[specialist].ability}</p>
+            </div>
+            <div className="challenge-console">
+              <div><span className="eyebrow">SCENARIO CODE</span><button onClick={() => { const seed = 100000 + Math.floor(Math.random() * 900000); setChallengeSeed(seed); setChallengeMessage("New challenge generated."); }}><RefreshCw size={14} /> New seed</button></div>
+              <code>{challengeCode}</code>
+              <div className="challenge-load"><input aria-label="Challenge code" value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder="Enter a BC challenge code" /><button onClick={loadChallengeCode}>Load</button></div>
+              {challengeMessage && <p aria-live="polite">{challengeMessage}</p>}
             </div>
             <div className="setup-controls">
               <div className="guided-control">
@@ -517,7 +575,7 @@ export default function Home() {
                 </div>
               </section>
 
-              <OperationsMap game={game} />
+              <InfrastructureConsole game={game} onFocus={focusInfrastructure} />
 
               <SectorBoard game={game} />
 
@@ -538,9 +596,13 @@ export default function Home() {
                 <section className="lead-strip"><Activity size={20} /><div><span className="eyebrow">CURRENT INTELLIGENCE</span><p>{getLead(game)}</p></div></section>
               )}
 
-              {game.status === "playing" && !game.pendingCommand && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
+              {game.status === "playing" && !game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
 
               {game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
+
+              {game.status === "playing" && <SectorSetPiece game={game} onChoose={sectorDecision} />}
+
+              {game.status === "playing" && <EvidenceWorkspace game={game} onCorrelate={correlate} />}
 
               {inlineReport && (
                 <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
@@ -553,7 +615,7 @@ export default function Home() {
                 </section>
               )}
 
-              {game.status === "playing" && !game.pendingCommand && (
+              {game.status === "playing" && !game.pendingCommand && !game.pendingSetPiece && (
                 <section className="procedure-section">
                   <div className="section-heading">
                     <div><h2>Investigation procedures</h2><p>Choose one action per turn. Used actions cool down for three turns.</p></div>
@@ -650,7 +712,8 @@ export default function Home() {
             <div className="briefing-readouts">
               <div><span>MODE</span><strong>{gameModes[game.mode].title}</strong><small>{gameModes[game.mode].description}</small></div>
               <div><span>SECTOR CONDITION</span><strong>{sectorSystems[game.scenario].title}</strong><small>{sectorSystems[game.scenario].rule}</small></div>
-              <div><span>DEPLOYED SPECIALIST</span><strong>{specialists[game.specialist].title}</strong><small>{specialists[game.specialist].ability}</small></div>
+              <div><span>DEPLOYED SPECIALIST</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
+              <div><span>THREAT GROUP</span><strong>{getAdversaryProfile(game).title}</strong><small>{getAdversaryProfile(game).description}</small></div>
             </div>
             <div className="director-order"><Radio size={20} /><p><span className="eyebrow">DIRECTOR’S INTENT</span>Establish the attack chain, infer the actor’s objective and preserve the essential service. Report uncertainty before it becomes operational surprise.</p></div>
             <button className="primary-button full" onClick={() => setMissionBriefing(false)}>Assume command <ArrowRight size={18} /></button>
@@ -711,6 +774,10 @@ export default function Home() {
               <section><h3>12 / Team deployment</h3><p>Select one specialist before deployment. Matching evidence earns a bonus, while repeated use creates fatigue that carries into campaign operations.</p></section>
               <section><h3>13 / Scope &amp; intensity</h3><p>Focused checks are efficient. Enterprise scope searches wider at a time cost. Exhaustive work is stronger but increases pressure and cooldown.</p></section>
               <section><h3>14 / Advanced modes</h3><p>Daily, Ironman, Escalation and Expert modes alter seeds, pressure, saves, coaching and rewards.</p></section>
+              <section><h3>15 / Infrastructure focus</h3><p>Select a system on the command map before acting. Procedures aligned to that evidence boundary earn +1.</p></section>
+              <section><h3>16 / Evidence correlation</h3><p>Successful procedures preserve findings. Test pairs carefully: a shared timestamp is not necessarily a causal relationship.</p></section>
+              <section><h3>17 / Sector set pieces</h3><p>Each incident has a unique operational crisis that changes impact, continuity, sector condition and adversary progress.</p></section>
+              <section><h3>18 / Campaign acts</h3><p>Ten incidents form three acts. Trust, readiness, unresolved access, team fatigue and command doctrine shape later operations and the final conclusion.</p></section>
             </div>
             <section className="attribution"><h3>About this adaptation</h3><p>Inspired by Backdoors &amp; Breaches, created by Black Hills Information Security and Active Countermeasures. This unofficial adaptation is not affiliated with or endorsed by the creators. It uses original wording, fictional settings and a rule-based facilitator. It does not reproduce the commercial deck, official artwork or expansion content.</p><a href="https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf" target="_blank" rel="noreferrer">Read the official classic rules <ArrowRight size={14} /></a></section>
           </div>
@@ -748,11 +815,13 @@ export default function Home() {
               <div><strong>{game.turns.filter(turn => turn.planningBonus > 0).length}</strong><span>Evidence-aligned actions</span></div>
               <div><strong>{game.commandHistory.length}</strong><span>Command events resolved</span></div>
               <div><strong>{game.turns.filter(turn => turn.success && !turn.revealed).length}</strong><span>Successful but non-discriminating actions</span></div>
+              <div><strong>{game.evidence.length}</strong><span>Evidence findings preserved</span></div>
+              <div><strong>{game.correlations.filter(item => item.valid).length}/{game.correlations.length}</strong><span>Causal relationships supported</span></div>
             </section>
             <section className="mission-consequences">
               <div><span className="eyebrow">SECTOR OUTCOME</span><strong>{game.sectorHealth}/100 · {sectorSystems[game.scenario].title}</strong><p>{sectorSystems[game.scenario].rule}</p></div>
               <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p></div>
-              <div><span className="eyebrow">COMMAND TEAM</span><strong>{specialists[game.specialist].title} · fatigue {game.specialistFatigue}/6</strong><p>{gameModes[game.mode].title} operation. Team fatigue and leadership confidence carry into the next campaign mission.</p></div>
+              <div><span className="eyebrow">COMMAND TEAM</span><strong>{namedSpecialists[game.specialist].name} · fatigue {game.specialistFatigue}/6</strong><p>{gameModes[game.mode].title} operation against {getAdversaryProfile(game).title}. Team fatigue and leadership confidence carry into the next campaign mission.</p></div>
             </section>
             <section className="timeline">
               <span className="eyebrow">EVIDENCE &amp; DECISION TIMELINE</span>
@@ -763,11 +832,12 @@ export default function Home() {
                 </div>
               ))}
             </section>
-            {(game.decisions.length > 0 || game.commandHistory.length > 0) && (
+            {(game.decisions.length > 0 || game.commandHistory.length > 0 || game.setPieceHistory.length > 0) && (
               <div className="decision-summary">
                 <span className="eyebrow">YOUR DECISIONS</span>
                 {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.rationale}</em>{record.adaptedTo && <em>Actor adaptation: {record.adaptationReason ?? `the hidden route changed to ${attacks.find(attack => attack.id === record.adaptedTo)?.title}.`}</em>}</p>)}
                 {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Command event:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
+                {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Sector decision:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
                 {game.responseChoices.map(id => {
                   const option = [...responseOptions.containment, ...responseOptions.recovery].find(item => item.id === id);
                   return <p key={id}><strong>Response:</strong> {option?.title}<span>{option?.confidence} confidence · {option?.residual} residual risk</span></p>;
@@ -775,6 +845,7 @@ export default function Home() {
               </div>
             )}
             <section className="counterfactuals"><span className="eyebrow">WHAT MIGHT HAVE CHANGED</span>{getCounterfactuals(game).map((item, index) => <p key={index}>{item}</p>)}</section>
+            <section className="evidence-review"><span className="eyebrow">EVIDENCE RECONSTRUCTION</span>{game.evidence.map(item => <div key={item.id}><strong>{item.id} · {item.title}</strong><span>{item.system} · {item.source} · {item.confidence}</span><p>{item.detail}</p></div>)}</section>
             <div className="debrief-chain">
               {game.chain.map((id, index) => {
                 const attack = attacks.find(item => item.id === id)!;
@@ -785,6 +856,7 @@ export default function Home() {
             <section className="debrief-learning"><h3>Take this back to your team</h3><p>{game.turns.some(turn => turn.success && !turn.revealed) ? "Some actions passed without finding new evidence. Did each action separate plausible explanations, or simply use an available tool?" : "Which evidence sources or decision authorities would be weakest in a real response?"}</p><p>{activeScenario.lesson}</p></section>
             <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
             <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
+            <section className="mastery-panel"><div><span className="eyebrow">SCENARIO MASTERY</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
             <div className="debrief-actions">
               <button className="secondary-button" onClick={() => window.print()}><Printer size={17} /> Print review</button>
               <button className="primary-button" onClick={() => { const nextScenario = (game.scenario + 1) % scenarios.length; resetToBriefing(); setScenarioChoice(nextScenario); }}>Choose next incident <ArrowRight size={18} /></button>

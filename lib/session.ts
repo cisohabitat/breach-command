@@ -2,7 +2,7 @@
 import { scenarios, difficulties, adversaryProfiles, type Game } from "./advanced-game.ts";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 4;
+export const SESSION_VERSION = 5;
 
 export type SavedSession = {
   version: number;
@@ -48,6 +48,12 @@ export function parseSession(raw: string): SavedSession | null {
       objective: game.objective ?? "espionage",
       objectiveProgress: Number.isFinite(game.objectiveProgress) ? game.objectiveProgress : 5,
       campaignTier: Number.isFinite(game.campaignTier) ? game.campaignTier : 0,
+      focusedNode: typeof game.focusedNode === "string" ? game.focusedNode : "boundary",
+      evidence: Array.isArray(game.evidence) ? game.evidence : [],
+      correlations: Array.isArray(game.correlations) ? game.correlations : [],
+      pendingSetPiece: game.pendingSetPiece ?? null,
+      setPieceHistory: Array.isArray(game.setPieceHistory) ? game.setPieceHistory : [],
+      campaignDoctrine: game.campaignDoctrine ?? "balanced",
       turns: game.turns.map(turn => ({
         ...turn,
         plan: turn.plan ?? { scope: "focused", intensity: "balanced" },
