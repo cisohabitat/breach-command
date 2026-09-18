@@ -1,8 +1,9 @@
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
-import { scenarios, difficulties, adversaryProfiles, type Game } from "./advanced-game.ts";
+import { scenarios, difficulties, infrastructureTopologies, adversaryProfiles, type Game } from "./advanced-game.ts";
+import type { NodePosture } from "./advanced-game";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 8;
+export const SESSION_VERSION = 9;
 
 export type SavedSession = {
   version: number;
@@ -32,6 +33,14 @@ export function parseSession(raw: string): SavedSession | null {
     if (!difficulties[game.difficulty]) return null;
     if (!Array.isArray(game.chain) || game.chain.length !== 4 || !Array.isArray(game.turns)) return null;
     const profile = game.adversaryProfile && adversaryProfiles[game.adversaryProfile] ? game.adversaryProfile : "ghost";
+    // Topologies vary per scenario, so a restored session is re-keyed to the
+    // nodes that exist on this incident's map. Legacy or stale node ids become
+    // normal posture rather than an invalid map.
+    const topologyNodes = infrastructureTopologies[game.scenario]?.nodes ?? [];
+    const nodeIds = topologyNodes.map(node => node.id);
+    const knownPosture: NodePosture[] = ["normal", "monitored", "isolated", "restored"];
+    const storedPosture = game.nodePosture && typeof game.nodePosture === "object" ? game.nodePosture as Record<string, NodePosture> : {};
+    const focusedNode = typeof game.focusedNode === "string" && nodeIds.includes(game.focusedNode) ? game.focusedNode : topologyNodes[1]?.id ?? nodeIds[0] ?? "boundary";
     const migrated: Game = {
       ...game,
       adversaryProfile: profile,
@@ -48,7 +57,7 @@ export function parseSession(raw: string): SavedSession | null {
       objective: game.objective ?? "espionage",
       objectiveProgress: Number.isFinite(game.objectiveProgress) ? game.objectiveProgress : 5,
       campaignTier: Number.isFinite(game.campaignTier) ? game.campaignTier : 0,
-      focusedNode: typeof game.focusedNode === "string" ? game.focusedNode : "boundary",
+      focusedNode,
       evidence: Array.isArray(game.evidence) ? game.evidence : [],
       correlations: Array.isArray(game.correlations) ? game.correlations.map(record => ({
         ...record,
@@ -62,7 +71,7 @@ export function parseSession(raw: string): SavedSession | null {
       variant: game.variant ?? { id: `${game.scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 },
       caseTheory: game.caseTheory ?? null,
       caseTheoryHistory: Array.isArray(game.caseTheoryHistory) ? game.caseTheoryHistory : [],
-      nodePosture: game.nodePosture && typeof game.nodePosture === "object" ? game.nodePosture : Object.fromEntries(["user", "boundary", "service", "admin", "data"].map(node => [node, "normal"])),
+      nodePosture: Object.fromEntries(nodeIds.length ? nodeIds.map(id => [id, knownPosture.includes(storedPosture[id]) ? storedPosture[id] : "normal"]) : [["boundary", storedPosture.boundary ?? "normal"]]),
       mapActionsRemaining: Number.isFinite(game.mapActionsRemaining) ? game.mapActionsRemaining : 3,
       mapHistory: Array.isArray(game.mapHistory) ? game.mapHistory : [],
       turns: game.turns.map(turn => ({

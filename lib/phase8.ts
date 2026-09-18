@@ -3,36 +3,130 @@ import type { GameMode, SpecialistId } from "./command-systems";
 
 export type InfrastructureNode = { id: string; label: string; type: string; procedures: string[] };
 export type InfrastructureEdge = { from: string; to: string; label: string };
-export type InfrastructureTopology = { title: string; critical: string; nodes: InfrastructureNode[]; edges: InfrastructureEdge[] };
+export type InfrastructureTopology = { title: string; critical: string; criticalRule: string; nodes: InfrastructureNode[]; edges: InfrastructureEdge[] };
 
-const common = {
-  user: { id: "user", label: "User access", type: "IDENTITY", procedures: ["identity", "email"] },
-  boundary: { id: "boundary", label: "Access boundary", type: "EDGE", procedures: ["firewall", "network", "dns"] },
-  service: { id: "service", label: "Service platform", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
-  admin: { id: "admin", label: "Admin plane", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
-  data: { id: "data", label: "Protected data", type: "ASSET", procedures: ["network", "cloud", "intel"] },
-};
-
-function topology(title: string, labels: Partial<Record<keyof typeof common, string>>, critical: keyof typeof common): InfrastructureTopology {
-  const nodes = (Object.keys(common) as (keyof typeof common)[]).map(key => ({ ...common[key], label: labels[key] ?? common[key].label }));
-  return { title, critical, nodes, edges: [
-    { from: "user", to: "boundary", label: "AUTHENTICATES" }, { from: "boundary", to: "service", label: "CONNECTS" },
-    { from: "service", to: "admin", label: "TRUSTS" }, { from: "admin", to: "data", label: "CONTROLS" },
-    { from: "service", to: "data", label: "READS" },
-  ] };
-}
+// Each scenario carries its own map: node count, trust edges and the rule that
+// decides which node is critical all differ, so the spatial puzzle changes with
+// the incident instead of repeating one five-node chain.
+const staffIdentity: InfrastructureNode = { id: "user", label: "Staff identity", type: "IDENTITY", procedures: ["identity", "email"] };
+const accessEdge: InfrastructureNode = { id: "boundary", label: "Access boundary", type: "EDGE", procedures: ["firewall", "network", "dns"] };
+const businessApps: InfrastructureNode = { id: "service", label: "Business apps", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] };
 
 export const infrastructureTopologies: InfrastructureTopology[] = [
-  topology("Enterprise trust map", { user: "Staff identity", boundary: "Remote access", service: "Business apps", admin: "Privileged services", data: "Corporate records" }, "service"),
-  topology("Clinical support map", { user: "Clinical user", boundary: "Support gateway", service: "Clinical apps", admin: "Hospital admin", data: "Patient records" }, "service"),
-  topology("Generation support map", { user: "Supplier identity", boundary: "Maintenance gateway", service: "Support server", admin: "Engineering zone", data: "Plant configuration" }, "admin"),
-  topology("Terminal dependency map", { user: "Partner identity", boundary: "Booking portal", service: "Terminal platform", admin: "Vessel planning", data: "Cargo schedules" }, "service"),
-  topology("Cloud trust map", { user: "Workload identity", boundary: "Cloud API", service: "Tenant workload", admin: "Control plane", data: "Object storage" }, "admin"),
-  topology("Shared-service map", { user: "Support identity", boundary: "Shared gateway", service: "Common platform", admin: "Trust service", data: "Partner records" }, "service"),
-  topology("Public-service map", { user: "Citizen identity", boundary: "Digital gateway", service: "Public service", admin: "Agency control", data: "Transaction records" }, "service"),
-  topology("Core network map", { user: "Operator identity", boundary: "Management edge", service: "Network core", admin: "Routing control", data: "Subscriber services" }, "service"),
-  topology("Water support map", { user: "Engineer identity", boundary: "Remote support", service: "Operations server", admin: "Process supervision", data: "Control configuration" }, "admin"),
-  topology("Clearing trust map", { user: "Approver identity", boundary: "Payment gateway", service: "Clearing service", admin: "Approval plane", data: "Settlement records" }, "service"),
+  { title: "Enterprise trust map", critical: "service", criticalRule: "The shared application platform supports every dependent workflow, so isolating it carries the highest service cost.", nodes: [
+    staffIdentity,
+    accessEdge,
+    businessApps,
+    { id: "admin", label: "Privileged services", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "data", label: "Corporate records", type: "ASSET", procedures: ["network", "cloud", "intel"] },
+    { id: "supplier", label: "Managed provider", type: "EXTERNAL", procedures: ["firewall", "intel", "network"] },
+  ], edges: [
+    { from: "user", to: "boundary", label: "AUTHENTICATES" }, { from: "boundary", to: "service", label: "CONNECTS" },
+    { from: "service", to: "admin", label: "TRUSTS" }, { from: "admin", to: "data", label: "CONTROLS" },
+    { from: "service", to: "data", label: "READS" }, { from: "supplier", to: "boundary", label: "SUPPORTS" },
+  ] },
+  { title: "Clinical support map", critical: "records", criticalRule: "The records store sets the clinical-continuity cost of containment, so it is the critical dependency.", nodes: [
+    { id: "clinician", label: "Clinical user", type: "IDENTITY", procedures: ["identity", "email"] },
+    { id: "gateway", label: "Support gateway", type: "EDGE", procedures: ["firewall", "network", "dns"] },
+    { id: "support", label: "Support service", type: "APPLICATION", procedures: ["server", "forensic", "cloud"] },
+    { id: "scheduling", label: "Scheduling platform", type: "APPLICATION", procedures: ["server", "cloud", "intel"] },
+    { id: "records", label: "Patient records", type: "ASSET", procedures: ["network", "cloud", "intel"] },
+  ], edges: [
+    { from: "clinician", to: "gateway", label: "AUTHENTICATES" }, { from: "gateway", to: "support", label: "CONNECTS" },
+    { from: "support", to: "scheduling", label: "TRUSTS" }, { from: "scheduling", to: "records", label: "READS" },
+    { from: "support", to: "records", label: "READS" },
+  ] },
+  { title: "Generation support map", critical: "engineering", criticalRule: "The engineering zone holds operational authority, so it is critical and isolating it needs plant approval.", nodes: [
+    { id: "supplier", label: "Supplier identity", type: "IDENTITY", procedures: ["identity", "email"] },
+    { id: "gateway", label: "Maintenance gateway", type: "EDGE", procedures: ["firewall", "network", "dns"] },
+    { id: "jump", label: "Location jump host", type: "EDGE", procedures: ["endpoint", "network", "firewall"] },
+    { id: "patch", label: "Patch server", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
+    { id: "engineering", label: "Engineering zone", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "historian", label: "Historian relay", type: "APPLICATION", procedures: ["server", "endpoint", "forensic"] },
+    { id: "config", label: "Plant configuration", type: "ASSET", procedures: ["network", "server", "intel"] },
+  ], edges: [
+    { from: "supplier", to: "gateway", label: "AUTHENTICATES" }, { from: "gateway", to: "jump", label: "CONNECTS" },
+    { from: "jump", to: "patch", label: "DEPLOYS" }, { from: "jump", to: "historian", label: "DEPLOYS" },
+    { from: "patch", to: "engineering", label: "TRUSTS" }, { from: "engineering", to: "config", label: "CONTROLS" },
+    { from: "config", to: "historian", label: "BACKFILLS" },
+  ] },
+  { title: "Terminal dependency map", critical: "portal", criticalRule: "The booking portal is the partner-facing edge, so it is critical and isolating it severs external transactions first.", nodes: [
+    { id: "partner", label: "Partner identity", type: "IDENTITY", procedures: ["identity", "email"] },
+    { id: "portal", label: "Booking portal", type: "EDGE", procedures: ["server", "network", "firewall"] },
+    { id: "platform", label: "Terminal platform", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
+    { id: "planning", label: "Vessel planning", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "schedules", label: "Cargo schedules", type: "ASSET", procedures: ["network", "cloud", "intel"] },
+  ], edges: [
+    { from: "partner", to: "portal", label: "CONNECTS" }, { from: "portal", to: "platform", label: "TRUSTS" },
+    { from: "platform", to: "planning", label: "CONTROLS" }, { from: "planning", to: "schedules", label: "CONTROLS" },
+    { from: "platform", to: "schedules", label: "READS" },
+  ] },
+  { title: "Cloud trust map", critical: "control", criticalRule: "Control-plane isolation removes the privilege path that reaches every tenant resource, so it is critical.", nodes: [
+    { id: "workload", label: "Workload identity", type: "IDENTITY", procedures: ["identity", "cloud"] },
+    { id: "api", label: "Cloud API edge", type: "EDGE", procedures: ["firewall", "network", "dns"] },
+    { id: "control", label: "Control plane", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "store", label: "Object storage", type: "ASSET", procedures: ["cloud", "network", "intel"] },
+  ], edges: [
+    { from: "workload", to: "api", label: "AUTHENTICATES" }, { from: "api", to: "control", label: "CALLS" },
+    { from: "control", to: "store", label: "CONTROLS" }, { from: "api", to: "store", label: "READS" },
+  ] },
+  { title: "Shared-service map", critical: "gateway", criticalRule: "The shared gateway is the single trust entry point, so it is critical and isolating it affects every connected organisation.", nodes: [
+    { id: "support", label: "Support identity", type: "IDENTITY", procedures: ["identity", "email"] },
+    { id: "gateway", label: "Shared gateway", type: "EDGE", procedures: ["firewall", "network", "dns"] },
+    { id: "platform", label: "Common platform", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
+    { id: "trust", label: "Trust service", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "partners", label: "Partner records", type: "ASSET", procedures: ["network", "cloud", "intel"] },
+    { id: "federation", label: "Federation broker", type: "CONTROL", procedures: ["cloud", "identity", "intel"] },
+  ], edges: [
+    { from: "support", to: "gateway", label: "AUTHENTICATES" }, { from: "gateway", to: "platform", label: "CONNECTS" },
+    { from: "platform", to: "trust", label: "TRUSTS" }, { from: "trust", to: "partners", label: "READS" },
+    { from: "trust", to: "federation", label: "ISSUES" }, { from: "platform", to: "partners", label: "READS" },
+  ] },
+  { title: "Public-service map", critical: "transactions", criticalRule: "Transaction records carry legal and public-accountability weight, so they are critical and their isolation is the costliest decision.", nodes: [
+    { id: "citizen", label: "Citizen identity", type: "IDENTITY", procedures: ["identity", "email"] },
+    { id: "dgateway", label: "Digital gateway", type: "EDGE", procedures: ["firewall", "network", "dns"] },
+    { id: "publicsvc", label: "Public service", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
+    { id: "agency", label: "Agency control", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "transactions", label: "Transaction records", type: "ASSET", procedures: ["network", "cloud", "intel"] },
+  ], edges: [
+    { from: "citizen", to: "dgateway", label: "AUTHENTICATES" }, { from: "dgateway", to: "publicsvc", label: "CONNECTS" },
+    { from: "publicsvc", to: "agency", label: "TRUSTS" }, { from: "agency", to: "transactions", label: "CONTROLS" },
+    { from: "publicsvc", to: "transactions", label: "WRITES" },
+  ] },
+  { title: "Core network map", critical: "core", criticalRule: "The network core carries national traffic, so it is critical and isolating it is the highest-consequence action on this map.", nodes: [
+    { id: "operator", label: "Operator identity", type: "IDENTITY", procedures: ["identity", "email"] },
+    { id: "medge", label: "Management edge", type: "EDGE", procedures: ["firewall", "network", "dns"] },
+    { id: "oss", label: "OSS support", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
+    { id: "core", label: "Network core", type: "APPLICATION", procedures: ["network", "server", "cloud"] },
+    { id: "routing", label: "Routing control", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "subscriber", label: "Subscriber services", type: "ASSET", procedures: ["network", "cloud", "intel"] },
+    { id: "probe", label: "Performance probes", type: "EDGE", procedures: ["network", "dns", "intel"] },
+  ], edges: [
+    { from: "operator", to: "medge", label: "AUTHENTICATES" }, { from: "medge", to: "oss", label: "CONNECTS" },
+    { from: "oss", to: "core", label: "MANAGES" }, { from: "core", to: "routing", label: "CONTROLS" },
+    { from: "routing", to: "subscriber", label: "PROVISIONS" }, { from: "core", to: "subscriber", label: "CARRIES" },
+    { from: "probe", to: "core", label: "MONITORS" },
+  ] },
+  { title: "Water support map", critical: "supervision", criticalRule: "Process supervision carries safety authority, so it is critical and isolating it requires operations approval.", nodes: [
+    { id: "engineer", label: "Engineer identity", type: "IDENTITY", procedures: ["identity", "email"] },
+    { id: "remote", label: "Remote support", type: "EDGE", procedures: ["firewall", "network", "dns"] },
+    { id: "ops", label: "Operations server", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
+    { id: "supervision", label: "Process supervision", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+  ], edges: [
+    { from: "engineer", to: "remote", label: "AUTHENTICATES" }, { from: "remote", to: "ops", label: "CONNECTS" },
+    { from: "ops", to: "supervision", label: "CONTROLS" }, { from: "remote", to: "supervision", label: "SUPPORTS" },
+  ] },
+  { title: "Clearing trust map", critical: "settlement", criticalRule: "Settlement records underpin transaction finality, so they are critical and their isolation halts completion.", nodes: [
+    { id: "approver", label: "Approver identity", type: "IDENTITY", procedures: ["identity", "email"] },
+    { id: "gateway", label: "Payment gateway", type: "EDGE", procedures: ["firewall", "network", "dns"] },
+    { id: "clearing", label: "Clearing service", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
+    { id: "approval", label: "Approval plane", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "settlement", label: "Settlement records", type: "ASSET", procedures: ["network", "cloud", "intel"] },
+  ], edges: [
+    { from: "approver", to: "gateway", label: "AUTHENTICATES" }, { from: "gateway", to: "clearing", label: "CONNECTS" },
+    { from: "clearing", to: "approval", label: "TRUSTS" }, { from: "approval", to: "settlement", label: "CONTROLS" },
+    { from: "clearing", to: "settlement", label: "WRITES" },
+  ] },
 ];
 
 export const namedSpecialists: Record<SpecialistId, { name: string; callsign: string; voice: string }> = {

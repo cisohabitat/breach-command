@@ -393,9 +393,10 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
   if (game.nodePosture[nodeId] === "isolated") throw new Error("This node is already isolated.");
   if (action === "monitor" && game.nodePosture[nodeId] === "monitored") throw new Error("This node is already monitored.");
   const critical = nodeId === topology.critical;
+  const sector = sectorSystems[game.scenario];
   const effect = action === "monitor"
     ? `Telemetry priority established on ${node.label}. The next aligned procedure gains analytical support.`
-    : `${node.label} isolated. Actor opportunity falls, with an immediate service cost.`;
+    : `${node.label} isolated. ${topology.criticalRule}`;
   return {
     ...game,
     focusedNode: nodeId,
@@ -405,7 +406,7 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
     nextModifier: action === "monitor" ? Math.max(game.nextModifier, 2) : game.nextModifier,
     impact: clamp(game.impact + (action === "monitor" ? -2 : critical ? -8 : -5)),
     continuity: clamp(game.continuity + (action === "monitor" ? 0 : critical ? -10 : -5)),
-    sectorHealth: clamp(game.sectorHealth + (action === "monitor" ? 0 : critical ? -7 : -3)),
+    sectorHealth: clamp(game.sectorHealth + (action === "monitor" ? sector.monitoringRecovery : -(critical ? 7 : 3) - sector.containmentCost)),
     objectiveProgress: clamp(game.objectiveProgress + (action === "monitor" ? -4 : critical ? -12 : -8)),
   };
 }
@@ -583,6 +584,8 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   }
   const sector = sectorSystems[g.scenario];
   const protection = g.specialist === "continuity" ? 3 : g.specialist === "ot" && [2, 8].includes(g.scenario) ? 3 : 0;
+  const identityLed = procedure === "identity" || procedure === "cloud";
+  const boundarySuccess = success && ["network", "firewall", "dns"].includes(procedure);
   let sectorSpecific = 0;
   let objectiveSpecific = 0;
   if (g.adversaryProfile === "ghost" && (g.adversaryMemory.procedureCounts[procedure] ?? 0) > 1) impactChange += 3;
@@ -590,16 +593,10 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.adversaryProfile === "broker" && plan.scope === "enterprise") sectorSpecific -= 2;
   if (g.adversaryProfile === "ledger" && (!g.caseTheory || plan.intensity === "rapid")) objectiveSpecific += 3;
   if (g.adversaryProfile === "sentinel" && !revealed) sectorSpecific -= 2;
-  if (g.scenario === 1 && plan.intensity === "exhaustive") continuityChange -= 3;
-  if (g.scenario === 3 && number >= 4) sectorSpecific -= 2;
-  if (g.scenario === 4 && plan.scope === "enterprise") objectiveSpecific -= 3;
-  if (g.scenario === 5 && plan.scope === "focused") sectorSpecific -= 2;
-  if (g.scenario === 6 && g.specialist === "communications") sectorSpecific += 2;
-  if (g.scenario === 7 && success && ["network", "firewall", "dns"].includes(procedure)) sectorSpecific += 3;
-  if (g.scenario === 8 && g.specialist !== "ot" && plan.scope === "enterprise") sectorSpecific -= 3;
-  if (g.scenario === 9 && plan.intensity === "rapid") objectiveSpecific += 4;
-  const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss + g.adversaryTempo + (success ? 0 : 2)) + (revealed ? 5 : 0) + protection + sectorSpecific));
-  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific);
+  if (plan.intensity === "exhaustive") continuityChange -= sector.exhaustiveContinuity;
+  const scopeSector = plan.scope === "enterprise" ? -sector.enterpriseBias : -sector.focusedBias;
+  const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)) + (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0) + protection + scopeSector + sectorSpecific + (g.specialist === "communications" ? sector.commsRecovery : 0)));
+  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
   g.sectorHealth = clamp(g.sectorHealth + sectorChange);
   g.sectorHistory.push(g.sectorHealth);
   g.objectiveProgress = clamp(g.objectiveProgress + objectiveChange);

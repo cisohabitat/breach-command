@@ -36,11 +36,11 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
         })}</div>
       </div>
       <div className="map-command-bar">
-        <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{posture === "normal" ? "No active control" : posture}</em></span></div>
+        <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{criticalFocus ? "CRITICAL DEPENDENCY · " : ""}{posture === "normal" ? "No active control" : posture}</em></span></div>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>Spend 1 action · next procedure +2 · impact −2</small></span></button>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>Spend 1 · impact −{criticalFocus ? 8 : 5} · continuity −{criticalFocus ? 10 : 5}</small></span></button>
       </div>
-      <p className="map-intel">Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
+      <p className="map-intel">Critical dependency: {topology.criticalRule} Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
     </section>
   );
 }

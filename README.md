@@ -22,15 +22,17 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 ## Major systems
 
 - **Ten sector scenarios:** enterprise IT, healthcare, energy, maritime, cloud, shared services, government, telecommunications, water and financial clearing.
+- **Seventy-two original techniques:** eighteen per stage, each with its own detectable evidence sources, so every incident draws a different set of investigative procedures rather than the same rotation.
 - **Three difficulty levels:** Training, Operational and Crisis.
 - **Five modes:** Campaign, Daily Operation, Ironman, Escalation and Expert.
 - **Distinct adaptive adversaries:** recurring threat groups have signature mechanics, learn from procedure use, hypotheses and command posture, and can move to less-exposed routes.
 - **Progressive attribution:** threat-group identity is withheld until the evidence supports behavioural, suspected, probable and attributed confidence levels.
 - **Focused command workspace:** Command, Investigate and Briefing views keep the immediate decision, analytical work and supporting context separate without removing information. First-time guidance names the next move and links directly to the relevant workspace.
-- **Playable infrastructure command maps:** every incident has a five-node topology with scarce monitoring and isolation actions, changing trust routes, service consequences and post-recovery state.
+- **Playable infrastructure command maps:** each incident has its own topology of four to seven nodes, a distinct trust-edge set, its own documented critical dependency and scarce monitoring and isolation actions with post-recovery state.
 - **Living incident presentation:** visible propagation, node posture, sector conditions, adaptive specialist transmissions and sector-specific ambient scoring respond to the operation. Healthcare, energy and telecommunications incidents also include dedicated live operating views for clinical services, engineering margins and routing domains.
 - **Evidence workspace:** successful actions build a timeline. Players declare an objective theory, select findings, judge the relationship as causal or coincidental, and receive consequences for unsupported inference.
 - **Operational decisions:** technique decisions, command events and a unique sector crisis change pressure, continuity, sector condition and actor progress.
+- **Mechanically distinct sector systems:** every sector combines its own base loss, tempo weighting, containment cost and recovery terms, so the same action has different consequences from one incident to the next.
 - **Persistent command team:** six named specialists have distinct capabilities, callsigns, fatigue, cohesion and after-action reactions.
 - **Branching campaign director:** command posture, trust and completed operations select Watchtower, Breakwater, Common Ground or Convergence routes. Routes alter starting conditions and mission priorities.
 - **Authored incident variants:** each of the ten scenarios has three operational variants with distinct briefings and starting pressure.
