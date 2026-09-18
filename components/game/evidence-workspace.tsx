@@ -24,6 +24,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
           <button className={assessment === "causal" ? "active" : ""} aria-pressed={assessment === "causal"} onClick={() => setAssessment("causal")}>Causal sequence</button>
           <button className={assessment === "coincidental" ? "active" : ""} aria-pressed={assessment === "coincidental"} onClick={() => setAssessment("coincidental")}>Coincidental overlap</button>
         </div>
+        <p className="relationship-helper">{selected.length === 0 ? "Select two findings to compare." : selected.length === 1 ? "One finding selected. Choose one more." : "Two findings selected. Choose whether the relationship is causal or coincidental, then test it."}</p>
         <button className="correlate-button" disabled={selected.length !== 2 || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { onCorrelate(selected as [string, string], assessment); setSelected([]); }}><Link2 size={17} /> Test assessment</button>
       </>}
       {!!game.correlations.length && <div className="correlation-results">{game.correlations.slice(-2).reverse().map((record, index) => <div key={`${record.evidence.join("-")}-${index}`} className={record.correct ? "valid" : "invalid"}>{record.correct ? <Check size={16} /> : <X size={16} />}<p><strong>{record.correct ? "Assessment supported" : "Assessment challenged"}</strong><span>{record.finding}</span></p></div>)}</div>}

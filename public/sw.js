@@ -1,4 +1,4 @@
-const CACHE = "breach-command-v8";
+const CACHE = "breach-command-v9";
 const CORE = ["/", "/manifest.webmanifest", "/favicon.svg"];
 
 self.addEventListener("install", event => {

@@ -193,7 +193,6 @@ export default function Home() {
     setGuided(mode === "expert" ? false : guided);
     const tutorialComplete = localStorage.getItem("breach-command.tutorial-complete") === "true";
     setTutorial(!tutorialComplete);
-    if (tutorialComplete) setFastResolve(true);
     setMissionBriefing(true);
     setSelected(null);
     setReport(null);
@@ -630,6 +629,7 @@ export default function Home() {
 
           <div className="game-layout workspace-shell">
             <div className="table-area" hidden={activeWorkspace === "briefing"}>
+              {activeWorkspace !== "briefing" && tutorial && game.status === "playing" && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <TutorialCoach game={game} workspace={activeWorkspace} onNavigate={() => setActiveWorkspace("investigate")} onDismiss={() => { setTutorial(false); localStorage.setItem("breach-command.tutorial-complete", "true"); }} />}
               <section className="attack-section" hidden={activeWorkspace !== "command"}>
                 <div className="section-heading"><h2>Attack chain</h2><span className="mono muted">{game.revealed.length} / 4 REVEALED</span></div>
                 <div className="attack-grid">
@@ -656,8 +656,6 @@ export default function Home() {
               {activeWorkspace === "command" && <SectorSituation game={game} />}
               {activeWorkspace === "command" && <SectorOperationalScene game={game} />}
 
-              {activeWorkspace === "command" && tutorial && game.status === "playing" && <TutorialCoach game={game} onDismiss={() => { setTutorial(false); setFastResolve(true); localStorage.setItem("breach-command.tutorial-complete", "true"); }} />}
-
               {activeWorkspace === "command" && (ended ? (
                 <section className="end-banner">
                   <div className="end-icon">{game.status === "won" ? <Trophy /> : <Flag />}</div>
@@ -669,9 +667,10 @@ export default function Home() {
                 </section>
               ) : game.status === "response" ? (
                 <ResponsePanel game={game} onChoose={respond} />
-              ) : (
+              ) : (<>
                 <section className="lead-strip"><Activity size={20} /><div><span className="eyebrow">CURRENT INTELLIGENCE</span><p>{getLead(game)}</p></div></section>
-              ))}
+                {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <section className="command-next-action"><div><span className="eyebrow">NEXT ACTION</span><strong>Build and test a working hypothesis.</strong><p>Open Investigate to select an explanation, focus the relevant infrastructure and run one evidence procedure.</p></div><button onClick={() => setActiveWorkspace("investigate")}>Open Investigate <ArrowRight size={17} /></button></section>}
+              </>))}
 
               {activeWorkspace === "command" && game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
 
@@ -764,8 +763,8 @@ export default function Home() {
           {proc && game && <>
             <div className="action-note"><span className="eyebrow">HYPOTHESIS CHECK</span><p>{proc.question}</p></div>
             <div className="procedure-planner">
-              <div><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}</strong><small>{procedureScopes[id].description}</small></button>)}</div></div>
-              <div><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}</strong><small>{procedureIntensities[id].description}</small></button>)}</div></div>
+              <div><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}</strong><small>{procedureScopes[id].description}</small><small className="plan-effects">ROLL {procedureScopes[id].modifier >= 0 ? "+" : ""}{procedureScopes[id].modifier} · IMPACT +{procedureScopes[id].impact} · ACTOR PROGRESS {procedureScopes[id].objective >= 0 ? "+" : "−"}{Math.abs(procedureScopes[id].objective)}</small></button>)}</div></div>
+              <div><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}</strong><small>{procedureIntensities[id].description}</small><small className="plan-effects">ROLL {procedureIntensities[id].modifier >= 0 ? "+" : ""}{procedureIntensities[id].modifier} · IMPACT {procedureIntensities[id].impact >= 0 ? "+" : "−"}{Math.abs(procedureIntensities[id].impact)}{procedureIntensities[id].cooldown ? ` · COOLDOWN +${procedureIntensities[id].cooldown}` : ""}</small></button>)}</div></div>
             </div>
             <div className={`alignment-notice ${procedureAligned ? "aligned" : ""}`}>
               <BrainLabel aligned={procedureAligned} />
@@ -801,6 +800,7 @@ export default function Home() {
               <div><span>CAMPAIGN ROUTE</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>
               <div><span>INCIDENT VARIANT</span><strong>{game.variant.title}</strong><small>{game.variant.briefing}</small></div>
             </div>
+            <div className="briefing-first-move"><span>01</span><p><strong>Your first move</strong>Assume command, open Investigate, choose a working hypothesis and run a procedure marked “Hypothesis evidence”.</p></div>
             <div className="director-order"><Radio size={20} /><p><span className="eyebrow">DIRECTOR’S INTENT</span>{campaignRoutes[game.campaignRoute].order} Establish the chain, declare an objective theory and preserve the essential service.</p></div>
             <button className="primary-button full" onClick={() => setMissionBriefing(false)}>Assume command <ArrowRight size={18} /></button>
           </>}
@@ -851,8 +851,14 @@ export default function Home() {
         <DialogContent className="game-dialog wide-dialog">
           <DialogHeader><div className="eyebrow">FIELD GUIDE</div><DialogTitle>Investigate. Decide. Recover.</DialogTitle><DialogDescription>A complete solo incident-response exercise with hidden information and operational consequences.</DialogDescription></DialogHeader>
           <div className="rules-content">
+            <section className="quick-start-guide" aria-label="Quick start">
+              <div><span>1</span><p><strong>Form a hypothesis</strong>Open Investigate and choose the access path that best explains the intelligence.</p></div>
+              <div><span>2</span><p><strong>Test it</strong>Run a procedure marked “Hypothesis evidence”. Every procedure uses one turn.</p></div>
+              <div><span>3</span><p><strong>Decide</strong>When a stage is confirmed, choose whether to observe for evidence or act to reduce risk.</p></div>
+              <div><span>4</span><p><strong>Respond</strong>Reveal all four stages, then contain, assure and recover the service.</p></div>
+            </section>
             <div className="rules-grid">
-              <section><h3>01 / Objective</h3><p>Reveal four hidden attack stages before the turn limit or impact reaches 100. Then make containment and recovery decisions.</p></section>
+              <section><h3>01 / Objective</h3><p>Reveal four hidden attack stages before the turn limit or impact reaches 100. Then complete containment, assurance and recovery decisions.</p></section>
               <section><h3>02 / Hypotheses &amp; evidence</h3><p>Record one explanation per turn. A correct theory paired with a relevant evidence source earns +2. Established procedures add +2.</p></section>
               <section><h3>03 / Adaptive adversary</h3><p>The actor escalates according to its behaviour profile and can move to a route less exposed by your recent procedures after intervention.</p></section>
               <section><h3>04 / Contextual decisions</h3><p>Each discovery creates a technique-specific choice: gather stronger evidence or intervene. The best choice depends on current impact and adversary tempo.</p></section>
@@ -866,7 +872,7 @@ export default function Home() {
               <section><h3>12 / Team deployment</h3><p>Select one specialist before deployment. Matching evidence earns a bonus, while repeated use creates fatigue that carries into campaign operations.</p></section>
               <section><h3>13 / Scope &amp; intensity</h3><p>Focused checks are efficient. Enterprise scope searches wider at a time cost. Exhaustive work is stronger but increases pressure and cooldown.</p></section>
               <section><h3>14 / Advanced modes</h3><p>Daily, Ironman, Escalation and Expert modes alter seeds, pressure, saves, coaching and rewards.</p></section>
-              <section><h3>15 / Infrastructure focus</h3><p>Select a system on the command map before acting. Procedures aligned to that evidence boundary earn +1.</p></section>
+              <section><h3>15 / Infrastructure actions</h3><p>Selecting a node changes investigation focus without spending a turn. Monitoring or isolation is optional, immediate and consumes one of three map actions. Their exact costs are shown before selection.</p></section>
               <section><h3>16 / Evidence correlation</h3><p>Successful procedures preserve findings. Test pairs carefully: a shared timestamp is not necessarily a causal relationship.</p></section>
               <section><h3>17 / Sector set pieces</h3><p>Each incident has a unique operational crisis that changes impact, continuity, sector condition and adversary progress.</p></section>
               <section><h3>18 / Campaign acts</h3><p>Ten incidents form three acts. Trust, readiness, unresolved access, team fatigue and command doctrine shape later operations and the final conclusion.</p></section>

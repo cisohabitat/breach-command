@@ -26,7 +26,7 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Five modes:** Campaign, Daily Operation, Ironman, Escalation and Expert.
 - **Distinct adaptive adversaries:** recurring threat groups have signature mechanics, learn from procedure use, hypotheses and command posture, and can move to less-exposed routes.
 - **Progressive attribution:** threat-group identity is withheld until the evidence supports behavioural, suspected, probable and attributed confidence levels.
-- **Focused command workspace:** Command, Investigate and Briefing views keep the immediate decision, analytical work and supporting context separate without removing information.
+- **Focused command workspace:** Command, Investigate and Briefing views keep the immediate decision, analytical work and supporting context separate without removing information. First-time guidance names the next move and links directly to the relevant workspace.
 - **Playable infrastructure command maps:** every incident has a five-node topology with scarce monitoring and isolation actions, changing trust routes, service consequences and post-recovery state.
 - **Living incident presentation:** visible propagation, node posture, sector conditions, adaptive specialist transmissions and sector-specific ambient scoring respond to the operation. Healthcare, energy and telecommunications incidents also include dedicated live operating views for clinical services, engineering margins and routing domains.
 - **Evidence workspace:** successful actions build a timeline. Players declare an objective theory, select findings, judge the relationship as causal or coincidental, and receive consequences for unsupported inference.
