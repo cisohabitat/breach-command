@@ -4,9 +4,9 @@ A single-player incident-response tabletop game with a rule-based computer Incid
 
 ## Play
 
-Choose one of six fictional settings, optionally enable guided recommendations, and reveal the four hidden attack stages within ten turns. A procedure succeeds at 11+ on a d20, with +3 for one of four established procedures. All used procedures have a three-intervening-turn cooldown. Natural 1, natural 20 or three failed rolls trigger one inject. Full rules and explicit solo conventions are in the Field Guide.
+Choose one of six fictional settings and three difficulty levels, then reveal four hidden attack stages before time or business impact runs out. Procedure checks use a d20, with +3 for four randomly established procedures. Discoveries force a choice between preserving evidence and disrupting the attacker. After the chain is found, containment and recovery choices determine the final outcome. Used procedures have a three-turn cooldown, while natural 1, natural 20 or three failed rolls trigger an inject.
 
-The captain is deterministic apart from randomly selected scenarios, established procedures, inject ordering and fair d20 rolls. It does not call an AI service, interact with real infrastructure or transmit incident details. Sessions are in memory and reset on refresh. The full commercial deck, artwork and Consultants are not included.
+The captain manages hidden scenario variants, ambiguous leads, pressure, injects and response consequences. Guided reflection offers reasoning prompts without naming the correct action. It does not call an AI service, interact with real infrastructure or transmit incident details. Sessions are in memory and reset on refresh. The full commercial deck, artwork and Consultants are not included.
 
 ## Source
 
@@ -22,4 +22,4 @@ Run engine checks with `node --experimental-strip-types tests/game.test.ts` usin
 - Original game: https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/
 - Classic visual guide: https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf
 
-Discovery does not demonstrate containment, eradication, safe recovery or compliance. Debriefs explicitly distinguish the game outcome from a real security assessment.
+The exercise models investigation, containment and recovery decisions for learning purposes. It is not a security assessment or evidence of compliance.
