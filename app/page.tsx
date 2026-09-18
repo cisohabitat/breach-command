@@ -7,6 +7,7 @@ import {
   BarChart3,
   ArrowRight,
   BookOpen,
+  BrainCircuit,
   Check,
   CheckCheck,
   CircleHelp,
@@ -117,6 +118,14 @@ import { campaignRoutes, incidentVariant, routeForCampaign, specialistReaction }
 const stageIcons = [LockKeyhole, Activity, RotateCcw, Radio];
 type WorkspaceView = "command" | "investigate" | "briefing";
 
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+}
+
 export default function Home() {
   const [game, setGame] = useState<Game | null>(null);
   const [guided, setGuided] = useState(true);
@@ -156,6 +165,9 @@ export default function Home() {
   const [backupInput, setBackupInput] = useState("");
   const [backupMessage, setBackupMessage] = useState("");
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
+  const [criticalAnnouncement, setCriticalAnnouncement] = useState("");
+  const [storageNotice, setStorageNotice] = useState("");
+  const [pendingUndo, setPendingUndo] = useState<{ label: string; game: Game } | null>(null);
   const stateRef = useRef(game);
   const busyRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -200,13 +212,14 @@ export default function Home() {
     setQuestion(null);
     setDebrief(false);
     setNewConfirm(false);
+    setPendingUndo(null);
     setAnnouncement("New investigation started.");
     setActiveWorkspace("command");
     playFeedback("open", soundEnabled, hapticsEnabled);
     setAdaptiveScore(musicEnabled, 0.15, index);
     recordTelemetry("start", { scenario: index });
     setTelemetry(readTelemetry());
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
   }
 
   function resume(session: SavedSession) {
@@ -218,9 +231,10 @@ export default function Home() {
     setReport(session.game.pendingDecision ? session.game.turns.at(-1) ?? null : null);
     setInlineReport(null);
     setSavedSession(null);
+    setPendingUndo(null);
     setAnnouncement(`Resumed ${scenarios[session.game.scenario].title}.`);
     setActiveWorkspace(session.game.pendingDecision || session.game.pendingCommand || session.game.pendingSetPiece ? "command" : "investigate");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
   }
 
   function run(id: string) {
@@ -246,6 +260,9 @@ export default function Home() {
       if (next.pendingDecision || next.pendingCommand || next.pendingSetPiece || next.status !== "playing") setActiveWorkspace("command");
       setReport(requiresDialog ? result : null);
       setInlineReport(requiresDialog ? null : result);
+      const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
+      setPendingUndo(quick && next.status === "playing" && !blockedNow ? { label: procedures.find(item => item.id === id)?.title ?? "Procedure", game: current } : null);
+      setCriticalAnnouncement(next.impact >= 70 || next.continuity <= 45 ? `Warning. Business impact ${next.impact}. ${getOperationalLabel(next)} ${next.continuity}.` : "");
       setRolling(false);
       setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
       playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled);
@@ -262,6 +279,7 @@ export default function Home() {
     if (!current) return;
     const next = resolveDecision(current, choice);
     setGame(next);
+    setPendingUndo(null);
     setActiveWorkspace(next.status === "playing" ? "investigate" : "command");
     playFeedback("decision", soundEnabled, hapticsEnabled);
     setAnnouncement(`Decision recorded. Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
@@ -280,6 +298,7 @@ export default function Home() {
     if (!current) return;
     const next = resolveResponse(current, choice);
     setGame(next);
+    setPendingUndo(null);
     playFeedback(next.status === "won" ? "complete" : "decision", soundEnabled, hapticsEnabled);
     setAnnouncement(next.status === "won" ? "Response complete. After-action review available." : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
     if (next.status === "won") {
@@ -293,6 +312,7 @@ export default function Home() {
     if (!current) return;
     const next = resolveCommand(current, choice);
     setGame(next);
+    setPendingUndo(null);
     setActiveWorkspace("investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
     setAnnouncement(`Command decision recorded. Business impact is ${next.impact}.`);
@@ -303,6 +323,7 @@ export default function Home() {
     if (!current) return;
     const next = resolveSetPiece(current, choice);
     setGame(next);
+    setPendingUndo(null);
     setActiveWorkspace("investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
     setAnnouncement(`Sector decision recorded. ${getOperationalLabel(next)} is ${next.continuity}.`);
@@ -319,8 +340,19 @@ export default function Home() {
     if (!current) return;
     const next = resolveMapAction(current, nodeId, action);
     setGame(next);
+    const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
+    setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? "Isolation" : "Monitoring", game: current } : null);
     playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
     setAnnouncement(next.mapHistory.at(-1)?.effect ?? "Infrastructure action recorded.");
+  }
+
+  function undo() {
+    if (!pendingUndo) return;
+    setGame(pendingUndo.game);
+    setReport(null);
+    setInlineReport(null);
+    setAnnouncement(`Undid ${pendingUndo.label}.`);
+    setPendingUndo(null);
   }
 
   function correlate(ids: [string, string], assessment: "causal" | "coincidental") {
@@ -328,6 +360,7 @@ export default function Home() {
     if (!current) return;
     const next = correlateEvidence(current, ids, assessment);
     setGame(next);
+    setPendingUndo(null);
     const correct = next.correlations.at(-1)?.correct;
     playFeedback(correct ? "success" : "failure", soundEnabled, hapticsEnabled);
     setAnnouncement(correct ? "Evidence assessment supported." : "Evidence assessment challenged.");
@@ -403,7 +436,10 @@ export default function Home() {
     const session = parseSession(stored);
     const loadTimer = setTimeout(() => {
       if (session && session.game.status !== "won") setSavedSession(session);
-      else if (!session) localStorage.removeItem(SESSION_KEY);
+      else if (!session) {
+        localStorage.removeItem(SESSION_KEY);
+        setStorageNotice("The saved operation on this device could not be restored and has been set aside.");
+      }
     }, 0);
     return () => clearTimeout(loadTimer);
   }, []);
@@ -419,7 +455,7 @@ export default function Home() {
           setMusicEnabled(parsed.music !== false);
           setHapticsEnabled(parsed.haptics !== false);
           setHighContrast(parsed.highContrast === true);
-        } catch {}
+        } catch { setStorageNotice("Stored settings could not be read, so defaults are in use."); }
       }
     }, 0);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -504,7 +540,16 @@ export default function Home() {
 
   return (
     <div className={`app-shell ${highContrast ? "high-contrast" : ""}`}>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <div className="sr-only" aria-live="polite" aria-atomic="true">{announcement}</div>
+      <div className="sr-only" aria-live="assertive" aria-atomic="true">{criticalAnnouncement}</div>
+      {storageNotice && (
+        <div className="storage-notice" role="status">
+          <strong>Saved data could not be read.</strong>
+          <span>{storageNotice} This device starts from a clean campaign, and existing progress is left untouched.</span>
+          <button onClick={() => setStorageNotice("")} aria-label="Dismiss storage notice"><X size={16} /></button>
+        </div>
+      )}
       <header className="topbar">
         <Link href="/" className="brand" aria-label="Breach Command home">
           <span className="brand-mark"><Shield size={24} /></span>
@@ -519,7 +564,7 @@ export default function Home() {
       </header>
 
       {!game ? (
-        <main className="briefing-screen">
+        <main className="briefing-screen" id="main-content">
           <div className="briefing-main">
             <div className="eyebrow"><span className="status-beacon" /> INCIDENT RESPONSE SIMULATION</div>
             <h1>Find the breach.<br /><span>Outthink the adversary.</span></h1>
@@ -555,8 +600,8 @@ export default function Home() {
               <p>{difficulties[difficulty].description}</p>
             </div>
             <div className="specialist-picker">
-              <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small>Fatigue carries between campaign operations.</small></label>
-              <select id="specialist" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
+              <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small id="specialist-fatigue">Fatigue carries between campaign operations.</small></label>
+              <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
                 {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name} · {specialists[id].title} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
               </select>
               <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].role}. {specialists[specialist].ability} Cohesion {campaign.specialistBonds[specialist] ?? 35}/100.</p>
@@ -599,7 +644,7 @@ export default function Home() {
           <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator.</p>
         </main>
       ) : (
-        <main className={`game-screen sector-theme-${game.scenario}`}>
+        <main className={`game-screen sector-theme-${game.scenario}`} id="main-content">
           <section className="game-heading">
             <div><div className="eyebrow">CASE 0{game.scenario + 1} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()} <span className="separator">/</span> {gameModes[game.mode].title.toUpperCase()}</div><h1>{activeScenario.title}</h1></div>
             <div className="case-meters">
@@ -623,7 +668,7 @@ export default function Home() {
 
           <nav className="workspace-tabs" aria-label="Command workspace">
             <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><LayoutDashboard size={18} /><span><strong>Command</strong><small>Situation and decisions</small></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Action</b>}</button>
-            <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing" || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece}><Search size={18} /><span><strong>Investigate</strong><small>Map, theory and evidence</small></span><b>{game.evidence.length}</b></button>
+            <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><Search size={18} /><span><strong>Investigate</strong><small>Map, theory and evidence</small></span><b>{game.evidence.length}</b></button>
             <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><MessagesSquare size={18} /><span><strong>Briefing</strong><small>Captain and incident log</small></span><b>{game.turns.length}</b></button>
           </nav>
 
@@ -679,12 +724,12 @@ export default function Home() {
               {activeWorkspace === "investigate" && game.status === "playing" && (
                 <div className="investigation-dashboard">
                   <div className="investigation-context">
-                    <InfrastructureConsole game={game} onFocus={focusInfrastructure} onAction={mapAction} />
+                    <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
                     <SpecialistTransmission game={game} />
                     {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
                     <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />
                   </div>
-                  <div className="investigation-actions">
+                  <div className="investigation-actions" role="region" aria-label="Investigation actions" tabIndex={0}>
                     {inlineReport && (
                       <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
                         <div>
@@ -695,6 +740,12 @@ export default function Home() {
                         <button onClick={() => setInlineReport(null)} aria-label="Dismiss quick result"><X size={18} /></button>
                       </section>
                     )}
+                    {pendingUndo && (
+                      <section className="undo-strip" role="status">
+                        <div><span className="eyebrow">LAST ACTION</span><strong>{pendingUndo.label}</strong></div>
+                        <button onClick={undo}>Undo</button>
+                      </section>
+                    )}
                     {!game.pendingCommand && !game.pendingSetPiece && (
                       <section className="procedure-section">
                         <div className="section-heading">
@@ -702,7 +753,8 @@ export default function Home() {
                           <span className="established-key">+2 Established</span>
                         </div>
                         {guided && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game)}</span></div>}
-                        <ProcedureGrid game={game} disabled={rolling} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
+                        {!game.hypothesis && <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong>Choose the explanation that best fits the current intelligence. Matching evidence then earns the reasoning bonus.</span></div>}
+                        <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
                       </section>
                     )}
                   </div>
@@ -808,7 +860,7 @@ export default function Home() {
       </Dialog>
 
       <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
-        <DialogContent className="game-dialog report-dialog">
+        <DialogContent className="game-dialog report-dialog" showCloseButton={!game?.pendingDecision} onEscapeKeyDown={event => { if (game?.pendingDecision) event.preventDefault(); }}>
           <DialogHeader>
             <div className="eyebrow">CAPTAIN’S REPORT <span className="separator">/</span> TURN {report?.number}</div>
             <DialogTitle>{report?.revealed ? "Evidence confirmed." : report?.success ? "No new attack identified." : "The action was unsuccessful."}</DialogTitle>
@@ -819,7 +871,7 @@ export default function Home() {
               <section className="report-summary" aria-label="Procedure result">
                 <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                   <span className="result-die">{report.raw}</span>
-                  <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus ? " including hypothesis bonus" : ""}</span><strong>{report.total} <span>/ {report.success ? "Success" : "Failure"}</span></strong></div>
+                  <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus ? " including hypothesis bonus" : ""}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
                   {report.success ? <CheckCheck size={23} /> : <X size={23} />}
                 </div>
                 <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>Sector {report.sectorChange >= 0 ? "+" : ""}{report.sectorChange}</span><span>Actor objective +{report.objectiveChange}</span></div>
@@ -842,7 +894,7 @@ export default function Home() {
               </section>}
             </div>
             <p className="report-impact small muted">Business impact changed by {report.impactChange >= 0 ? "+" : ""}{report.impactChange}; {getOperationalLabel(game).toLowerCase()} changed by {report.continuityChange}. Decision quality is explained in the debrief.</p>
-            {!game.pendingDecision && <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}<ArrowRight size={17} /></button>}
+            {game.pendingDecision ? <p className="report-gate" role="status">Resolve the operational decision above to continue. This report stays open until the choice is recorded.</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}<ArrowRight size={17} /></button>}
           </>}
         </DialogContent>
       </Dialog>

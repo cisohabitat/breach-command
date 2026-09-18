@@ -1,7 +1,7 @@
 import { Activity, CircleDot, Crosshair, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
 import { attacks, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
 
-export function InfrastructureConsole({ game, onFocus, onAction }: { game: Game; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
+export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
   const topology = infrastructureTopologies[game.scenario];
   const activeStage = Math.min(4, game.revealed.length);
   const focused = topology.nodes.find(node => node.id === game.focusedNode) ?? topology.nodes[0];
@@ -18,14 +18,14 @@ export function InfrastructureConsole({ game, onFocus, onAction }: { game: Game;
             const state = nodePosture === "isolated" ? "isolated" : nodePosture === "restored" ? "restored" : index < activeStage ? "affected" : index === activeStage ? "exposed" : "clear";
             const critical = node.id === topology.critical;
             const findings = game.evidence.filter(item => item.system === node.label).length;
-            return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
+            return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
               <span className="node-icon">{nodePosture === "isolated" ? <Unplug size={18} /> : nodePosture === "monitored" ? <Eye size={18} /> : critical ? <ShieldAlert size={18} /> : state === "affected" ? <CircleDot size={18} /> : <Network size={18} />}</span>
               <small>{node.type}{critical ? " · CRITICAL" : ""}</small><strong>{node.label}</strong>
               <em>{nodePosture === "isolated" ? "ISOLATED" : nodePosture === "monitored" ? "MONITORED" : nodePosture === "restored" ? "RESTORED" : game.focusedNode === node.id ? "SELECTED" : findings ? `${findings} FINDING${findings === 1 ? "" : "S"}` : state.toUpperCase()}</em>
             </button>;
           })}
         </div>
-        <div className="topology-routes" aria-label="Trust relationships">{topology.edges.map((edge, index) => {
+        <div className="topology-routes" role="group" aria-label="Trust relationships">{topology.edges.map((edge, index) => {
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
           return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>
             <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
@@ -37,8 +37,8 @@ export function InfrastructureConsole({ game, onFocus, onAction }: { game: Game;
       </div>
       <div className="map-command-bar">
         <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{posture === "normal" ? "No active control" : posture}</em></span></div>
-        <button disabled={game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>Spend 1 action · next procedure +2 · impact −2</small></span></button>
-        <button disabled={game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>Spend 1 · impact −{criticalFocus ? 8 : 5} · continuity −{criticalFocus ? 10 : 5}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>Spend 1 action · next procedure +2 · impact −2</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>Spend 1 · impact −{criticalFocus ? 8 : 5} · continuity −{criticalFocus ? 10 : 5}</small></span></button>
       </div>
       <p className="map-intel">Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
     </section>
