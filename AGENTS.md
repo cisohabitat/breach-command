@@ -57,7 +57,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Keep essential tap targets at least 40 px high, preferably 44 px on mobile.
 - Never rely on colour alone to communicate state.
 - Preserve reduced-motion behaviour and high-contrast support.
-- Keep main gameplay readable on both phone and PC. Test start, investigation, decisions, response and debrief surfaces when changing shared layout rules.
+- Keep main gameplay readable on phone, iPad and PC. Test start, investigation, decisions, response and debrief surfaces when changing shared layout rules.
 - Player-facing language should be concise, professional and operationally plausible. Avoid exaggerated claims and unnecessary jargon.
 
 ## Change discipline
@@ -81,7 +81,7 @@ node /root/.codex/plugins/cache/openai-curated-remote/sites/0.1.65/scripts/build
 git diff --check
 ```
 
-For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 1024 and 1280 px widths. A successful build does not replace interaction and responsive checks.
+For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194 and 1280 px widths. Treat 768–834 px portrait and 1024–1194 px landscape as explicit iPad targets. A successful build does not replace interaction and responsive checks.
 
 ## Publication
 
