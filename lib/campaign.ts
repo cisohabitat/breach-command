@@ -15,9 +15,11 @@ export type CampaignState = {
   commandPosture: { observe: number; act: number };
   unresolvedThreads: number;
   actorSightings: Record<string, number>;
+  specialistBonds: Record<string, number>;
+  routeHistory: string[];
 };
 
-export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {} };
+export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {}, specialistBonds: {}, routeHistory: [] };
 
 export function parseCampaign(raw: string | null): CampaignState {
   if (!raw) return defaultCampaign;
@@ -36,6 +38,8 @@ export function parseCampaign(raw: string | null): CampaignState {
       commandPosture: value.commandPosture && typeof value.commandPosture === "object" ? value.commandPosture : { observe: 0, act: 0 },
       unresolvedThreads: Number.isFinite(value.unresolvedThreads) ? Math.max(0, Number(value.unresolvedThreads)) : 0,
       actorSightings: value.actorSightings && typeof value.actorSightings === "object" ? value.actorSightings : {},
+      specialistBonds: value.specialistBonds && typeof value.specialistBonds === "object" ? value.specialistBonds : {},
+      routeHistory: Array.isArray(value.routeHistory) ? value.routeHistory.filter(item => typeof item === "string").slice(-12) : [],
     };
   } catch {
     return defaultCampaign;
@@ -70,10 +74,14 @@ export function campaignAct(completed: number) {
 
 export function campaignEnding(state: CampaignState) {
   if (state.completed.length < 10) return null;
-  if (state.leadershipTrust >= 75 && state.readiness >= 75 && state.unresolvedThreads <= 1) return { title: "Collective resilience", detail: "The campaign closes with trusted coordination, strong service continuity and no material unresolved access." };
-  if (state.unresolvedThreads >= 4) return { title: "The quiet foothold", detail: "Services survived, but unresolved access leaves the national picture strategically uncertain." };
-  if (state.leadershipTrust < 40) return { title: "Operational victory, fractured trust", detail: "The technical campaign was contained, but delayed or unclear decisions weakened collective confidence." };
-  return { title: "Guarded stability", detail: "The campaign is contained with manageable residual risk and a clear programme of follow-up work." };
+  const bonds = Object.values(state.specialistBonds);
+  const cohesion = bonds.length ? Math.round(bonds.reduce((sum, value) => sum + value, 0) / bonds.length) : 35;
+  const finalRoute = state.routeHistory.at(-1) ?? "common-ground";
+  const coda = ` Final doctrine: ${finalRoute.replace("-", " ")}. Team cohesion: ${cohesion}/100.`;
+  if (state.leadershipTrust >= 75 && state.readiness >= 75 && state.unresolvedThreads <= 1) return { title: "Collective resilience", detail: "The campaign closes with trusted coordination, strong service continuity and no material unresolved access." + coda };
+  if (state.unresolvedThreads >= 4) return { title: "The quiet foothold", detail: "Services survived, but unresolved access leaves the strategic picture uncertain and forces a sustained hunt." + coda };
+  if (state.leadershipTrust < 40) return { title: "Operational victory, fractured trust", detail: "The technical campaign was contained, but delayed or unclear decisions weakened collective confidence." + coda };
+  return { title: "Guarded stability", detail: "The campaign is contained with manageable residual risk and a funded programme of follow-up work." + coda };
 }
 
 export function recordCampaignResult(current: CampaignState, game: Game, score: number): CampaignState {
@@ -92,6 +100,8 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     act: current.commandPosture.act + game.decisions.filter(item => item.choice === "act").length,
   };
   const actorSightings = { ...current.actorSightings, [game.adversaryProfile]: (current.actorSightings[game.adversaryProfile] ?? 0) + 1 };
+  const bond = current.specialistBonds[game.specialist] ?? 35;
+  const specialistBonds = { ...current.specialistBonds, [game.specialist]: Math.max(0, Math.min(100, bond + (won ? (score >= 82 ? 8 : 5) : 2) - (game.specialistFatigue >= 6 ? 2 : 0))) };
   return {
     completed,
     xp: current.xp + reward,
@@ -105,5 +115,7 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     commandPosture,
     unresolvedThreads: Math.max(0, current.unresolvedThreads + (won && game.objectiveProgress < 65 ? -1 : 1)),
     actorSightings,
+    specialistBonds,
+    routeHistory: [...current.routeHistory, game.campaignRoute].slice(-12),
   };
 }
