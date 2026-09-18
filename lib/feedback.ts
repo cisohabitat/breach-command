@@ -9,6 +9,47 @@ const cueNotes: Record<FeedbackCue, number[]> = {
   complete: [392, 523, 659, 784],
 };
 
+let ambientContext: AudioContext | null = null;
+let ambientGain: GainNode | null = null;
+let ambientNodes: OscillatorNode[] = [];
+
+export function setAdaptiveScore(enabled: boolean, tension = 0) {
+  if (typeof window === "undefined") return;
+  if (!enabled) {
+    ambientGain?.gain.setTargetAtTime(0.0001, ambientContext?.currentTime ?? 0, 0.2);
+    window.setTimeout(() => {
+      ambientNodes.forEach(node => { try { node.stop(); } catch {} });
+      ambientNodes = [];
+      void ambientContext?.close();
+      ambientContext = null;
+      ambientGain = null;
+    }, 500);
+    return;
+  }
+  const AudioContextClass = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextClass) return;
+  if (!ambientContext) {
+    ambientContext = new AudioContextClass();
+    ambientGain = ambientContext.createGain();
+    ambientGain.gain.value = 0.0001;
+    ambientGain.connect(ambientContext.destination);
+    [55, 82.5, 110].forEach((frequency, index) => {
+      const oscillator = ambientContext!.createOscillator();
+      const layer = ambientContext!.createGain();
+      oscillator.type = index === 0 ? "sine" : "triangle";
+      oscillator.frequency.value = frequency;
+      layer.gain.value = index === 0 ? 0.5 : 0.16;
+      oscillator.connect(layer).connect(ambientGain!);
+      oscillator.start();
+      ambientNodes.push(oscillator);
+    });
+  }
+  if (ambientContext.state === "suspended") void ambientContext.resume();
+  const level = 0.008 + Math.min(1, Math.max(0, tension)) * 0.012;
+  ambientGain?.gain.setTargetAtTime(level, ambientContext.currentTime, 0.35);
+  ambientNodes.forEach((node, index) => node.detune.setTargetAtTime(tension * (index + 1) * 7, ambientContext!.currentTime, 0.5));
+}
+
 export function playFeedback(cue: FeedbackCue, sound = true, haptics = true) {
   if (haptics && typeof navigator !== "undefined" && "vibrate" in navigator) {
     const pattern = cue === "warning" ? [35, 45, 70] : cue === "failure" ? [70, 35, 70] : [30];

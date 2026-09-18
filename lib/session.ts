@@ -2,7 +2,7 @@
 import { scenarios, difficulties, adversaryProfiles, type Game } from "./advanced-game.ts";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 3;
+export const SESSION_VERSION = 4;
 
 export type SavedSession = {
   version: number;
@@ -39,6 +39,22 @@ export function parseSession(raw: string): SavedSession | null {
       adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
       pendingCommand: game.pendingCommand ?? null,
       commandHistory: Array.isArray(game.commandHistory) ? game.commandHistory : [],
+      mode: game.mode ?? "campaign",
+      turnLimit: Number.isFinite(game.turnLimit) ? game.turnLimit : difficulties[game.difficulty].maxTurns,
+      specialist: game.specialist ?? "hunter",
+      specialistFatigue: Number.isFinite(game.specialistFatigue) ? game.specialistFatigue : 0,
+      sectorHealth: Number.isFinite(game.sectorHealth) ? game.sectorHealth : 100,
+      sectorHistory: Array.isArray(game.sectorHistory) ? game.sectorHistory : [],
+      objective: game.objective ?? "espionage",
+      objectiveProgress: Number.isFinite(game.objectiveProgress) ? game.objectiveProgress : 5,
+      campaignTier: Number.isFinite(game.campaignTier) ? game.campaignTier : 0,
+      turns: game.turns.map(turn => ({
+        ...turn,
+        plan: turn.plan ?? { scope: "focused", intensity: "balanced" },
+        specialistBonus: Number.isFinite(turn.specialistBonus) ? turn.specialistBonus : 0,
+        sectorChange: Number.isFinite(turn.sectorChange) ? turn.sectorChange : 0,
+        objectiveChange: Number.isFinite(turn.objectiveChange) ? turn.objectiveChange : 0,
+      })),
       decisions: Array.isArray(game.decisions) ? game.decisions.map(decision => ({
         ...decision,
         adaptationReason: decision.adaptationReason ?? null,

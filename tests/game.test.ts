@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
-import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,setHypothesis,availableIn,attacks,procedures,scenarios,getSuggestion,difficulties,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getScoreBreakdown,attackVector,type Difficulty,type Game} from "../lib/advanced-game.ts";
+import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,setHypothesis,availableIn,attacks,procedures,scenarios,getSuggestion,difficulties,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getScoreBreakdown,getTurnLimit,attackVector,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
+// @ts-expect-error Native Node TypeScript execution requires the source extension.
+import {modeRandom} from "../lib/command-systems.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
 let g=baseline();
@@ -22,6 +24,11 @@ g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);asse
 g=baseline();for(let i=0;i<10&&g.status==="playing";i++){if(g.pendingCommand)g=resolveCommand(g,"a");g=playTurn(g,["email","cloud","dns","intel"][i%4],2);}assert.equal(g.status,"lost");
 assert.equal(getAdversaryState(newGame(0,"crisis",()=>0)),"Maneuvering");assert.equal(difficulties.crisis.maxTurns,9);
 assert.throws(()=>playTurn(baseline(),"unknown",10),/Unknown/);assert.throws(()=>playTurn(baseline(),"endpoint",21),/Invalid/);assert.throws(()=>newGame(-1),/Unknown/);
+const ironman=newGame(0,"operational",()=>0,{mode:"ironman",specialist:"forensics"});assert.equal(getTurnLimit(ironman),difficulties.operational.maxTurns-1);
+const escalation=newGame(0,"operational",()=>0,{mode:"escalation",specialist:"hunter"});assert.ok(escalation.impact>newGame(0,"operational",()=>0).impact);assert.ok(escalation.objectiveProgress>5);
+const dailyA=newGame(4,"operational",modeRandom("daily",4,new Date("2026-09-18T00:00:00Z")),{mode:"daily"});
+const dailyB=newGame(4,"operational",modeRandom("daily",4,new Date("2026-09-18T23:59:00Z")),{mode:"daily"});assert.deepEqual(dailyA.chain,dailyB.chain);
+let specialistGame=newGame(0,"operational",()=>0,{specialist:"forensics"});specialistGame.chain=["phish","spray","task","https"];specialistGame.established=[];specialistGame=playTurn(specialistGame,"endpoint",8, {scope:"focused",intensity:"exhaustive"});assert.equal(specialistGame.turns[0].specialistBonus,2);assert.ok(specialistGame.specialistFatigue>0);assert.ok(availableIn(specialistGame,"endpoint")>3);
 
 g=baseline();
 g=setHypothesis(g,"endpoint");
@@ -60,4 +67,18 @@ for(const difficulty of Object.keys(difficulties) as Difficulty[])for(let s=0;s<
 }
 const simulationCount=Object.keys(difficulties).length*scenarios.length*30;
 assert.equal(Object.values(totals).reduce((a,b)=>a+b,0),simulationCount);
-console.log(`PASS: adaptive routes, hypotheses, command events, sector pressure, contextual decisions, hidden response tradeoffs, counterfactuals and ${simulationCount} complete simulations.`,totals);
+const modes=Object.keys({campaign:1,daily:1,ironman:1,escalation:1,expert:1}) as GameMode[];
+const specialistIds=["hunter","forensics","identity","ot","continuity","communications"] as SpecialistId[];
+let modeSimulations=0;
+for(const mode of modes)for(let s=0;s<scenarios.length;s++)for(let attempt=0;attempt<6;attempt++){
+  let sim:Game=newGame(s,"operational",undefined,{mode,specialist:specialistIds[(s+attempt)%specialistIds.length],campaignTier:attempt%4,inheritedFatigue:attempt%3,readiness:50+attempt*5,leadershipTrust:45+attempt*6});
+  while(sim.status==="playing"){
+    if(sim.pendingDecision){sim=resolveDecision(sim,sim.impact>50?"act":"observe");continue;}
+    if(sim.pendingCommand){sim=resolveCommand(sim,sim.impact>55?"a":"b");continue;}
+    const next=sim.chain.find(id=>!sim.revealed.includes(id));if(next)sim=setHypothesis(sim,attackVector(next));
+    const action=getSuggestion(sim);assert.ok(action);sim=playTurn(sim,action.id,undefined,{scope:attempt%2?"enterprise":"focused",intensity:attempt%3===0?"exhaustive":"balanced"});
+  }
+  if(sim.status==="response"){sim=resolveResponse(sim,"credential");sim=resolveResponse(sim,"rebuild");}
+  assert.ok(["won","lost","exercise"].includes(sim.status));modeSimulations++;
+}
+console.log(`PASS: adaptive routes, hypotheses, command events, sector systems, specialists, advanced modes, response tradeoffs, counterfactuals and ${simulationCount+modeSimulations} complete simulations.`,totals);
