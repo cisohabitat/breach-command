@@ -91,19 +91,7 @@ const attackVectors: Record<HypothesisId,string[]> = {
 };
 export function attackVector(id:string):HypothesisId {return (Object.keys(attackVectors) as HypothesisId[]).find(key=>attackVectors[key].includes(id))??"endpoint";}
 
-const injects = [
-  {id:"expert",title:"A specialist joins",text:"A responder helps focus the next investigative plan.",effect:"bonus",effectLabel:"+2 to the next procedure roll."},
-  {id:"delay",title:"Access approval delayed",text:"Coordination friction slows the next action while business impact grows.",effect:"penalty",effectLabel:"−2 to the next roll; impact +6."},
-  {id:"restored",title:"Collection pipeline restored",text:"A repaired pipeline lets you revisit a used procedure early.",effect:"restore",effectLabel:"One cooling-down procedure becomes available."},
-  {id:"partner",title:"Partner shares evidence",text:"A trusted partner supplies a validated finding.",effect:"reveal",effectLabel:"One hidden stage is revealed, if any remain."},
-  {id:"press",title:"Leadership wants an update",text:"Leaders ask whether the essential service is safe. Uncertainty carries a cost.",effect:"pressure",effectLabel:"Impact +8."},
-  {id:"backup",title:"A useful evidence copy",text:"Retained telemetry improves the next investigation.",effect:"bonus",effectLabel:"+2 to the next procedure roll."},
-  {id:"noise",title:"An alert flood",text:"Unrelated alerts reduce analyst attention and delay decisions.",effect:"penalty",effectLabel:"−2 to the next roll; impact +6."},
-  {id:"operations",title:"Operations stabilises service",text:"A workaround buys the investigation team time.",effect:"relief",effectLabel:"Impact −8."},
-  {id:"exercise",title:"Authorised exercise confirmed",text:"The controller confirms that the activity belongs to an authorised test.",effect:"end",effectLabel:"Exercise ends."},
-];
-
-type Inject = typeof injects[number] & {reason:string};
+type Inject = {id:string;title:string;text:string;effect:string;effectLabel:string;reason:string};
 export type Turn = {number:number;procedure:string;raw:number;modifier:number;total:number;success:boolean;revealed:string|null;narrative:string;inject:Inject|null;injectReveal:string|null;impactChange:number};
 export type DecisionRecord = {stage:string;choice:"preserve"|"disrupt";title:string;effect:string};
 export type GameStatus = "playing"|"response"|"won"|"lost"|"exercise";
@@ -123,74 +111,3 @@ export const responseOptions = {
 };
 
 export function randomInt(max:number) {if(typeof crypto!=="undefined"&&crypto.getRandomValues){const limit=Math.floor(0x100000000/max)*max;const value=new Uint32Array(1);do{crypto.getRandomValues(value)}while(value[0]>=limit);return value[0]%max;}return Math.floor(Math.random()*max);}
-function shuffle<T>(array:T[],random=(max:number)=>randomInt(max)){const result=[...array];for(let i=result.length-1;i>0;i--){const j=random(i+1);[result[i],result[j]]=[result[j],result[i]];}return result;}
-const clamp=(n:number)=>Math.max(0,Math.min(100,n));
-
-export function newGame(scenario:number,difficulty:Difficulty="operational",random=(max:number)=>randomInt(max)):Game {
-  if(!Number.isInteger(scenario)||!scenarios[scenario])throw new Error("Unknown incident");
-  if(!difficulties[difficulty])throw new Error("Unknown difficulty");
-  return {scenario,difficulty,chain:scenarios[scenario].choices.map(options=>options[random(options.length)]),revealed:[],established:shuffle(procedures.map(p=>p.id),random).slice(0,4),lastUsed:{},turns:[],failures:0,nextModifier:0,injectDeck:shuffle(injects.map((_,i)=>i),random),status:"playing",impact:difficulties[difficulty].startImpact,pendingDecision:null,decisions:[],responseChoices:[],responseScore:0,continuity:100};
-}
-
-export function availableIn(game:Game,id:string){return game.lastUsed[id]===undefined?0:Math.max(0,game.lastUsed[id]+4-(game.turns.length+1));}
-export function getLead(game:Game){const s=scenarios[game.scenario];const index=Math.min(s.leads.length-1,Math.floor(game.turns.length/3));return s.leads[index];}
-export function getCoachPrompt(game:Game){
-  if(game.pendingDecision)return "Decide whether immediate disruption or better evidence matters more at this moment.";
-  if(game.impact>=70)return "Impact is high. Prefer actions that can confirm the most dangerous live hypothesis, not the easiest data source.";
-  if(!game.revealed.length)return "Name two plausible entry paths. Choose evidence that separates them instead of chasing the loudest alert.";
-  if(game.turns.some(t=>t.success&&!t.revealed))return "A successful check found no matching stage. Update the hypothesis before selecting another source.";
-  return "Use the confirmed stage to predict what the attacker needed next, then test that prediction.";
-}
-export function getSuggestion(game:Game){const hidden=game.chain.filter(id=>!game.revealed.includes(id)).map(id=>attacks.find(a=>a.id===id)!);for(const a of hidden){const candidates=a.detect.filter(id=>!availableIn(game,id));candidates.sort((a,b)=>Number(game.established.includes(b))-Number(game.established.includes(a)));if(candidates.length)return procedures.find(p=>p.id===candidates[0]);}return procedures.find(p=>!availableIn(game,p.id));}
-
-export function playTurn(game:Game,procedure:string,forcedRoll?:number):Game {
-  if(game.status!=="playing")throw new Error("This investigation has ended.");
-  if(game.pendingDecision)throw new Error("Resolve the evidence decision first.");
-  if(!procedures.some(p=>p.id===procedure))throw new Error("Unknown procedure.");
-  if(availableIn(game,procedure)>0)throw new Error("This procedure is cooling down.");
-  const raw=forcedRoll??randomInt(20)+1;if(!Number.isInteger(raw)||raw<1||raw>20)throw new Error("Invalid d20 roll.");
-  const g:Game={...game,revealed:[...game.revealed],lastUsed:{...game.lastUsed},turns:[...game.turns],injectDeck:[...game.injectDeck],decisions:[...game.decisions],responseChoices:[...game.responseChoices]};
-  const config=difficulties[g.difficulty];const number=g.turns.length+1;const modifier=(g.established.includes(procedure)?3:0)+g.nextModifier;const total=raw+modifier;const success=total>=config.threshold;g.nextModifier=0;
-  const match=success?g.chain.find(id=>!g.revealed.includes(id)&&attacks.find(a=>a.id===id)!.detect.includes(procedure)):undefined;
-  let revealed:string|null=null;let narrative="";let impactChange=success?3:10;
-  if(match){revealed=match;g.revealed.push(match);g.pendingDecision=match;impactChange=1;narrative=attacks.find(a=>a.id===match)!.evidence;}
-  else if(success)narrative="The procedure completed successfully, but the evidence does not support an undiscovered stage. Reassess the hypothesis.";
-  else narrative="The action did not produce reliable evidence. The attacker gains time while the team reorients.";
-  g.lastUsed[procedure]=number;g.failures=success?0:g.failures+1;
-  let inject:Inject|null=null;let injectReveal:string|null=null;let exerciseEnd=false;
-  const reason=raw===1?"Natural 1":raw===20?"Natural 20":g.failures>=3?"Three failed rolls":null;
-  if(reason&&g.injectDeck.length){const index=g.injectDeck.shift()!;inject={...injects[index],reason};if(g.failures>=3)g.failures=0;
-    if(inject.effect==="bonus")g.nextModifier=2;
-    if(inject.effect==="penalty"){g.nextModifier=-2;impactChange+=6;}
-    if(inject.effect==="pressure")impactChange+=8;
-    if(inject.effect==="relief")impactChange-=8;
-    if(inject.effect==="restore"){const cooling=Object.keys(g.lastUsed).filter(id=>g.lastUsed[id]+4>number+1).sort((a,b)=>g.lastUsed[a]-g.lastUsed[b]);if(cooling.length){delete g.lastUsed[cooling[0]];inject.effectLabel=`${procedures.find(p=>p.id===cooling[0])!.title} is available again.`;}else inject.effectLabel="No procedures are cooling down; no change.";}
-    if(inject.effect==="reveal"){injectReveal=g.chain.find(id=>!g.revealed.includes(id))??null;if(injectReveal){g.revealed.push(injectReveal);g.pendingDecision=g.pendingDecision??injectReveal;inject.effectLabel=`Additional discovery: ${attacks.find(a=>a.id===injectReveal)!.title}.`;}else inject.effectLabel="All stages are already revealed.";}
-    if(inject.effect==="end")exerciseEnd=true;
-  }
-  g.impact=clamp(g.impact+impactChange);
-  g.turns.push({number,procedure,raw,modifier,total,success,revealed,narrative,inject,injectReveal,impactChange});
-  if(g.impact>=100)g.status="lost";else if(exerciseEnd&&g.revealed.length<4)g.status="exercise";else if(number>=config.maxTurns&&g.revealed.length<4)g.status="lost";
-  return g;
-}
-
-export function resolveDecision(game:Game,choice:"preserve"|"disrupt"):Game {
-  if(game.status!=="playing"||!game.pendingDecision)throw new Error("No evidence decision is pending.");
-  const g:Game={...game,decisions:[...game.decisions]};const attack=attacks.find(a=>a.id===g.pendingDecision)!;
-  if(choice==="preserve"){g.nextModifier=Math.max(g.nextModifier,2);g.impact=clamp(g.impact+8);g.decisions.push({stage:g.pendingDecision,choice,title:"Preserve and observe",effect:"Next roll +2; impact +8"});}
-  else{g.nextModifier=Math.min(g.nextModifier,-1);g.impact=clamp(g.impact-12);g.decisions.push({stage:g.pendingDecision,choice,title:"Disrupt immediately",effect:"Impact −12; next roll −1"});}
-  g.pendingDecision=null;
-  if(g.impact>=100)g.status="lost";else if(g.revealed.length===4)g.status="response";
-  return g;
-}
-
-export function resolveResponse(game:Game,choice:string):Game {
-  if(game.status!=="response")throw new Error("The response phase is not active.");
-  const phase=game.responseChoices.length===0?"containment":"recovery";const option=responseOptions[phase].find(o=>o.id===choice);if(!option)throw new Error("Unknown response choice.");
-  const g:Game={...game,responseChoices:[...game.responseChoices,choice]};const preferred=scenarios[g.scenario].preferred[g.responseChoices.length-1]===choice;
-  g.impact=clamp(g.impact+option.impact);g.continuity=clamp(g.continuity+option.continuity);g.responseScore+=option.score+(preferred?6:0);
-  if(g.responseChoices.length===2)g.status="won";
-  return g;
-}
-
-export function getOutcome(game:Game){const investigation=Math.max(0,44-game.turns.length*2-game.impact/5);const total=Math.round(investigation+game.responseScore+game.continuity/5);if(total>=72)return {grade:"A",title:"Controlled recovery",detail:"You balanced evidence, disruption and service continuity with strong operational judgement."};if(total>=58)return {grade:"B",title:"Stable, with residual risk",detail:"The incident is contained, but the debrief identifies avoidable exposure or disruption."};if(total>=42)return {grade:"C",title:"Costly stabilisation",detail:"Services are recovering, but uncertainty and operational cost remain high."};return {grade:"D",title:"Fragile recovery",detail:"The immediate crisis passed, but the response left significant residual risk."};}

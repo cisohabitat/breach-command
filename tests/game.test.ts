@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
-import {newGame,playTurn,resolveDecision,resolveResponse,setHypothesis,availableIn,attacks,procedures,scenarios,getSuggestion,difficulties,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,attackVector,type Difficulty,type Game} from "../lib/advanced-game.ts";
+import {newGame,playTurn,resolveDecision,resolveResponse,setHypothesis,availableIn,attacks,procedures,scenarios,getSuggestion,difficulties,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getScoreBreakdown,attackVector,type Difficulty,type Game} from "../lib/advanced-game.ts";
+// @ts-expect-error Native Node TypeScript execution requires the source extension.
+import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
 let g=baseline();
@@ -20,6 +22,27 @@ g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);asse
 g=baseline();for(let i=0;i<10&&g.status==="playing";i++)g=playTurn(g,["email","cloud","dns","intel"][i%4],2);assert.equal(g.status,"lost");
 assert.equal(getAdversaryState(newGame(0,"crisis",()=>0)),"Maneuvering");assert.equal(difficulties.crisis.maxTurns,9);
 assert.throws(()=>playTurn(baseline(),"unknown",10),/Unknown/);assert.throws(()=>playTurn(baseline(),"endpoint",21),/Invalid/);assert.throws(()=>newGame(-1),/Unknown/);
+
+g=baseline();
+g=setHypothesis(g,"endpoint");
+g=setHypothesis(g,"identity");
+g=setHypothesis(g,"cloud");
+assert.equal(g.hypothesisHistory.length,1,"only the final hypothesis for a turn is recorded");
+assert.equal(g.hypothesisHistory[0].id,"cloud");
+const scoreBefore=getScoreBreakdown(g).hypothesis;
+for(let i=0;i<20;i++)g=setHypothesis(g,i%2?"identity":"cloud");
+assert.equal(g.hypothesisHistory.length,1,"hypothesis switching cannot inflate history");
+assert.equal(getScoreBreakdown(g).hypothesis,scoreBefore,"hypothesis switching cannot inflate score");
+
+g=baseline();
+g=setHypothesis(g,"endpoint");
+g=playTurn(g,"endpoint",8);
+const saved=parseSession(serialiseSession(g,true,true));
+assert.ok(saved);
+assert.equal(saved?.version,SESSION_VERSION);
+assert.equal(saved?.game.turns.length,1);
+assert.equal(saved?.fastResolve,true);
+assert.equal(parseSession("{\"version\":2,\"game\":{}}"),null);
 for(const a of attacks){assert.ok(a.detect.length>=3);for(const id of a.detect)assert.ok(procedures.some(p=>p.id===id));}
 for(const s of scenarios){assert.equal(s.choices.length,4);s.choices.forEach((choices,stage)=>choices.forEach(id=>assert.equal(attacks.find(a=>a.id===id)?.stage,stage)));}
 
