@@ -66,6 +66,31 @@ export const difficulties: Record<Difficulty,{title:string;description:string;th
   crisis:{title:"Crisis",description:"Tighter rolls, fewer turns and higher starting impact.",threshold:12,maxTurns:9,startImpact:34},
 };
 
+export type HypothesisId = "identity"|"endpoint"|"application"|"cloud";
+export const hypotheses: {id:HypothesisId;title:string;premise:string;procedures:string[]}[] = [
+  {id:"identity",title:"Identity-led intrusion",premise:"A valid account, session or trust path is being abused.",procedures:["identity","firewall","cloud","hunt"]},
+  {id:"endpoint",title:"Compromised host",premise:"Execution on an endpoint or server is driving the incident.",procedures:["endpoint","forensic","server","hunt"]},
+  {id:"application",title:"Application or supplier path",premise:"A public service, integration or trusted package is the entry route.",procedures:["server","network","firewall","intel"]},
+  {id:"cloud",title:"Cloud control-plane abuse",premise:"Tokens, roles or cloud services are being used outside their intended boundary.",procedures:["cloud","identity","network","hunt"]},
+];
+
+export const scenarioDynamics = [
+  {label:"Business service integrity",objective:"Exploit trusted identities and quietly reach shared business data.",reaction:"The actor rotates to another trusted session after detecting intervention.",escalations:["A privileged session begins accessing an additional business service.","Payroll data is staged on an internal share.","A second administrator account shows anomalous activity."],countermeasure:"Earlier identity revocation would have reduced spread, but risked locking out legitimate administrators."},
+  {label:"Clinical service continuity",objective:"Use support access to reach administrative records without triggering a clinical outage.",reaction:"The actor shifts activity into a different support account and reduces its request rate.",escalations:["The scheduling service begins responding slowly.","A clinical support queue moves to manual processing.","Staff report intermittent access to administrative records."],countermeasure:"A segmented support path would have limited movement while preserving most clinical activity."},
+  {label:"Trusted maintenance access",objective:"Remain inside the support environment and abuse legitimate maintenance pathways.",reaction:"The actor abandons the observed session and moves toward a dormant supplier trust path.",escalations:["A maintenance job is delayed while access is verified.","The jump host can no longer be treated as a trusted administration point.","Operations invokes an alternate maintenance process."],countermeasure:"Revoking all supplier access earlier would have reduced cyber risk but weakened operational support."},
+  {label:"Terminal service flow",objective:"Use the booking environment to obtain partner data and disrupt trusted transactions.",reaction:"The actor changes infrastructure and begins blending with partner-originated traffic.",escalations:["Partner bookings require additional verification.","A vessel schedule update enters a manual review queue.","The terminal activates a continuity process for partner transactions."],countermeasure:"Earlier portal isolation would have constrained access but caused a larger partner-service interruption."},
+  {label:"Tenant trust",objective:"Expand control-plane privileges and export data through legitimate cloud services.",reaction:"The actor exchanges the observed credential for another role and changes the export path.",escalations:["A second tenant boundary requires urgent review.","Unplanned egress cost continues to rise.","The provider restricts one automation workflow pending validation."],countermeasure:"Broad credential rotation would have reduced attacker options but disrupted dependent automation."},
+  {label:"Downstream trust",objective:"Propagate through shared identities before dependent organisations can coordinate.",reaction:"The actor lowers activity on the shared service and tests a downstream trust relationship.",escalations:["A dependent organisation requests urgent indicators.","Another connected service suspends automated trust.","Coordination delays leave one downstream environment without confirmed scope."],countermeasure:"Earlier partner notification could have reduced downstream exposure, while sharing less-certain information."},
+];
+
+const attackVectors: Record<HypothesisId,string[]> = {
+  identity:["vpn","oauth","spray","dump","session","account","federation","saas"],
+  endpoint:["phish","supply","remote","task","service","https","beacon"],
+  application:["web","supply","trust","webshell","deadrop"],
+  cloud:["token","oauth","role","session","key","federation","storage","saas"],
+};
+export function attackVector(id:string):HypothesisId {return (Object.keys(attackVectors) as HypothesisId[]).find(key=>attackVectors[key].includes(id))??"endpoint";}
+
 const injects = [
   {id:"expert",title:"A specialist joins",text:"A responder helps focus the next investigative plan.",effect:"bonus",effectLabel:"+2 to the next procedure roll."},
   {id:"delay",title:"Access approval delayed",text:"Coordination friction slows the next action while business impact grows.",effect:"penalty",effectLabel:"−2 to the next roll; impact +6."},
