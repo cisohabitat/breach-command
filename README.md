@@ -32,7 +32,7 @@ Procedure checks use a d20. Established procedures, correct hypotheses, aligned 
 - **Three-act campaign:** progression tracks experience, trust, readiness, unresolved access, mastery and command doctrine, leading to one of four endings.
 - **Challenge codes:** compact `BC-...` codes reproduce a scenario, difficulty, mode, specialist and random seed.
 - **After-action review:** scoring, timelines, decision quality, evidence reconstruction, actor adaptation and counterfactuals support facilitated learning.
-- **Accessible feedback:** optional procedural sound, adaptive music, haptics, high contrast, reduced motion and guided reflection.
+- **Accessible, responsive play:** dedicated phone, iPad portrait, iPad landscape and desktop layouts, plus optional procedural sound, adaptive music, haptics, high contrast, reduced motion and guided reflection.
 - **Offline and local-first play:** the installable PWA caches core assets. Sessions, campaign progress, settings and anonymous balance counters remain on the device.
 
 The game does not call an AI service, inspect real systems or transmit incident information.
