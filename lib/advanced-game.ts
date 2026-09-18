@@ -1,5 +1,7 @@
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
 import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "./game.ts";
+// @ts-expect-error Native Node TypeScript execution requires the source extension.
+import { adversaryObjectives, gameModes, objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type GameMode, type ProcedureIntensity, type ProcedurePlan, type ProcedureScope, type SpecialistId } from "./command-systems.ts";
 
 export {
   attacks,
@@ -12,6 +14,8 @@ export {
   attackVector,
 };
 export type { Difficulty, HypothesisId };
+export { adversaryObjectives, gameModes, procedureIntensities, procedureScopes, sectorSystems, specialists };
+export type { GameMode, ProcedureIntensity, ProcedurePlan, ProcedureScope, SpecialistId };
 
 const injects = [
   { id: "expert", title: "A specialist joins", text: "A responder helps focus the next investigative plan.", effect: "bonus", effectLabel: "Analytical advantage on the next procedure." },
@@ -78,6 +82,10 @@ export type Turn = {
   continuityChange: number;
   adversaryEvent: string | null;
   hypothesis: HypothesisId | null;
+  plan: ProcedurePlan;
+  specialistBonus: number;
+  sectorChange: number;
+  objectiveChange: number;
 };
 export type DecisionRecord = {
   stage: string;
@@ -118,6 +126,24 @@ export type Game = {
   adversaryMemory: AdversaryMemory;
   pendingCommand: CommandEventId | null;
   commandHistory: CommandRecord[];
+  mode: GameMode;
+  turnLimit: number;
+  specialist: SpecialistId;
+  specialistFatigue: number;
+  sectorHealth: number;
+  sectorHistory: number[];
+  objective: AdversaryObjectiveId;
+  objectiveProgress: number;
+  campaignTier: number;
+};
+
+export type GameSetup = {
+  mode?: GameMode;
+  specialist?: SpecialistId;
+  campaignTier?: number;
+  inheritedFatigue?: number;
+  readiness?: number;
+  leadershipTrust?: number;
 };
 
 export const commandEvents = {
@@ -198,37 +224,64 @@ export function getOperationalLabel(game: Game) {
   return scenarioDynamics[game.scenario].label;
 }
 
-export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max)): Game {
+export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max), setup: GameSetup = {}): Game {
   if (!Number.isInteger(scenario) || !scenarios[scenario]) throw new Error("Unknown incident");
   if (!difficulties[difficulty]) throw new Error("Unknown difficulty");
   const profiles = scenarioProfiles[scenario];
+  const mode = setup.mode ?? "campaign";
+  const specialist = setup.specialist ?? "hunter";
+  const campaignTier = Math.max(0, Math.min(3, setup.campaignTier ?? 0));
+  const campaignReadiness = mode === "campaign" ? setup.readiness ?? 50 : 50;
+  const campaignTrust = mode === "campaign" ? setup.leadershipTrust ?? 50 : 50;
+  const turnLimit = Math.max(5, difficulties[difficulty].maxTurns - (mode === "ironman" ? 1 : 0) + (campaignReadiness >= 75 ? 1 : 0));
+  const startingImpact = difficulties[difficulty].startImpact + (mode === "escalation" ? 12 : 0) - (campaignTier >= 2 ? 5 : 0) + (campaignTrust < 35 ? 5 : campaignTrust >= 75 ? -3 : 0);
+  const startingContinuity = 100 + (campaignTier >= 3 ? 5 : 0) + (campaignReadiness >= 60 ? 3 : campaignReadiness < 30 ? -5 : 0);
   return {
     scenario,
     difficulty,
     chain: scenarios[scenario].choices.map(options => options[random(options.length)]),
     revealed: [],
-    established: shuffle(procedures.map(p => p.id), random).slice(0, 4),
+    established: shuffle(procedures.map(p => p.id), random).slice(0, campaignTier >= 1 ? 5 : 4),
     lastUsed: {},
     turns: [],
     failures: 0,
     nextModifier: 0,
     injectDeck: shuffle(injects.map((_, i) => i), random),
     status: "playing",
-    impact: difficulties[difficulty].startImpact,
-    continuity: 100,
+    impact: clamp(startingImpact),
+    continuity: clamp(startingContinuity),
     pendingDecision: null,
     decisions: [],
     responseChoices: [],
     responseScore: 0,
     hypothesis: null,
     hypothesisHistory: [],
-    adversaryTempo: difficulty === "crisis" ? 1 : 0,
+    adversaryTempo: difficulty === "crisis" || mode === "escalation" ? 1 : 0,
     adversaryEvent: null,
     adversaryProfile: profiles[random(profiles.length)],
     adversaryMemory: { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
     pendingCommand: null,
     commandHistory: [],
+    mode,
+    turnLimit,
+    specialist,
+    specialistFatigue: Math.max(0, setup.inheritedFatigue ?? 0),
+    sectorHealth: mode === "escalation" ? 88 : 100,
+    sectorHistory: [],
+    objective: objectiveForScenario(scenario, random(2)),
+    objectiveProgress: mode === "escalation" ? 18 : 5,
+    campaignTier,
   };
+}
+
+export function getTurnLimit(game: Game) {
+  return game.turnLimit;
+}
+
+export function getObjectiveRead(game: Game) {
+  if (game.revealed.length < 2 && game.turns.length < 4) return { title: "Objective unconfirmed", detail: "Collect evidence across at least two stages to assess intent.", confidence: "LOW" };
+  const objective = adversaryObjectives[game.objective];
+  return { title: objective.title, detail: objective.tell, confidence: game.revealed.length >= 3 ? "HIGH" : "MODERATE" };
 }
 
 export function setHypothesis(game: Game, id: HypothesisId): Game {
@@ -283,7 +336,7 @@ export function getDecisionOptions(game: Game) {
   };
 }
 
-export function playTurn(game: Game, procedure: string, forcedRoll?: number): Game {
+export function playTurn(game: Game, procedure: string, forcedRoll?: number, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }): Game {
   if (game.status !== "playing") throw new Error("This investigation has ended.");
   if (game.pendingDecision) throw new Error("Resolve the evidence decision first.");
   if (game.pendingCommand) throw new Error("Resolve the command event first.");
@@ -311,7 +364,12 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number): Ga
   const nextHidden = g.chain.find(id => !g.revealed.includes(id));
   const hypothesis = hypotheses.find(item => item.id === g.hypothesis);
   const planningBonus = nextHidden && g.hypothesis === attackVector(nextHidden) && hypothesis?.procedures.includes(procedure) ? 1 : 0;
-  const modifier = (g.established.includes(procedure) ? 3 : 0) + g.nextModifier + planningBonus;
+  const specialist = specialists[g.specialist];
+  const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < 5 ? 2 : 0;
+  const scope = procedureScopes[plan.scope];
+  const intensity = procedureIntensities[plan.intensity];
+  const modeModifier = g.mode === "expert" ? -1 : 0;
+  const modifier = (g.established.includes(procedure) ? 3 : 0) + g.nextModifier + planningBonus + specialistBonus + scope.modifier + intensity.modifier + modeModifier;
   const total = raw + modifier;
   const success = total >= config.threshold;
   g.nextModifier = 0;
@@ -319,7 +377,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number): Ga
   const match = success ? g.chain.find(id => !g.revealed.includes(id) && attacks.find(attack => attack.id === id)!.detect.includes(procedure)) : undefined;
   let revealed: string | null = null;
   let narrative = "";
-  let impactChange = success ? 3 : 10;
+  let impactChange = (success ? 3 : 10) + scope.impact + intensity.impact;
   let continuityChange = success ? 0 : -1;
   if (match) {
     revealed = match;
@@ -336,7 +394,8 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number): Ga
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   }
 
-  g.lastUsed[procedure] = number;
+  g.lastUsed[procedure] = number + intensity.cooldown;
+  if (specialistBonus) g.specialistFatigue = Math.min(6, g.specialistFatigue + (plan.intensity === "exhaustive" ? 2 : 1));
   g.failures = success ? 0 : g.failures + 1;
   let inject: Inject | null = null;
   let injectReveal: string | null = null;
@@ -379,12 +438,30 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number): Ga
     continuityChange -= 2 + g.adversaryTempo;
     g.adversaryEvent = adversaryEvent;
   }
+  const sector = sectorSystems[g.scenario];
+  const protection = g.specialist === "continuity" ? 3 : g.specialist === "ot" && [2, 8].includes(g.scenario) ? 3 : 0;
+  let sectorSpecific = 0;
+  let objectiveSpecific = 0;
+  if (g.scenario === 1 && plan.intensity === "exhaustive") continuityChange -= 3;
+  if (g.scenario === 3 && number >= 4) sectorSpecific -= 2;
+  if (g.scenario === 4 && plan.scope === "enterprise") objectiveSpecific -= 3;
+  if (g.scenario === 5 && plan.scope === "focused") sectorSpecific -= 2;
+  if (g.scenario === 6 && g.specialist === "communications") sectorSpecific += 2;
+  if (g.scenario === 7 && success && ["network", "firewall", "dns"].includes(procedure)) sectorSpecific += 3;
+  if (g.scenario === 8 && g.specialist !== "ot" && plan.scope === "enterprise") sectorSpecific -= 3;
+  if (g.scenario === 9 && plan.intensity === "rapid") objectiveSpecific += 4;
+  const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss + g.adversaryTempo + (success ? 0 : 2)) + (revealed ? 5 : 0) + protection + sectorSpecific));
+  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific);
+  g.sectorHealth = clamp(g.sectorHealth + sectorChange);
+  g.sectorHistory.push(g.sectorHealth);
+  g.objectiveProgress = clamp(g.objectiveProgress + objectiveChange);
+  if (g.specialist === "communications") impactChange -= 2;
   g.impact = clamp(g.impact + impactChange);
   g.continuity = clamp(g.continuity + continuityChange);
-  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis });
-  if (g.impact >= 100 || g.continuity <= 0) g.status = "lost";
+  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange });
+  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
   else if (exerciseEnd && g.revealed.length < 4) g.status = "exercise";
-  else if (number >= config.maxTurns && g.revealed.length < 4) g.status = "lost";
+  else if (number >= g.turnLimit && g.revealed.length < 4) g.status = "lost";
   else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {
     const ids = Object.keys(commandEvents) as CommandEventId[];
     g.pendingCommand = ids[(g.scenario + number + g.adversaryTempo) % ids.length];
@@ -433,11 +510,14 @@ export function resolveDecision(game: Game, choice: "observe" | "act"): Game {
     g.nextModifier = Math.max(g.nextModifier, 2);
     g.impact = clamp(g.impact + language.observeCost);
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
+    g.objectiveProgress = clamp(g.objectiveProgress + 6);
   } else {
     g.nextModifier = Math.min(g.nextModifier, -1);
     g.impact = clamp(g.impact + language.actRelief);
     g.continuity = clamp(g.continuity + language.continuityCost);
     g.adversaryTempo = Math.max(0, g.adversaryTempo - 1);
+    g.objectiveProgress = clamp(g.objectiveProgress - 8);
+    g.sectorHealth = clamp(g.sectorHealth - 2);
     const nextStage = Math.min(3, attack.stage + 1);
     const current = g.chain[nextStage];
     if (current && !g.revealed.includes(current)) {
@@ -465,7 +545,7 @@ export function resolveDecision(game: Game, choice: "observe" | "act"): Game {
     rationale,
   });
   g.pendingDecision = null;
-  if (g.impact >= 100 || g.continuity <= 0) g.status = "lost";
+  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
   else if (g.revealed.length === 4) g.status = "response";
   return g;
 }
@@ -480,9 +560,10 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
   g.adversaryTempo = clamp(g.adversaryTempo + option.tempo, 0, 3);
-  g.commandHistory.push({ event: eventId, choice, title: option.title, quality: option.quality, effect: option.signal });
+  const communicationsBonus = g.specialist === "communications" && eventId === "leadership" ? 1 : 0;
+  g.commandHistory.push({ event: eventId, choice, title: option.title, quality: Math.min(5, option.quality + communicationsBonus), effect: option.signal });
   g.pendingCommand = null;
-  if (g.impact >= 100 || g.continuity <= 0) g.status = "lost";
+  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
   return g;
 }
 
@@ -502,9 +583,14 @@ export function resolveResponse(game: Game, choice: string): Game {
   if (!option) throw new Error("Unknown response choice.");
   const g: Game = { ...game, responseChoices: [...game.responseChoices, choice] };
   const preferred = scenarios[g.scenario].preferred[g.responseChoices.length - 1] === choice;
+  const objectiveResponses: Record<AdversaryObjectiveId, [string, string]> = {
+    exfiltration: ["isolate", "rebuild"], disruption: ["monitor", "restore"], fraud: ["credential", "rebuild"], espionage: ["credential", "rebuild"], preposition: ["isolate", "rebuild"],
+  };
+  const objectiveAligned = objectiveResponses[g.objective][g.responseChoices.length - 1] === choice;
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
-  g.responseScore += option.score + (preferred ? 6 : 0);
+  g.responseScore += option.score + (preferred ? 4 : 0) + (objectiveAligned ? 4 : 0);
+  if (objectiveAligned) g.objectiveProgress = clamp(g.objectiveProgress - 10);
   if (g.responseChoices.length === 2) g.status = "won";
   return g;
 }
@@ -522,7 +608,7 @@ export type ScoreBreakdown = {
 export function getScoreBreakdown(game: Game): ScoreBreakdown {
   const investigation = clamp(25 - Math.max(0, game.turns.length - 4) * 3, 0, 25);
   const impact = Math.round((100 - game.impact) * 0.15);
-  const continuity = Math.round(game.continuity * 0.15);
+  const continuity = Math.round(((game.continuity + game.sectorHealth) / 2) * 0.15);
   const decisionItems = [...game.decisions.map(item => item.quality), ...game.commandHistory.map(item => item.quality)];
   const decisionQuality = decisionItems.length ? decisionItems.reduce((sum, quality) => sum + quality, 0) / (decisionItems.length * 5) : 0;
   const decisions = Math.round(decisionQuality * 15);

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
+  BarChart3,
   ArrowRight,
   BookOpen,
   Check,
@@ -30,6 +31,8 @@ import {
   Volume2,
   Vibrate,
   Contrast,
+  GraduationCap,
+  Headphones,
   X,
   Zap,
 } from "lucide-react";
@@ -41,6 +44,8 @@ import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { OperationsMap } from "@/components/game/operations-map";
 import { CommandEvent } from "@/components/game/command-event";
+import { SectorBoard } from "@/components/game/sector-board";
+import { TutorialCoach } from "@/components/game/tutorial-coach";
 import {
   attacks,
   procedures,
@@ -48,7 +53,6 @@ import {
   stages,
   difficulties,
   hypotheses,
-  scenarioDynamics,
   responseOptions,
   newGame,
   playTurn,
@@ -65,14 +69,28 @@ import {
   getAdversaryState,
   getAdversaryRead,
   getOperationalLabel,
+  getObjectiveRead,
+  getTurnLimit,
+  adversaryObjectives,
+  gameModes,
+  procedureIntensities,
+  procedureScopes,
+  sectorSystems,
+  specialists,
   type Difficulty,
+  type GameMode,
+  type ProcedureIntensity,
+  type ProcedureScope,
+  type SpecialistId,
   type HypothesisId,
   type Game,
   type Turn,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
-import { campaignRank, defaultCampaign, parseCampaign, recordCampaignResult, unlockedCapabilities, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
-import { playFeedback } from "@/lib/feedback";
+import { campaignRank, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, unlockedCapabilities, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
+import { modeRandom } from "@/lib/command-systems";
+import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 
 const stageIcons = [LockKeyhole, Activity, RotateCcw, Radio];
 
@@ -97,6 +115,14 @@ export default function Home() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [highContrast, setHighContrast] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(true);
+  const [mode, setMode] = useState<GameMode>("campaign");
+  const [specialist, setSpecialist] = useState<SpecialistId>("hunter");
+  const [actionScope, setActionScope] = useState<ProcedureScope>("focused");
+  const [actionIntensity, setActionIntensity] = useState<ProcedureIntensity>("balanced");
+  const [missionBriefing, setMissionBriefing] = useState(false);
+  const [tutorial, setTutorial] = useState(false);
+  const [telemetry, setTelemetry] = useState<BalanceTelemetry>(() => readTelemetry());
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   const stateRef = useRef(game);
   const busyRef = useRef(false);
@@ -121,7 +147,12 @@ export default function Home() {
   function start(index = scenarioChoice) {
     if (busyRef.current) return;
     clearStoredSession();
-    setGame(newGame(index, difficulty));
+    const random = modeRandom(mode, index);
+    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust });
+    setGame(next);
+    setGuided(mode === "expert" ? false : guided);
+    setTutorial(localStorage.getItem("breach-command.tutorial-complete") !== "true");
+    setMissionBriefing(true);
     setSelected(null);
     setReport(null);
     setInlineReport(null);
@@ -130,6 +161,9 @@ export default function Home() {
     setNewConfirm(false);
     setAnnouncement("New investigation started.");
     playFeedback("open", soundEnabled, hapticsEnabled);
+    setAdaptiveScore(musicEnabled, 0.15);
+    recordTelemetry("start", { scenario: index });
+    setTelemetry(readTelemetry());
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -161,7 +195,7 @@ export default function Home() {
     }
     const timeout = setTimeout(() => {
       if (interval) clearInterval(interval);
-      const next = playTurn(current, id);
+      const next = playTurn(current, id, undefined, { scope: actionScope, intensity: actionIntensity });
       const result = next.turns.at(-1)!;
       const requiresDialog = !quick || !!result.revealed || !!result.inject || !!result.adversaryEvent || next.status !== "playing";
       setDie(result.raw);
@@ -171,6 +205,8 @@ export default function Home() {
       setRolling(false);
       setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
       playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled);
+      recordTelemetry("turn", { procedure: id });
+      setTelemetry(readTelemetry());
       if (["lost", "exercise"].includes(next.status)) recordProgress(next);
       busyRef.current = false;
     }, quick ? 0 : 850);
@@ -220,6 +256,8 @@ export default function Home() {
     const marker = `${result.scenario}:${result.status}:${result.turns.length}:${result.responseChoices.join("-")}`;
     if (recordedRuns.current.has(marker)) return;
     recordedRuns.current.add(marker);
+    recordTelemetry(result.status === "won" ? "win" : "loss", { scenario: result.scenario });
+    setTelemetry(readTelemetry());
     const score = getOutcome(result).breakdown.total;
     setCampaign(current => {
       const updated = recordCampaignResult(current, result, score);
@@ -243,6 +281,7 @@ export default function Home() {
     setInlineReport(null);
     setSelected(null);
     setDebrief(false);
+    setAdaptiveScore(false);
   }
 
   useEffect(() => {
@@ -262,8 +301,9 @@ export default function Home() {
       const preferences = localStorage.getItem("breach-command.preferences");
       if (preferences) {
         try {
-          const parsed = JSON.parse(preferences) as { sound?: boolean; haptics?: boolean; highContrast?: boolean };
+          const parsed = JSON.parse(preferences) as { sound?: boolean; music?: boolean; haptics?: boolean; highContrast?: boolean };
           setSoundEnabled(parsed.sound !== false);
+          setMusicEnabled(parsed.music !== false);
           setHapticsEnabled(parsed.haptics !== false);
           setHighContrast(parsed.highContrast === true);
         } catch {}
@@ -274,8 +314,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("breach-command.preferences", JSON.stringify({ sound: soundEnabled, haptics: hapticsEnabled, highContrast }));
-  }, [soundEnabled, hapticsEnabled, highContrast]);
+    localStorage.setItem("breach-command.preferences", JSON.stringify({ sound: soundEnabled, music: musicEnabled, haptics: hapticsEnabled, highContrast }));
+  }, [soundEnabled, musicEnabled, hapticsEnabled, highContrast]);
 
   useEffect(() => {
     const handleKeyboard = (event: KeyboardEvent) => {
@@ -290,10 +330,11 @@ export default function Home() {
 
   useEffect(() => {
     stateRef.current = game;
-  }, [game]);
+    if (game && musicEnabled) setAdaptiveScore(true, Math.max(game.impact, game.objectiveProgress, 100 - game.sectorHealth) / 100);
+  }, [game, musicEnabled]);
 
   useEffect(() => {
-    if (!game) return;
+    if (!game || game.mode === "ironman") return;
     localStorage.setItem(SESSION_KEY, serialiseSession(game, guided, fastResolve));
   }, [game, guided, fastResolve]);
 
@@ -314,13 +355,12 @@ export default function Home() {
           if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).length) throw new Error("Expected an empty object.");
           const current = stateRef.current;
           if (!current) return { status: "briefing" };
-          const currentDifficulty = difficulties[current.difficulty];
           return {
             status: current.status,
             difficulty: current.difficulty,
             incident: scenarios[current.scenario].title,
             turnsUsed: current.turns.length,
-            turnsRemaining: Math.max(0, currentDifficulty.maxTurns - current.turns.length),
+            turnsRemaining: Math.max(0, getTurnLimit(current) - current.turns.length),
             impact: current.impact,
             operationalCondition: current.continuity,
             hypothesis: current.hypothesis,
@@ -345,7 +385,7 @@ export default function Home() {
     : question === "constraints" ? activeScenario.constraints
     : question === "impact" ? activeScenario.impact
     : question === "known" ? `${activeScenario.timeline} ${getLead(game!)}`
-    : question === "adversary" ? `Assessed objective: ${scenarioDynamics[game!.scenario].objective} Current behaviour: ${getAdversaryState(game!)}. ${getAdversaryRead(game!)}`
+    : question === "adversary" ? `${getObjectiveRead(game!).title}: ${getObjectiveRead(game!).detail} Current behaviour: ${getAdversaryState(game!)}. ${getAdversaryRead(game!)}`
     : question === "assumptions" ? "Treat alerts, valid credentials and successful procedures as evidence, not conclusions. Record one working hypothesis for each turn and revise it only when evidence no longer fits."
     : "";
 
@@ -379,7 +419,7 @@ export default function Home() {
             </div>
             <div className="first-move"><Dices size={20} /><p>Form a hypothesis, test evidence, command the response.</p></div>
             <section className="career-card" aria-label="Command career progression">
-              <div><span className="eyebrow">COMMAND CAREER</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents completed · {campaign.operations} operations</small></div>
+              <div><span className="eyebrow">COMMAND CAREER</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents · trust {campaign.leadershipTrust} · readiness {campaign.readiness}</small></div>
               <b>{campaign.xp}<small> XP</small></b>
               <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
             </section>
@@ -396,6 +436,17 @@ export default function Home() {
               <span className="eyebrow">DIFFICULTY</span>
               <div>{(Object.keys(difficulties) as Difficulty[]).map(id => <button key={id} className={difficulty === id ? "active" : ""} aria-pressed={difficulty === id} onClick={() => setDifficulty(id)}><strong>{difficulties[id].title}</strong><small>{difficulties[id].maxTurns} turns · {difficulties[id].threshold}+</small></button>)}</div>
               <p>{difficulties[difficulty].description}</p>
+            </div>
+            <div className="mode-picker">
+              <span className="eyebrow">OPERATION MODE</span>
+              <div>{(Object.keys(gameModes) as GameMode[]).map(id => <button key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => setMode(id)}><strong>{gameModes[id].title}</strong><small>{gameModes[id].description}</small></button>)}</div>
+            </div>
+            <div className="specialist-picker">
+              <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small>Fatigue carries between campaign operations.</small></label>
+              <select id="specialist" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
+                {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{specialists[id].title} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
+              </select>
+              <p><strong>{specialists[specialist].role}</strong> · {specialists[specialist].ability}</p>
             </div>
             <div className="setup-controls">
               <div className="guided-control">
@@ -424,12 +475,12 @@ export default function Home() {
       ) : (
         <main className="game-screen">
           <section className="game-heading">
-            <div><div className="eyebrow">CASE 0{game.scenario + 1} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()}</div><h1>{activeScenario.title}</h1></div>
+            <div><div className="eyebrow">CASE 0{game.scenario + 1} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()} <span className="separator">/</span> {gameModes[game.mode].title.toUpperCase()}</div><h1>{activeScenario.title}</h1></div>
             <div className="case-meters">
               <div className="turn-meter">
                 <span className="mono">{game.status === "response" ? "RESPONSE PHASE" : ended ? "FINAL STATUS" : "INVESTIGATION WINDOW"}</span>
-                <div>{!ended && game.status !== "response" ? <><strong>{Math.max(0, config.maxTurns - game.turns.length)}</strong> turns remaining</> : game.status === "response" ? "Contain and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : "Window closed"}</div>
-                <Progress value={Math.max(0, (config.maxTurns - game.turns.length) / config.maxTurns * 100)} className="turn-progress" aria-label="Turns remaining" />
+                <div>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> turns remaining</> : game.status === "response" ? "Contain and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : "Window closed"}</div>
+                <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Turns remaining" />
               </div>
               <div className={`impact-meter ${game.impact >= 70 ? "critical" : ""}`}>
                 <span className="mono">BUSINESS IMPACT</span><strong>{game.impact}</strong>
@@ -467,6 +518,10 @@ export default function Home() {
               </section>
 
               <OperationsMap game={game} />
+
+              <SectorBoard game={game} />
+
+              {tutorial && game.status === "playing" && <TutorialCoach game={game} onDismiss={() => { setTutorial(false); localStorage.setItem("breach-command.tutorial-complete", "true"); }} />}
 
               {ended ? (
                 <section className="end-banner">
@@ -528,7 +583,7 @@ export default function Home() {
                   ].map(item => <button key={item.id} className={question === item.id ? "active" : ""} onClick={() => setQuestion(question === item.id ? null : item.id)}>{item.label}<ArrowRight size={14} /></button>)}
                 </div>
                 {question && <div className="captain-answer" aria-live="polite">{answer}</div>}
-                <div className="guided-inline"><label htmlFor="guided-game"><Sparkles size={14} /> Guided reflection</label><Switch id="guided-game" checked={guided} onCheckedChange={setGuided} /></div>
+                <div className="guided-inline"><label htmlFor="guided-game"><Sparkles size={14} /> {game.mode === "expert" ? "Guidance disabled in Expert" : "Guided reflection"}</label><Switch id="guided-game" checked={guided} disabled={game.mode === "expert"} onCheckedChange={setGuided} /></div>
                 <div className="guided-inline"><label htmlFor="fast-game"><FastForward size={14} /> Fast resolution</label><Switch id="fast-game" checked={fastResolve} onCheckedChange={setFastResolve} /></div>
                 <div className="adversary-read"><span className="eyebrow">ACTOR MODEL</span><p>{getAdversaryRead(game)}</p></div>
               </section>
@@ -562,13 +617,17 @@ export default function Home() {
           <DialogHeader><div className="eyebrow">PREPARE ACTION</div><DialogTitle>{proc?.title}</DialogTitle><DialogDescription>{proc?.description}</DialogDescription></DialogHeader>
           {proc && game && <>
             <div className="action-note"><span className="eyebrow">HYPOTHESIS CHECK</span><p>{proc.question}</p></div>
+            <div className="procedure-planner">
+              <div><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}</strong><small>{procedureScopes[id].description}</small></button>)}</div></div>
+              <div><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}</strong><small>{procedureIntensities[id].description}</small></button>)}</div></div>
+            </div>
             <div className={`alignment-notice ${procedureAligned ? "aligned" : ""}`}>
               <BrainLabel aligned={procedureAligned} />
               <span>{procedureAligned ? "This procedure supports your working hypothesis. It earns +1 if the hypothesis matches the next unresolved stage." : "This procedure does not directly support your working hypothesis. It can still reveal evidence, but cannot earn the hypothesis bonus."}</span>
             </div>
             <div className="roll-preview">
               <div><span>D20</span><small>Dice roll</small></div><span>+</span>
-              <div><span>{game.established.includes(proc.id) ? 3 : 0}{game.nextModifier !== 0 ? ` ${game.nextModifier > 0 ? "+" : ""}${game.nextModifier}` : ""}</span><small>Known modifier</small></div><span>≥</span>
+              <div><span>{(game.established.includes(proc.id) ? 3 : 0) + game.nextModifier + procedureScopes[actionScope].modifier + procedureIntensities[actionIntensity].modifier + (specialists[game.specialist].procedures.includes(proc.id as never) && game.specialistFatigue < 5 ? 2 : 0)}</span><small>Known modifier</small></div><span>≥</span>
               <div><span>{config.threshold}</span><small>To succeed</small></div>
             </div>
             <p className="muted small">Success reveals a stage only when this evidence source matches an undiscovered technique. The action consumes one turn and may increase impact.</p>
@@ -581,6 +640,21 @@ export default function Home() {
         <DialogContent className="roll-dialog" showCloseButton={false} onEscapeKeyDown={event => event.preventDefault()} onPointerDownOutside={event => event.preventDefault()}>
           <DialogHeader><DialogTitle>Running procedure</DialogTitle><DialogDescription>The Incident Captain is resolving evidence and pressure.</DialogDescription></DialogHeader>
           <div className="die rolling"><Dices size={32} /><strong>{die}</strong><span>D20</span></div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={missionBriefing} onOpenChange={setMissionBriefing}>
+        <DialogContent className="game-dialog cinematic-briefing" showCloseButton={false}>
+          <DialogHeader><div className="eyebrow">SECURE COMMAND BRIEFING · CASE {String((game?.scenario ?? 0) + 1).padStart(2, "0")}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
+          {game && <>
+            <div className="briefing-readouts">
+              <div><span>MODE</span><strong>{gameModes[game.mode].title}</strong><small>{gameModes[game.mode].description}</small></div>
+              <div><span>SECTOR CONDITION</span><strong>{sectorSystems[game.scenario].title}</strong><small>{sectorSystems[game.scenario].rule}</small></div>
+              <div><span>DEPLOYED SPECIALIST</span><strong>{specialists[game.specialist].title}</strong><small>{specialists[game.specialist].ability}</small></div>
+            </div>
+            <div className="director-order"><Radio size={20} /><p><span className="eyebrow">DIRECTOR’S INTENT</span>Establish the attack chain, infer the actor’s objective and preserve the essential service. Report uncertainty before it becomes operational surprise.</p></div>
+            <button className="primary-button full" onClick={() => setMissionBriefing(false)}>Assume command <ArrowRight size={18} /></button>
+          </>}
         </DialogContent>
       </Dialog>
 
@@ -597,6 +671,7 @@ export default function Home() {
               <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus ? " including hypothesis bonus" : ""}</span><strong>{report.total} <span>/ {report.success ? "Success" : "Failure"}</span></strong></div>
               {report.success ? <CheckCheck size={23} /> : <X size={23} />}
             </div>
+            <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>Sector {report.sectorChange >= 0 ? "+" : ""}{report.sectorChange}</span><span>Actor objective +{report.objectiveChange}</span></div>
             <p>{report.narrative}</p>
             {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
             {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">ACTOR MOVEMENT</span><p>{report.adversaryEvent}</p></div></div>}
@@ -632,6 +707,10 @@ export default function Home() {
               <section><h3>08 / Fast resolution</h3><p>After turn one, fast mode skips confirmation and dice animation for routine actions. Discoveries and major events still receive full reports.</p></section>
               <section><h3>09 / Command events</h3><p>Operational interruptions test scoping, leadership communication and specialist allocation. These choices affect pressure, continuity and adversary tempo.</p></section>
               <section><h3>10 / Campaign progression</h3><p>Completed incidents, best scores and command experience remain on this device. Progress unlocks professional capability milestones.</p></section>
+              <section><h3>11 / Sector condition</h3><p>Every sector has a distinct operating constraint and condition meter. The operation fails if the essential-service margin is exhausted.</p></section>
+              <section><h3>12 / Team deployment</h3><p>Select one specialist before deployment. Matching evidence earns a bonus, while repeated use creates fatigue that carries into campaign operations.</p></section>
+              <section><h3>13 / Scope &amp; intensity</h3><p>Focused checks are efficient. Enterprise scope searches wider at a time cost. Exhaustive work is stronger but increases pressure and cooldown.</p></section>
+              <section><h3>14 / Advanced modes</h3><p>Daily, Ironman, Escalation and Expert modes alter seeds, pressure, saves, coaching and rewards.</p></section>
             </div>
             <section className="attribution"><h3>About this adaptation</h3><p>Inspired by Backdoors &amp; Breaches, created by Black Hills Information Security and Active Countermeasures. This unofficial adaptation is not affiliated with or endorsed by the creators. It uses original wording, fictional settings and a rule-based facilitator. It does not reproduce the commercial deck, official artwork or expansion content.</p><a href="https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf" target="_blank" rel="noreferrer">Read the official classic rules <ArrowRight size={14} /></a></section>
           </div>
@@ -670,12 +749,17 @@ export default function Home() {
               <div><strong>{game.commandHistory.length}</strong><span>Command events resolved</span></div>
               <div><strong>{game.turns.filter(turn => turn.success && !turn.revealed).length}</strong><span>Successful but non-discriminating actions</span></div>
             </section>
+            <section className="mission-consequences">
+              <div><span className="eyebrow">SECTOR OUTCOME</span><strong>{game.sectorHealth}/100 · {sectorSystems[game.scenario].title}</strong><p>{sectorSystems[game.scenario].rule}</p></div>
+              <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p></div>
+              <div><span className="eyebrow">COMMAND TEAM</span><strong>{specialists[game.specialist].title} · fatigue {game.specialistFatigue}/6</strong><p>{gameModes[game.mode].title} operation. Team fatigue and leadership confidence carry into the next campaign mission.</p></div>
+            </section>
             <section className="timeline">
               <span className="eyebrow">EVIDENCE &amp; DECISION TIMELINE</span>
               {game.turns.map(turn => (
                 <div key={turn.number}>
                   <span>{String(turn.number).padStart(2, "0")}</span>
-                  <p><strong>{procedures.find(procedure => procedure.id === turn.procedure)?.title}</strong>{turn.hypothesis ? ` · Hypothesis: ${hypotheses.find(item => item.id === turn.hypothesis)?.title}` : " · No hypothesis recorded"}<small>{turn.revealed ? `Revealed ${attacks.find(attack => attack.id === turn.revealed)?.title}` : turn.narrative}</small></p>
+                  <p><strong>{procedures.find(procedure => procedure.id === turn.procedure)?.title}</strong>{turn.hypothesis ? ` · Hypothesis: ${hypotheses.find(item => item.id === turn.hypothesis)?.title}` : " · No hypothesis recorded"}<small>{procedureScopes[turn.plan.scope].title} scope · {procedureIntensities[turn.plan.intensity].title} analysis · {turn.revealed ? `Revealed ${attacks.find(attack => attack.id === turn.revealed)?.title}` : turn.narrative}</small></p>
                 </div>
               ))}
             </section>
@@ -700,6 +784,7 @@ export default function Home() {
             </div>
             <section className="debrief-learning"><h3>Take this back to your team</h3><p>{game.turns.some(turn => turn.success && !turn.revealed) ? "Some actions passed without finding new evidence. Did each action separate plausible explanations, or simply use an available tool?" : "Which evidence sources or decision authorities would be weakest in a real response?"}</p><p>{activeScenario.lesson}</p></section>
             <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
+            <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
             <div className="debrief-actions">
               <button className="secondary-button" onClick={() => window.print()}><Printer size={17} /> Print review</button>
               <button className="primary-button" onClick={() => { const nextScenario = (game.scenario + 1) % scenarios.length; resetToBriefing(); setScenarioChoice(nextScenario); }}>Choose next incident <ArrowRight size={18} /></button>
@@ -713,9 +798,12 @@ export default function Home() {
           <DialogHeader><div className="eyebrow">GAME SETTINGS</div><DialogTitle>Command interface</DialogTitle><DialogDescription>Adjust feedback, accessibility and display behaviour. Preferences stay on this device.</DialogDescription></DialogHeader>
           <div className="settings-list">
             <label htmlFor="sound-setting"><span><Volume2 size={19} /><b>Sound cues</b><small>Procedural audio for discoveries, warnings and outcomes.</small></span><Switch id="sound-setting" checked={soundEnabled} onCheckedChange={setSoundEnabled} /></label>
+            <label htmlFor="music-setting"><span><Headphones size={19} /><b>Adaptive score</b><small>Ambient command-room audio intensifies as operational pressure rises.</small></span><Switch id="music-setting" checked={musicEnabled} onCheckedChange={value => { setMusicEnabled(value); setAdaptiveScore(value, game ? Math.max(game.impact, game.objectiveProgress) / 100 : 0.1); }} /></label>
             <label htmlFor="haptic-setting"><span><Vibrate size={19} /><b>Haptic feedback</b><small>Short vibration cues on supported mobile devices.</small></span><Switch id="haptic-setting" checked={hapticsEnabled} onCheckedChange={setHapticsEnabled} /></label>
             <label htmlFor="contrast-setting"><span><Contrast size={19} /><b>High contrast</b><small>Strengthens borders, text and interactive states.</small></span><Switch id="contrast-setting" checked={highContrast} onCheckedChange={setHighContrast} /></label>
           </div>
+          <section className="local-telemetry"><div><BarChart3 size={18} /><span><b>Local balance record</b><small>Stored only on this device. No gameplay data is transmitted.</small></span></div><p><strong>{telemetry.operationsStarted}</strong> starts <strong>{telemetry.operationsFinished}</strong> completed <strong>{telemetry.wins}</strong> wins <strong>{telemetry.turns}</strong> turns</p><button onClick={() => { clearTelemetry(); setTelemetry(readTelemetry()); }}>Clear local record</button></section>
+          <button className="secondary-button full" onClick={() => { localStorage.removeItem("breach-command.tutorial-complete"); setTutorial(true); setSettings(false); }}><GraduationCap size={17} /> Restart command tutorial</button>
           <button className="secondary-button full" onClick={() => { const action = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); Promise.resolve(action).catch(() => {}); }}><Maximize2 size={17} /> Toggle full screen</button>
           <p className="shortcut-note">Keyboard: F field guide · M sound · G guided reflection</p>
         </DialogContent>
