@@ -40,11 +40,15 @@ import {
   FileDown,
   FileUp,
   GitBranch,
+  LayoutDashboard,
+  Search,
+  MessagesSquare,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { CommandEvent } from "@/components/game/command-event";
@@ -80,6 +84,7 @@ import {
   getAdversaryState,
   getAdversaryRead,
   getAdversaryProfile,
+  getAttributionRead,
   getOperationalLabel,
   getObjectiveRead,
   getTurnLimit,
@@ -107,6 +112,7 @@ import { decodeChallenge, encodeChallenge, namedSpecialists, seededChallengeRand
 import { campaignRoutes, incidentVariant, routeForCampaign, specialistReaction } from "@/lib/phase9";
 
 const stageIcons = [LockKeyhole, Activity, RotateCcw, Radio];
+type WorkspaceView = "command" | "investigate" | "briefing";
 
 export default function Home() {
   const [game, setGame] = useState<Game | null>(null);
@@ -146,6 +152,7 @@ export default function Home() {
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   const [backupInput, setBackupInput] = useState("");
   const [backupMessage, setBackupMessage] = useState("");
+  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
   const stateRef = useRef(game);
   const busyRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -181,7 +188,9 @@ export default function Home() {
     const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, challengeSeed) });
     setGame(next);
     setGuided(mode === "expert" ? false : guided);
-    setTutorial(localStorage.getItem("breach-command.tutorial-complete") !== "true");
+    const tutorialComplete = localStorage.getItem("breach-command.tutorial-complete") === "true";
+    setTutorial(!tutorialComplete);
+    if (tutorialComplete) setFastResolve(true);
     setMissionBriefing(true);
     setSelected(null);
     setReport(null);
@@ -190,6 +199,7 @@ export default function Home() {
     setDebrief(false);
     setNewConfirm(false);
     setAnnouncement("New investigation started.");
+    setActiveWorkspace("command");
     playFeedback("open", soundEnabled, hapticsEnabled);
     setAdaptiveScore(musicEnabled, 0.15);
     recordTelemetry("start", { scenario: index });
@@ -207,6 +217,7 @@ export default function Home() {
     setInlineReport(null);
     setSavedSession(null);
     setAnnouncement(`Resumed ${scenarios[session.game.scenario].title}.`);
+    setActiveWorkspace(session.game.pendingDecision || session.game.pendingCommand || session.game.pendingSetPiece ? "command" : "investigate");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -227,9 +238,10 @@ export default function Home() {
       if (interval) clearInterval(interval);
       const next = playTurn(current, id, undefined, { scope: actionScope, intensity: actionIntensity });
       const result = next.turns.at(-1)!;
-      const requiresDialog = !quick || !!result.revealed || !!result.inject || !!result.adversaryEvent || next.status !== "playing";
+      const requiresDialog = !!result.revealed || !!result.inject || !!result.adversaryEvent || next.status !== "playing";
       setDie(result.raw);
       setGame(next);
+      if (next.pendingDecision || next.pendingCommand || next.pendingSetPiece || next.status !== "playing") setActiveWorkspace("command");
       setReport(requiresDialog ? result : null);
       setInlineReport(requiresDialog ? null : result);
       setRolling(false);
@@ -248,6 +260,7 @@ export default function Home() {
     if (!current) return;
     const next = resolveDecision(current, choice);
     setGame(next);
+    setActiveWorkspace(next.status === "playing" ? "investigate" : "command");
     playFeedback("decision", soundEnabled, hapticsEnabled);
     setAnnouncement(`Decision recorded. Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
   }
@@ -278,6 +291,7 @@ export default function Home() {
     if (!current) return;
     const next = resolveCommand(current, choice);
     setGame(next);
+    setActiveWorkspace("investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
     setAnnouncement(`Command decision recorded. Business impact is ${next.impact}.`);
   }
@@ -287,6 +301,7 @@ export default function Home() {
     if (!current) return;
     const next = resolveSetPiece(current, choice);
     setGame(next);
+    setActiveWorkspace("investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
     setAnnouncement(`Sector decision recorded. ${getOperationalLabel(next)} is ${next.continuity}.`);
   }
@@ -297,14 +312,14 @@ export default function Home() {
     setGame(setInfrastructureFocus(current, nodeId));
   }
 
-  function correlate(ids: [string, string]) {
+  function correlate(ids: [string, string], assessment: "causal" | "coincidental") {
     const current = stateRef.current;
     if (!current) return;
-    const next = correlateEvidence(current, ids);
+    const next = correlateEvidence(current, ids, assessment);
     setGame(next);
-    const valid = next.correlations.at(-1)?.valid;
-    playFeedback(valid ? "success" : "failure", soundEnabled, hapticsEnabled);
-    setAnnouncement(valid ? "Causal relationship supported." : "Correlation recorded without sufficient causal support.");
+    const correct = next.correlations.at(-1)?.correct;
+    playFeedback(correct ? "success" : "failure", soundEnabled, hapticsEnabled);
+    setAnnouncement(correct ? "Evidence assessment supported." : "Evidence assessment challenged.");
   }
 
   function chooseCaseTheory(objective: AdversaryObjectiveId) {
@@ -528,10 +543,6 @@ export default function Home() {
               <div>{(Object.keys(difficulties) as Difficulty[]).map(id => <button key={id} className={difficulty === id ? "active" : ""} aria-pressed={difficulty === id} onClick={() => setDifficulty(id)}><strong>{difficulties[id].title}</strong><small>{difficulties[id].maxTurns} turns · {difficulties[id].threshold}+</small></button>)}</div>
               <p>{difficulties[difficulty].description}</p>
             </div>
-            <div className="mode-picker">
-              <span className="eyebrow">OPERATION MODE</span>
-              <div>{(Object.keys(gameModes) as GameMode[]).map(id => <button key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => setMode(id)}><strong>{gameModes[id].title}</strong><small>{gameModes[id].description}</small></button>)}</div>
-            </div>
             <div className="specialist-picker">
               <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small>Fatigue carries between campaign operations.</small></label>
               <select id="specialist" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
@@ -539,22 +550,29 @@ export default function Home() {
               </select>
               <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].role}. {specialists[specialist].ability} Cohesion {campaign.specialistBonds[specialist] ?? 35}/100.</p>
             </div>
-            <div className="challenge-console">
-              <div><span className="eyebrow">SCENARIO CODE</span><button onClick={() => { const seed = 100000 + Math.floor(Math.random() * 900000); setChallengeSeed(seed); setChallengeMessage("New challenge generated."); }}><RefreshCw size={14} /> New seed</button></div>
-              <code>{challengeCode}</code>
-              <div className="challenge-load"><input aria-label="Challenge code" value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder="Enter a BC challenge code" /><button onClick={loadChallengeCode}>Load</button></div>
-              {challengeMessage && <p aria-live="polite">{challengeMessage}</p>}
-            </div>
-            <div className="setup-controls">
-              <div className="guided-control">
-                <div><label htmlFor="guided-start">Guided reflection</label><small>Strategic prompts, never the correct card.</small></div>
-                <Switch id="guided-start" checked={guided} onCheckedChange={setGuided} />
+            <details className="advanced-setup">
+              <summary><Settings2 size={16} /> Advanced operation settings <span>{gameModes[mode].title}</span></summary>
+              <div className="mode-picker">
+                <span className="eyebrow">OPERATION MODE</span>
+                <div>{(Object.keys(gameModes) as GameMode[]).map(id => <button key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => setMode(id)}><strong>{gameModes[id].title}</strong><small>{gameModes[id].description}</small></button>)}</div>
               </div>
-              <div className="guided-control">
-                <div><label htmlFor="fast-start">Fast resolution</label><small>Skip confirmations and dice animation after turn one.</small></div>
-                <Switch id="fast-start" checked={fastResolve} onCheckedChange={setFastResolve} />
+              <div className="challenge-console">
+                <div><span className="eyebrow">SCENARIO CODE</span><button onClick={() => { const seed = 100000 + Math.floor(Math.random() * 900000); setChallengeSeed(seed); setChallengeMessage("New challenge generated."); }}><RefreshCw size={14} /> New seed</button></div>
+                <code>{challengeCode}</code>
+                <div className="challenge-load"><input aria-label="Challenge code" value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder="Enter a BC challenge code" /><button onClick={loadChallengeCode}>Load</button></div>
+                {challengeMessage && <p aria-live="polite">{challengeMessage}</p>}
               </div>
-            </div>
+              <div className="setup-controls">
+                <div className="guided-control">
+                  <div><label htmlFor="guided-start">Guided reflection</label><small>Strategic prompts, never the correct card.</small></div>
+                  <Switch id="guided-start" checked={guided} onCheckedChange={setGuided} />
+                </div>
+                <div className="guided-control">
+                  <div><label htmlFor="fast-start">Fast resolution</label><small>Resolve routine actions inline after the tutorial.</small></div>
+                  <Switch id="fast-start" checked={fastResolve} onCheckedChange={setFastResolve} />
+                </div>
+              </div>
+            </details>
             {savedSession && (
               <section className="resume-card">
                 <div><Clock3 size={19} /><span><strong>Investigation saved</strong><small>{scenarios[savedSession.game.scenario].title} · Turn {savedSession.game.turns.length} · {savedSession.game.impact} impact</small></span></div>
@@ -592,9 +610,15 @@ export default function Home() {
             </div>
           </section>
 
-          <div className="game-layout">
-            <div className="table-area">
-              <section className="attack-section">
+          <nav className="workspace-tabs" aria-label="Command workspace">
+            <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><LayoutDashboard size={18} /><span><strong>Command</strong><small>Situation and decisions</small></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Action</b>}</button>
+            <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing" || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece}><Search size={18} /><span><strong>Investigate</strong><small>Map, theory and evidence</small></span><b>{game.evidence.length}</b></button>
+            <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><MessagesSquare size={18} /><span><strong>Briefing</strong><small>Captain and incident log</small></span><b>{game.turns.length}</b></button>
+          </nav>
+
+          <div className="game-layout workspace-shell">
+            <div className="table-area" hidden={activeWorkspace === "briefing"}>
+              <section className="attack-section" hidden={activeWorkspace !== "command"}>
                 <div className="section-heading"><h2>Attack chain</h2><span className="mono muted">{game.revealed.length} / 4 REVEALED</span></div>
                 <div className="attack-grid">
                   {stages.map((stage, index) => {
@@ -614,15 +638,13 @@ export default function Home() {
                 </div>
               </section>
 
-              <section className="director-live"><div><span className="eyebrow">{campaignRoutes[game.campaignRoute].title.toUpperCase()} ROUTE · {game.variant.title.toUpperCase()}</span><strong>{game.variant.briefing}</strong><small>{game.variant.modifier}</small></div><div><span className="eyebrow">ACTOR SIGNATURE</span><strong>{getAdversaryProfile(game).signature}</strong><small>{getAdversaryProfile(game).counterplay}</small></div></section>
+              <section className="director-live" hidden={activeWorkspace !== "command"}><div><span className="eyebrow">{campaignRoutes[game.campaignRoute].title.toUpperCase()} ROUTE · {game.variant.title.toUpperCase()}</span><strong>{game.variant.briefing}</strong><small>{game.variant.modifier}</small></div><div><span className="eyebrow">ATTRIBUTION · {getAttributionRead(game).confidence}</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div></section>
 
-              <InfrastructureConsole game={game} onFocus={focusInfrastructure} />
+              <div hidden={activeWorkspace !== "command"}><SectorBoard game={game} /></div>
 
-              <SectorBoard game={game} />
+              {activeWorkspace === "command" && tutorial && game.status === "playing" && <TutorialCoach game={game} onDismiss={() => { setTutorial(false); setFastResolve(true); localStorage.setItem("breach-command.tutorial-complete", "true"); }} />}
 
-              {tutorial && game.status === "playing" && <TutorialCoach game={game} onDismiss={() => { setTutorial(false); localStorage.setItem("breach-command.tutorial-complete", "true"); }} />}
-
-              {ended ? (
+              {activeWorkspace === "command" && (ended ? (
                 <section className="end-banner">
                   <div className="end-icon">{game.status === "won" ? <Trophy /> : <Flag />}</div>
                   <div>
@@ -635,40 +657,46 @@ export default function Home() {
                 <ResponsePanel game={game} onChoose={respond} />
               ) : (
                 <section className="lead-strip"><Activity size={20} /><div><span className="eyebrow">CURRENT INTELLIGENCE</span><p>{getLead(game)}</p></div></section>
-              )}
+              ))}
 
-              {game.status === "playing" && !game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
+              {activeWorkspace === "command" && game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
 
-              {game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
+              {activeWorkspace === "command" && game.status === "playing" && <SectorSetPiece game={game} onChoose={sectorDecision} />}
 
-              {game.status === "playing" && <SectorSetPiece game={game} onChoose={sectorDecision} />}
-
-              {game.status === "playing" && <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />}
-
-              {inlineReport && (
-                <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
-                  <div>
-                    <span className="eyebrow">TURN {inlineReport.number} · QUICK RESULT</span>
-                    <strong>{inlineReport.success ? "Procedure succeeded" : "Procedure unsuccessful"} · {inlineReport.total}</strong>
-                    <p>{inlineReport.narrative}</p>
+              {activeWorkspace === "investigate" && game.status === "playing" && (
+                <div className="investigation-dashboard">
+                  <div className="investigation-context">
+                    <InfrastructureConsole game={game} onFocus={focusInfrastructure} />
+                    {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
+                    <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />
                   </div>
-                  <button onClick={() => setInlineReport(null)} aria-label="Dismiss quick result"><X size={18} /></button>
-                </section>
-              )}
-
-              {game.status === "playing" && !game.pendingCommand && !game.pendingSetPiece && (
-                <section className="procedure-section">
-                  <div className="section-heading">
-                    <div><h2>Investigation procedures</h2><p>Choose one action per turn. Used actions cool down for three turns.</p></div>
-                    <span className="established-key">+3 Established</span>
+                  <div className="investigation-actions">
+                    {inlineReport && (
+                      <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
+                        <div>
+                          <span className="eyebrow">TURN {inlineReport.number} · QUICK RESULT</span>
+                          <strong>{inlineReport.success ? "Procedure succeeded" : "Procedure unsuccessful"} · {inlineReport.total}</strong>
+                          <p>{inlineReport.narrative}</p>
+                        </div>
+                        <button onClick={() => setInlineReport(null)} aria-label="Dismiss quick result"><X size={18} /></button>
+                      </section>
+                    )}
+                    {!game.pendingCommand && !game.pendingSetPiece && (
+                      <section className="procedure-section">
+                        <div className="section-heading">
+                          <div><h2>Investigation procedures</h2><p>Choose one action per turn. Used actions cool down for three turns.</p></div>
+                          <span className="established-key">+2 Established</span>
+                        </div>
+                        {guided && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game)}</span></div>}
+                        <ProcedureGrid game={game} disabled={rolling} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
+                      </section>
+                    )}
                   </div>
-                  {guided && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game)}</span></div>}
-                  <ProcedureGrid game={game} disabled={rolling} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
-                </section>
+                </div>
               )}
             </div>
 
-            <aside className="captain-column">
+            <aside className="captain-column" hidden={activeWorkspace !== "briefing"}>
               <section className="captain-panel">
                 <div className="captain-label"><span className="captain-avatar"><Terminal size={23} /></span><div><h2>Incident Captain</h2><span>ADAPTIVE COMPUTER FACILITATOR</span></div></div>
                 <div className="brief-label">SITUATION</div>
@@ -707,7 +735,7 @@ export default function Home() {
                   </div>
                 )}
               </section>
-              <div className="rules-reminder"><Dices size={18} /><p>{config.threshold}+ succeeds. A correct hypothesis and a highlighted evidence source can add +1.</p></div>
+              <div className="rules-reminder"><Dices size={18} /><p>{config.threshold}+ succeeds. A correct hypothesis paired with relevant evidence can add +2.</p></div>
             </aside>
           </div>
 
@@ -715,9 +743,9 @@ export default function Home() {
         </main>
       )}
 
-      <Dialog open={!!proc && !rolling} onOpenChange={open => { if (!open) setSelected(null); }}>
-        <DialogContent className="game-dialog">
-          <DialogHeader><div className="eyebrow">PREPARE ACTION</div><DialogTitle>{proc?.title}</DialogTitle><DialogDescription>{proc?.description}</DialogDescription></DialogHeader>
+      <Sheet open={!!proc && !rolling} onOpenChange={open => { if (!open) setSelected(null); }}>
+        <SheetContent className="action-sheet" side="right">
+          <SheetHeader><div className="eyebrow">PREPARE ACTION</div><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc?.description}</SheetDescription></SheetHeader>
           {proc && game && <>
             <div className="action-note"><span className="eyebrow">HYPOTHESIS CHECK</span><p>{proc.question}</p></div>
             <div className="procedure-planner">
@@ -726,18 +754,18 @@ export default function Home() {
             </div>
             <div className={`alignment-notice ${procedureAligned ? "aligned" : ""}`}>
               <BrainLabel aligned={procedureAligned} />
-              <span>{procedureAligned ? "This procedure supports your working hypothesis. It earns +1 if the hypothesis matches the next unresolved stage." : "This procedure does not directly support your working hypothesis. It can still reveal evidence, but cannot earn the hypothesis bonus."}</span>
+              <span>{procedureAligned ? "This procedure tests your working hypothesis. Sound alignment can add +2 when the theory matches the next unresolved stage." : "This procedure does not directly test your working hypothesis. It may still collect useful evidence, but receives no reasoning bonus."}</span>
             </div>
             <div className="roll-preview">
               <div><span>D20</span><small>Dice roll</small></div><span>+</span>
-              <div><span>{(game.established.includes(proc.id) ? 3 : 0) + game.nextModifier + procedureScopes[actionScope].modifier + procedureIntensities[actionIntensity].modifier + (specialists[game.specialist].procedures.includes(proc.id as never) && game.specialistFatigue < 5 ? 2 : 0)}</span><small>Known modifier</small></div><span>≥</span>
+              <div><span>{(game.established.includes(proc.id) ? 2 : 0) + game.nextModifier + procedureScopes[actionScope].modifier + procedureIntensities[actionIntensity].modifier + (specialists[game.specialist].procedures.includes(proc.id as never) && game.specialistFatigue < 5 ? 1 : 0)}</span><small>Known modifier</small></div><span>≥</span>
               <div><span>{config.threshold}</span><small>To succeed</small></div>
             </div>
             <p className="muted small">Success reveals a stage only when this evidence source matches an undiscovered technique. The action consumes one turn and may increase impact.</p>
             <button className="primary-button full" onClick={() => run(proc.id)}><Dices size={19} /> Run procedure</button>
           </>}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={rolling} onOpenChange={() => {}}>
         <DialogContent className="roll-dialog" showCloseButton={false} onEscapeKeyDown={event => event.preventDefault()} onPointerDownOutside={event => event.preventDefault()}>
@@ -754,7 +782,7 @@ export default function Home() {
               <div><span>MODE</span><strong>{gameModes[game.mode].title}</strong><small>{gameModes[game.mode].description}</small></div>
               <div><span>SECTOR CONDITION</span><strong>{sectorSystems[game.scenario].title}</strong><small>{sectorSystems[game.scenario].rule}</small></div>
               <div><span>DEPLOYED SPECIALIST</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
-              <div><span>THREAT GROUP</span><strong>{getAdversaryProfile(game).title}</strong><small>{getAdversaryProfile(game).description}</small></div>
+              <div><span>ATTRIBUTION</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div>
               <div><span>CAMPAIGN ROUTE</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>
               <div><span>INCIDENT VARIANT</span><strong>{game.variant.title}</strong><small>{game.variant.briefing}</small></div>
             </div>
@@ -804,7 +832,7 @@ export default function Home() {
           <div className="rules-content">
             <div className="rules-grid">
               <section><h3>01 / Objective</h3><p>Reveal four hidden attack stages before the turn limit or impact reaches 100. Then make containment and recovery decisions.</p></section>
-              <section><h3>02 / Hypotheses &amp; dice</h3><p>Record one explanation per turn. Highlighted evidence sources can earn +1 when the hypothesis matches the next unresolved stage. Established procedures add +3.</p></section>
+              <section><h3>02 / Hypotheses &amp; evidence</h3><p>Record one explanation per turn. A correct theory paired with a relevant evidence source earns +2. Established procedures add +2.</p></section>
               <section><h3>03 / Adaptive adversary</h3><p>The actor escalates according to its behaviour profile and can move to a route less exposed by your recent procedures after intervention.</p></section>
               <section><h3>04 / Contextual decisions</h3><p>Each discovery creates a technique-specific choice: gather stronger evidence or intervene. The best choice depends on current impact and adversary tempo.</p></section>
               <section><h3>05 / Hidden consequences</h3><p>Decision cards show disruption, confidence and residual risk rather than exact scores. Natural rolls and failure streaks can trigger injects.</p></section>

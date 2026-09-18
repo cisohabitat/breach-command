@@ -13,11 +13,11 @@ The player takes command of one of ten fictional cyber incidents. Each operation
 3. Choose the scope and intensity of the action.
 4. Reveal four hidden attack stages before the investigation window closes.
 5. Balance evidence preservation, intervention and essential-service continuity.
-6. Correlate findings to distinguish causal relationships from coincidence.
+6. Assess selected findings as causal or coincidental, then test that judgement.
 7. Declare and revise a case theory for the adversary objective, then test it against causal evidence.
 8. Make containment and recovery decisions, then review the after-action report.
 
-Procedure checks use a d20. Established procedures, correct hypotheses, aligned infrastructure focus and matching specialists can modify the roll. Used procedures cool down, while failed actions, actor tempo and sector pressure can end an operation before the chain is found.
+Procedure checks use a d20, but evidence-led reasoning now carries more weight than tool familiarity. Correct hypotheses receive a larger bonus than established procedures or specialist familiarity. Used procedures cool down, while failed actions, actor tempo and sector pressure can end an operation before the chain is found.
 
 ## Major systems
 
@@ -25,8 +25,10 @@ Procedure checks use a d20. Established procedures, correct hypotheses, aligned 
 - **Three difficulty levels:** Training, Operational and Crisis.
 - **Five modes:** Campaign, Daily Operation, Ironman, Escalation and Expert.
 - **Distinct adaptive adversaries:** recurring threat groups have signature mechanics, learn from procedure use, hypotheses and command posture, and can move to less-exposed routes.
+- **Progressive attribution:** threat-group identity is withheld until the evidence supports behavioural, suspected, probable and attributed confidence levels.
+- **Focused command workspace:** Command, Investigate and Briefing views keep the immediate decision, analytical work and supporting context separate without removing information.
 - **Infrastructure command maps:** every incident has a selectable five-node topology. Aligned procedures receive a planning bonus.
-- **Evidence workspace:** successful actions build a timeline. Players declare an objective theory, select findings and test whether relationships are causal.
+- **Evidence workspace:** successful actions build a timeline. Players declare an objective theory, select findings, judge the relationship as causal or coincidental, and receive consequences for unsupported inference.
 - **Operational decisions:** technique decisions, command events and a unique sector crisis change pressure, continuity, sector condition and actor progress.
 - **Persistent command team:** six named specialists have distinct capabilities, callsigns, fatigue, cohesion and after-action reactions.
 - **Branching campaign director:** command posture, trust and completed operations select Watchtower, Breakwater, Common Ground or Convergence routes. Routes alter starting conditions and mission priorities.
@@ -76,7 +78,7 @@ pnpm build
 
 | Path | Responsibility |
 | --- | --- |
-| `app/page.tsx` | Game orchestration, start screen, dialogs, settings and debrief |
+| `app/page.tsx` | Game orchestration, focused workspaces, start screen, action sheet, settings and debrief |
 | `app/globals.css` | Tactical visual system and responsive layouts |
 | `components/game/` | Gameplay boards, maps, events, procedures and tutorial surfaces |
 | `components/ui/` | Reusable interface primitives |

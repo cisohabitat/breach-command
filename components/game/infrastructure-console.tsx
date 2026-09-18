@@ -12,16 +12,17 @@ export function InfrastructureConsole({ game, onFocus }: { game: Game; onFocus: 
           {topology.nodes.map((node, index) => {
             const state = index < activeStage ? "affected" : index === activeStage ? "exposed" : "clear";
             const critical = node.id === topology.critical;
+            const findings = game.evidence.filter(item => item.system === node.label).length;
             return <button key={node.id} className={`${state} ${game.focusedNode === node.id ? "focused" : ""}`} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
               <span className="node-icon">{critical ? <ShieldAlert size={18} /> : state === "affected" ? <CircleDot size={18} /> : <Network size={18} />}</span>
               <small>{node.type}{critical ? " · CRITICAL" : ""}</small><strong>{node.label}</strong>
-              <em>{game.focusedNode === node.id ? "EVIDENCE FOCUS" : state.toUpperCase()}</em>
+              <em>{game.focusedNode === node.id ? "EVIDENCE FOCUS" : findings ? `${findings} FINDING${findings === 1 ? "" : "S"}` : state.toUpperCase()}</em>
             </button>;
           })}
         </div>
-        <div className="topology-routes">{topology.edges.map(edge => <div key={`${edge.from}-${edge.to}`}><span>{topology.nodes.find(node => node.id === edge.from)?.label}</span><b>{edge.label}</b><span>{topology.nodes.find(node => node.id === edge.to)?.label}</span></div>)}</div>
+        <div className="topology-routes" aria-label="Trust relationships">{topology.edges.map((edge, index) => <div className={index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}><span>{topology.nodes.find(node => node.id === edge.from)?.label}</span><b>{edge.label}</b><span>{topology.nodes.find(node => node.id === edge.to)?.label}</span><i>{index < Math.max(0, activeStage - 1) ? "CONFIRMED" : index === Math.max(0, activeStage - 1) ? "SUSPECTED" : "UNASSESSED"}</i></div>)}</div>
       </div>
-      <p className="map-intel">Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Procedures aligned to the selected node receive +1.</p>
+      <p className="map-intel">Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Select the boundary your next action should test. Aligned procedures receive +1.</p>
     </section>
   );
 }

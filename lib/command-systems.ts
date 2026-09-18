@@ -14,10 +14,10 @@ export const gameModes: Record<GameMode, { title: string; description: string; r
 };
 
 export const specialists = {
-  hunter: { title: "Threat hunter", role: "Cross-source behaviour", procedures: ["hunt", "network", "intel"], ability: "+2 when using hunting, network or intelligence evidence." },
-  forensics: { title: "Forensics lead", role: "Host and artefact reconstruction", procedures: ["forensic", "endpoint", "server"], ability: "+2 when using endpoint, server or forensic evidence." },
-  identity: { title: "Identity specialist", role: "Accounts, tokens and trust", procedures: ["identity", "cloud", "email"], ability: "+2 when using identity, cloud or email evidence." },
-  ot: { title: "OT security engineer", role: "Operational technology boundaries", procedures: ["network", "firewall", "server"], ability: "+2 on boundary evidence and reduces sector degradation." },
+  hunter: { title: "Threat hunter", role: "Cross-source behaviour", procedures: ["hunt", "network", "intel"], ability: "+1 when using hunting, network or intelligence evidence." },
+  forensics: { title: "Forensics lead", role: "Host and artefact reconstruction", procedures: ["forensic", "endpoint", "server"], ability: "+1 when using endpoint, server or forensic evidence." },
+  identity: { title: "Identity specialist", role: "Accounts, tokens and trust", procedures: ["identity", "cloud", "email"], ability: "+1 when using identity, cloud or email evidence." },
+  ot: { title: "OT security engineer", role: "Operational technology boundaries", procedures: ["network", "firewall", "server"], ability: "+1 on boundary evidence and reduces sector degradation." },
   continuity: { title: "Continuity lead", role: "Service consequence management", procedures: ["server", "cloud", "network"], ability: "Reduces continuity and sector-health losses from investigative delay." },
   communications: { title: "Communications lead", role: "Leadership and stakeholder confidence", procedures: ["intel", "email", "identity"], ability: "Reduces business pressure and improves leadership decisions." },
 } as const;
@@ -37,7 +37,7 @@ export const adversaryObjectives = {
   exfiltration: { title: "Strategic data theft", tell: "The actor is staging and moving high-value information.", pressure: "DATA EXPOSURE" },
   disruption: { title: "Service disruption", tell: "The actor is positioning to interrupt an essential service.", pressure: "DISRUPTION READINESS" },
   fraud: { title: "Financial manipulation", tell: "The actor is seeking trusted transactions and approval paths.", pressure: "FRAUD POSITION" },
-  espionage: { title: "Long-term espionage", tell: "The actor values durable access and low-noise collection.", pressure: "COLLECTION POSITION" },
+  espionage: { title: "Long-term collection", tell: "The actor values durable access and low-noise collection.", pressure: "COLLECTION POSITION" },
   preposition: { title: "Strategic pre-positioning", tell: "The actor is mapping dependencies for later operational effect.", pressure: "PRE-POSITIONING" },
 } as const;
 

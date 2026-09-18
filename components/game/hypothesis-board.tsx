@@ -1,6 +1,6 @@
 import { BrainCircuit, Gauge } from "lucide-react";
 import {
-  getAdversaryProfile,
+  getAttributionRead,
   getAdversaryState,
   hypotheses,
   procedures,
@@ -15,7 +15,7 @@ export function HypothesisBoard({
   game: Game;
   onChoose: (id: HypothesisId) => void;
 }) {
-  const profile = getAdversaryProfile(game);
+  const attribution = getAttributionRead(game);
   return (
     <section className="hypothesis-board" aria-labelledby="hypothesis-heading">
       <div className="hypothesis-heading">
@@ -28,7 +28,7 @@ export function HypothesisBoard({
         </div>
         <span
           className={`adversary-state tempo-${game.adversaryTempo}`}
-          title={profile.description}
+          title={attribution.detail}
         >
           <Gauge size={14} /> ACTOR: {getAdversaryState(game).toUpperCase()}
         </span>

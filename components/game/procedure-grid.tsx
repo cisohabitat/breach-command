@@ -46,12 +46,12 @@ export function ProcedureGrid({
             className={`procedure-card ${established ? "established" : ""} ${cooldown ? "cooling" : ""} ${aligned ? "hypothesis-aligned" : ""}`}
             disabled={disabled || cooldown > 0 || !!game.pendingDecision}
             onClick={() => onChoose(procedure.id)}
-            aria-label={`${procedure.title}${established ? ", established, plus 3" : ""}${aligned ? ", supports current hypothesis" : ""}${cooldown ? `, available in ${cooldown} turns` : ""}`}
+            aria-label={`${procedure.title}${established ? ", established, plus 2" : ""}${aligned ? ", supports current hypothesis" : ""}${cooldown ? `, available in ${cooldown} turns` : ""}`}
           >
             <div className="procedure-top">
               <span className="procedure-icon"><Icon size={20} /></span>
               <span className={`procedure-badge ${established ? "bonus" : ""}`}>
-                {cooldown ? <><Clock3 size={12} /> {cooldown} turn{cooldown === 1 ? "" : "s"}</> : established ? "+3" : "+0"}
+                {cooldown ? <><Clock3 size={12} /> {cooldown} turn{cooldown === 1 ? "" : "s"}</> : established ? "+2" : "+0"}
               </span>
             </div>
             <h3>{procedure.title}</h3>

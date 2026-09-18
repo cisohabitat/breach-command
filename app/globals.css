@@ -185,3 +185,43 @@ html,body{max-width:100%;overflow-x:clip}
 @media(max-width:650px){.director-live{grid-template-columns:1fr}.case-theory>div:last-child{display:grid;grid-template-columns:1fr 1fr}.case-theory button{min-height:44px}.evidence-timeline{overflow-x:auto}.evidence-timeline span{min-width:72px}.backup-console>div{align-items:stretch;flex-direction:column}.backup-console>div>button{align-self:flex-start}}
 @media(min-width:651px) and (max-width:900px){.director-live{grid-template-columns:1fr 1fr}.case-theory button{min-height:44px}.backup-console textarea{min-height:110px}}
 @media(prefers-reduced-motion:reduce){.attack-card.revealed{animation:none}}
+
+/* Phase 10: command-loop compression and evidence-led deduction */
+.advanced-setup{border:1px solid #3e5142;background:#121d16;border-radius:7px;margin:14px 0 20px;overflow:hidden}
+.advanced-setup>summary{list-style:none;min-height:48px;padding:11px 13px;display:flex;align-items:center;gap:9px;color:#d4e1d1;font-size:.875rem;cursor:pointer}
+.advanced-setup>summary::-webkit-details-marker{display:none}.advanced-setup>summary svg{color:var(--lime)}.advanced-setup>summary span{margin-left:auto;color:var(--lime);font:500 .75rem ui-monospace,SFMono-Regular,Consolas,monospace}
+.advanced-setup[open]>summary{border-bottom:1px solid #35483a;background:#1a281f}.advanced-setup>.mode-picker,.advanced-setup>.challenge-console,.advanced-setup>.setup-controls{margin:14px}
+.advanced-setup .guided-control:last-child{padding-bottom:4px}
+
+.game-heading{margin-bottom:20px}.case-meters{display:flex;gap:18px;align-items:end}.impact-meter,.continuity-meter{width:155px}.impact-meter>.mono,.continuity-meter>.mono{display:block;color:var(--text-soft);font-size:.75rem;line-height:1.25;min-height:30px}.impact-meter strong,.continuity-meter strong{display:block;font-size:1.25rem;margin:3px 0}.impact-meter small,.continuity-meter small{display:block;color:var(--text-soft);font-size:.75rem;margin-top:4px}
+.workspace-tabs{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 22px;padding:10px;background:#101817f2;border:1px solid #34483a;border-radius:10px;box-shadow:0 12px 26px #0004;backdrop-filter:blur(14px)}
+.workspace-tabs button{min-height:58px;display:flex;align-items:center;gap:10px;border:1px solid transparent;border-radius:7px;background:#17221c;color:#9fb0a5;padding:8px 12px;text-align:left}
+.workspace-tabs button:hover:not(:disabled){border-color:#52674f;color:#dfe9dc}.workspace-tabs button.active{border-color:var(--lime);background:#283b2b;color:#eff8eb}.workspace-tabs button:disabled{opacity:.45}
+.workspace-tabs button>span{display:flex;flex-direction:column;min-width:0}.workspace-tabs strong{font-size:.9375rem}.workspace-tabs small{font-size:.8125rem;color:#93a798;margin-top:2px}.workspace-tabs b{margin-left:auto;min-width:24px;height:24px;border:1px solid #52654c;border-radius:999px;display:grid;place-items:center;color:var(--lime);font:500 .75rem ui-monospace,SFMono-Regular,Consolas,monospace}
+.workspace-shell{display:block;max-width:1280px;margin:0 auto}.workspace-shell .table-area{min-width:0}.workspace-shell .captain-column{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,1fr);gap:20px}.workspace-shell .captain-panel{min-height:420px}.workspace-shell .journal-panel{border:1px solid #36463b;background:#161f1a;border-radius:8px;padding:21px}.workspace-shell .rules-reminder{grid-column:1/-1;margin:0}
+.attack-section .attack-card{min-height:190px}.attack-section .attack-emblem{height:48px}.director-live{margin-top:14px}
+.investigation-dashboard{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(390px,1fr);gap:20px;align-items:start}.investigation-context,.investigation-actions{min-width:0}.investigation-dashboard .infrastructure-console{margin-top:0}.investigation-dashboard .evidence-workspace{margin-bottom:0}.investigation-dashboard .procedure-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.investigation-dashboard .procedure-card{min-height:156px}.investigation-dashboard .procedure-top{margin-bottom:12px}.investigation-actions{position:sticky;top:90px;border:1px solid #34483a;background:#121c17;border-radius:9px;padding:17px;max-height:calc(100dvh - 108px);overflow:auto;scrollbar-width:thin;scrollbar-color:#46563e transparent}.investigation-actions .inline-result{margin-top:0}
+
+.action-sheet{width:min(520px,94vw)!important;max-width:520px!important;padding:18px 20px 22px!important;background:radial-gradient(circle at 100% 0,#36533855,transparent 35%),#142018!important;border-color:#4a5d4c!important;overflow-y:auto}
+.action-sheet [data-slot=sheet-header]{padding:4px 28px 4px 0}.action-sheet [data-slot=sheet-title]{font-size:1.5rem;font-weight:500}.action-sheet [data-slot=sheet-description]{font-size:.9375rem;line-height:1.55;color:#adbcaa}
+.action-sheet .procedure-planner{margin-top:4px}.action-sheet .primary-button{position:sticky;bottom:0;box-shadow:0 -12px 24px #142018}
+
+.relationship-assessment{display:grid;grid-template-columns:auto 1fr 1fr;gap:7px;align-items:center;margin:12px 0}.relationship-assessment>span{font:500 .75rem ui-monospace,SFMono-Regular,Consolas,monospace;color:#9aac99}.relationship-assessment button{min-height:42px;border:1px solid #405244;background:#17221b;color:#aebbaa;border-radius:5px;padding:8px 10px;font-size:.8125rem}.relationship-assessment button.active{border-color:#e3c462;background:#342d1b;color:#f1dc91}
+.topology-routes>div{position:relative;padding-right:72px;min-height:48px}.topology-routes>div i{position:absolute;right:0;top:50%;transform:translateY(-50%);font:500 .6875rem ui-monospace,SFMono-Regular,Consolas,monospace;font-style:normal;color:#718274}.topology-routes>div.route-confirmed{box-shadow:inset 2px 0 var(--lime)}.topology-routes>div.route-confirmed i{color:var(--lime)}.topology-routes>div.route-suspected{box-shadow:inset 2px 0 #e4c15f}.topology-routes>div.route-suspected i{color:#e4c15f}
+
+.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards span,.evidence-cards small,.evidence-cards em,.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small,.turn-effects span{font-size:.75rem}
+.topology-nodes strong,.evidence-cards strong,.case-theory strong,.procedure-planner strong,.procedure-planner small{font-size:.8125rem}.map-intel,.evidence-empty p,.correlation-results p span{font-size:.8125rem}.question-list button,.guided-inline label{font-size:.875rem}
+
+@media(max-width:900px){
+  .workspace-tabs{top:0}.workspace-tabs small{display:none}.workspace-tabs button{min-height:52px;justify-content:center}.workspace-tabs button>span{display:block}.workspace-tabs button b{margin-left:2px}
+  .workspace-shell .captain-column{grid-template-columns:1fr}.workspace-shell .rules-reminder{grid-column:auto}.case-meters{width:100%;display:grid;grid-template-columns:1.2fr 1fr 1fr}
+  .investigation-dashboard{grid-template-columns:1fr}.investigation-actions{position:static;max-height:none;overflow:visible}.investigation-dashboard .procedure-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  .game-screen{padding-top:18px}.game-heading{gap:15px}.case-meters{grid-template-columns:1fr 1fr}.turn-meter{grid-column:1/-1}.impact-meter,.continuity-meter{width:auto}.impact-meter>.mono,.continuity-meter>.mono{min-height:auto}
+  .workspace-tabs{margin-left:-8px;margin-right:-8px;padding:7px;gap:5px}.workspace-tabs button{padding:7px 8px;gap:6px}.workspace-tabs strong{font-size:.8125rem}.workspace-tabs button>b{font-size:.6875rem;min-width:21px;height:21px}
+  .attack-section .attack-card{min-height:170px}.relationship-assessment{grid-template-columns:1fr 1fr}.relationship-assessment>span{grid-column:1/-1}.action-sheet{inset:0!important;width:100%!important;max-width:none!important}
+  .investigation-actions{padding:13px 11px}.investigation-dashboard .procedure-card{min-height:150px}
+}
+@media(max-width:380px){.workspace-tabs button>svg{display:none}.workspace-tabs button{padding-inline:5px}.workspace-tabs button>b{display:none}}
+@media(prefers-reduced-motion:reduce){.workspace-tabs{backdrop-filter:none}.action-sheet,.workspace-tabs button{transition:none}}

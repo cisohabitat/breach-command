@@ -50,6 +50,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Any new campaign field requires a backward-compatible default in `parseCampaign`.
 - Campaign routes and incident variants must remain deterministic for the same challenge seed and campaign state.
 - Case-theory changes are blocked by every pending decision state and must never reveal the hidden objective.
+- Adversary identity remains progressively attributed. Do not expose the profile name in opening briefings or low-confidence operational text.
+- Evidence correlation records both the player's causal assessment and whether that assessment was correct. Timing alone must not be presented as causation.
 - New scenarios must include a topology, sector system, set piece, adversary profile mapping and complete four-stage choice sets.
 
 ## Experience requirements
@@ -61,6 +63,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Never rely on colour alone to communicate state.
 - Preserve reduced-motion behaviour and high-contrast support.
 - Keep main gameplay readable on phone, iPad and PC. Test start, investigation, decisions, response and debrief surfaces when changing shared layout rules.
+- Preserve the Command, Investigate and Briefing workspace separation. Blocking decisions return focus to Command; routine analytical actions remain in Investigate.
 - Player-facing language should be concise, professional and operationally plausible. Avoid exaggerated claims and unnecessary jargon.
 
 ## Change discipline

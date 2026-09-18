@@ -91,7 +91,7 @@ export type AdversaryMemory = {
 };
 export type CommandRecord = { event: CommandEventId; choice: "a" | "b"; title: string; quality: number; effect: string };
 export type EvidenceItem = { id: string; turn: number; title: string; source: string; system: string; confidence: "LOW" | "MODERATE" | "HIGH"; supports: string | null; detail: string };
-export type CorrelationRecord = { evidence: [string, string]; valid: boolean; finding: string };
+export type CorrelationRecord = { evidence: [string, string]; valid: boolean; assessment: "causal" | "coincidental"; correct: boolean; finding: string };
 export type SetPieceRecord = { event: SetPieceId; choice: "a" | "b"; title: string; quality: number; effect: string };
 type Inject = typeof injects[number] & { reason: string };
 export type Turn = {
@@ -260,6 +260,16 @@ export function getAdversaryState(game: Game) {
 
 export function getAdversaryProfile(game: Game) {
   return adversaryProfiles[game.adversaryProfile];
+}
+
+export function getAttributionRead(game: Game) {
+  const profile = getAdversaryProfile(game);
+  const evidence = game.revealed.length;
+  if (evidence === 0) return { title: "Unknown operator", confidence: "LOW", detail: "No reliable attribution. Infer behaviour before assigning an identity." };
+  if (evidence === 1) return { title: "Behavioural pattern emerging", confidence: "DEVELOPING", detail: `${profile.signature}. Treat this as a hypothesis, not attribution.` };
+  if (evidence === 2) return { title: `Suspected: ${profile.title}`, confidence: "MODERATE", detail: profile.description };
+  if (evidence === 3) return { title: `Probable: ${profile.title}`, confidence: "HIGH", detail: `${profile.description} One stage remains unresolved.` };
+  return { title: profile.title, confidence: "ATTRIBUTED", detail: profile.description };
 }
 
 export function getOperationalLabel(game: Game) {
@@ -439,15 +449,15 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   g.adversaryMemory.procedureCounts[procedure] = (g.adversaryMemory.procedureCounts[procedure] ?? 0) + 1;
   const nextHidden = g.chain.find(id => !g.revealed.includes(id));
   const hypothesis = hypotheses.find(item => item.id === g.hypothesis);
-  const planningBonus = nextHidden && g.hypothesis === attackVector(nextHidden) && hypothesis?.procedures.includes(procedure) ? 1 : 0;
+  const planningBonus = nextHidden && g.hypothesis === attackVector(nextHidden) && hypothesis?.procedures.includes(procedure) ? 2 : 0;
   const specialist = specialists[g.specialist];
-  const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < 5 ? 2 : 0;
+  const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < 5 ? 1 : 0;
   const scope = procedureScopes[plan.scope];
   const intensity = procedureIntensities[plan.intensity];
   const focusNode = infrastructureTopologies[g.scenario].nodes.find(node => node.id === g.focusedNode)!;
   const infrastructureBonus = focusNode.procedures.includes(procedure) ? 1 : 0;
   const modeModifier = g.mode === "expert" ? -1 : 0;
-  const modifier = (g.established.includes(procedure) ? 3 : 0) + g.nextModifier + planningBonus + specialistBonus + infrastructureBonus + scope.modifier + intensity.modifier + modeModifier;
+  const modifier = (g.established.includes(procedure) ? 2 : 0) + g.nextModifier + planningBonus + specialistBonus + infrastructureBonus + scope.modifier + intensity.modifier + modeModifier;
   const total = raw + modifier;
   const success = total >= config.threshold;
   g.nextModifier = 0;
@@ -681,7 +691,7 @@ export function resolveSetPiece(game: Game, choice: "a" | "b"): Game {
   return g;
 }
 
-export function correlateEvidence(game: Game, evidenceIds: [string, string]): Game {
+export function correlateEvidence(game: Game, evidenceIds: [string, string], assessment: "causal" | "coincidental" = "causal"): Game {
   if (game.status !== "playing" || game.pendingDecision || game.pendingCommand || game.pendingSetPiece) throw new Error("Evidence cannot be correlated during a pending decision.");
   if (evidenceIds[0] === evidenceIds[1]) throw new Error("Choose two different findings.");
   if (game.correlations.some(record => record.evidence.every(id => evidenceIds.includes(id)))) throw new Error("These findings are already correlated.");
@@ -691,16 +701,21 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string]): Ga
   const firstAttack = first.supports ? attacks.find(item => item.id === first.supports) : null;
   const secondAttack = second.supports ? attacks.find(item => item.id === second.supports) : null;
   const valid = !!firstAttack && !!secondAttack && (Math.abs(firstAttack.stage - secondAttack.stage) <= 1 || attackVector(firstAttack.id) === attackVector(secondAttack.id));
-  const theoryAligned = valid && game.caseTheory === game.objective;
-  const finding = valid
-    ? `${first.title} and ${second.title} form a credible causal sequence across ${first.system} and ${second.system}.`
-    : `${first.title} and ${second.title} are correlated in time, but the available evidence does not establish causation.`;
+  const correct = (assessment === "causal") === valid;
+  const theoryAligned = correct && valid && game.caseTheory === game.objective;
+  const finding = correct
+    ? valid
+      ? `${first.title} and ${second.title} form a credible causal sequence across ${first.system} and ${second.system}.`
+      : `${first.title} and ${second.title} overlap in time, but the available evidence does not establish causation.`
+    : valid
+      ? "The findings were assessed as coincidental, but their sequence and shared attack path support causation."
+      : "The findings were treated as causal, but timing alone does not establish a dependable relationship.";
   return {
     ...game,
-    nextModifier: valid ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
-    impact: clamp(game.impact + (valid ? (theoryAligned ? -5 : -3) : 3)),
-    objectiveProgress: clamp(game.objectiveProgress + (valid ? (theoryAligned ? -10 : -6) : 2)),
-    correlations: [...game.correlations, { evidence: evidenceIds, valid, finding }],
+    nextModifier: correct ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
+    impact: clamp(game.impact + (correct ? (theoryAligned ? -5 : -3) : 4)),
+    objectiveProgress: clamp(game.objectiveProgress + (correct ? (theoryAligned ? -10 : -6) : 3)),
+    correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding }],
   };
 }
 
@@ -711,7 +726,8 @@ export function getAdversaryRead(game: Game) {
   const posture = memory.actChoices > memory.observeChoices ? "expects rapid intervention" : memory.observeChoices > memory.actChoices ? "expects evidence preservation" : "is still learning your command posture";
   const hypothesis = memory.hypothesisChanges >= 3 ? "Your frequent hypothesis changes are creating exploitable uncertainty." : memory.hypothesisChanges ? "The actor has observed changes in your investigative theory." : "Your investigative theory remains difficult to infer.";
   const campaignRead = game.campaignDoctrine === "balanced" ? "No dominant campaign doctrine is yet visible." : `Across operations, the group expects a predominantly ${game.campaignDoctrine === "act" ? "intervention-led" : "observation-led"} response.`;
-  return `${getAdversaryProfile(game).title} ${posture}${source ? ` and has seen repeated use of ${source}.` : "."} ${hypothesis} ${campaignRead}`;
+  const attribution = getAttributionRead(game);
+  return `${attribution.title} ${posture}${source ? ` and has seen repeated use of ${source}.` : "."} ${hypothesis} ${campaignRead}`;
 }
 
 export function resolveResponse(game: Game, choice: string): Game {
