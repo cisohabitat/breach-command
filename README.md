@@ -1,26 +1,100 @@
 # Breach Command
 
-A single-player incident-response tabletop game with a rule-based computer Incident Captain. An unofficial adaptation of the classic Backdoors & Breaches mechanics with original scenarios, card wording and interface. Not affiliated with or endorsed by the original creators.
+Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. It is an unofficial adaptation inspired by the investigation structure of Backdoors & Breaches, using original scenarios, wording, characters, systems and presentation.
 
-## Play
+Play the current release at [breach-command.cfusion2k.chatgpt.site](https://breach-command.cfusion2k.chatgpt.site).
 
-Choose one of six fictional settings and three difficulty levels, record a working hypothesis, then reveal four hidden attack stages before time, business impact or operational continuity runs out. Procedure checks use a d20, with +3 for four established procedures and a hidden +1 when the selected evidence source supports a correct hypothesis. Discoveries create technique-specific observe-or-intervene decisions. Intervention can make the actor adapt an unrevealed route. After the chain is found, containment and recovery choices determine the final outcome.
+## What the player does
 
-The captain manages hidden scenario variants, ambiguous leads, sector-specific operational pressure, adversary tempo, injects and response consequences. Guided reflection offers reasoning prompts without naming the correct action. The debrief explains counterfactuals and actor adaptations. It does not call an AI service, interact with real infrastructure or transmit incident details. Sessions are in memory and reset on refresh. The full commercial deck, artwork and Consultants are not included.
+The player takes command of one of ten fictional cyber incidents. Each operation requires the player to:
 
-## Source
+1. Form a working hypothesis about the intrusion path.
+2. Focus an infrastructure node and select an evidence procedure.
+3. Choose the scope and intensity of the action.
+4. Reveal four hidden attack stages before the investigation window closes.
+5. Balance evidence preservation, intervention and essential-service continuity.
+6. Correlate findings to distinguish causal relationships from coincidence.
+7. Infer the adversary objective and respond to adaptive actor movement.
+8. Make containment and recovery decisions, then review the after-action report.
 
-- `app/page.tsx`: accessible game interface, dialogs and optional WebMCP read tool.
-- `app/globals.css`: responsive tactical card-table theme.
-- `lib/game.ts`: original scenario, technique and baseline rules data.
-- `lib/advanced-game.ts`: adaptive adversary, hypothesis and response engine.
-- `tests/game.test.ts`: rule boundaries and complete simulated playthroughs.
+Procedure checks use a d20. Established procedures, correct hypotheses, aligned infrastructure focus and matching specialists can modify the roll. Used procedures cool down, while failed actions, actor tempo and sector pressure can end an operation before the chain is found.
 
-Run engine checks with `node --experimental-strip-types tests/game.test.ts` using Node 24. Build and publication use the Sites project scripts. The site identity is in `.openai/hosting.json`.
+## Major systems
 
-## References
+- **Ten sector scenarios:** enterprise IT, healthcare, energy, maritime, cloud, shared services, government, telecommunications, water and financial clearing.
+- **Three difficulty levels:** Training, Operational and Crisis.
+- **Five modes:** Campaign, Daily Operation, Ironman, Escalation and Expert.
+- **Adaptive adversaries:** recurring threat groups learn from procedure use, hypotheses and command posture, and can move to less-exposed routes.
+- **Infrastructure command maps:** every incident has a selectable five-node topology. Aligned procedures receive a planning bonus.
+- **Evidence workspace:** successful actions preserve findings that can be tested for causal relationships.
+- **Operational decisions:** technique decisions, command events and a unique sector crisis change pressure, continuity, sector condition and actor progress.
+- **Named command team:** six persistent specialists have distinct capabilities, callsigns and campaign fatigue.
+- **Three-act campaign:** progression tracks experience, trust, readiness, unresolved access, mastery and command doctrine, leading to one of four endings.
+- **Challenge codes:** compact `BC-...` codes reproduce a scenario, difficulty, mode, specialist and random seed.
+- **After-action review:** scoring, timelines, decision quality, evidence reconstruction, actor adaptation and counterfactuals support facilitated learning.
+- **Accessible feedback:** optional procedural sound, adaptive music, haptics, high contrast, reduced motion and guided reflection.
+- **Offline and local-first play:** the installable PWA caches core assets. Sessions, campaign progress, settings and anonymous balance counters remain on the device.
 
-- Original game: https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/
-- Classic visual guide: https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf
+The game does not call an AI service, inspect real systems or transmit incident information.
 
-The exercise models investigation, containment and recovery decisions for learning purposes. It is not a security assessment or evidence of compliance.
+## Campaign and saves
+
+Campaign progression is stored in browser local storage. Mid-operation sessions are versioned and migrated by `lib/session.ts`; Ironman mode intentionally disables normal mid-operation saving. Clearing browser storage resets local progress.
+
+Daily Operation and challenge codes use deterministic seeds, allowing the same configuration to be replayed or shared. Scenario mastery awards one star for a successful recovery, two for a score of 74 or above, and three for a score of 88 or above.
+
+## Run locally
+
+Requirements:
+
+- Node.js 22.13 or newer
+- pnpm 11.25
+
+Install and start the development server:
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Run the verification suite:
+
+```bash
+pnpm test
+pnpm lint
+pnpm exec tsc --noEmit
+pnpm build
+```
+
+`pnpm test` includes deterministic rule checks and 1,200 complete simulated operations across scenarios, difficulties, modes and specialists.
+
+## Architecture
+
+| Path | Responsibility |
+| --- | --- |
+| `app/page.tsx` | Game orchestration, start screen, dialogs, settings and debrief |
+| `app/globals.css` | Tactical visual system and responsive layouts |
+| `components/game/` | Gameplay boards, maps, events, procedures and tutorial surfaces |
+| `components/ui/` | Reusable interface primitives |
+| `lib/game.ts` | Scenario, procedure and attack data |
+| `lib/advanced-game.ts` | Game state, transitions, adaptive adversary and scoring |
+| `lib/command-systems.ts` | Modes, specialists, procedure plans, objectives and sector rules |
+| `lib/phase8.ts` | Infrastructure topologies, named team, set pieces and challenge codes |
+| `lib/campaign.ts` | Persistent progression, acts, mastery and endings |
+| `lib/session.ts` | Versioned save format and migration |
+| `lib/feedback.ts` | Audio and haptic feedback |
+| `lib/telemetry.ts` | Device-local balance counters |
+| `tests/game.test.ts` | Engine assertions and full-game simulations |
+
+The interface is built with Next.js 16, React 19 and TypeScript. Vinext produces the Cloudflare Workers-compatible deployment used by OpenAI Sites.
+
+See [`AGENTS.md`](AGENTS.md) for repository-wide contribution rules, game-engine invariants and required verification.
+
+## Attribution
+
+Breach Command is not affiliated with or endorsed by Black Hills Information Security or Active Countermeasures. It does not reproduce the commercial deck, official artwork, official card wording, Consultants or expansion content.
+
+- [Backdoors & Breaches](https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/)
+- [Classic visual guide](https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf)
+
+This project is a learning simulation. Its outcomes are not a security assessment, certification or evidence of regulatory compliance.
