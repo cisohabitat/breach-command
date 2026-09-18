@@ -66,7 +66,6 @@ import {
   stages,
   difficulties,
   hypotheses,
-  responseOptions,
   newGame,
   playTurn,
   resolveDecision,
@@ -81,6 +80,9 @@ import {
   availableIn,
   getLead,
   getCoachPrompt,
+  getSuggestion,
+  guidanceLevel,
+  responseOptionsFor,
   getOutcome,
   getCounterfactuals,
   getDecisionOptions,
@@ -106,6 +108,7 @@ import {
   type Game,
   type Turn,
   type AdversaryObjectiveId,
+  type DecisionChoice,
   type MapAction,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
@@ -179,6 +182,9 @@ export default function Home() {
   const ended = !!game && ["won", "lost", "exercise"].includes(game.status);
   const config = game ? difficulties[game.difficulty] : difficulties[difficulty];
   const decision = game ? getDecisionOptions(game) : null;
+  const guidance = game ? guidanceLevel(game, guided) : "off";
+  const suggestion = game ? getSuggestion(game, guided) : null;
+  const responseProfile = game ? responseOptionsFor(game) : null;
   const outcome = game ? getOutcome(game) : null;
   const activeHypothesis = game ? hypotheses.find(item => item.id === game.hypothesis) : null;
   const procedureAligned = !!proc && !!activeHypothesis?.procedures.includes(proc.id);
@@ -274,7 +280,7 @@ export default function Home() {
     timers.current.push(timeout);
   }
 
-  function decide(choice: "observe" | "act") {
+  function decide(choice: DecisionChoice) {
     const current = stateRef.current;
     if (!current) return;
     const next = resolveDecision(current, choice);
@@ -752,7 +758,8 @@ export default function Home() {
                           <div><h2>Investigation procedures</h2><p>Choose one action per turn. Used actions cool down for three turns.</p></div>
                           <span className="established-key">+2 Established</span>
                         </div>
-                        {guided && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game)}</span></div>}
+                        {guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}</span></div>}
+                        {suggestion && <div className="guide-nudge"><GraduationCap size={15} /><span><strong>Training aid:</strong> Suggested next evidence source: {suggestion.title}. The chain is still yours to confirm.</span></div>}
                         {!game.hypothesis && <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong>Choose the explanation that best fits the current intelligence. Matching evidence then earns the reasoning bonus.</span></div>}
                         <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
                       </section>
@@ -884,10 +891,15 @@ export default function Home() {
                 {decision && (
                   <div className="evidence-decision">
                     <span className="eyebrow">OPERATIONAL DECISION REQUIRED</span>
-                    <h3>{decision.attack.title}: act now or learn more?</h3>
+                    <h3>{decision.attack.title}: choose a command response.</h3>
                     <div>
-                      <button onClick={() => decide("observe")}><Eye size={20} /><strong>{decision.observe.title}</strong><span>{decision.observe.description}<br /><b>{decision.observe.evidence}</b> · {decision.observe.risk}</span></button>
-                      <button onClick={() => decide("act")}><Siren size={20} /><strong>{decision.act.title}</strong><span>{decision.act.description}<br /><b>{decision.act.service}</b> · {decision.act.evidence}</span></button>
+                      {decision.options.map(option => (
+                        <button key={option.id} onClick={() => decide(option.id)}>
+                          {option.id === "observe" ? <Eye size={20} /> : option.id === "act" ? <Siren size={20} /> : option.id === "attribute" ? <BrainCircuit size={20} /> : option.id === "contain" ? <Shield size={20} /> : <MessagesSquare size={20} />}
+                          <strong>{option.title}</strong>
+                          <span>{option.description}<br /><b>{option.evidence}</b> · {option.risk} · {option.service}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -906,14 +918,14 @@ export default function Home() {
             <section className="quick-start-guide" aria-label="Quick start">
               <div><span>1</span><p><strong>Form a hypothesis</strong>Open Investigate and choose the access path that best explains the intelligence.</p></div>
               <div><span>2</span><p><strong>Test it</strong>Run a procedure marked “Hypothesis evidence”. Every procedure uses one turn.</p></div>
-              <div><span>3</span><p><strong>Decide</strong>When a stage is confirmed, choose whether to observe for evidence or act to reduce risk.</p></div>
+              <div><span>3</span><p><strong>Decide</strong>When a stage is confirmed, choose a command response: observe, act, attribute, contain or notify.</p></div>
               <div><span>4</span><p><strong>Respond</strong>Reveal all four stages, then contain, assure and recover the service.</p></div>
             </section>
             <div className="rules-grid">
               <section><h3>01 / Objective</h3><p>Reveal four hidden attack stages before the turn limit or impact reaches 100. Then complete containment, assurance and recovery decisions.</p></section>
               <section><h3>02 / Hypotheses &amp; evidence</h3><p>Record one explanation per turn. A correct theory paired with a relevant evidence source earns +2. Established procedures add +2.</p></section>
               <section><h3>03 / Adaptive adversary</h3><p>The actor escalates according to its behaviour profile and can move to a route less exposed by your recent procedures after intervention.</p></section>
-              <section><h3>04 / Contextual decisions</h3><p>Each discovery creates a technique-specific choice: gather stronger evidence or intervene. The best choice depends on current impact and adversary tempo.</p></section>
+              <section><h3>04 / Contextual decisions</h3><p>Each discovery offers five command verbs. Observation and attribution build evidence and analytical depth. Act presses the actor and forces adaptation. Contain protects the sector margin. Notify protects continuity but exposes your read and costs tempo. The right choice depends on impact, adversary tempo, sector condition and continuity.</p></section>
               <section><h3>05 / Hidden consequences</h3><p>Decision cards show disruption, confidence and residual risk rather than exact scores. Natural rolls and failure streaks can trigger injects.</p></section>
               <section><h3>06 / Score &amp; recovery</h3><p>The 100-point review covers investigation speed, impact, continuity, decision quality, response quality and hypothesis accuracy.</p></section>
               <section><h3>07 / Saved sessions</h3><p>Your current investigation is saved on this device. Refresh safely and resume from the assignment screen.</p></section>
@@ -923,7 +935,7 @@ export default function Home() {
               <section><h3>11 / Sector condition</h3><p>Every sector has a distinct operating constraint and condition meter. The operation fails if the essential-service margin is exhausted.</p></section>
               <section><h3>12 / Team deployment</h3><p>Select one specialist before deployment. Matching evidence earns a bonus, while repeated use creates fatigue that carries into campaign operations.</p></section>
               <section><h3>13 / Scope &amp; intensity</h3><p>Focused checks are efficient. Enterprise scope searches wider at a time cost. Exhaustive work is stronger but increases pressure and cooldown.</p></section>
-              <section><h3>14 / Advanced modes</h3><p>Daily, Ironman, Escalation and Expert modes alter seeds, pressure, saves, coaching and rewards.</p></section>
+              <section><h3>14 / Advanced modes</h3><p>Daily, Ironman, Escalation and Expert modes alter seeds, pressure, saves, coaching and rewards. Expert disables guidance entirely, guided reflection gives strategic prompts without the answer, and only Training difficulty reveals a suggested evidence source.</p></section>
               <section><h3>15 / Infrastructure actions</h3><p>Selecting a node changes investigation focus without spending a turn. Monitoring or isolation is optional, immediate and consumes one of three map actions. Their exact costs are shown before selection.</p></section>
               <section><h3>16 / Evidence correlation</h3><p>Successful procedures preserve findings. Test pairs carefully: a shared timestamp is not necessarily a causal relationship.</p></section>
               <section><h3>17 / Sector set pieces</h3><p>Each incident has a unique operational crisis that changes impact, continuity, sector condition and adversary progress.</p></section>
@@ -988,11 +1000,11 @@ export default function Home() {
             {(game.decisions.length > 0 || game.commandHistory.length > 0 || game.setPieceHistory.length > 0) && (
               <div className="decision-summary">
                 <span className="eyebrow">YOUR DECISIONS</span>
-                {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.rationale}</em>{record.adaptedTo && <em>Actor adaptation: {record.adaptationReason ?? `the hidden route changed to ${attacks.find(attack => attack.id === record.adaptedTo)?.title}.`}</em>}</p>)}
+                {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.rationale}</em><em>Impact {record.impactChange >= 0 ? "+" : ""}{record.impactChange} · {getOperationalLabel(game).toLowerCase()} {record.continuityChange >= 0 ? "+" : ""}{record.continuityChange} · Tempo {record.tempoChange >= 0 ? "+" : ""}{record.tempoChange} · Sector {record.sectorChange >= 0 ? "+" : ""}{record.sectorChange} · Objective {record.objectiveChange >= 0 ? "+" : ""}{record.objectiveChange}</em>{record.adaptedTo && <em>Actor adaptation: {record.adaptationReason ?? `the hidden route changed to ${attacks.find(attack => attack.id === record.adaptedTo)?.title}.`}</em>}</p>)}
                 {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Command event:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
                 {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Sector decision:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
                 {game.responseChoices.map(id => {
-                  const option = [...responseOptions.containment, ...responseOptions.assurance, ...responseOptions.recovery].find(item => item.id === id);
+                  const option = responseProfile ? [...responseProfile.containment, ...responseProfile.assurance, ...responseProfile.recovery].find(item => item.id === id) : undefined;
                   return <p key={id}><strong>Response:</strong> {option?.title}<span>{option?.confidence} confidence · {option?.residual} residual risk</span></p>;
                 })}
                 {game.mapHistory.map((record, index) => <p key={`${record.node}-${index}`}><strong>Infrastructure:</strong> {record.action === "isolate" ? "Isolated" : "Monitored"} {record.node}<span>Map action</span><em>{record.effect}</em></p>)}
@@ -1056,13 +1068,14 @@ function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choice: stri
   const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
   const containment = phase === "containment";
   const assurance = phase === "assurance";
-  const options = responseOptions[phase];
+  const profile = responseOptionsFor(game);
+  const options = profile[phase];
   return (
     <section className="response-panel">
       <div className="response-sequence" aria-label="Response sequence"><span className={game.responseChoices.length >= 0 ? "active" : ""}>1 Contain</span><span className={game.responseChoices.length >= 1 ? "active" : ""}>2 Assure</span><span className={game.responseChoices.length >= 2 ? "active" : ""}>3 Recover</span></div>
       <div className="response-heading">
         <span className="response-icon">{containment ? <Zap size={24} /> : assurance ? <ShieldCheck size={24} /> : <HeartPulse size={24} />}</span>
-        <div><span className="eyebrow">{containment ? "CONTAINMENT DECISION" : assurance ? "ASSURANCE GATE" : "RECOVERY DECISION"}</span><h2>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p></div>
+        <div><span className="eyebrow">{containment ? "CONTAINMENT DECISION" : assurance ? "ASSURANCE GATE" : "RECOVERY DECISION"}</span><h2>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p><p className="muted small"><strong>Sector constraint:</strong> {profile.constraint}</p></div>
       </div>
       <div className="response-options">
         {options.map(option => <button key={option.id} onClick={() => onChoose(option.id)}><strong>{option.title}</strong><span>{option.description}</span><small>DISRUPTION {option.disruption} · CONFIDENCE {option.confidence} · RESIDUAL RISK {option.residual}</small><ArrowRight size={17} /></button>)}

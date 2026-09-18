@@ -118,9 +118,13 @@ export type Turn = {
   sectorChange: number;
   objectiveChange: number;
 };
+// Five decision verbs replace the single observe/act binary. Each verb moves the
+// operational picture differently: evidence and tempo, service continuity, sector
+// condition and adversary objective all respond to the choice.
+export type DecisionChoice = "observe" | "act" | "attribute" | "contain" | "notify";
 export type DecisionRecord = {
   stage: string;
-  choice: "observe" | "act";
+  choice: DecisionChoice;
   title: string;
   effect: string;
   counterfactual: string;
@@ -129,6 +133,19 @@ export type DecisionRecord = {
   adaptationReason: string | null;
   quality: number;
   rationale: string;
+  impactChange: number;
+  continuityChange: number;
+  tempoChange: number;
+  sectorChange: number;
+  objectiveChange: number;
+};
+export type DecisionOption = {
+  id: DecisionChoice;
+  title: string;
+  description: string;
+  service: string;
+  evidence: string;
+  risk: string;
 };
 export type GameStatus = "playing" | "response" | "won" | "lost" | "exercise";
 export type Game = {
@@ -215,30 +232,253 @@ export const commandEvents = {
   },
 } as const;
 
-export const responseOptions = {
-  containment: [
-    { id: "isolate", title: "Isolate affected systems", description: "Cuts attacker access quickly, but may interrupt dependent services.", disruption: "High", confidence: "Strong", residual: "Low", impact: -24, continuity: -14, score: 12 },
-    { id: "credential", title: "Revoke identities and sessions", description: "Constrains identity-led movement while preserving most service paths.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -17, continuity: -5, score: 11 },
-    { id: "monitor", title: "Monitor while mapping scope", description: "Preserves visibility and continuity while accepting further attacker opportunity.", disruption: "Low", confidence: "Developing", residual: "High", impact: 5, continuity: 5, score: 9 },
-  ],
-  assurance: [
-    { id: "verify", title: "Validate the clean boundary", description: "Test identities, routes and dependencies before restoration begins.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
-    { id: "preserve", title: "Preserve forensic state", description: "Retain volatile evidence and trusted copies before systems are changed.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-    { id: "accelerate", title: "Accept operational assurance", description: "Use current operational checks to shorten the interruption.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
-  ],
-  recovery: [
-    { id: "rebuild", title: "Rebuild from trusted baseline", description: "Provides the highest assurance at the cost of a longer interruption.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -13, score: 14 },
-    { id: "restore", title: "Restore validated backups", description: "Returns service faster if backup integrity and dependencies are understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
-    { id: "patch", title: "Patch in place and monitor", description: "Minimises immediate disruption but retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
-  ],
+export type ResponsePhase = "containment" | "assurance" | "recovery";
+export type ResponseOption = { id: string; title: string; description: string; disruption: string; confidence: string; residual: string; impact: number; continuity: number; score: number };
+export type ResponseProfile = { constraint: string; containment: ResponseOption[]; assurance: ResponseOption[]; recovery: ResponseOption[] };
+
+// The response set is authored per incident. Containment, assurance and recovery
+// each carry the sector's own constraint, so the same three-stage sequence is not
+// a single fixed list: the disruption, service cost and residual risk differ with
+// the sector under investigation. Ids are stable so scoring and objective
+// alignment stay internally consistent across every sector.
+export const responseProfiles: ResponseProfile[] = [
+  {
+    constraint: "Business service confidence: isolating the shared application tier interrupts payroll and dependent workflows first.",
+    containment: [
+      { id: "isolate", title: "Isolate the business application tier", description: "Severs the trust path to shared applications and stops dependent workflows.", disruption: "High", confidence: "Strong", residual: "Low", impact: -24, continuity: -16, score: 12 },
+      { id: "credential", title: "Revoke business identities and sessions", description: "Constrains identity-led movement across payroll and shared services.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -17, continuity: -6, score: 11 },
+      { id: "monitor", title: "Monitor the shared service path", description: "Preserves payroll availability while the actor retains opportunity.", disruption: "Low", confidence: "Developing", residual: "High", impact: 5, continuity: 6, score: 9 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the trusted service boundary", description: "Test identities, integrations and dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
+      { id: "preserve", title: "Preserve business service evidence", description: "Retain approval, identity and application artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Use existing service checks to shorten the administrative freeze.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the application tier from baseline", description: "Highest assurance for shared services, with the longest payroll interruption.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -13, score: 14 },
+      { id: "restore", title: "Restore validated service backups", description: "Returns payroll and shared applications faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
+      { id: "patch", title: "Patch in place and monitor", description: "Minimises payroll disruption and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+    ],
+  },
+  {
+    constraint: "Clinical service margin: containment cuts deepest here, and every isolation must be justified against care delivery.",
+    containment: [
+      { id: "isolate", title: "Isolate the support path serving clinical work", description: "Stops support access and suspends scheduling and records for care teams.", disruption: "High", confidence: "Strong", residual: "Low", impact: -22, continuity: -19, score: 12 },
+      { id: "credential", title: "Revoke clinical support identities", description: "Constrains support access with limited interruption to care delivery.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -15, continuity: -6, score: 12 },
+      { id: "monitor", title: "Monitor the clinical support path", description: "Preserves clinical continuity while the actor retains opportunity.", disruption: "Low", confidence: "Developing", residual: "High", impact: 6, continuity: 7, score: 10 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the clinical boundary", description: "Prove identities, routes and dependent workflows before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -5, score: 13 },
+      { id: "preserve", title: "Preserve clinical support evidence", description: "Retain volatile artefacts before the support path changes again.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -6, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the interruption using current clinical checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the support estate from baseline", description: "Highest assurance, with the longest period of manual clinical work.", disruption: "High", confidence: "Strong", residual: "Low", impact: -17, continuity: -16, score: 14 },
+      { id: "restore", title: "Restore validated clinical backups", description: "Returns scheduling and records faster if integrity is sound.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -11, continuity: 3, score: 12 },
+      { id: "patch", title: "Patch in place and monitor", description: "Minimises clinical disruption and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -5, continuity: 8, score: 7 },
+    ],
+  },
+  {
+    constraint: "Operational support integrity: successful boundary analysis protects support, but isolation erodes engineering capacity.",
+    containment: [
+      { id: "isolate", title: "Isolate the maintenance jump host", description: "Removes remote support and leaves local engineers covering operations.", disruption: "High", confidence: "Strong", residual: "Low", impact: -21, continuity: -14, score: 12 },
+      { id: "credential", title: "Revoke supplier and support identities", description: "Constrains the support trust path while local administration continues.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -16, continuity: -8, score: 12 },
+      { id: "monitor", title: "Monitor the support boundary", description: "Preserves engineering support while accepting continued actor access.", disruption: "Low", confidence: "Developing", residual: "High", impact: 5, continuity: 6, score: 9 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the engineering boundary", description: "Test supplier routes and support dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -4, score: 14 },
+      { id: "preserve", title: "Preserve support artefacts", description: "Retain jump-host and configuration evidence before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -6, continuity: -5, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Use plant checks to shorten the maintenance interruption.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the support estate from baseline", description: "Strongest assurance, with the longest engineering-capacity gap.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -12, score: 14 },
+      { id: "restore", title: "Restore validated support backups", description: "Returns maintenance capability faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
+      { id: "patch", title: "Patch in place and monitor", description: "Protects engineering capacity and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 7, score: 8 },
+    ],
+  },
+  {
+    constraint: "Terminal operating window: capacity falls fastest late in the incident, and isolation severs partner transactions first.",
+    containment: [
+      { id: "isolate", title: "Isolate the booking portal", description: "Cuts external partner access and shifts bookings to manual handling.", disruption: "High", confidence: "Strong", residual: "Low", impact: -25, continuity: -18, score: 13 },
+      { id: "credential", title: "Revoke partner and planning identities", description: "Constrains the portal trust path with limited terminal disruption.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -16, continuity: -6, score: 11 },
+      { id: "monitor", title: "Monitor the portal while mapping scope", description: "Preserves terminal throughput while partner risk persists.", disruption: "Low", confidence: "Developing", residual: "High", impact: 7, continuity: 6, score: 9 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the partner boundary", description: "Test portal identities and planning dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
+      { id: "preserve", title: "Preserve booking evidence", description: "Retain portal and scheduling artefacts before the platform changes.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the manual window using current terminal checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the booking platform from baseline", description: "Highest assurance, with the longest planning interruption.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -14, score: 14 },
+      { id: "restore", title: "Restore validated scheduling backups", description: "Returns automated planning faster if integrity is sound.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 3, score: 12 },
+      { id: "patch", title: "Patch in place and monitor", description: "Protects terminal capacity and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+    ],
+  },
+  {
+    constraint: "Tenant trust boundary: control-plane exposure widens tenant risk, and unapproved scope advances the actor's objective.",
+    containment: [
+      { id: "isolate", title: "Isolate the affected tenant boundary", description: "Stops the privilege path to tenant resources and disrupts shared workloads.", disruption: "High", confidence: "Strong", residual: "Low", impact: -23, continuity: -15, score: 12 },
+      { id: "credential", title: "Revoke workload identities and keys", description: "Constrains control-plane access while dependent automation keeps running.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -18, continuity: -5, score: 12 },
+      { id: "monitor", title: "Monitor the control plane", description: "Preserves workload availability while the privilege path stays open.", disruption: "Low", confidence: "Developing", residual: "High", impact: 5, continuity: 6, score: 9 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the tenant boundary", description: "Test roles, trust policies and derived keys before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
+      { id: "preserve", title: "Preserve control-plane evidence", description: "Retain audit history and key material before roles change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Use provider checks to shorten the automation interruption.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the workload from a trusted image", description: "Highest assurance, with the longest automation gap.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -13, score: 14 },
+      { id: "restore", title: "Restore validated workload snapshots", description: "Returns automation faster if snapshot integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
+      { id: "patch", title: "Patch roles in place and monitor", description: "Protects workload availability and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+    ],
+  },
+  {
+    constraint: "Shared-service confidence: unverified trust propagates to dependent organisations, so scope and notification shape the outcome.",
+    containment: [
+      { id: "isolate", title: "Isolate the shared gateway", description: "Severs the single trust entry point and affects every connected organisation.", disruption: "High", confidence: "Strong", residual: "Low", impact: -22, continuity: -17, score: 12 },
+      { id: "credential", title: "Revoke shared support identities", description: "Constrains the shared trust path while connected services keep operating.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -17, continuity: -5, score: 12 },
+      { id: "monitor", title: "Monitor the shared path", description: "Preserves dependent services while the shared trust stays unverified.", disruption: "Low", confidence: "Developing", residual: "High", impact: 6, continuity: 5, score: 9 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the shared boundary", description: "Prove the trust service and federation routes before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -4, score: 14 },
+      { id: "preserve", title: "Preserve shared-service evidence", description: "Retain federation and identity artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the coordination pause using partner-visible checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the shared platform from baseline", description: "Strongest assurance, with the longest coordination pause for partners.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -12, score: 14 },
+      { id: "restore", title: "Restore validated shared backups", description: "Returns dependent organisations faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
+      { id: "patch", title: "Patch in place and monitor", description: "Protects partner service and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+    ],
+  },
+  {
+    constraint: "Public transaction capacity: public demand constrains disruptive containment, and a communications lead protects capacity.",
+    containment: [
+      { id: "isolate", title: "Isolate the administrative trust path", description: "Cuts privileged access and interrupts in-flight citizen transactions.", disruption: "High", confidence: "Strong", residual: "Low", impact: -23, continuity: -18, score: 12 },
+      { id: "credential", title: "Revoke administrative identities", description: "Constrains the privileged path while public transactions continue.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -17, continuity: -6, score: 12 },
+      { id: "monitor", title: "Monitor the public service", description: "Preserves the transaction window while administrative risk persists.", disruption: "Low", confidence: "Developing", residual: "High", impact: 6, continuity: 7, score: 10 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the public-service boundary", description: "Prove administrative routes and agency dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
+      { id: "preserve", title: "Preserve administrative evidence", description: "Retain identity and application artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the administrative freeze using current service checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the public service from baseline", description: "Highest assurance, with the longest administrative pause.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -14, score: 14 },
+      { id: "restore", title: "Restore validated service backups", description: "Returns citizen transactions faster if integrity is sound.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 3, score: 12 },
+      { id: "patch", title: "Patch in place and monitor", description: "Protects public capacity and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+    ],
+  },
+  {
+    constraint: "Core network stability: the core decays fastest of all sectors, and containment must avoid unnecessary loss of connectivity.",
+    containment: [
+      { id: "isolate", title: "Isolate the management core", description: "Removes the management path and risks national connectivity.", disruption: "High", confidence: "Strong", residual: "Low", impact: -24, continuity: -19, score: 12 },
+      { id: "credential", title: "Revoke management identities", description: "Constrains the management plane while subscriber traffic continues.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -17, continuity: -5, score: 12 },
+      { id: "monitor", title: "Monitor the management plane", description: "Preserves connectivity while the actor keeps management access.", disruption: "Low", confidence: "Developing", residual: "High", impact: 6, continuity: 7, score: 10 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the core boundary", description: "Test routing control and management routes before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -3, score: 14 },
+      { id: "preserve", title: "Preserve core evidence", description: "Retain routing and management artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -6, continuity: -4, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the change freeze using network health checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the management core from baseline", description: "Strongest assurance, with the longest restriction of management change.", disruption: "High", confidence: "Strong", residual: "Low", impact: -20, continuity: -14, score: 14 },
+      { id: "restore", title: "Restore validated core configuration", description: "Returns routing control faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -13, continuity: 2, score: 11 },
+      { id: "patch", title: "Patch in place and monitor", description: "Protects connectivity and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 8 },
+    ],
+  },
+  {
+    constraint: "Process safety margin: the margin resists delay, but unapproved scope and any isolation erode it sharply.",
+    containment: [
+      { id: "isolate", title: "Isolate the engineering support zone", description: "Removes support access and moves one process area to manual supervision.", disruption: "High", confidence: "Strong", residual: "Low", impact: -21, continuity: -15, score: 12 },
+      { id: "credential", title: "Revoke engineering and vendor identities", description: "Constrains support access while operations continue under normal control.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -16, continuity: -6, score: 12 },
+      { id: "monitor", title: "Monitor the support environment", description: "Preserves the operating envelope while engineering trust stays uncertain.", disruption: "Low", confidence: "Developing", residual: "High", impact: 4, continuity: 6, score: 9 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the support boundary", description: "Test vendor routes and engineering dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
+      { id: "preserve", title: "Preserve historian evidence", description: "Retain historian and configuration artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the manual period using current process checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the support environment from baseline", description: "Strongest assurance, with the longest manual-supervision period.", disruption: "High", confidence: "Strong", residual: "Low", impact: -17, continuity: -13, score: 14 },
+      { id: "restore", title: "Restore validated support backups", description: "Returns engineering support faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -11, continuity: 2, score: 11 },
+      { id: "patch", title: "Patch in place and monitor", description: "Protects the process safety margin and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -5, continuity: 7, score: 8 },
+    ],
+  },
+  {
+    constraint: "Clearing-window integrity: integrity erodes with delay and failure, and every decision must be defensible before settlement.",
+    containment: [
+      { id: "isolate", title: "Isolate the clearing service", description: "Cuts the approval path and suspends in-flight settlement.", disruption: "High", confidence: "Strong", residual: "Low", impact: -24, continuity: -16, score: 13 },
+      { id: "credential", title: "Revoke approval and settlement identities", description: "Constrains the approval plane while settlement continues under review.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -18, continuity: -5, score: 12 },
+      { id: "monitor", title: "Monitor the approval plane", description: "Preserves the settlement window while approval integrity is unverified.", disruption: "Low", confidence: "Developing", residual: "High", impact: 6, continuity: 6, score: 9 },
+    ],
+    assurance: [
+      { id: "verify", title: "Validate the clearing boundary", description: "Test approvals, roles and settlement dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -4, score: 14 },
+      { id: "preserve", title: "Preserve settlement evidence", description: "Retain transaction and approval artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
+      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the review using current clearing checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 5, score: 8 },
+    ],
+    recovery: [
+      { id: "rebuild", title: "Rebuild the clearing service from baseline", description: "Highest assurance, with the longest settlement delay.", disruption: "High", confidence: "Strong", residual: "Low", impact: -19, continuity: -14, score: 14 },
+      { id: "restore", title: "Restore validated settlement backups", description: "Returns clearing faster if backup integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
+      { id: "patch", title: "Patch in place and monitor", description: "Meets the deadline and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -5, continuity: 8, score: 8 },
+    ],
+  },
+];
+
+// Kept for compatibility: the first incident's authored set. Prefer responseOptionsFor.
+export const responseOptions: Record<ResponsePhase, ResponseOption[]> = { containment: responseProfiles[0].containment, assurance: responseProfiles[0].assurance, recovery: responseProfiles[0].recovery };
+
+export function responseOptionsFor(game: Game): ResponseProfile {
+  return responseProfiles[game.scenario] ?? responseProfiles[0];
+}
+
+type DecisionLanguage = {
+  observeTitle: string; observe: string;
+  actTitle: string; act: string;
+  attributeTitle: string; attribute: string;
+  containTitle: string; contain: string;
+  notifyTitle: string; notify: string;
+  observeCost: number; actRelief: number; continuityCost: number; containRelief: number; containCost: number;
 };
 
-const decisionLanguage = [
-  { observeTitle: "Trace the access path", observe: "Keep the suspected route active long enough to correlate its origin.", actTitle: "Revoke the access path", act: "Terminate the observed access and invalidate related sessions.", observeCost: 7, actRelief: -13, continuityCost: -4 },
-  { observeTitle: "Map lateral access", observe: "Watch the movement briefly to identify reached systems and identities.", actTitle: "Segment the movement path", act: "Block the observed administrative route before scope is complete.", observeCost: 9, actRelief: -15, continuityCost: -7 },
-  { observeTitle: "Capture the persistence mechanism", observe: "Preserve volatile and configuration evidence before removal.", actTitle: "Remove the foothold", act: "Disable the confirmed mechanism and accept reduced visibility.", observeCost: 8, actRelief: -14, continuityCost: -5 },
-  { observeTitle: "Trace the outbound channel", observe: "Collect destination and transfer evidence before blocking it.", actTitle: "Block the channel now", act: "Stop the confirmed connection before attribution and scope are complete.", observeCost: 10, actRelief: -18, continuityCost: -3 },
+const decisionLanguage: DecisionLanguage[] = [
+  {
+    observeTitle: "Trace the access path", observe: "Keep the suspected route active long enough to correlate its origin.",
+    actTitle: "Revoke the access path", act: "Terminate the observed access and invalidate related sessions.",
+    attributeTitle: "Attribute the access pattern", attribute: "Correlate the access with prior behaviour and artefacts before changing anything.",
+    containTitle: "Contain the access path", contain: "Restrict the observed path to a bounded trust scope and hold it there.",
+    notifyTitle: "Notify command and service owners", notify: "Brief leadership and service owners on confirmed facts before the next action.",
+    observeCost: 7, actRelief: -13, continuityCost: -4, containRelief: -10, containCost: -3,
+  },
+  {
+    observeTitle: "Map lateral access", observe: "Watch the movement briefly to identify reached systems and identities.",
+    actTitle: "Segment the movement path", act: "Block the observed administrative route before scope is complete.",
+    attributeTitle: "Attribute the movement", attribute: "Map the identities and systems touched, and compare them with the actor's established behaviour.",
+    containTitle: "Contain the movement path", contain: "Segment the observed route at the nearest trust boundary while the estate stays live.",
+    notifyTitle: "Notify the reached service owners", notify: "Tell the owners of the reached systems what is confirmed and what remains uncertain.",
+    observeCost: 9, actRelief: -15, continuityCost: -7, containRelief: -11, containCost: -5,
+  },
+  {
+    observeTitle: "Capture the persistence mechanism", observe: "Preserve volatile and configuration evidence before removal.",
+    actTitle: "Remove the foothold", act: "Disable the confirmed mechanism and accept reduced visibility.",
+    attributeTitle: "Attribute the persistence mechanism", attribute: "Identify the mechanism, its authoring pattern and any related access before removal.",
+    containTitle: "Contain the foothold", contain: "Disable the observed mechanism on a bounded system set while service continues.",
+    notifyTitle: "Notify platform owners", notify: "Brief platform owners on the confirmed mechanism and the change window it needs.",
+    observeCost: 8, actRelief: -14, continuityCost: -5, containRelief: -10, containCost: -4,
+  },
+  {
+    observeTitle: "Trace the outbound channel", observe: "Collect destination and transfer evidence before blocking it.",
+    actTitle: "Block the channel now", act: "Stop the confirmed connection before attribution and scope are complete.",
+    attributeTitle: "Attribute the outbound channel", attribute: "Correlate destination, timing and volume to characterise the channel before blocking it.",
+    containTitle: "Contain the channel", contain: "Throttle and restrict the observed channel at the boundary rather than severing all egress.",
+    notifyTitle: "Notify data and compliance owners", notify: "Inform data owners and compliance of the confirmed export path and its uncertainty.",
+    observeCost: 10, actRelief: -18, continuityCost: -3, containRelief: -12, containCost: -3,
+  },
 ];
+
+export const decisionChoices: DecisionChoice[] = ["observe", "act", "attribute", "contain", "notify"];
+
+const decisionTitles: Record<DecisionChoice, keyof DecisionLanguage> = { observe: "observeTitle", act: "actTitle", attribute: "attributeTitle", contain: "containTitle", notify: "notifyTitle" };
+const decisionText: Record<DecisionChoice, keyof DecisionLanguage> = { observe: "observe", act: "act", attribute: "attribute", contain: "contain", notify: "notify" };
 
 const scenarioProfiles: AdversaryProfileId[][] = [
   ["ghost", "broker", "sentinel"],
@@ -430,7 +670,19 @@ export function getLead(game: Game) {
   return scenario.leads[index] + reaction + decoy;
 }
 
-export function getCoachPrompt(game: Game) {
+export type GuidanceLevel = "off" | "reflection" | "training";
+
+// Guidance is deliberately scoped. Expert mode never receives it, guided
+// reflection offers strategic prompts without the answer, and only the training
+// path exposes the next evidence source. Normal play is unguided, so the engine
+// no longer pre-solves the puzzle for the player.
+export function guidanceLevel(game: Game, guided: boolean): GuidanceLevel {
+  if (game.mode === "expert" || !guided) return "off";
+  return game.difficulty === "training" ? "training" : "reflection";
+}
+
+export function getCoachPrompt(game: Game, guided = false) {
+  if (guidanceLevel(game, guided) === "off") return "Compare evidence value, attacker opportunity and service consequence before deciding.";
   if (!game.hypothesis) return "Record a working hypothesis before acting. It can be changed when the evidence no longer fits.";
   if (game.pendingDecision) return "Compare evidence value, attacker opportunity and service consequence before intervening.";
   if (game.impact >= 70) return "Pressure is critical. Test the hypothesis whose failure would create the greatest consequence.";
@@ -438,7 +690,12 @@ export function getCoachPrompt(game: Game) {
   return "Use confirmed facts to predict the attacker’s next requirement, not merely the next available tool.";
 }
 
-export function getSuggestion(game: Game) {
+/**
+ * The solver behind the balance simulations. It resolves the next hidden stage and
+ * returns the evidence source that would expose it. It is not a player-facing
+ * helper; call getSuggestion for anything that reaches the player.
+ */
+export function nextEvidenceSource(game: Game) {
   const hidden = game.chain.filter(id => !game.revealed.includes(id)).map(id => attacks.find(attack => attack.id === id)!);
   for (const attack of hidden) {
     const candidates = attack.detect.filter(id => !availableIn(game, id));
@@ -448,15 +705,50 @@ export function getSuggestion(game: Game) {
   return procedures.find(procedure => !availableIn(game, procedure.id));
 }
 
+/**
+ * Player-facing suggestion. Only the training path receives the answer, so normal
+ * play and expert operations never hand the player the optimal move.
+ */
+export function getSuggestion(game: Game, guided = false) {
+  if (guidanceLevel(game, guided) !== "training") return null;
+  return nextEvidenceSource(game);
+}
+
 export function getDecisionOptions(game: Game) {
   if (!game.pendingDecision) return null;
   const attack = attacks.find(item => item.id === game.pendingDecision)!;
   const language = decisionLanguage[attack.stage];
-  return {
-    attack,
-    observe: { id: "observe" as const, title: language.observeTitle, description: language.observe, service: "No immediate disruption", evidence: "Evidence confidence improves", risk: "Attacker opportunity increases" },
-    act: { id: "act" as const, title: language.actTitle, description: language.act, service: language.continuityCost <= -7 ? "Significant service risk" : "Limited service risk", evidence: "Some telemetry will be lost", risk: "Immediate exposure falls" },
+  const service: Record<DecisionChoice, string> = {
+    observe: "No immediate disruption",
+    act: language.continuityCost <= -7 ? "Significant service risk" : "Limited service risk",
+    attribute: "Analyst time only",
+    contain: "Bounded service impact",
+    notify: "Service owners prepared",
   };
+  const evidence: Record<DecisionChoice, string> = {
+    observe: "Evidence confidence improves",
+    act: "Some telemetry will be lost",
+    attribute: "Attribution depth improves",
+    contain: "Local telemetry preserved",
+    notify: "No new evidence",
+  };
+  const risk: Record<DecisionChoice, string> = {
+    observe: "Attacker opportunity increases",
+    act: "Immediate exposure falls",
+    attribute: "The actor keeps moving",
+    contain: "Parallel access paths remain",
+    notify: "Your read is disclosed",
+  };
+  const options: DecisionOption[] = decisionChoices.map(id => ({
+    id,
+    title: language[decisionTitles[id]] as string,
+    description: language[decisionText[id]] as string,
+    service: service[id],
+    evidence: evidence[id],
+    risk: risk[id],
+  }));
+  const find = (id: DecisionChoice) => options.find(option => option.id === id)!;
+  return { attack, options, observe: find("observe"), act: find("act") };
 }
 
 export function playTurn(game: Game, procedure: string, forcedRoll?: number, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }): Game {
@@ -635,35 +927,97 @@ function selectAdaptation(game: Game, stage: number, current: string) {
   };
 }
 
-export function resolveDecision(game: Game, choice: "observe" | "act"): Game {
+// Decision verbs trade off along five axes. Only act pressures the actor hard
+// enough to force a route adaptation, while contain protects the sector that act
+// would erode, notify protects continuity at the cost of tempo and disclosure,
+// and attribute buys analytical depth without reducing exposure at all.
+const decisionEffects: Record<DecisionChoice, string> = {
+  observe: "Evidence improved while attacker opportunity increased.",
+  act: "Immediate exposure reduced; service and telemetry were affected.",
+  attribute: "Attribution depth improved before any change to the environment.",
+  contain: "The observed path was restricted without eroding the sector's own margin.",
+  notify: "Stakeholders were aligned on confirmed facts; the actor gained tempo.",
+};
+
+function decisionRationale(choice: DecisionChoice, highPressure: boolean, bindingSector: boolean, bindingContinuity: boolean) {
+  switch (choice) {
+    case "observe": return highPressure ? "Additional observation improved evidence but accepted substantial operational risk." : "Observation was proportionate while impact and adversary tempo remained manageable.";
+    case "act": return highPressure ? "Intervention matched the elevated impact and adversary tempo." : "Intervention reduced exposure, although evidence collection still had room to continue.";
+    case "attribute": return highPressure ? "Deep attribution delayed containment while the actor remained free to act." : "Attribution deepened the analytical picture while the actor stayed covert.";
+    case "contain": return bindingSector ? "Bounded containment protected a sector margin that a full intervention would have eroded." : highPressure ? "Containment absorbed pressure without removing the actor's parallel access." : "Containment was proportionate, although a broader intervention was still available.";
+    case "notify": return bindingContinuity ? "Early notification protected service continuity while the picture stayed uncertain." : highPressure ? "Notification kept owners aligned, but it cost tempo and disclosed your read." : "Notification was low-cost, but it did not reduce exposure or preserve evidence.";
+  }
+}
+
+function decisionQuality(game: Game, choice: DecisionChoice, highPressure: boolean) {
+  const bindingSector = game.sectorHealth <= 70;
+  const bindingContinuity = game.continuity <= 65;
+  switch (choice) {
+    case "observe": return highPressure ? 2 : 5;
+    case "act": return highPressure ? 5 : 3;
+    case "attribute": return !highPressure && game.adversaryTempo <= 1 ? 4 : 1;
+    case "contain": return bindingSector || highPressure ? 4 : 2;
+    case "notify": return bindingContinuity ? 4 : highPressure ? 3 : 2;
+  }
+}
+
+export function resolveDecision(game: Game, choice: DecisionChoice): Game {
   if (game.status !== "playing" || !game.pendingDecision) throw new Error("No evidence decision is pending.");
+  if (!decisionChoices.includes(choice)) throw new Error("Unknown decision.");
   const g: Game = { ...game, chain: [...game.chain], decisions: [...game.decisions], adversaryMemory: { ...game.adversaryMemory } };
   if (choice === "observe") g.adversaryMemory.observeChoices += 1;
-  else g.adversaryMemory.actChoices += 1;
+  if (choice === "act") g.adversaryMemory.actChoices += 1;
   const stageId = g.pendingDecision!;
   const attack = attacks.find(item => item.id === stageId)!;
   const language = decisionLanguage[attack.stage];
   const highPressure = g.impact >= 55 || g.adversaryTempo >= 2;
-  const quality = choice === "act" ? (highPressure ? 5 : 3) : (highPressure ? 2 : 5);
-  const rationale = choice === "act"
-    ? highPressure ? "Intervention matched the elevated impact and adversary tempo." : "Intervention reduced exposure, although evidence collection still had room to continue."
-    : highPressure ? "Additional observation improved evidence but accepted substantial operational risk." : "Observation was proportionate while impact and adversary tempo remained manageable.";
+  const bindingSector = g.sectorHealth <= 70;
+  const bindingContinuity = g.continuity <= 65;
+  const quality = decisionQuality(g, choice, highPressure);
+  const rationale = decisionRationale(choice, highPressure, bindingSector, bindingContinuity);
+  const before = { impact: g.impact, continuity: g.continuity, tempo: g.adversaryTempo, sector: g.sectorHealth, objective: g.objectiveProgress };
   let adaptedFrom: string | null = null;
   let adaptedTo: string | null = null;
   let adaptationReason: string | null = null;
 
-  if (choice === "observe") {
-    g.nextModifier = Math.max(g.nextModifier, 2);
-    g.impact = clamp(g.impact + language.observeCost);
-    g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
-    g.objectiveProgress = clamp(g.objectiveProgress + 6);
-  } else {
-    g.nextModifier = Math.min(g.nextModifier, -1);
-    g.impact = clamp(g.impact + language.actRelief);
-    g.continuity = clamp(g.continuity + language.continuityCost);
-    g.adversaryTempo = Math.max(0, g.adversaryTempo - 1);
-    g.objectiveProgress = clamp(g.objectiveProgress - 8);
-    g.sectorHealth = clamp(g.sectorHealth - 2);
+  switch (choice) {
+    case "observe":
+      g.nextModifier = Math.max(g.nextModifier, 2);
+      g.impact = clamp(g.impact + language.observeCost);
+      g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
+      g.objectiveProgress = clamp(g.objectiveProgress + 6);
+      break;
+    case "act":
+      g.nextModifier = Math.min(g.nextModifier, -1);
+      g.impact = clamp(g.impact + language.actRelief);
+      g.continuity = clamp(g.continuity + language.continuityCost);
+      g.adversaryTempo = Math.max(0, g.adversaryTempo - 1);
+      g.objectiveProgress = clamp(g.objectiveProgress - 8);
+      g.sectorHealth = clamp(g.sectorHealth - 2);
+      break;
+    case "attribute":
+      g.nextModifier = Math.max(g.nextModifier, 3);
+      g.impact = clamp(g.impact + 3);
+      g.sectorHealth = clamp(g.sectorHealth - 1);
+      g.objectiveProgress = clamp(g.objectiveProgress - 4);
+      break;
+    case "contain":
+      g.impact = clamp(g.impact + language.containRelief);
+      g.continuity = clamp(g.continuity + language.containCost);
+      g.sectorHealth = clamp(g.sectorHealth + 3);
+      g.objectiveProgress = clamp(g.objectiveProgress - 6);
+      break;
+    case "notify":
+      g.nextModifier = Math.max(g.nextModifier, 1);
+      g.impact = clamp(g.impact + 2);
+      g.continuity = clamp(g.continuity + 3);
+      g.sectorHealth = clamp(g.sectorHealth - 3);
+      g.objectiveProgress = clamp(g.objectiveProgress + 5);
+      g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
+      break;
+  }
+
+  if (choice === "act") {
     const nextStage = Math.min(3, attack.stage + 1);
     const current = g.chain[nextStage];
     if (current && !g.revealed.includes(current)) {
@@ -681,20 +1035,35 @@ export function resolveDecision(game: Game, choice: "observe" | "act"): Game {
   g.decisions.push({
     stage: stageId,
     choice,
-    title: choice === "observe" ? language.observeTitle : language.actTitle,
-    effect: choice === "observe" ? "Evidence improved while attacker opportunity increased." : "Immediate exposure reduced; service and telemetry were affected.",
-    counterfactual: choice === "observe" ? `${language.actTitle} would have reduced immediate exposure but sacrificed telemetry.` : `${language.observeTitle} would have improved confidence but given the actor more time.`,
+    title: language[decisionTitles[choice]] as string,
+    effect: decisionEffects[choice],
+    counterfactual: decisionCounterfactual(choice, language),
     adaptedFrom,
     adaptedTo,
     adaptationReason,
     quality,
     rationale,
+    impactChange: g.impact - before.impact,
+    continuityChange: g.continuity - before.continuity,
+    tempoChange: g.adversaryTempo - before.tempo,
+    sectorChange: g.sectorHealth - before.sector,
+    objectiveChange: g.objectiveProgress - before.objective,
   });
   g.pendingDecision = null;
   if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
   else if (g.revealed.length === 4) g.status = "response";
   else if (g.turns.length === 2 && !g.setPieceHistory.length) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   return g;
+}
+
+function decisionCounterfactual(choice: DecisionChoice, language: DecisionLanguage) {
+  switch (choice) {
+    case "observe": return `${language.actTitle} would have reduced immediate exposure but sacrificed telemetry.`;
+    case "act": return `${language.observeTitle} would have improved confidence but given the actor more time.`;
+    case "attribute": return `${language.observeTitle} would have gathered telemetry faster, but with less attribution depth.`;
+    case "contain": return `${language.actTitle} would have removed access faster at greater service and sector cost.`;
+    case "notify": return `${language.attributeTitle} would have deepened attribution instead of briefing stakeholders.`;
+  }
 }
 
 export function resolveCommand(game: Game, choice: "a" | "b"): Game {
@@ -770,8 +1139,8 @@ export function getAdversaryRead(game: Game) {
 
 export function resolveResponse(game: Game, choice: string): Game {
   if (game.status !== "response") throw new Error("The response phase is not active.");
-  const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
-  const option = responseOptions[phase].find(item => item.id === choice);
+  const phase: ResponsePhase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
+  const option = responseOptionsFor(game)[phase].find(item => item.id === choice);
   if (!option) throw new Error("Unknown response choice.");
   const g: Game = { ...game, responseChoices: [...game.responseChoices, choice] };
   const preferred = g.responseChoices.length === 2 ? choice !== "accelerate" : scenarios[g.scenario].preferred[g.responseChoices.length === 1 ? 0 : 1] === choice;
@@ -824,12 +1193,13 @@ export function getOutcome(game: Game) {
 export function getCounterfactuals(game: Game) {
   const items = game.decisions.slice(-3).map(decision => `${decision.title}: ${decision.counterfactual} ${decision.rationale}`);
   const dynamics = scenarioDynamics[game.scenario];
+  const responseProfile = responseOptionsFor(game);
   if (game.responseChoices.length) {
-    const containment = responseOptions.containment.find(option => option.id === game.responseChoices[0]);
+    const containment = responseProfile.containment.find(option => option.id === game.responseChoices[0]);
     items.push(`Containment: ${containment?.title} prioritised ${containment?.disruption.toLowerCase()} disruption and left ${containment?.residual.toLowerCase()} residual risk. ${dynamics.countermeasure}`);
   }
   if (game.responseChoices.length > 1) {
-    const assurance = responseOptions.assurance.find(option => option.id === game.responseChoices[1]);
+    const assurance = responseProfile.assurance.find(option => option.id === game.responseChoices[1]);
     items.push(`Assurance: ${assurance?.title} established ${assurance?.confidence.toLowerCase()} confidence before restoration.`);
   }
   if (game.mapHistory.some(record => record.action === "isolate")) items.push("Infrastructure isolation reduced actor opportunity, but every isolated dependency had to be justified and restored deliberately.");

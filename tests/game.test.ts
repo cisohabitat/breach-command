@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
-import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,procedures,scenarios,getSuggestion,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
+import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,procedures,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
@@ -27,7 +27,7 @@ g=baseline();g.injectDeck=[2];g=playTurn(g,"endpoint",20);assert.equal(available
 g=baseline();g.injectDeck=[3];g=playTurn(g,"endpoint",20);assert.equal(g.revealed.length,2);assert.ok(g.pendingDecision);
 g=baseline();g.injectDeck=[8];g=playTurn(g,"email",20);assert.equal(g.status,"exercise");
 g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);assert.ok(g.pendingDecision);g=resolveDecision(g,"act");assert.equal(g.status,"response");g=resolveResponse(g,"credential");assert.equal(g.status,"response");g=resolveResponse(g,"verify");assert.equal(g.status,"response");g=resolveResponse(g,"rebuild");assert.equal(g.status,"won");assert.ok(getOutcome(g).grade);assert.ok(getCounterfactuals(g).length);
-g=baseline();for(let i=0;i<14&&g.status==="playing";i++){if(g.pendingSetPiece){g=resolveSetPiece(g,"a");continue;}if(g.pendingCommand){g=resolveCommand(g,"a");continue;}const action=getSuggestion(g);assert.ok(action);g=playTurn(g,action.id,2);}assert.equal(g.status,"lost");
+g=baseline();for(let i=0;i<14&&g.status==="playing";i++){if(g.pendingSetPiece){g=resolveSetPiece(g,"a");continue;}if(g.pendingCommand){g=resolveCommand(g,"a");continue;}const action=nextEvidenceSource(g);assert.ok(action);g=playTurn(g,action.id,2);}assert.equal(g.status,"lost");
 assert.equal(getAdversaryState(newGame(0,"crisis",()=>0)),"Maneuvering");assert.equal(difficulties.crisis.maxTurns,9);
 assert.throws(()=>playTurn(baseline(),"unknown",10),/Unknown/);assert.throws(()=>playTurn(baseline(),"endpoint",21),/Invalid/);assert.throws(()=>newGame(-1),/Unknown/);
 const ironman=newGame(0,"operational",()=>0,{mode:"ironman",specialist:"forensics"});assert.equal(getTurnLimit(ironman),difficulties.operational.maxTurns-1);
@@ -136,15 +136,102 @@ assert.equal(immutableBaseline.impact,snapshotImpact);
 assert.equal(immutableBaseline.nodePosture[immutableKey],"normal");
 assert.ok(isolated.sectorHealth<=snapshotSector);
 
+// The engine's solver stays behind an explicit guidance gate. Normal play and
+// expert operations never receive the optimal move; only the training path does.
+// The balance simulations below call nextEvidenceSource directly.
+const ordinary=baseline();
+assert.equal(getSuggestion(ordinary),null,"normal play must not be handed the next evidence source");
+assert.equal(getSuggestion(ordinary,true),null,"guided reflection prompts without revealing the answer");
+assert.equal(guidanceLevel(ordinary,false),"off");
+assert.equal(guidanceLevel(ordinary,true),"reflection");
+assert.ok(nextEvidenceSource(ordinary),"the underlying solver still resolves an evidence source");
+const trainingGame=newGame(0,"training",()=>0);
+assert.equal(guidanceLevel(trainingGame,true),"training");
+assert.ok(getSuggestion(trainingGame,true),"the training path receives the suggested evidence source");
+assert.equal(getSuggestion(trainingGame,false),null,"the training aid still requires guidance to be enabled");
+const expertGame=newGame(0,"operational",()=>0,{mode:"expert"});
+assert.equal(guidanceLevel(expertGame,true),"off","expert mode never receives guidance");
+assert.equal(getSuggestion(expertGame,true),null);
+
+// Five decision verbs: each moves impact, continuity, sector condition, objective
+// progress and adversary tempo by its own terms.
+const verbBase=(over:Partial<Game>={})=>({...baseline(),pendingDecision:"phish",...over});
+const observeVerb=resolveDecision(verbBase(),"observe");
+assert.equal(observeVerb.decisions[0].choice,"observe");
+assert.deepEqual([observeVerb.impact,observeVerb.continuity,observeVerb.adversaryTempo,observeVerb.sectorHealth,observeVerb.objectiveProgress,observeVerb.nextModifier],[29,100,1,100,11,2]);
+assert.equal(observeVerb.decisions[0].quality,5);
+assert.deepEqual([observeVerb.decisions[0].impactChange,observeVerb.decisions[0].continuityChange,observeVerb.decisions[0].tempoChange,observeVerb.decisions[0].sectorChange,observeVerb.decisions[0].objectiveChange],[7,0,1,0,6]);
+const actVerb=resolveDecision(verbBase({adversaryTempo:1}),"act");
+assert.equal(actVerb.decisions[0].choice,"act");
+assert.deepEqual([actVerb.impact,actVerb.continuity,actVerb.adversaryTempo,actVerb.sectorHealth,actVerb.objectiveProgress,actVerb.nextModifier],[9,96,0,98,0,-1]);
+assert.equal(actVerb.decisions[0].quality,3);
+assert.deepEqual([actVerb.decisions[0].impactChange,actVerb.decisions[0].tempoChange,actVerb.decisions[0].sectorChange,actVerb.decisions[0].objectiveChange],[-13,-1,-2,-5]);
+assert.ok(actVerb.decisions[0].adaptedTo,"act presses the actor hard enough to force a route change");
+const attributeVerb=resolveDecision(verbBase(),"attribute");
+assert.equal(attributeVerb.decisions[0].choice,"attribute");
+assert.deepEqual([attributeVerb.impact,attributeVerb.continuity,attributeVerb.adversaryTempo,attributeVerb.sectorHealth,attributeVerb.objectiveProgress,attributeVerb.nextModifier],[25,100,0,99,1,3]);
+assert.equal(attributeVerb.decisions[0].quality,4);
+assert.equal(attributeVerb.decisions[0].adaptedTo,null,"attribution does not force a route change");
+assert.deepEqual([attributeVerb.decisions[0].impactChange,attributeVerb.decisions[0].tempoChange,attributeVerb.decisions[0].sectorChange,attributeVerb.decisions[0].objectiveChange],[3,0,-1,-4]);
+const containVerb=resolveDecision(verbBase({sectorHealth:60}),"contain");
+assert.equal(containVerb.decisions[0].choice,"contain");
+assert.deepEqual([containVerb.impact,containVerb.continuity,containVerb.adversaryTempo,containVerb.sectorHealth,containVerb.objectiveProgress],[12,97,0,63,0]);
+assert.equal(containVerb.decisions[0].quality,4,"contain scores well when the sector is the binding constraint");
+assert.deepEqual([containVerb.decisions[0].sectorChange,containVerb.decisions[0].continuityChange,containVerb.decisions[0].tempoChange],[3,-3,0]);
+const notifyVerb=resolveDecision(verbBase({continuity:60}),"notify");
+assert.equal(notifyVerb.decisions[0].choice,"notify");
+assert.deepEqual([notifyVerb.impact,notifyVerb.continuity,notifyVerb.adversaryTempo,notifyVerb.sectorHealth,notifyVerb.objectiveProgress,notifyVerb.nextModifier],[24,63,1,97,10,1]);
+assert.equal(notifyVerb.decisions[0].quality,4,"notify scores well when continuity is the binding constraint");
+assert.deepEqual([notifyVerb.decisions[0].continuityChange,notifyVerb.decisions[0].sectorChange,notifyVerb.decisions[0].tempoChange,notifyVerb.decisions[0].objectiveChange],[3,-3,1,5]);
+const verbOptions=getDecisionOptions(verbBase());
+assert.ok(verbOptions);
+assert.deepEqual(verbOptions.options.map(option=>option.id),decisionChoices,"every decision verb is offered");
+assert.equal(new Set(verbOptions.options.map(option=>option.title)).size,decisionChoices.length,"each verb has its own title and description");
+
+// Response options are authored per scenario, and the sequence stays strict:
+// containment, then assurance, then recovery.
+assert.equal(responseProfiles.length,scenarios.length,"every incident has its own response profile");
+assert.deepEqual(responseOptions.containment,responseOptionsFor(newGame(0,"operational",()=>0)).containment,"the legacy export mirrors incident one");
+const responseSignatures=scenarios.map((scenario,index)=>{
+  const profile=responseOptionsFor(newGame(index,"operational",()=>0));
+  assert.ok(profile.constraint.length>=40,`${scenario.id} names its sector constraint`);
+  assert.deepEqual(profile.containment.map(option=>option.id),["isolate","credential","monitor"],`${scenario.id} containment options`);
+  assert.deepEqual(profile.assurance.map(option=>option.id),["verify","preserve","accelerate"],`${scenario.id} assurance options`);
+  assert.deepEqual(profile.recovery.map(option=>option.id),["rebuild","restore","patch"],`${scenario.id} recovery options`);
+  return [...profile.containment,...profile.assurance,...profile.recovery].map(option=>`${option.title}|${option.impact}|${option.continuity}|${option.score}`).join(">");
+});
+assert.equal(new Set(responseSignatures).size,scenarios.length,"every sector has a distinct response set");
+const clearing=responseOptionsFor(newGame(9,"operational",()=>0));
+assert.notDeepEqual(clearing.containment,responseOptionsFor(newGame(0,"operational",()=>0)).containment,"the same verb costs different service in different sectors");
+const responseRun=newGame(9,"operational",()=>0);responseRun.revealed=[...responseRun.chain];responseRun.status="response";
+const contained=resolveResponse(responseRun,"credential");
+assert.deepEqual([contained.impact,contained.continuity,contained.status],[4,95,"response"],"the clearing sector's own containment numbers apply");
+assert.throws(()=>resolveResponse(contained,"rebuild"),/Unknown/,"the assurance gate cannot be skipped");
+const assured=resolveResponse(contained,"verify");
+assert.equal(assured.status,"response");
+assert.equal(assured.impact,0);
+const recovered=resolveResponse(assured,"rebuild");
+assert.equal(recovered.status,"won");
+assert.equal(recovered.continuity,77);
+
+const verbTally:Record<DecisionChoice,number>={observe:0,act:0,attribute:0,contain:0,notify:0};
+const simDecision=(g:Game,attempt:number):DecisionChoice=>{
+  if(attempt%4===0)return decisionChoices[(g.turns.length+g.decisions.length)%decisionChoices.length];
+  if(g.impact>=55||g.adversaryTempo>=2)return g.sectorHealth<=70?"contain":"act";
+  if(g.continuity<=65)return "notify";
+  if(g.adversaryTempo<=1&&g.revealed.length<3)return "attribute";
+  return "observe";
+};
+
 const totals={won:0,lost:0,exercise:0};
 for(const difficulty of Object.keys(difficulties) as Difficulty[])for(let s=0;s<scenarios.length;s++)for(let attempt=0;attempt<30;attempt++){
   let sim:Game=newGame(s,difficulty);
   while(sim.status==="playing"){
-    if(sim.pendingDecision){sim=resolveDecision(sim,sim.impact>52?"act":"observe");continue;}
+    if(sim.pendingDecision){const verb=simDecision(sim,attempt);verbTally[verb]+=1;sim=resolveDecision(sim,verb);continue;}
     if(sim.pendingCommand){sim=resolveCommand(sim,sim.impact>55?"a":"b");continue;}
     if(sim.pendingSetPiece){sim=resolveSetPiece(sim,sim.impact>55?"a":"b");continue;}
     const next=sim.chain.find(id=>!sim.revealed.includes(id));if(next)sim=setHypothesis(sim,attackVector(next));
-    const action=getSuggestion(sim);assert.ok(action);sim=playTurn(sim,action.id);assert.ok(sim.turns.length<=difficulties[difficulty].maxTurns);assert.equal(new Set(sim.revealed).size,sim.revealed.length);
+    const action=nextEvidenceSource(sim);assert.ok(action);sim=playTurn(sim,action.id);assert.ok(sim.turns.length<=difficulties[difficulty].maxTurns);assert.equal(new Set(sim.revealed).size,sim.revealed.length);
   }
   if(sim.status==="response"){sim=resolveResponse(sim,"credential");sim=resolveResponse(sim,"verify");sim=resolveResponse(sim,"rebuild");}
   totals[sim.status as keyof typeof totals]++;
@@ -157,13 +244,14 @@ let modeSimulations=0;
 for(const mode of modes)for(let s=0;s<scenarios.length;s++)for(let attempt=0;attempt<6;attempt++){
   let sim:Game=newGame(s,"operational",undefined,{mode,specialist:specialistIds[(s+attempt)%specialistIds.length],campaignTier:attempt%4,inheritedFatigue:attempt%3,readiness:50+attempt*5,leadershipTrust:45+attempt*6});
   while(sim.status==="playing"){
-    if(sim.pendingDecision){sim=resolveDecision(sim,sim.impact>50?"act":"observe");continue;}
+    if(sim.pendingDecision){const verb=simDecision(sim,attempt);verbTally[verb]+=1;sim=resolveDecision(sim,verb);continue;}
     if(sim.pendingCommand){sim=resolveCommand(sim,sim.impact>55?"a":"b");continue;}
     if(sim.pendingSetPiece){sim=resolveSetPiece(sim,sim.impact>55?"a":"b");continue;}
     const next=sim.chain.find(id=>!sim.revealed.includes(id));if(next)sim=setHypothesis(sim,attackVector(next));
-    const action=getSuggestion(sim);assert.ok(action);sim=playTurn(sim,action.id,undefined,{scope:attempt%2?"enterprise":"focused",intensity:attempt%3===0?"exhaustive":"balanced"});
+    const action=nextEvidenceSource(sim);assert.ok(action);sim=playTurn(sim,action.id,undefined,{scope:attempt%2?"enterprise":"focused",intensity:attempt%3===0?"exhaustive":"balanced"});
   }
   if(sim.status==="response"){sim=resolveResponse(sim,"credential");sim=resolveResponse(sim,"verify");sim=resolveResponse(sim,"rebuild");}
   assert.ok(["won","lost","exercise"].includes(sim.status));modeSimulations++;
 }
-console.log(`PASS: adaptive routes, hypotheses, command events, sector systems, specialists, advanced modes, response tradeoffs, counterfactuals and ${simulationCount+modeSimulations} complete simulations.`,totals);
+for(const verb of decisionChoices)assert.ok(verbTally[verb]>0,`simulations exercise the ${verb} decision verb`);
+console.log(`PASS: adaptive routes, hypotheses, command events, sector systems, specialists, advanced modes, five decision verbs, per-sector response sets, counterfactuals and ${simulationCount+modeSimulations} complete simulations.`,totals,verbTally);
