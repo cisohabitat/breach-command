@@ -53,6 +53,14 @@ export const adversaryProfiles = {
 } as const;
 
 export type AdversaryProfileId = keyof typeof adversaryProfiles;
+export type CommandEventId = keyof typeof commandEvents;
+export type AdversaryMemory = {
+  procedureCounts: Record<string, number>;
+  observeChoices: number;
+  actChoices: number;
+  hypothesisChanges: number;
+};
+export type CommandRecord = { event: CommandEventId; choice: "a" | "b"; title: string; quality: number; effect: string };
 type Inject = typeof injects[number] & { reason: string };
 export type Turn = {
   number: number;
@@ -107,7 +115,31 @@ export type Game = {
   adversaryTempo: number;
   adversaryEvent: string | null;
   adversaryProfile: AdversaryProfileId;
+  adversaryMemory: AdversaryMemory;
+  pendingCommand: CommandEventId | null;
+  commandHistory: CommandRecord[];
 };
+
+export const commandEvents = {
+  scope: {
+    title: "Scope is expanding",
+    prompt: "A connected service reports related activity. Decide how broadly the team should investigate.",
+    a: { title: "Expand the evidence boundary", description: "Bring the connected service into the investigation now.", signal: "Higher confidence · Slower next action", modifier: -1, impact: 2, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Hold the current boundary", description: "Keep the team focused until the link is confirmed.", signal: "Faster action · Greater blind-spot risk", modifier: 1, impact: 5, continuity: 0, tempo: 1, quality: 3 },
+  },
+  leadership: {
+    title: "Leadership needs a recommendation",
+    prompt: "Executives need a clear position before the next operational decision.",
+    a: { title: "Brief confirmed facts and uncertainty", description: "State what is known, what is assumed and what decision is approaching.", signal: "Pressure falls · No analytical shortcut", modifier: 0, impact: -5, continuity: 0, tempo: 0, quality: 5 },
+    b: { title: "Delay until the picture is complete", description: "Preserve analyst time and wait for stronger attribution.", signal: "No interruption · Pressure rises", modifier: 1, impact: 7, continuity: 0, tempo: 1, quality: 2 },
+  },
+  capacity: {
+    title: "Specialist capacity is limited",
+    prompt: "One specialist team can be surged into the incident, but routine operations will lose support.",
+    a: { title: "Surge specialist support", description: "Accelerate the next evidence action and accept operational strain.", signal: "Analytical advantage · Service cost", modifier: 2, impact: 0, continuity: -5, tempo: 0, quality: 4 },
+    b: { title: "Preserve operational coverage", description: "Keep routine services supported and continue with the current team.", signal: "Continuity protected · Actor retains tempo", modifier: 0, impact: 3, continuity: 2, tempo: 1, quality: 3 },
+  },
+} as const;
 
 export const responseOptions = {
   containment: [
@@ -136,6 +168,10 @@ const scenarioProfiles: AdversaryProfileId[][] = [
   ["raider", "broker"],
   ["ghost", "raider"],
   ["broker", "ghost"],
+  ["ghost", "broker"],
+  ["raider", "broker"],
+  ["broker", "raider"],
+  ["ghost", "raider"],
 ];
 
 function shuffle<T>(array: T[], random = (max: number) => randomInt(max)) {
@@ -189,17 +225,21 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     adversaryTempo: difficulty === "crisis" ? 1 : 0,
     adversaryEvent: null,
     adversaryProfile: profiles[random(profiles.length)],
+    adversaryMemory: { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
+    pendingCommand: null,
+    commandHistory: [],
   };
 }
 
 export function setHypothesis(game: Game, id: HypothesisId): Game {
   if (game.status !== "playing" || game.pendingDecision) throw new Error("The hypothesis cannot be changed now.");
+  if (game.pendingCommand) throw new Error("Resolve the command event first.");
   if (!hypotheses.some(h => h.id === id)) throw new Error("Unknown hypothesis.");
   if (game.hypothesis === id) return game;
   const turn = game.turns.length + 1;
   const hypothesisHistory = game.hypothesisHistory.filter(entry => entry.turn !== turn);
   hypothesisHistory.push({ turn, id });
-  return { ...game, hypothesis: id, hypothesisHistory };
+  return { ...game, hypothesis: id, hypothesisHistory, adversaryMemory: { ...game.adversaryMemory, hypothesisChanges: game.adversaryMemory.hypothesisChanges + (game.hypothesis ? 1 : 0) } };
 }
 
 export function availableIn(game: Game, id: string) {
@@ -246,6 +286,7 @@ export function getDecisionOptions(game: Game) {
 export function playTurn(game: Game, procedure: string, forcedRoll?: number): Game {
   if (game.status !== "playing") throw new Error("This investigation has ended.");
   if (game.pendingDecision) throw new Error("Resolve the evidence decision first.");
+  if (game.pendingCommand) throw new Error("Resolve the command event first.");
   if (!procedures.some(item => item.id === procedure)) throw new Error("Unknown procedure.");
   if (availableIn(game, procedure) > 0) throw new Error("This procedure is cooling down.");
 
@@ -261,9 +302,12 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number): Ga
     decisions: [...game.decisions],
     responseChoices: [...game.responseChoices],
     hypothesisHistory: [...game.hypothesisHistory],
+    adversaryMemory: { ...game.adversaryMemory, procedureCounts: { ...game.adversaryMemory.procedureCounts } },
+    commandHistory: [...game.commandHistory],
   };
   const config = difficulties[g.difficulty];
   const number = g.turns.length + 1;
+  g.adversaryMemory.procedureCounts[procedure] = (g.adversaryMemory.procedureCounts[procedure] ?? 0) + 1;
   const nextHidden = g.chain.find(id => !g.revealed.includes(id));
   const hypothesis = hypotheses.find(item => item.id === g.hypothesis);
   const planningBonus = nextHidden && g.hypothesis === attackVector(nextHidden) && hypothesis?.procedures.includes(procedure) ? 1 : 0;
@@ -341,6 +385,10 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number): Ga
   if (g.impact >= 100 || g.continuity <= 0) g.status = "lost";
   else if (exerciseEnd && g.revealed.length < 4) g.status = "exercise";
   else if (number >= config.maxTurns && g.revealed.length < 4) g.status = "lost";
+  else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {
+    const ids = Object.keys(commandEvents) as CommandEventId[];
+    g.pendingCommand = ids[(g.scenario + number + g.adversaryTempo) % ids.length];
+  }
   return g;
 }
 
@@ -352,8 +400,9 @@ function selectAdaptation(game: Game, stage: number, current: string) {
   const ranked = choices.map(id => {
     const attack = attacks.find(item => item.id === id)!;
     const vectorRank = profile.preferredVectors.indexOf(attackVector(id));
-    const exposure = attack.detect.filter(source => recentProcedures.includes(source)).length;
-    return { id, score: (4 - Math.max(0, vectorRank)) * 2 - exposure * 3 };
+    const exposure = attack.detect.reduce((sum, source) => sum + (recentProcedures.includes(source) ? 2 : 0) + (game.adversaryMemory.procedureCounts[source] ?? 0), 0);
+    const choiceBias = game.adversaryMemory.actChoices > game.adversaryMemory.observeChoices ? 2 : 0;
+    return { id, score: (4 - Math.max(0, vectorRank)) * 2 - exposure * 2 + choiceBias };
   }).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
   const chosen = ranked[0].id;
   const title = attacks.find(item => item.id === chosen)!.title;
@@ -365,7 +414,9 @@ function selectAdaptation(game: Game, stage: number, current: string) {
 
 export function resolveDecision(game: Game, choice: "observe" | "act"): Game {
   if (game.status !== "playing" || !game.pendingDecision) throw new Error("No evidence decision is pending.");
-  const g: Game = { ...game, chain: [...game.chain], decisions: [...game.decisions] };
+  const g: Game = { ...game, chain: [...game.chain], decisions: [...game.decisions], adversaryMemory: { ...game.adversaryMemory } };
+  if (choice === "observe") g.adversaryMemory.observeChoices += 1;
+  else g.adversaryMemory.actChoices += 1;
   const stageId = g.pendingDecision!;
   const attack = attacks.find(item => item.id === stageId)!;
   const language = decisionLanguage[attack.stage];
@@ -419,6 +470,31 @@ export function resolveDecision(game: Game, choice: "observe" | "act"): Game {
   return g;
 }
 
+export function resolveCommand(game: Game, choice: "a" | "b"): Game {
+  if (game.status !== "playing" || !game.pendingCommand) throw new Error("No command event is pending.");
+  const eventId = game.pendingCommand;
+  const event = commandEvents[eventId];
+  const option = event[choice];
+  const g: Game = { ...game, commandHistory: [...game.commandHistory] };
+  g.nextModifier = Math.max(-2, Math.min(3, g.nextModifier + option.modifier));
+  g.impact = clamp(g.impact + option.impact);
+  g.continuity = clamp(g.continuity + option.continuity);
+  g.adversaryTempo = clamp(g.adversaryTempo + option.tempo, 0, 3);
+  g.commandHistory.push({ event: eventId, choice, title: option.title, quality: option.quality, effect: option.signal });
+  g.pendingCommand = null;
+  if (g.impact >= 100 || g.continuity <= 0) g.status = "lost";
+  return g;
+}
+
+export function getAdversaryRead(game: Game) {
+  const memory = game.adversaryMemory;
+  const favourite = Object.entries(memory.procedureCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const source = favourite ? procedures.find(item => item.id === favourite)?.title : null;
+  const posture = memory.actChoices > memory.observeChoices ? "expects rapid intervention" : memory.observeChoices > memory.actChoices ? "expects evidence preservation" : "is still learning your command posture";
+  const hypothesis = memory.hypothesisChanges >= 3 ? "Your frequent hypothesis changes are creating exploitable uncertainty." : memory.hypothesisChanges ? "The actor has observed changes in your investigative theory." : "Your investigative theory remains difficult to infer.";
+  return `${getAdversaryProfile(game).title} ${posture}${source ? ` and has seen repeated use of ${source}.` : "."} ${hypothesis}`;
+}
+
 export function resolveResponse(game: Game, choice: string): Game {
   if (game.status !== "response") throw new Error("The response phase is not active.");
   const phase = game.responseChoices.length === 0 ? "containment" : "recovery";
@@ -447,7 +523,8 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   const investigation = clamp(25 - Math.max(0, game.turns.length - 4) * 3, 0, 25);
   const impact = Math.round((100 - game.impact) * 0.15);
   const continuity = Math.round(game.continuity * 0.15);
-  const decisionQuality = game.decisions.length ? game.decisions.reduce((sum, decision) => sum + decision.quality, 0) / (game.decisions.length * 5) : 0;
+  const decisionItems = [...game.decisions.map(item => item.quality), ...game.commandHistory.map(item => item.quality)];
+  const decisionQuality = decisionItems.length ? decisionItems.reduce((sum, quality) => sum + quality, 0) / (decisionItems.length * 5) : 0;
   const decisions = Math.round(decisionQuality * 15);
   const response = Math.round(clamp(game.responseScore, 0, 38) / 38 * 20);
   const aligned = game.turns.filter(turn => turn.revealed && turn.hypothesis === attackVector(turn.revealed)).length;

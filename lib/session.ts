@@ -2,7 +2,7 @@
 import { scenarios, difficulties, adversaryProfiles, type Game } from "./advanced-game.ts";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 2;
+export const SESSION_VERSION = 3;
 
 export type SavedSession = {
   version: number;
@@ -36,6 +36,9 @@ export function parseSession(raw: string): SavedSession | null {
       ...game,
       adversaryProfile: profile,
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],
+      adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
+      pendingCommand: game.pendingCommand ?? null,
+      commandHistory: Array.isArray(game.commandHistory) ? game.commandHistory : [],
       decisions: Array.isArray(game.decisions) ? game.decisions.map(decision => ({
         ...decision,
         adaptationReason: decision.adaptationReason ?? null,

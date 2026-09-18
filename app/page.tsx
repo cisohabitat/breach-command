@@ -16,15 +16,20 @@ import {
   Flag,
   HeartPulse,
   LockKeyhole,
+  Maximize2,
   Printer,
   Radio,
   RotateCcw,
+  Settings2,
   Shield,
   ShieldCheck,
   Siren,
   Sparkles,
   Terminal,
   Trophy,
+  Volume2,
+  Vibrate,
+  Contrast,
   X,
   Zap,
 } from "lucide-react";
@@ -34,6 +39,8 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
+import { OperationsMap } from "@/components/game/operations-map";
+import { CommandEvent } from "@/components/game/command-event";
 import {
   attacks,
   procedures,
@@ -47,6 +54,7 @@ import {
   playTurn,
   resolveDecision,
   resolveResponse,
+  resolveCommand,
   setHypothesis,
   availableIn,
   getLead,
@@ -55,7 +63,7 @@ import {
   getCounterfactuals,
   getDecisionOptions,
   getAdversaryState,
-  getAdversaryProfile,
+  getAdversaryRead,
   getOperationalLabel,
   type Difficulty,
   type HypothesisId,
@@ -63,6 +71,8 @@ import {
   type Turn,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
+import { campaignRank, defaultCampaign, parseCampaign, recordCampaignResult, unlockedCapabilities, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { playFeedback } from "@/lib/feedback";
 
 const stageIcons = [LockKeyhole, Activity, RotateCcw, Radio];
 
@@ -83,9 +93,15 @@ export default function Home() {
   const [scenarioChoice, setScenarioChoice] = useState(0);
   const [savedSession, setSavedSession] = useState<SavedSession | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  const [settings, setSettings] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const [highContrast, setHighContrast] = useState(false);
+  const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   const stateRef = useRef(game);
   const busyRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const recordedRuns = useRef(new Set<string>());
 
   const activeScenario = scenarios[game?.scenario ?? scenarioChoice];
   const ScenarioIcon = activeScenario.icon;
@@ -113,6 +129,7 @@ export default function Home() {
     setDebrief(false);
     setNewConfirm(false);
     setAnnouncement("New investigation started.");
+    playFeedback("open", soundEnabled, hapticsEnabled);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -131,7 +148,7 @@ export default function Home() {
 
   function run(id: string) {
     const current = stateRef.current;
-    if (!current || busyRef.current || current.status !== "playing" || current.pendingDecision || availableIn(current, id) > 0) return;
+    if (!current || busyRef.current || current.status !== "playing" || current.pendingDecision || current.pendingCommand || availableIn(current, id) > 0) return;
     busyRef.current = true;
     const quick = fastResolve && current.turns.length > 0;
     setSelected(null);
@@ -153,6 +170,8 @@ export default function Home() {
       setInlineReport(requiresDialog ? null : result);
       setRolling(false);
       setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
+      playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled);
+      if (["lost", "exercise"].includes(next.status)) recordProgress(next);
       busyRef.current = false;
     }, quick ? 0 : 850);
     timers.current.push(timeout);
@@ -163,6 +182,7 @@ export default function Home() {
     if (!current) return;
     const next = resolveDecision(current, choice);
     setGame(next);
+    playFeedback("decision", soundEnabled, hapticsEnabled);
     setAnnouncement(`Decision recorded. Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
   }
 
@@ -179,8 +199,33 @@ export default function Home() {
     if (!current) return;
     const next = resolveResponse(current, choice);
     setGame(next);
+    playFeedback(next.status === "won" ? "complete" : "decision", soundEnabled, hapticsEnabled);
     setAnnouncement(next.status === "won" ? "Response complete. After-action review available." : "Containment decision recorded. Choose a recovery approach.");
-    if (next.status === "won") setDebrief(true);
+    if (next.status === "won") {
+      recordProgress(next);
+      setDebrief(true);
+    }
+  }
+
+  function command(choice: "a" | "b") {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = resolveCommand(current, choice);
+    setGame(next);
+    playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
+    setAnnouncement(`Command decision recorded. Business impact is ${next.impact}.`);
+  }
+
+  function recordProgress(result: Game) {
+    const marker = `${result.scenario}:${result.status}:${result.turns.length}:${result.responseChoices.join("-")}`;
+    if (recordedRuns.current.has(marker)) return;
+    recordedRuns.current.add(marker);
+    const score = getOutcome(result).breakdown.total;
+    setCampaign(current => {
+      const updated = recordCampaignResult(current, result, score);
+      localStorage.setItem(CAMPAIGN_KEY, JSON.stringify(updated));
+      return updated;
+    });
   }
 
   function dismissReport() {
@@ -209,6 +254,38 @@ export default function Home() {
       else if (!session) localStorage.removeItem(SESSION_KEY);
     }, 0);
     return () => clearTimeout(loadTimer);
+  }, []);
+
+  useEffect(() => {
+    const loadTimer = setTimeout(() => {
+      setCampaign(parseCampaign(localStorage.getItem(CAMPAIGN_KEY)));
+      const preferences = localStorage.getItem("breach-command.preferences");
+      if (preferences) {
+        try {
+          const parsed = JSON.parse(preferences) as { sound?: boolean; haptics?: boolean; highContrast?: boolean };
+          setSoundEnabled(parsed.sound !== false);
+          setHapticsEnabled(parsed.haptics !== false);
+          setHighContrast(parsed.highContrast === true);
+        } catch {}
+      }
+    }, 0);
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+    return () => clearTimeout(loadTimer);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("breach-command.preferences", JSON.stringify({ sound: soundEnabled, haptics: hapticsEnabled, highContrast }));
+  }, [soundEnabled, hapticsEnabled, highContrast]);
+
+  useEffect(() => {
+    const handleKeyboard = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      if (event.key.toLowerCase() === "f") setRules(value => !value);
+      if (event.key.toLowerCase() === "m") setSoundEnabled(value => !value);
+      if (event.key.toLowerCase() === "g") setGuided(value => !value);
+    };
+    window.addEventListener("keydown", handleKeyboard);
+    return () => window.removeEventListener("keydown", handleKeyboard);
   }, []);
 
   useEffect(() => {
@@ -268,12 +345,12 @@ export default function Home() {
     : question === "constraints" ? activeScenario.constraints
     : question === "impact" ? activeScenario.impact
     : question === "known" ? `${activeScenario.timeline} ${getLead(game!)}`
-    : question === "adversary" ? `Assessed objective: ${scenarioDynamics[game!.scenario].objective} Current behaviour: ${getAdversaryState(game!)}. Pattern: ${getAdversaryProfile(game!).description}`
+    : question === "adversary" ? `Assessed objective: ${scenarioDynamics[game!.scenario].objective} Current behaviour: ${getAdversaryState(game!)}. ${getAdversaryRead(game!)}`
     : question === "assumptions" ? "Treat alerts, valid credentials and successful procedures as evidence, not conclusions. Record one working hypothesis for each turn and revise it only when evidence no longer fits."
     : "";
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${highContrast ? "high-contrast" : ""}`}>
       <div className="sr-only" aria-live="polite" aria-atomic="true">{announcement}</div>
       <header className="topbar">
         <Link href="/" className="brand" aria-label="Breach Command home">
@@ -283,6 +360,7 @@ export default function Home() {
         <div className="top-actions">
           <span className="solo-label"><Terminal size={14} /> SINGLE PLAYER</span>
           <button className="quiet-button" onClick={() => setRules(true)}><BookOpen size={17} /><span>Field guide</span></button>
+          <button className="quiet-button" onClick={() => setSettings(true)} aria-label="Game settings"><Settings2 size={17} /><span>Settings</span></button>
           {game && <button className="quiet-button" disabled={rolling} onClick={() => setNewConfirm(true)} aria-label="New incident"><RotateCcw size={16} /><span>New incident</span></button>}
         </div>
       </header>
@@ -300,14 +378,19 @@ export default function Home() {
               })}
             </div>
             <div className="first-move"><Dices size={20} /><p>Form a hypothesis, test evidence, command the response.</p></div>
+            <section className="career-card" aria-label="Command career progression">
+              <div><span className="eyebrow">COMMAND CAREER</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents completed · {campaign.operations} operations</small></div>
+              <b>{campaign.xp}<small> XP</small></b>
+              <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
+            </section>
           </div>
           <section className="mission-panel">
-            <div className="panel-top"><span className="eyebrow">YOUR NEXT ASSIGNMENT</span><span className="mono muted">0{scenarioChoice + 1} / 06</span></div>
+            <div className="panel-top"><span className="eyebrow">YOUR NEXT ASSIGNMENT</span><span className="mono muted">{String(scenarioChoice + 1).padStart(2, "0")} / {String(scenarios.length).padStart(2, "0")}</span></div>
             <div className="mission-symbol"><ScenarioIcon size={33} strokeWidth={1.4} /><span>{activeScenario.sector}</span></div>
             <h2>{activeScenario.title}</h2>
             <p>{activeScenario.summary}</p>
             <div className="mission-selector" aria-label="Select incident">
-              {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={scenario.title} aria-pressed={scenarioChoice === index} className={scenarioChoice === index ? "active" : ""} onClick={() => setScenarioChoice(index)}>{String(index + 1).padStart(2, "0")}</button>)}
+              {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? ", completed" : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}>{String(index + 1).padStart(2, "0")}</button>)}
             </div>
             <div className="difficulty-picker">
               <span className="eyebrow">DIFFICULTY</span>
@@ -334,7 +417,7 @@ export default function Home() {
               </section>
             )}
             <button className="primary-button start-button" onClick={() => start()}>Begin investigation <ArrowRight size={19} /></button>
-            <div className="mission-meta"><span><Clock3 size={14} /> 15–25 minutes solo</span><span><LockKeyhole size={14} /> No real systems</span></div>
+            <div className="mission-meta"><span><Clock3 size={14} /> 20–35 minutes solo</span><span><LockKeyhole size={14} /> No real systems</span></div>
           </section>
           <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator.</p>
         </main>
@@ -383,6 +466,8 @@ export default function Home() {
                 </div>
               </section>
 
+              <OperationsMap game={game} />
+
               {ended ? (
                 <section className="end-banner">
                   <div className="end-icon">{game.status === "won" ? <Trophy /> : <Flag />}</div>
@@ -398,7 +483,9 @@ export default function Home() {
                 <section className="lead-strip"><Activity size={20} /><div><span className="eyebrow">CURRENT INTELLIGENCE</span><p>{getLead(game)}</p></div></section>
               )}
 
-              {game.status === "playing" && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
+              {game.status === "playing" && !game.pendingCommand && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
+
+              {game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
 
               {inlineReport && (
                 <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
@@ -411,7 +498,7 @@ export default function Home() {
                 </section>
               )}
 
-              {game.status === "playing" && (
+              {game.status === "playing" && !game.pendingCommand && (
                 <section className="procedure-section">
                   <div className="section-heading">
                     <div><h2>Investigation procedures</h2><p>Choose one action per turn. Used actions cool down for three turns.</p></div>
@@ -443,6 +530,7 @@ export default function Home() {
                 {question && <div className="captain-answer" aria-live="polite">{answer}</div>}
                 <div className="guided-inline"><label htmlFor="guided-game"><Sparkles size={14} /> Guided reflection</label><Switch id="guided-game" checked={guided} onCheckedChange={setGuided} /></div>
                 <div className="guided-inline"><label htmlFor="fast-game"><FastForward size={14} /> Fast resolution</label><Switch id="fast-game" checked={fastResolve} onCheckedChange={setFastResolve} /></div>
+                <div className="adversary-read"><span className="eyebrow">ACTOR MODEL</span><p>{getAdversaryRead(game)}</p></div>
               </section>
 
               <section className="journal-panel">
@@ -542,6 +630,8 @@ export default function Home() {
               <section><h3>06 / Score &amp; recovery</h3><p>The 100-point review covers investigation speed, impact, continuity, decision quality, response quality and hypothesis accuracy.</p></section>
               <section><h3>07 / Saved sessions</h3><p>Your current investigation is saved on this device. Refresh safely and resume from the assignment screen.</p></section>
               <section><h3>08 / Fast resolution</h3><p>After turn one, fast mode skips confirmation and dice animation for routine actions. Discoveries and major events still receive full reports.</p></section>
+              <section><h3>09 / Command events</h3><p>Operational interruptions test scoping, leadership communication and specialist allocation. These choices affect pressure, continuity and adversary tempo.</p></section>
+              <section><h3>10 / Campaign progression</h3><p>Completed incidents, best scores and command experience remain on this device. Progress unlocks professional capability milestones.</p></section>
             </div>
             <section className="attribution"><h3>About this adaptation</h3><p>Inspired by Backdoors &amp; Breaches, created by Black Hills Information Security and Active Countermeasures. This unofficial adaptation is not affiliated with or endorsed by the creators. It uses original wording, fictional settings and a rule-based facilitator. It does not reproduce the commercial deck, official artwork or expansion content.</p><a href="https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf" target="_blank" rel="noreferrer">Read the official classic rules <ArrowRight size={14} /></a></section>
           </div>
@@ -574,6 +664,12 @@ export default function Home() {
                 ].map(([label, value, maximum]) => <div key={String(label)}><span>{label}</span><strong>{value}/{maximum}</strong></div>)}
               </div>
             </section>
+            <section className="advanced-review">
+              <div><strong>{game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0)}</strong><span>Hypothesis revisions</span></div>
+              <div><strong>{game.turns.filter(turn => turn.planningBonus > 0).length}</strong><span>Evidence-aligned actions</span></div>
+              <div><strong>{game.commandHistory.length}</strong><span>Command events resolved</span></div>
+              <div><strong>{game.turns.filter(turn => turn.success && !turn.revealed).length}</strong><span>Successful but non-discriminating actions</span></div>
+            </section>
             <section className="timeline">
               <span className="eyebrow">EVIDENCE &amp; DECISION TIMELINE</span>
               {game.turns.map(turn => (
@@ -583,10 +679,11 @@ export default function Home() {
                 </div>
               ))}
             </section>
-            {game.decisions.length > 0 && (
+            {(game.decisions.length > 0 || game.commandHistory.length > 0) && (
               <div className="decision-summary">
                 <span className="eyebrow">YOUR DECISIONS</span>
                 {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.rationale}</em>{record.adaptedTo && <em>Actor adaptation: {record.adaptationReason ?? `the hidden route changed to ${attacks.find(attack => attack.id === record.adaptedTo)?.title}.`}</em>}</p>)}
+                {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Command event:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
                 {game.responseChoices.map(id => {
                   const option = [...responseOptions.containment, ...responseOptions.recovery].find(item => item.id === id);
                   return <p key={id}><strong>Response:</strong> {option?.title}<span>{option?.confidence} confidence · {option?.residual} residual risk</span></p>;
@@ -597,15 +694,30 @@ export default function Home() {
             <div className="debrief-chain">
               {game.chain.map((id, index) => {
                 const attack = attacks.find(item => item.id === id)!;
-                return <section key={id} style={{ "--stage-color": stages[index].color } as React.CSSProperties}><span className="eyebrow">0{index + 1} / {stages[index].name}<span className={game.revealed.includes(id) ? "found-label" : "missed-label"}>{game.revealed.includes(id) ? "FOUND" : "UNRESOLVED"}</span></span><h3>{attack.title}</h3><p>{attack.evidence}</p><small>Detectable with: {attack.detect.map(source => procedures.find(procedure => procedure.id === source)?.title).join(" · ")}</small></section>;
+                const tactic = ["Initial Access", "Lateral Movement", "Persistence", "Command and Control / Exfiltration"][index];
+                return <section key={id} style={{ "--stage-color": stages[index].color } as React.CSSProperties}><span className="eyebrow">0{index + 1} / {stages[index].name}<span className={game.revealed.includes(id) ? "found-label" : "missed-label"}>{game.revealed.includes(id) ? "FOUND" : "UNRESOLVED"}</span></span><h3>{attack.title}</h3><p>{attack.evidence}</p><small>MITRE ATT&amp;CK lens: {tactic}<br />Detectable with: {attack.detect.map(source => procedures.find(procedure => procedure.id === source)?.title).join(" · ")}</small></section>;
               })}
             </div>
             <section className="debrief-learning"><h3>Take this back to your team</h3><p>{game.turns.some(turn => turn.success && !turn.revealed) ? "Some actions passed without finding new evidence. Did each action separate plausible explanations, or simply use an available tool?" : "Which evidence sources or decision authorities would be weakest in a real response?"}</p><p>{activeScenario.lesson}</p></section>
+            <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
             <div className="debrief-actions">
               <button className="secondary-button" onClick={() => window.print()}><Printer size={17} /> Print review</button>
               <button className="primary-button" onClick={() => { const nextScenario = (game.scenario + 1) % scenarios.length; resetToBriefing(); setScenarioChoice(nextScenario); }}>Choose next incident <ArrowRight size={18} /></button>
             </div>
           </>}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={settings} onOpenChange={setSettings}>
+        <DialogContent className="game-dialog settings-dialog">
+          <DialogHeader><div className="eyebrow">GAME SETTINGS</div><DialogTitle>Command interface</DialogTitle><DialogDescription>Adjust feedback, accessibility and display behaviour. Preferences stay on this device.</DialogDescription></DialogHeader>
+          <div className="settings-list">
+            <label htmlFor="sound-setting"><span><Volume2 size={19} /><b>Sound cues</b><small>Procedural audio for discoveries, warnings and outcomes.</small></span><Switch id="sound-setting" checked={soundEnabled} onCheckedChange={setSoundEnabled} /></label>
+            <label htmlFor="haptic-setting"><span><Vibrate size={19} /><b>Haptic feedback</b><small>Short vibration cues on supported mobile devices.</small></span><Switch id="haptic-setting" checked={hapticsEnabled} onCheckedChange={setHapticsEnabled} /></label>
+            <label htmlFor="contrast-setting"><span><Contrast size={19} /><b>High contrast</b><small>Strengthens borders, text and interactive states.</small></span><Switch id="contrast-setting" checked={highContrast} onCheckedChange={setHighContrast} /></label>
+          </div>
+          <button className="secondary-button full" onClick={() => { const action = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); Promise.resolve(action).catch(() => {}); }}><Maximize2 size={17} /> Toggle full screen</button>
+          <p className="shortcut-note">Keyboard: F field guide · M sound · G guided reflection</p>
         </DialogContent>
       </Dialog>
 
