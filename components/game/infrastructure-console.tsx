@@ -26,7 +26,12 @@ export function InfrastructureConsole({ game, onFocus, onAction }: { game: Game;
         </div>
         <div className="topology-routes" aria-label="Trust relationships">{topology.edges.map((edge, index) => {
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
-          return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}><span>{topology.nodes.find(node => node.id === edge.from)?.label}</span><b>{edge.label}</b><span>{topology.nodes.find(node => node.id === edge.to)?.label}</span><i>{isolated ? "BLOCKED" : index < Math.max(0, activeStage - 1) ? "CONFIRMED" : index === Math.max(0, activeStage - 1) ? "SUSPECTED" : "UNASSESSED"}</i></div>;
+          return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>
+            <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
+            <b className="route-relation">{edge.label}</b>
+            <span className="route-target">{topology.nodes.find(node => node.id === edge.to)?.label}</span>
+            <i className="route-status">{isolated ? "BLOCKED" : index < Math.max(0, activeStage - 1) ? "CONFIRMED" : index === Math.max(0, activeStage - 1) ? "SUSPECTED" : "UNASSESSED"}</i>
+          </div>;
         })}</div>
       </div>
       <div className="map-command-bar">
