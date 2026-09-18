@@ -57,7 +57,7 @@ import { TutorialCoach } from "@/components/game/tutorial-coach";
 import { InfrastructureConsole } from "@/components/game/infrastructure-console";
 import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
 import { SectorSetPiece } from "@/components/game/sector-set-piece";
-import { SectorSituation, SpecialistTransmission } from "@/components/game/living-incident";
+import { SectorOperationalScene, SectorSituation, SpecialistTransmission } from "@/components/game/living-incident";
 import {
   attacks,
   procedures,
@@ -654,6 +654,7 @@ export default function Home() {
 
               <div hidden={activeWorkspace !== "command"}><SectorBoard game={game} /></div>
               {activeWorkspace === "command" && <SectorSituation game={game} />}
+              {activeWorkspace === "command" && <SectorOperationalScene game={game} />}
 
               {activeWorkspace === "command" && tutorial && game.status === "playing" && <TutorialCoach game={game} onDismiss={() => { setTutorial(false); setFastResolve(true); localStorage.setItem("breach-command.tutorial-complete", "true"); }} />}
 
@@ -814,27 +815,33 @@ export default function Home() {
             <DialogDescription>{report && procedures.find(procedure => procedure.id === report.procedure)?.title}</DialogDescription>
           </DialogHeader>
           {report && game && <>
-            <div className={`result-roll ${report.success ? "success" : "failure"}`}>
-              <span className="result-die">{report.raw}</span>
-              <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus ? " including hypothesis bonus" : ""}</span><strong>{report.total} <span>/ {report.success ? "Success" : "Failure"}</span></strong></div>
-              {report.success ? <CheckCheck size={23} /> : <X size={23} />}
-            </div>
-            <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>Sector {report.sectorChange >= 0 ? "+" : ""}{report.sectorChange}</span><span>Actor objective +{report.objectiveChange}</span></div>
-            <p>{report.narrative}</p>
-            {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
-            {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">ACTOR MOVEMENT</span><p>{report.adversaryEvent}</p></div></div>}
-            {report.inject && <div className="inject-box"><span className="eyebrow">INJECT <span className="separator">/</span> {report.inject.reason}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>}
-            {decision && (
-              <div className="evidence-decision">
-                <span className="eyebrow">OPERATIONAL DECISION REQUIRED</span>
-                <h3>{decision.attack.title}: act now or learn more?</h3>
-                <div>
-                  <button onClick={() => decide("observe")}><Eye size={20} /><strong>{decision.observe.title}</strong><span>{decision.observe.description}<br /><b>{decision.observe.evidence}</b> · {decision.observe.risk}</span></button>
-                  <button onClick={() => decide("act")}><Siren size={20} /><strong>{decision.act.title}</strong><span>{decision.act.description}<br /><b>{decision.act.service}</b> · {decision.act.evidence}</span></button>
+            <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
+              <section className="report-summary" aria-label="Procedure result">
+                <div className={`result-roll ${report.success ? "success" : "failure"}`}>
+                  <span className="result-die">{report.raw}</span>
+                  <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus ? " including hypothesis bonus" : ""}</span><strong>{report.total} <span>/ {report.success ? "Success" : "Failure"}</span></strong></div>
+                  {report.success ? <CheckCheck size={23} /> : <X size={23} />}
                 </div>
-              </div>
-            )}
-            <p className="small muted">Business impact changed by {report.impactChange >= 0 ? "+" : ""}{report.impactChange}; {getOperationalLabel(game).toLowerCase()} changed by {report.continuityChange}. Decision quality is explained in the debrief.</p>
+                <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>Sector {report.sectorChange >= 0 ? "+" : ""}{report.sectorChange}</span><span>Actor objective +{report.objectiveChange}</span></div>
+                <p className="report-narrative">{report.narrative}</p>
+                {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
+                {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">ACTOR MOVEMENT</span><p>{report.adversaryEvent}</p></div></div>}
+              </section>
+              {(report.inject || decision) && <section className="report-briefing" aria-label="Operational update">
+                {report.inject && <div className="inject-box"><span className="eyebrow">INJECT <span className="separator">/</span> {report.inject.reason}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>}
+                {decision && (
+                  <div className="evidence-decision">
+                    <span className="eyebrow">OPERATIONAL DECISION REQUIRED</span>
+                    <h3>{decision.attack.title}: act now or learn more?</h3>
+                    <div>
+                      <button onClick={() => decide("observe")}><Eye size={20} /><strong>{decision.observe.title}</strong><span>{decision.observe.description}<br /><b>{decision.observe.evidence}</b> · {decision.observe.risk}</span></button>
+                      <button onClick={() => decide("act")}><Siren size={20} /><strong>{decision.act.title}</strong><span>{decision.act.description}<br /><b>{decision.act.service}</b> · {decision.act.evidence}</span></button>
+                    </div>
+                  </div>
+                )}
+              </section>}
+            </div>
+            <p className="report-impact small muted">Business impact changed by {report.impactChange >= 0 ? "+" : ""}{report.impactChange}; {getOperationalLabel(game).toLowerCase()} changed by {report.continuityChange}. Decision quality is explained in the debrief.</p>
             {!game.pendingDecision && <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}<ArrowRight size={17} /></button>}
           </>}
         </DialogContent>

@@ -1,4 +1,4 @@
-import { Activity, Radio, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Activity, Database, Gauge, HeartPulse, Network, Radio, ShieldCheck, TriangleAlert, Wifi, Zap } from "lucide-react";
 import { getAttributionRead, getOperationalLabel, infrastructureTopologies, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 
@@ -22,6 +22,72 @@ export function SectorSituation({ game }: { game: Game }) {
     <span className="situation-icon">{severity === "stable" ? <ShieldCheck size={21} /> : severity === "degraded" ? <Activity size={21} /> : <TriangleAlert size={21} />}</span>
     <div><span className="eyebrow">LIVE SECTOR CONDITION · {getOperationalLabel(game).toUpperCase()}</span><strong>{title}</strong><p>{detail}</p></div>
     <b>{game.continuity}<small>/100</small></b>
+  </section>;
+}
+
+const clampReadout = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
+
+export function SectorOperationalScene({ game }: { game: Game }) {
+  if (![1, 2, 7].includes(game.scenario)) return null;
+
+  const configs = {
+    1: {
+      className: "clinical",
+      eyebrow: "CLINICAL SERVICE LANES",
+      title: "Patient care continuity",
+      detail: "Live service lanes show where investigative pressure can become a care-delivery constraint.",
+      Icon: HeartPulse,
+      lanes: [
+        { label: "Clinical access", value: game.continuity, Icon: HeartPulse },
+        { label: "Diagnostic services", value: game.sectorHealth, Icon: Activity },
+        { label: "Patient records", value: 100 - game.objectiveProgress, Icon: Database },
+      ],
+    },
+    2: {
+      className: "energy",
+      eyebrow: "ENGINEERING OPERATING ENVELOPE",
+      title: "Generation and control stability",
+      detail: "Margins combine plant health, operating continuity and resistance to actor control.",
+      Icon: Zap,
+      lanes: [
+        { label: "Generation margin", value: game.sectorHealth, Icon: Gauge },
+        { label: "Control room", value: game.continuity, Icon: Activity },
+        { label: "Remote maintenance", value: 100 - game.objectiveProgress, Icon: Zap },
+      ],
+    },
+    7: {
+      className: "infocomm",
+      eyebrow: "ROUTING DOMAIN PULSE",
+      title: "Network service propagation",
+      detail: "Domain telemetry reflects routing control, management-plane integrity and subscriber service.",
+      Icon: Network,
+      lanes: [
+        { label: "Core routing", value: 100 - game.objectiveProgress, Icon: Network },
+        { label: "Management plane", value: game.sectorHealth, Icon: Wifi },
+        { label: "Subscriber service", value: game.continuity, Icon: Radio },
+      ],
+    },
+  } as const;
+  const config = configs[game.scenario as 1 | 2 | 7];
+  const SceneIcon = config.Icon;
+
+  return <section className={`sector-operational-scene ${config.className}`} aria-label={config.title}>
+    <header>
+      <span className="sector-scene-icon"><SceneIcon size={22} /></span>
+      <div><span className="eyebrow">{config.eyebrow}</span><strong>{config.title}</strong><p>{config.detail}</p></div>
+    </header>
+    <div className="sector-scene-lanes">
+      {config.lanes.map(lane => {
+        const value = clampReadout(lane.value);
+        const status = value > 75 ? "Stable" : value > 45 ? "Constrained" : "At risk";
+        const LaneIcon = lane.Icon;
+        return <div className={`sector-scene-lane ${value <= 45 ? "at-risk" : value <= 75 ? "constrained" : "stable"}`} key={lane.label}>
+          <span><LaneIcon size={17} /></span>
+          <div><strong>{lane.label}</strong><div className="sector-scene-track" aria-hidden="true"><i style={{ width: `${value}%` }} /></div><small>{status}</small></div>
+          <b>{value}</b>
+        </div>;
+      })}
+    </div>
   </section>;
 }
 
