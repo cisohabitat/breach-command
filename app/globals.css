@@ -51,3 +51,46 @@
 @media print{
   body{background:#fff;color:#111}.topbar,.game-screen,.briefing-screen,[data-radix-dialog-overlay]{display:none!important}.debrief-dialog{position:absolute!important;inset:0!important;transform:none!important;width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;background:#fff!important;color:#111!important;border:0!important;box-shadow:none!important}.debrief-dialog *{color:#111!important;background:transparent!important}.debrief-dialog button{display:none!important}.score-card,.timeline,.decision-summary,.counterfactuals,.debrief-chain section{border-color:#777!important;break-inside:avoid}
 }
+
+/* Responsive hardening for phones, tablets and desktop browsers. */
+html,body{max-width:100%;overflow-x:clip}
+.impact-meter,.continuity-meter{grid-template-columns:minmax(0,1fr) auto;min-width:0}
+.impact-meter .mono,.continuity-meter .mono{white-space:normal;line-height:1.25;overflow-wrap:anywhere}
+[data-slot=dialog-close]{width:44px;height:44px;display:grid;place-items:center;top:6px!important;right:6px!important}
+
+@media(max-width:1100px){
+  .game-heading{align-items:flex-start}
+  .case-meters{min-width:0}
+}
+
+@media(max-width:850px){
+  .game-heading{flex-wrap:wrap}
+  .game-heading>div:first-child{width:100%}
+  .case-meters{justify-content:flex-start}
+}
+
+@media(max-width:650px){
+  .topbar{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+  .game-screen,.briefing-screen{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+  .top-actions .quiet-button{min-width:44px;min-height:44px;justify-content:center}
+  .procedure-card,.hypothesis-options button,.question-list button,.response-options button{touch-action:manipulation}
+  .game-footer{padding-bottom:max(18px,env(safe-area-inset-bottom))}
+}
+
+@media(max-width:430px){
+  .top-actions .quiet-button>span{display:none}
+  .top-actions{gap:6px}
+  .mission-panel{padding:19px 16px}
+  .mission-selector{gap:5px}
+  .mission-selector button{min-width:0;padding-inline:4px}
+  .attack-grid{gap:8px}
+  .attack-card{padding-inline:11px}
+  .result-roll{align-items:flex-start}
+}
+
+@media(max-width:360px){
+  .procedure-grid{grid-template-columns:1fr}
+  .procedure-card{min-height:150px}
+  .brand{font-size:.8125rem}
+  .brand-mark{width:33px;height:33px}
+}
