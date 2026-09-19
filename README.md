@@ -36,12 +36,13 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Mechanically distinct sector systems:** every sector combines its own base loss, tempo weighting, containment cost and recovery terms, so the same action has different consequences from one incident to the next.
 - **Persistent command team:** six named specialists have distinct capabilities, callsigns, fatigue, cohesion and after-action reactions.
 - **Branching campaign director:** command posture, trust and completed operations select Watchtower, Breakwater, Common Ground or Convergence routes. Routes alter starting conditions and mission priorities.
-- **Authored incident variants:** each of the ten scenarios has three operational variants with distinct briefings and starting pressure.
+- **Authored incident variants:** each of the ten scenarios has five operational variants with distinct briefings and starting pressure, and the campaign route selects between them, so a route change produces a different operation.
+- **Resolved endings:** a win stands the incident down, a loss closes the record with the unresolved stages noted, and an authorised exercise stops at the drill boundary. Each is a distinct presentation rather than one banner with different text.
 - **Three-stage response:** containment is followed by an assurance gate and deliberate recovery, with isolated infrastructure restored only after the response completes. Containment, assurance and recovery options are authored per sector, so disruption, service cost and residual risk reflect the incident's own constraint while the strict three-stage sequence is preserved.
 - **Three-act campaign:** progression tracks experience, trust, readiness, unresolved access, mastery, team cohesion and command doctrine, leading to one of four endings.
 - **Challenge codes:** compact `BC-...` codes reproduce a scenario, difficulty, mode, specialist and random seed.
 - **After-action review:** scoring, timelines, decision quality, evidence reconstruction, actor adaptation and counterfactuals support facilitated learning.
-- **Accessible, responsive play:** dedicated phone, iPad portrait, iPad landscape and desktop layouts, plus optional procedural sound, adaptive music, haptics, high contrast, reduced motion and guided reflection.
+- **Accessible, responsive play:** dedicated phone, tablet and desktop layouts that recompose at nine width breakpoints, plus optional procedural sound, adaptive music, haptics, high contrast, reduced motion and guided reflection. The audit suite reports no accessibility violations.
 - **Offline and local-first play:** the installable PWA caches core assets. Sessions, campaign progress, settings and anonymous balance counters remain on the device. Portable backup text can transfer progress without an account.
 
 The game does not call an AI service, inspect real systems or transmit incident information.
@@ -83,10 +84,11 @@ pnpm build
 
 | Path | Responsibility |
 | --- | --- |
-| `app/page.tsx` | Game orchestration, focused workspaces, start screen, action sheet, settings and debrief |
-| `app/globals.css` | Tactical visual system and responsive layouts |
-| `components/game/` | Gameplay boards, maps, events, procedures and tutorial surfaces |
-| `components/ui/` | Reusable interface primitives |
+| `app/page.tsx` | Application shell: topbar, workspace switch, live regions and overlay mounting |
+| `hooks/use-game-session.ts` | Game, session and campaign state, every transition, effect and derived readout |
+| `app/globals.css` | Tactical visual system, motion and responsive layouts |
+| `components/game/` | Workspaces, gameplay boards, maps, dialogs, end states and the tutorial |
+| `components/ui/` | The interface primitives the game actually imports |
 | `lib/game.ts` | Scenario, procedure and attack data |
 | `lib/advanced-game.ts` | Game state, transitions, adaptive adversary and scoring |
 | `lib/command-systems.ts` | Modes, specialists, procedure plans, objectives and sector rules |
