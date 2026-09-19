@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
   attacks,
   procedures,
@@ -49,6 +49,7 @@ import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
 import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { decodeChallenge, encodeChallenge, seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
+import { chooseBotAction, type BotAction } from "@/lib/game-bot";
 
 type WorkspaceView = "command" | "investigate" | "briefing";
 
@@ -116,8 +117,14 @@ export function useGameSession() {
   const [storageNotice, setStorageNotice] = useState("");
   const [pendingUndo, setPendingUndo] = useState<{ label: string; game: Game } | null>(null);
   const [meterPulse, setMeterPulse] = useState<MeterPulse | null>(null);
+  const [botEnabled, setBotEnabled] = useState(false);
+  const [botRun, setBotRun] = useState(false);
+  const [botActive, setBotActive] = useState(false);
+  const [botPaused, setBotPaused] = useState(false);
+  const [botStatus, setBotStatus] = useState("Waiting for the operation to begin.");
   const stateRef = useRef(game);
   const busyRef = useRef(false);
+  const botRunRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const recordedRuns = useRef(new Set<string>());
   const pulseKey = useRef(0);
@@ -174,11 +181,17 @@ export function useGameSession() {
     const random = seededChallengeRandom(challengeSeed);
     const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
     const route = routeForCampaign(campaign);
+    const automated = botEnabled;
     const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, challengeSeed) });
     setGame(next);
+    botRunRef.current = automated;
+    setBotRun(automated);
+    setBotActive(automated);
+    setBotPaused(false);
+    setBotStatus(automated ? "Reviewing the mission briefing before the first move." : "Waiting for the operation to begin.");
     setGuided(mode === "expert" ? false : guided);
     const tutorialComplete = localStorage.getItem("breach-command.tutorial-complete") === "true";
-    setTutorial(!tutorialComplete);
+    setTutorial(automated ? false : !tutorialComplete);
     setMissionBriefing(true);
     setSelected(null);
     setReport(null);
@@ -192,12 +205,18 @@ export function useGameSession() {
     setActiveWorkspace("command");
     playFeedback("open", soundEnabled, hapticsEnabled);
     setAdaptiveScore(musicEnabled, 0.15, index);
-    recordTelemetry("start", { scenario: index });
-    setTelemetry(readTelemetry());
+    if (!automated) {
+      recordTelemetry("start", { scenario: index });
+      setTelemetry(readTelemetry());
+    }
     scrollToTop();
   }
 
   function resume(session: SavedSession) {
+    botRunRef.current = false;
+    setBotRun(false);
+    setBotActive(false);
+    setBotPaused(false);
     setGame(session.game);
     setGuided(session.guided);
     setFastResolve(session.fastResolve);
@@ -213,7 +232,7 @@ export function useGameSession() {
     scrollToTop();
   }
 
-  function run(id: string) {
+  function run(id: string, plan = { scope: actionScope, intensity: actionIntensity }) {
     const current = stateRef.current;
     if (!current || busyRef.current || current.status !== "playing" || current.pendingDecision || current.pendingCommand || current.pendingSetPiece || availableIn(current, id) > 0) return;
     busyRef.current = true;
@@ -228,7 +247,7 @@ export function useGameSession() {
     }
     const timeout = setTimeout(() => {
       if (interval) clearInterval(interval);
-      const next = playTurn(current, id, undefined, { scope: actionScope, intensity: actionIntensity });
+      const next = playTurn(current, id, undefined, plan);
       const result = next.turns.at(-1)!;
       const requiresDialog = !!result.revealed || !!result.inject || !!result.adversaryEvent || next.status !== "playing";
       setDie(result.raw);
@@ -253,8 +272,10 @@ export function useGameSession() {
         turn: result.number,
         stageRevealed: !!result.revealed,
       });
-      recordTelemetry("turn", { procedure: id });
-      setTelemetry(readTelemetry());
+      if (!botRunRef.current) {
+        recordTelemetry("turn", { procedure: id });
+        setTelemetry(readTelemetry());
+      }
       if (["lost", "exercise"].includes(next.status)) recordProgress(next);
       busyRef.current = false;
     }, quick ? 0 : 850);
@@ -369,7 +390,7 @@ export function useGameSession() {
   }
 
   function exportProgress() {
-    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, session: game && game.mode !== "ironman" ? serialiseSession(game, guided, fastResolve) : null });
+    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, session: game && game.mode !== "ironman" && !botRun ? serialiseSession(game, guided, fastResolve) : null });
     setBackupInput(payload);
     navigator.clipboard?.writeText(payload).then(() => setBackupMessage("Backup copied to the clipboard."), () => setBackupMessage("Backup prepared. Copy the text below."));
   }
@@ -400,6 +421,7 @@ export function useGameSession() {
   }
 
   function recordProgress(result: Game) {
+    if (botRunRef.current) return;
     const marker = `${result.scenario}:${result.status}:${result.turns.length}:${result.responseChoices.join("-")}`;
     if (recordedRuns.current.has(marker)) return;
     recordedRuns.current.add(marker);
@@ -428,6 +450,11 @@ export function useGameSession() {
     setInlineReport(null);
     setSelected(null);
     setDebrief(false);
+    botRunRef.current = false;
+    setBotRun(false);
+    setBotActive(false);
+    setBotPaused(false);
+    setBotStatus("Waiting for the operation to begin.");
     clearMeterPulse();
     setAdaptiveScore(false);
   }
@@ -452,6 +479,38 @@ export function useGameSession() {
     setMusicEnabled(value);
     setAdaptiveScore(value, game ? Math.max(game.impact, game.objectiveProgress) / 100 : 0.1, game?.scenario ?? scenarioChoice);
   }
+
+  function toggleBotPause() {
+    setBotPaused(value => {
+      const next = !value;
+      setBotStatus(next ? "Automation paused. The current operation state is unchanged." : "Automation resumed. Reassessing the visible incident state.");
+      return next;
+    });
+  }
+
+  function takeControl() {
+    setBotActive(false);
+    setBotPaused(false);
+    setBotEnabled(false);
+    setBotStatus("Manual control resumed. This remains a practice operation without campaign rewards.");
+    setAnnouncement("Manual control resumed. Bot-assisted operations do not award campaign progress.");
+  }
+
+  const executeBotAction = useEffectEvent((action: BotAction) => {
+    switch (action.type) {
+      case "decision": decide(action.choice); break;
+      case "command": command(action.choice); break;
+      case "set-piece": sectorDecision(action.choice); break;
+      case "response": respond(action.choice); break;
+      case "hypothesis": chooseHypothesis(action.hypothesis); break;
+      case "case-theory": chooseCaseTheory(action.objective); break;
+      case "correlate": correlate(action.evidence, action.assessment); break;
+      case "focus": focusInfrastructure(action.nodeId); break;
+      case "map": mapAction(action.nodeId, action.action); break;
+      case "procedure": run(action.procedure, action.plan); break;
+      case "complete": setBotActive(false); break;
+    }
+  });
 
   useEffect(() => {
     const stored = localStorage.getItem(SESSION_KEY);
@@ -506,9 +565,28 @@ export function useGameSession() {
   }, [game, musicEnabled]);
 
   useEffect(() => {
-    if (!game || game.mode === "ironman") return;
+    if (!game || game.mode === "ironman" || botRunRef.current) return;
     localStorage.setItem(SESSION_KEY, serialiseSession(game, guided, fastResolve));
   }, [game, guided, fastResolve]);
+
+  useEffect(() => {
+    if (!game || !botActive || botPaused || rolling || missionBriefing || settings || rules || newConfirm || debrief || tutorial || selected) return;
+    const delay = prefersReducedMotion() ? 350 : 900;
+    const timer = setTimeout(() => {
+      const current = stateRef.current;
+      if (!current) return;
+      if (report && !current.pendingDecision) {
+        setBotStatus(current.status === "response" ? "Entering the three-stage response sequence." : "Closing the completed action report.");
+        setReport(null);
+        if (["won", "lost", "exercise"].includes(current.status)) setDebrief(true);
+        return;
+      }
+      const action = chooseBotAction(current);
+      setBotStatus(action.reason);
+      executeBotAction(action);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [game, botActive, botPaused, rolling, missionBriefing, settings, rules, newConfirm, debrief, tutorial, selected, report]);
 
   useEffect(() => () => {
     timers.current.forEach(clearTimeout);
@@ -585,6 +663,11 @@ export function useGameSession() {
     musicEnabled,
     hapticsEnabled, setHapticsEnabled,
     highContrast, setHighContrast,
+    botEnabled, setBotEnabled,
+    botRun,
+    botActive,
+    botPaused,
+    botStatus,
     // Turn, report and decision state
     selected, setSelected,
     rolling,
@@ -653,6 +736,8 @@ export function useGameSession() {
     restartTutorial,
     clearLocalRecord,
     setMusic,
+    toggleBotPause,
+    takeControl,
   };
 }
 

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, Clock3, Dices, GitBranch, LockKeyhole, RefreshCw, Settings2, Star, Trophy } from "lucide-react";
+import { ArrowRight, Bot, Clock3, Dices, GitBranch, LockKeyhole, RefreshCw, Settings2, Star, Trophy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { stageIcons } from "@/components/game/stage-icons";
 import { difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
@@ -14,6 +14,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
     difficulty, setDifficulty, specialist, setSpecialist, mode, setMode,
     challengeCode, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed,
     guided, setGuided, fastResolve, setFastResolve,
+    botEnabled, setBotEnabled,
     savedSession, resume, clearStoredSession, start,
   } = session;
 
@@ -80,6 +81,11 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             <div className="guided-control">
               <div><label htmlFor="fast-start">Fast resolution</label><small>Resolve routine actions inline after the tutorial.</small></div>
               <Switch id="fast-start" checked={fastResolve} onCheckedChange={setFastResolve} />
+            </div>
+            <div className="guided-control bot-setup-control">
+              <Bot size={19} aria-hidden="true" />
+              <div><label htmlFor="bot-start">Bot commander</label><small>Watch a local rule-based operator play. Practice runs do not save or award campaign progress.</small></div>
+              <Switch id="bot-start" checked={botEnabled} onCheckedChange={setBotEnabled} />
             </div>
           </div>
         </details>

@@ -404,3 +404,24 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
   .resolution-stamp{animation:none;opacity:1;transform:none}
   .debrief-dialog [data-slot=dialog-header],.debrief-dialog .debrief-stats,.debrief-dialog .score-card,.debrief-dialog .advanced-review{animation:none}
 }
+
+/* Bot Commander keeps automated play visible, interruptible, and distinct from campaign runs. */
+.bot-setup-control{justify-content:flex-start}
+.bot-setup-control>svg{color:var(--lime);flex:0 0 auto}
+.bot-setup-control>div{flex:1}
+.bot-setup-control>[data-slot=switch]{flex:0 0 auto}
+.bot-control{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:13px;align-items:center;margin:0 0 18px;padding:13px 15px;border:1px solid #60794f;border-left:3px solid var(--lime);border-radius:8px;background:linear-gradient(90deg,#263b29,#17241d);box-shadow:0 10px 28px #0002}
+.bot-control.paused{border-color:#8b7848;border-left-color:#e1c66c;background:linear-gradient(90deg,#352f20,#1d241c)}
+.bot-control-icon{width:42px;height:42px;display:grid;place-items:center;border:1px solid #627a53;border-radius:7px;color:var(--lime);background:#101a14}
+.bot-control-copy{min-width:0}
+.bot-control-copy>.eyebrow{font-size:var(--type-micro)}
+.bot-control-copy>strong{display:block;margin:3px 0 2px;font-size:var(--type-body)}
+.bot-control-copy>small{display:block;color:#a9baaa;font-size:var(--type-caption);line-height:var(--leading-base)}
+.bot-control-actions{display:flex;gap:7px;align-items:center}
+.bot-control-actions button{min-height:44px;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border:1px solid #53694c;border-radius:6px;background:#142019;color:#d7e4d2;font-size:var(--type-caption)}
+.bot-control-actions button:hover{border-color:var(--lime);color:var(--lime)}
+@media(max-width:650px){
+  .bot-control{grid-template-columns:auto 1fr;margin-bottom:14px;padding:12px}
+  .bot-control-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}
+  .bot-control-actions button:only-child{grid-column:1/-1}
+}

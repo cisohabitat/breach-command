@@ -4,6 +4,7 @@ import { TutorialCoach } from "@/components/game/tutorial-coach";
 import { CommandWorkspace } from "@/components/game/command-workspace";
 import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
 import { BriefingWorkspace } from "@/components/game/briefing-workspace";
+import { BotControl } from "@/components/game/bot-control";
 import { gameModes, getOperationalLabel, getTurnLimit } from "@/lib/advanced-game";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, type GameSession } from "@/hooks/use-game-session";
 
@@ -49,6 +50,8 @@ export function GameScreen({ session }: { session: GameSession }) {
           </div>
         </div>
       </section>
+
+      <BotControl session={session} />
 
       <nav className="workspace-tabs" aria-label="Command workspace">
         <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><LayoutDashboard size={18} /><span><strong>Command</strong><small>Situation and decisions</small></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Action</b>}</button>

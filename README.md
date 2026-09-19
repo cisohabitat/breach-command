@@ -25,6 +25,7 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Seventy-two original techniques:** eighteen per stage, each with its own detectable evidence sources, so every incident draws a different set of investigative procedures rather than the same rotation.
 - **Three difficulty levels:** Training, Operational and Crisis.
 - **Five modes:** Campaign, Daily Operation, Ironman, Escalation and Expert.
+- **Local Bot Commander:** an optional visible-evidence operator can run a complete practice incident, explain its current intent, pause on request and hand control back without writing saves, campaign rewards or balance telemetry.
 - **Distinct adaptive adversaries:** recurring threat groups have signature mechanics, learn from procedure use, hypotheses and command posture, and can move to less-exposed routes.
 - **Progressive attribution:** threat-group identity is withheld until the evidence supports behavioural, suspected, probable and attributed confidence levels.
 - **Focused command workspace:** Command, Investigate and Briefing views keep the immediate decision, analytical work and supporting context separate without removing information. First-time guidance names the next move and links directly to the relevant workspace. Guidance is tiered: guided reflection offers strategic prompts, only Training difficulty reveals a suggested evidence source, and Expert disables guidance entirely, so normal play never hands the player the answer.
@@ -73,12 +74,14 @@ Run the verification suite:
 
 ```bash
 pnpm test
+pnpm test:responsive:install # first run only
+pnpm test:responsive
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm build
 ```
 
-`pnpm test` includes deterministic rule checks and 1,200 complete simulated operations across scenarios, difficulties, modes and specialists.
+`pnpm test` includes deterministic rule checks and 1,230 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover.
 
 ## Architecture
 
@@ -91,6 +94,7 @@ pnpm build
 | `components/ui/` | The interface primitives the game actually imports |
 | `lib/game.ts` | Scenario, procedure and attack data |
 | `lib/advanced-game.ts` | Game state, transitions, adaptive adversary and scoring |
+| `lib/game-bot.ts` | Visible-evidence Bot Commander policy and action selection |
 | `lib/command-systems.ts` | Modes, specialists, procedure plans, objectives and sector rules |
 | `lib/phase8.ts` | Infrastructure topologies, named team, set pieces and challenge codes |
 | `lib/phase9.ts` | Campaign routes, incident variants, objective theories and team reactions |
@@ -99,6 +103,8 @@ pnpm build
 | `lib/feedback.ts` | Audio and haptic feedback |
 | `lib/telemetry.ts` | Device-local balance counters |
 | `tests/game.test.ts` | Engine assertions and full-game simulations |
+| `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
+| `playwright.config.ts` | Deterministic Chromium test runner and local preview lifecycle |
 
 The interface is built with Next.js 16, React 19 and TypeScript. Vinext produces the Cloudflare Workers-compatible deployment used by OpenAI Sites.
 

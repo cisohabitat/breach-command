@@ -11,6 +11,8 @@ import {decodeChallenge,encodeChallenge,seededChallengeRandom} from "../lib/phas
 import {campaignAct,campaignEnding,defaultCampaign,parseCampaign} from "../lib/campaign.ts";
 // @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {campaignRoutes,incidentVariant,routeForCampaign} from "../lib/phase9.ts";
+// @ts-expect-error Native Node TypeScript execution requires the source extension.
+import {chooseBotAction,type BotAction} from "../lib/game-bot.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
 let g=baseline();
@@ -254,4 +256,35 @@ for(const mode of modes)for(let s=0;s<scenarios.length;s++)for(let attempt=0;att
   assert.ok(["won","lost","exercise"].includes(sim.status));modeSimulations++;
 }
 for(const verb of decisionChoices)assert.ok(verbTally[verb]>0,`simulations exercise the ${verb} decision verb`);
-console.log(`PASS: adaptive routes, hypotheses, command events, sector systems, specialists, advanced modes, five decision verbs, per-sector response sets, counterfactuals and ${simulationCount+modeSimulations} complete simulations.`,totals,verbTally);
+
+const applyBotAction=(game:Game,action:BotAction)=>{
+  switch(action.type){
+    case "decision":return resolveDecision(game,action.choice);
+    case "command":return resolveCommand(game,action.choice);
+    case "set-piece":return resolveSetPiece(game,action.choice);
+    case "response":return resolveResponse(game,action.choice);
+    case "hypothesis":return setHypothesis(game,action.hypothesis);
+    case "case-theory":return setCaseTheory(game,action.objective);
+    case "correlate":return correlateEvidence(game,action.evidence,action.assessment);
+    case "focus":return setInfrastructureFocus(game,action.nodeId);
+    case "map":return resolveMapAction(game,action.nodeId,action.action);
+    case "procedure":return playTurn(game,action.procedure,18,action.plan);
+    case "complete":return game;
+  }
+};
+const botActionTypes=new Set<BotAction["type"]>();
+let botSimulations=0;
+for(let scenario=0;scenario<scenarios.length;scenario++)for(const difficulty of ["training","operational","crisis"] as Difficulty[]){
+  let botGame=newGame(scenario,difficulty,seededChallengeRandom(500000+scenario),{specialist:specialistIds[scenario%specialistIds.length]});
+  for(let step=0;step<160&&!(["won","lost","exercise"] as string[]).includes(botGame.status);step++){
+    const action=chooseBotAction(botGame);
+    assert.notEqual(action.type,"complete","bot always has a move before the operation ends");
+    botActionTypes.add(action.type);
+    botGame=applyBotAction(botGame,action);
+  }
+  assert.ok(["won","lost","exercise"].includes(botGame.status),`bot terminates ${scenarios[scenario].id} on ${difficulty}`);
+  assert.ok(botGame.turns.length<=getTurnLimit(botGame),"bot respects the investigation turn limit");
+  botSimulations++;
+}
+for(const action of ["procedure","hypothesis","decision","set-piece","response"] as const)assert.ok(botActionTypes.has(action),`bot simulations exercise ${action}`);
+console.log(`PASS: adaptive routes, hypotheses, command events, sector systems, specialists, advanced modes, five decision verbs, per-sector response sets, counterfactuals, a visible-evidence bot and ${simulationCount+modeSimulations+botSimulations} complete simulations.`,totals,verbTally);
