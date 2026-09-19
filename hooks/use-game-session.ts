@@ -1,0 +1,606 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import {
+  attacks,
+  procedures,
+  scenarios,
+  hypotheses,
+  difficulties,
+  newGame,
+  playTurn,
+  resolveDecision,
+  resolveResponse,
+  resolveCommand,
+  resolveSetPiece,
+  resolveMapAction,
+  correlateEvidence,
+  setHypothesis,
+  setInfrastructureFocus,
+  setCaseTheory,
+  availableIn,
+  getLead,
+  getSuggestion,
+  guidanceLevel,
+  responseOptionsFor,
+  getOutcome,
+  getDecisionOptions,
+  getAdversaryState,
+  getAdversaryRead,
+  getOperationalLabel,
+  getObjectiveRead,
+  getTurnLimit,
+  adversaryObjectives,
+  type Difficulty,
+  type GameMode,
+  type ProcedureIntensity,
+  type ProcedureScope,
+  type SpecialistId,
+  type HypothesisId,
+  type Game,
+  type Turn,
+  type AdversaryObjectiveId,
+  type DecisionChoice,
+  type MapAction,
+} from "@/lib/advanced-game";
+import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
+import { campaignAct, campaignEnding, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
+import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
+import { decodeChallenge, encodeChallenge, seededChallengeRandom } from "@/lib/phase8";
+import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
+
+type WorkspaceView = "command" | "investigate" | "briefing";
+
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+}
+
+export function useGameSession() {
+  const [game, setGame] = useState<Game | null>(null);
+  const [guided, setGuided] = useState(true);
+  const [fastResolve, setFastResolve] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>("operational");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [rolling, setRolling] = useState(false);
+  const [die, setDie] = useState(20);
+  const [report, setReport] = useState<Turn | null>(null);
+  const [inlineReport, setInlineReport] = useState<Turn | null>(null);
+  const [rules, setRules] = useState(false);
+  const [newConfirm, setNewConfirm] = useState(false);
+  const [question, setQuestion] = useState<string | null>(null);
+  const [debrief, setDebrief] = useState(false);
+  const [scenarioChoice, setScenarioChoice] = useState(0);
+  const [savedSession, setSavedSession] = useState<SavedSession | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [settings, setSettings] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const [highContrast, setHighContrast] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(true);
+  const [mode, setMode] = useState<GameMode>("campaign");
+  const [specialist, setSpecialist] = useState<SpecialistId>("hunter");
+  const [actionScope, setActionScope] = useState<ProcedureScope>("focused");
+  const [actionIntensity, setActionIntensity] = useState<ProcedureIntensity>("balanced");
+  const [missionBriefing, setMissionBriefing] = useState(false);
+  const [tutorial, setTutorial] = useState(false);
+  const [telemetry, setTelemetry] = useState<BalanceTelemetry>(() => readTelemetry());
+  const [challengeSeed, setChallengeSeed] = useState(() => {
+    const now = new Date();
+    return Number(`${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`);
+  });
+  const [challengeInput, setChallengeInput] = useState("");
+  const [challengeMessage, setChallengeMessage] = useState("");
+  const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
+  const [backupInput, setBackupInput] = useState("");
+  const [backupMessage, setBackupMessage] = useState("");
+  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
+  const [criticalAnnouncement, setCriticalAnnouncement] = useState("");
+  const [storageNotice, setStorageNotice] = useState("");
+  const [pendingUndo, setPendingUndo] = useState<{ label: string; game: Game } | null>(null);
+  const stateRef = useRef(game);
+  const busyRef = useRef(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const recordedRuns = useRef(new Set<string>());
+
+  const activeScenario = scenarios[game?.scenario ?? scenarioChoice];
+  const ScenarioIcon = activeScenario.icon;
+  const proc = procedures.find(procedure => procedure.id === selected);
+  const ended = !!game && ["won", "lost", "exercise"].includes(game.status);
+  const config = game ? difficulties[game.difficulty] : difficulties[difficulty];
+  const decision = game ? getDecisionOptions(game) : null;
+  const guidance = game ? guidanceLevel(game, guided) : "off";
+  const suggestion = game ? getSuggestion(game, guided) : null;
+  const responseProfile = game ? responseOptionsFor(game) : null;
+  const outcome = game ? getOutcome(game) : null;
+  const activeHypothesis = game ? hypotheses.find(item => item.id === game.hypothesis) : null;
+  const procedureAligned = !!proc && !!activeHypothesis?.procedures.includes(proc.id);
+  const currentAct = campaignAct(campaign.completed.length);
+  const currentRouteId = routeForCampaign(campaign);
+  const currentRoute = campaignRoutes[currentRouteId];
+  const previewVariant = incidentVariant(scenarioChoice, currentRouteId, challengeSeed);
+  const finalEnding = campaignEnding(campaign);
+  const challengeCode = encodeChallenge({ scenario: scenarioChoice, difficulty, mode, specialist, seed: challengeSeed });
+
+  function clearStoredSession() {
+    localStorage.removeItem(SESSION_KEY);
+    setSavedSession(null);
+  }
+
+  function start(index = scenarioChoice) {
+    if (busyRef.current) return;
+    clearStoredSession();
+    const random = seededChallengeRandom(challengeSeed);
+    const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
+    const route = routeForCampaign(campaign);
+    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, challengeSeed) });
+    setGame(next);
+    setGuided(mode === "expert" ? false : guided);
+    const tutorialComplete = localStorage.getItem("breach-command.tutorial-complete") === "true";
+    setTutorial(!tutorialComplete);
+    setMissionBriefing(true);
+    setSelected(null);
+    setReport(null);
+    setInlineReport(null);
+    setQuestion(null);
+    setDebrief(false);
+    setNewConfirm(false);
+    setPendingUndo(null);
+    setAnnouncement("New investigation started.");
+    setActiveWorkspace("command");
+    playFeedback("open", soundEnabled, hapticsEnabled);
+    setAdaptiveScore(musicEnabled, 0.15, index);
+    recordTelemetry("start", { scenario: index });
+    setTelemetry(readTelemetry());
+    scrollToTop();
+  }
+
+  function resume(session: SavedSession) {
+    setGame(session.game);
+    setGuided(session.guided);
+    setFastResolve(session.fastResolve);
+    setDifficulty(session.game.difficulty);
+    setScenarioChoice(session.game.scenario);
+    setReport(session.game.pendingDecision ? session.game.turns.at(-1) ?? null : null);
+    setInlineReport(null);
+    setSavedSession(null);
+    setPendingUndo(null);
+    setAnnouncement(`Resumed ${scenarios[session.game.scenario].title}.`);
+    setActiveWorkspace(session.game.pendingDecision || session.game.pendingCommand || session.game.pendingSetPiece ? "command" : "investigate");
+    scrollToTop();
+  }
+
+  function run(id: string) {
+    const current = stateRef.current;
+    if (!current || busyRef.current || current.status !== "playing" || current.pendingDecision || current.pendingCommand || current.pendingSetPiece || availableIn(current, id) > 0) return;
+    busyRef.current = true;
+    const quick = fastResolve && current.turns.length > 0;
+    setSelected(null);
+    setInlineReport(null);
+    let interval: ReturnType<typeof setInterval> | null = null;
+    if (!quick) {
+      setRolling(true);
+      interval = setInterval(() => setDie(1 + Math.floor(Math.random() * 20)), 80);
+      timers.current.push(interval);
+    }
+    const timeout = setTimeout(() => {
+      if (interval) clearInterval(interval);
+      const next = playTurn(current, id, undefined, { scope: actionScope, intensity: actionIntensity });
+      const result = next.turns.at(-1)!;
+      const requiresDialog = !!result.revealed || !!result.inject || !!result.adversaryEvent || next.status !== "playing";
+      setDie(result.raw);
+      setGame(next);
+      if (next.pendingDecision || next.pendingCommand || next.pendingSetPiece || next.status !== "playing") setActiveWorkspace("command");
+      setReport(requiresDialog ? result : null);
+      setInlineReport(requiresDialog ? null : result);
+      const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
+      setPendingUndo(quick && next.status === "playing" && !blockedNow ? { label: procedures.find(item => item.id === id)?.title ?? "Procedure", game: current } : null);
+      setCriticalAnnouncement(next.impact >= 70 || next.continuity <= 45 ? `Warning. Business impact ${next.impact}. ${getOperationalLabel(next)} ${next.continuity}.` : "");
+      setRolling(false);
+      setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
+      playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
+        procedure: result.procedure,
+        success: result.success,
+        roll: result.raw,
+        total: result.total,
+        threshold: difficulties[next.difficulty].threshold,
+        impact: next.impact,
+        continuity: next.continuity,
+        turn: result.number,
+        stageRevealed: !!result.revealed,
+      });
+      recordTelemetry("turn", { procedure: id });
+      setTelemetry(readTelemetry());
+      if (["lost", "exercise"].includes(next.status)) recordProgress(next);
+      busyRef.current = false;
+    }, quick ? 0 : 850);
+    timers.current.push(timeout);
+  }
+
+  function decide(choice: DecisionChoice) {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = resolveDecision(current, choice);
+    setGame(next);
+    setPendingUndo(null);
+    setActiveWorkspace(next.status === "playing" ? "investigate" : "command");
+    playFeedback("decision", soundEnabled, hapticsEnabled);
+    setAnnouncement(`Decision recorded. Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
+  }
+
+  function chooseHypothesis(id: HypothesisId) {
+    const current = stateRef.current;
+    if (!current || current.pendingDecision || current.pendingCommand || current.pendingSetPiece) return;
+    const next = setHypothesis(current, id);
+    setGame(next);
+    setAnnouncement(`Working hypothesis set to ${hypotheses.find(item => item.id === id)?.title}.`);
+  }
+
+  function respond(choice: string) {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = resolveResponse(current, choice);
+    setGame(next);
+    setPendingUndo(null);
+    playFeedback(next.status === "won" ? "complete" : "decision", soundEnabled, hapticsEnabled);
+    setAnnouncement(next.status === "won" ? "Response complete. After-action review available." : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
+    if (next.status === "won") {
+      recordProgress(next);
+      setDebrief(true);
+    }
+  }
+
+  function command(choice: "a" | "b") {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = resolveCommand(current, choice);
+    setGame(next);
+    setPendingUndo(null);
+    setActiveWorkspace("investigate");
+    playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
+    setAnnouncement(`Command decision recorded. Business impact is ${next.impact}.`);
+  }
+
+  function sectorDecision(choice: "a" | "b") {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = resolveSetPiece(current, choice);
+    setGame(next);
+    setPendingUndo(null);
+    setActiveWorkspace("investigate");
+    playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
+    setAnnouncement(`Sector decision recorded. ${getOperationalLabel(next)} is ${next.continuity}.`);
+  }
+
+  function focusInfrastructure(nodeId: string) {
+    const current = stateRef.current;
+    if (!current) return;
+    setGame(setInfrastructureFocus(current, nodeId));
+  }
+
+  function mapAction(nodeId: string, action: MapAction) {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = resolveMapAction(current, nodeId, action);
+    setGame(next);
+    const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
+    setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? "Isolation" : "Monitoring", game: current } : null);
+    playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
+    setAnnouncement(next.mapHistory.at(-1)?.effect ?? "Infrastructure action recorded.");
+  }
+
+  function undo() {
+    if (!pendingUndo) return;
+    setGame(pendingUndo.game);
+    setReport(null);
+    setInlineReport(null);
+    setAnnouncement(`Undid ${pendingUndo.label}.`);
+    setPendingUndo(null);
+  }
+
+  function correlate(ids: [string, string], assessment: "causal" | "coincidental") {
+    const current = stateRef.current;
+    if (!current) return;
+    const next = correlateEvidence(current, ids, assessment);
+    setGame(next);
+    setPendingUndo(null);
+    const correct = next.correlations.at(-1)?.correct;
+    playFeedback(correct ? "success" : "failure", soundEnabled, hapticsEnabled);
+    setAnnouncement(correct ? "Evidence assessment supported." : "Evidence assessment challenged.");
+  }
+
+  function chooseCaseTheory(objective: AdversaryObjectiveId) {
+    const current = stateRef.current;
+    if (!current) return;
+    setGame(setCaseTheory(current, objective));
+    setAnnouncement(`Case theory set to ${adversaryObjectives[objective].title}.`);
+  }
+
+  function exportProgress() {
+    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, session: game && game.mode !== "ironman" ? serialiseSession(game, guided, fastResolve) : null });
+    setBackupInput(payload);
+    navigator.clipboard?.writeText(payload).then(() => setBackupMessage("Backup copied to the clipboard."), () => setBackupMessage("Backup prepared. Copy the text below."));
+  }
+
+  function importProgress() {
+    try {
+      const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null };
+      if (payload.format !== "breach-command-backup") throw new Error("format");
+      const nextCampaign = parseCampaign(JSON.stringify(payload.campaign));
+      setCampaign(nextCampaign);
+      localStorage.setItem(CAMPAIGN_KEY, JSON.stringify(nextCampaign));
+      if (typeof payload.session === "string") localStorage.setItem(SESSION_KEY, payload.session);
+      setBackupMessage("Progress restored. Return to assignments to load any saved operation.");
+    } catch { setBackupMessage("Backup not recognised. Paste a complete Breach Command backup."); }
+  }
+
+  function loadChallengeCode() {
+    const setup = decodeChallenge(challengeInput);
+    if (!setup) { setChallengeMessage("Code not recognised. Check every character and try again."); return; }
+    setScenarioChoice(setup.scenario); setDifficulty(setup.difficulty); setMode(setup.mode); setSpecialist(setup.specialist); setChallengeSeed(setup.seed);
+    setChallengeMessage("Challenge loaded. Review the assignment and begin when ready.");
+  }
+
+  function generateSeed() {
+    const seed = 100000 + Math.floor(Math.random() * 900000);
+    setChallengeSeed(seed);
+    setChallengeMessage("New challenge generated.");
+  }
+
+  function recordProgress(result: Game) {
+    const marker = `${result.scenario}:${result.status}:${result.turns.length}:${result.responseChoices.join("-")}`;
+    if (recordedRuns.current.has(marker)) return;
+    recordedRuns.current.add(marker);
+    recordTelemetry(result.status === "won" ? "win" : "loss", { scenario: result.scenario });
+    setTelemetry(readTelemetry());
+    const score = getOutcome(result).breakdown.total;
+    setCampaign(current => {
+      const updated = recordCampaignResult(current, result, score);
+      localStorage.setItem(CAMPAIGN_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  function dismissReport() {
+    if (game?.pendingDecision) return;
+    setReport(null);
+    if (ended) setDebrief(true);
+  }
+
+  function resetToBriefing() {
+    clearStoredSession();
+    setGame(null);
+    setNewConfirm(false);
+    setQuestion(null);
+    setReport(null);
+    setInlineReport(null);
+    setSelected(null);
+    setDebrief(false);
+    setAdaptiveScore(false);
+  }
+
+  function dismissTutorial() {
+    setTutorial(false);
+    localStorage.setItem("breach-command.tutorial-complete", "true");
+  }
+
+  function restartTutorial() {
+    localStorage.removeItem("breach-command.tutorial-complete");
+    setTutorial(true);
+    setSettings(false);
+  }
+
+  function clearLocalRecord() {
+    clearTelemetry();
+    setTelemetry(readTelemetry());
+  }
+
+  function setMusic(value: boolean) {
+    setMusicEnabled(value);
+    setAdaptiveScore(value, game ? Math.max(game.impact, game.objectiveProgress) / 100 : 0.1, game?.scenario ?? scenarioChoice);
+  }
+
+  useEffect(() => {
+    const stored = localStorage.getItem(SESSION_KEY);
+    if (!stored) return;
+    const session = parseSession(stored);
+    const loadTimer = setTimeout(() => {
+      if (session && session.game.status !== "won") setSavedSession(session);
+      else if (!session) {
+        localStorage.removeItem(SESSION_KEY);
+        setStorageNotice("The saved operation on this device could not be restored and has been set aside.");
+      }
+    }, 0);
+    return () => clearTimeout(loadTimer);
+  }, []);
+
+  useEffect(() => {
+    const loadTimer = setTimeout(() => {
+      setCampaign(parseCampaign(localStorage.getItem(CAMPAIGN_KEY)));
+      const preferences = localStorage.getItem("breach-command.preferences");
+      if (preferences) {
+        try {
+          const parsed = JSON.parse(preferences) as { sound?: boolean; music?: boolean; haptics?: boolean; highContrast?: boolean };
+          setSoundEnabled(parsed.sound !== false);
+          setMusicEnabled(parsed.music !== false);
+          setHapticsEnabled(parsed.haptics !== false);
+          setHighContrast(parsed.highContrast === true);
+        } catch { setStorageNotice("Stored settings could not be read, so defaults are in use."); }
+      }
+    }, 0);
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+    return () => clearTimeout(loadTimer);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("breach-command.preferences", JSON.stringify({ sound: soundEnabled, music: musicEnabled, haptics: hapticsEnabled, highContrast }));
+  }, [soundEnabled, musicEnabled, hapticsEnabled, highContrast]);
+
+  useEffect(() => {
+    const handleKeyboard = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      if (event.key.toLowerCase() === "f") setRules(value => !value);
+      if (event.key.toLowerCase() === "m") setSoundEnabled(value => !value);
+      if (event.key.toLowerCase() === "g") setGuided(value => !value);
+    };
+    window.addEventListener("keydown", handleKeyboard);
+    return () => window.removeEventListener("keydown", handleKeyboard);
+  }, []);
+
+  useEffect(() => {
+    stateRef.current = game;
+    if (game && musicEnabled) setAdaptiveScore(true, Math.max(game.impact, game.objectiveProgress, 100 - game.sectorHealth) / 100, game.scenario);
+  }, [game, musicEnabled]);
+
+  useEffect(() => {
+    if (!game || game.mode === "ironman") return;
+    localStorage.setItem(SESSION_KEY, serialiseSession(game, guided, fastResolve));
+  }, [game, guided, fastResolve]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  useEffect(() => {
+    const context = (document as Document & { modelContext?: { registerTool: (tool: unknown, options: { signal: AbortSignal }) => void | Promise<void> } }).modelContext;
+    if (!context?.registerTool) return;
+    const lifecycle = new AbortController();
+    try {
+      const registration = context.registerTool({
+        name: "read_incident_state",
+        title: "Read incident state",
+        description: "Read the visible incident, working hypothesis, operational condition and available procedures. Hidden attacks are not disclosed.",
+        inputSchema: { type: "object", properties: {}, additionalProperties: false },
+        annotations: { readOnlyHint: true, untrustedContentHint: false },
+        execute(input: unknown) {
+          if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).length) throw new Error("Expected an empty object.");
+          const current = stateRef.current;
+          if (!current) return { status: "briefing" };
+          return {
+            status: current.status,
+            difficulty: current.difficulty,
+            incident: scenarios[current.scenario].title,
+            turnsUsed: current.turns.length,
+            turnsRemaining: Math.max(0, getTurnLimit(current) - current.turns.length),
+            impact: current.impact,
+            operationalCondition: current.continuity,
+            hypothesis: current.hypothesis,
+            adversaryState: getAdversaryState(current),
+            discovered: current.revealed.map(id => attacks.find(attack => attack.id === id)?.title),
+            lead: getLead(current),
+            procedures: procedures.map(procedure => ({
+              id: procedure.id,
+              title: procedure.title,
+              established: current.established.includes(procedure.id),
+              cooldown: availableIn(current, procedure.id),
+            })),
+          };
+        },
+      }, { signal: lifecycle.signal });
+      Promise.resolve(registration).catch(() => {});
+    } catch {}
+    return () => lifecycle.abort();
+  }, []);
+
+  const answer = game && question === "scope" ? activeScenario.scope
+    : question === "constraints" ? activeScenario.constraints
+    : question === "impact" ? activeScenario.impact
+    : question === "known" ? `${activeScenario.timeline} ${getLead(game!)}`
+    : question === "adversary" ? `${getObjectiveRead(game!).title}: ${getObjectiveRead(game!).detail} Current behaviour: ${getAdversaryState(game!)}. ${getAdversaryRead(game!)}`
+    : question === "assumptions" ? "Treat alerts, valid credentials and successful procedures as evidence, not conclusions. Record one working hypothesis for each turn and revise it only when evidence no longer fits."
+    : "";
+
+  return {
+    // Campaign, session and operation state
+    game,
+    campaign,
+    savedSession,
+    difficulty, setDifficulty,
+    scenarioChoice, setScenarioChoice,
+    mode, setMode,
+    specialist, setSpecialist,
+    guided, setGuided,
+    fastResolve, setFastResolve,
+    actionScope, setActionScope,
+    actionIntensity, setActionIntensity,
+    challengeSeed,
+    challengeInput, setChallengeInput,
+    challengeMessage,
+    telemetry,
+    soundEnabled, setSoundEnabled,
+    musicEnabled,
+    hapticsEnabled, setHapticsEnabled,
+    highContrast, setHighContrast,
+    // Turn, report and decision state
+    selected, setSelected,
+    rolling,
+    die,
+    report, setReport,
+    inlineReport, setInlineReport,
+    pendingUndo,
+    ended,
+    // Interface state
+    rules, setRules,
+    settings, setSettings,
+    newConfirm, setNewConfirm,
+    missionBriefing, setMissionBriefing,
+    debrief, setDebrief,
+    tutorial,
+    question, setQuestion,
+    answer,
+    activeWorkspace, setActiveWorkspace,
+    storageNotice, setStorageNotice,
+    backupInput, setBackupInput,
+    backupMessage,
+    // Live regions
+    announcement,
+    criticalAnnouncement,
+    // Derived readouts
+    activeScenario,
+    ScenarioIcon,
+    proc,
+    config,
+    decision,
+    guidance,
+    suggestion,
+    responseProfile,
+    outcome,
+    activeHypothesis,
+    procedureAligned,
+    currentAct,
+    currentRouteId,
+    currentRoute,
+    previewVariant,
+    finalEnding,
+    challengeCode,
+    // Transitions
+    start,
+    resume,
+    run,
+    decide,
+    chooseHypothesis,
+    respond,
+    command,
+    sectorDecision,
+    focusInfrastructure,
+    mapAction,
+    undo,
+    correlate,
+    chooseCaseTheory,
+    loadChallengeCode,
+    generateSeed,
+    exportProgress,
+    importProgress,
+    clearStoredSession,
+    dismissReport,
+    resetToBriefing,
+    dismissTutorial,
+    restartTutorial,
+    clearLocalRecord,
+    setMusic,
+  };
+}
+
+export type GameSession = ReturnType<typeof useGameSession>;
