@@ -13,12 +13,12 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Technical baseline
 
-- Framework: Next.js 16 with React 19, built through Vinext for Cloudflare Workers.
+- Framework: Next.js 16 with React 19, built and hosted natively on Vercel.
 - Language: TypeScript with strict checking.
 - Package manager: pnpm. Preserve `pnpm-lock.yaml` and do not switch package managers.
 - UI primitives: reuse the components in `components/ui` when a suitable primitive already exists.
 - Icons: use `lucide-react` rather than custom icon SVGs.
-- Hosting identity: `.openai/hosting.json`. Never replace its `project_id` or create a second Site for this checkout.
+- Hosting identity: the existing Vercel project `breach-command`. Preserve `vercel.json` and the checkout-local `.vercel/project.json` link; do not create a duplicate Vercel project.
 
 ## Repository map
 
@@ -85,7 +85,7 @@ Run these checks before committing code changes:
 pnpm test
 pnpm lint
 pnpm exec tsc --noEmit
-node /root/.codex/plugins/cache/openai-curated-remote/sites/0.1.65/scripts/build-site.mjs
+pnpm build
 git diff --check
 ```
 
@@ -93,4 +93,4 @@ For engine changes, add a deterministic assertion and ensure all simulated playt
 
 ## Publication
 
-The production Site is `https://breach-command.cfusion2k.chatgpt.site`. Preserve its public audience. Publish only a tested, committed source state and keep the private `cisohabitat/breach-command` repository synchronized with the deployed version.
+Production is [breach-command.vercel.app](https://breach-command.vercel.app), deployed from the existing Vercel project `breach-command`. Publish only a tested, committed source state and keep the private `cisohabitat/breach-command` repository synchronized with the deployed version.

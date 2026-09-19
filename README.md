@@ -2,7 +2,7 @@
 
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. It is an unofficial adaptation inspired by the investigation structure of Backdoors & Breaches, using original scenarios, wording, characters, systems and presentation.
 
-Play the current release at [breach-command.cfusion2k.chatgpt.site](https://breach-command.cfusion2k.chatgpt.site).
+Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
 
 ## What the player does
 
@@ -106,7 +106,7 @@ pnpm build
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
 | `playwright.config.ts` | Deterministic Chromium test runner and local preview lifecycle |
 
-The interface is built with Next.js 16, React 19 and TypeScript. Vinext produces the Cloudflare Workers-compatible deployment used by OpenAI Sites.
+The interface is built with Next.js 16, React 19 and TypeScript and deployed as a native Next.js application on Vercel.
 
 See [`AGENTS.md`](AGENTS.md) for repository-wide contribution rules, game-engine invariants and required verification.
 

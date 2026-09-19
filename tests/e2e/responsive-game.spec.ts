@@ -118,59 +118,56 @@ async function enablePracticeRun(page: Page) {
 }
 
 test.describe("responsive interaction audit", () => {
-  test("plays every required width from assignment through debrief", async ({ page }) => {
-    test.setTimeout(10 * 60_000);
-    await installDeterministicAudit(page);
+  for (const viewport of viewports) {
+    test("plays " + viewport.label + " from assignment through debrief", async ({ page }) => {
+      test.setTimeout(120_000);
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await installDeterministicAudit(page);
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await expect(page.getByRole("heading", { name: /Find the breach/i })).toBeVisible();
+      await expectNoHorizontalOverflow(page, viewport.label + " assignment");
 
-    for (const viewport of viewports) {
-      await test.step(viewport.label, async () => {
-        await page.setViewportSize({ width: viewport.width, height: viewport.height });
-        await page.goto("/");
-        await expect(page.getByRole("heading", { name: /Find the breach/i })).toBeVisible();
-        await expectNoHorizontalOverflow(page, viewport.label + " assignment");
+      await enablePracticeRun(page);
+      const pause = page.getByRole("button", { name: "Pause Bot Commander" });
+      await expectReachableTarget(page, pause, "Pause Bot Commander");
+      await pause.click();
+      await expect(page.getByText("Bot commander paused", { exact: true })).toBeVisible();
 
-        await enablePracticeRun(page);
-        const pause = page.getByRole("button", { name: "Pause Bot Commander" });
-        await expectReachableTarget(page, pause, "Pause Bot Commander");
-        await pause.click();
-        await expect(page.getByText("Bot commander paused", { exact: true })).toBeVisible();
+      const investigate = page.getByRole("button", { name: /Investigate/ }).first();
+      await expectReachableTarget(page, investigate, "Investigate workspace");
+      await investigate.click();
+      await expect(page.locator(".investigation-dashboard")).toBeVisible();
+      await expectNoHorizontalOverflow(page, viewport.label + " investigation");
 
-        const investigate = page.getByRole("button", { name: /Investigate/ }).first();
-        await expectReachableTarget(page, investigate, "Investigate workspace");
-        await investigate.click();
-        await expect(page.locator(".investigation-dashboard")).toBeVisible();
-        await expectNoHorizontalOverflow(page, viewport.label + " investigation");
+      const resume = page.getByRole("button", { name: "Resume Bot Commander" });
+      await expectReachableTarget(page, resume, "Resume Bot Commander");
+      await resume.click();
 
-        const resume = page.getByRole("button", { name: "Resume Bot Commander" });
-        await expectReachableTarget(page, resume, "Resume Bot Commander");
-        await resume.click();
+      const resolution = page.locator("[data-resolution]");
+      await expect(resolution).toBeVisible({ timeout: 90_000 });
+      await expectNoHorizontalOverflow(page, viewport.label + " resolution");
 
-        const resolution = page.locator("[data-resolution]");
-        await expect(resolution).toBeVisible({ timeout: 90_000 });
-        await expectNoHorizontalOverflow(page, viewport.label + " resolution");
+      const review = page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/i });
+      await expectReachableTarget(page, review, "Open review");
+      await review.click();
+      await expect(page.getByText("AFTER-ACTION REVIEW", { exact: true })).toBeVisible();
+      await expectNoHorizontalOverflow(page, viewport.label + " debrief");
 
-        const review = page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/i });
-        await expectReachableTarget(page, review, "Open review");
-        await review.click();
-        await expect(page.getByText("AFTER-ACTION REVIEW", { exact: true })).toBeVisible();
-        await expectNoHorizontalOverflow(page, viewport.label + " debrief");
-
-        const audit = await page.evaluate(() => window.__breachResponsiveAudit);
-        expect(audit, viewport.label + " should record the exercised surfaces").toEqual({
-          decision: true,
-          containment: true,
-          assurance: true,
-          recovery: true,
-          debrief: true,
-        });
+      const audit = await page.evaluate(() => window.__breachResponsiveAudit);
+      expect(audit, viewport.label + " should record the exercised surfaces").toEqual({
+        decision: true,
+        containment: true,
+        assurance: true,
+        recovery: true,
+        debrief: true,
       });
-    }
-  });
+    });
+  }
 
   test("hands a phone-sized practice run back to the player", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await installDeterministicAudit(page);
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
     await enablePracticeRun(page);
 
     await page.getByRole("button", { name: "Pause Bot Commander" }).click();
