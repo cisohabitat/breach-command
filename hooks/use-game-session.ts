@@ -52,6 +52,19 @@ import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9"
 
 type WorkspaceView = "command" | "investigate" | "briefing";
 
+// Moment-to-moment feedback for the case meters. The deltas describe what the
+// last resolved step did to business impact and operational continuity, plus
+// whether that step pushed either readout across a meaningful threshold.
+export type MeterPulse = {
+  key: number;
+  impact: number;
+  continuity: number;
+  impactCritical: boolean;
+  continuityAtRisk: boolean;
+};
+export const IMPACT_CRITICAL = 70;
+export const CONTINUITY_AT_RISK = 45;
+
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -102,10 +115,13 @@ export function useGameSession() {
   const [criticalAnnouncement, setCriticalAnnouncement] = useState("");
   const [storageNotice, setStorageNotice] = useState("");
   const [pendingUndo, setPendingUndo] = useState<{ label: string; game: Game } | null>(null);
+  const [meterPulse, setMeterPulse] = useState<MeterPulse | null>(null);
   const stateRef = useRef(game);
   const busyRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const recordedRuns = useRef(new Set<string>());
+  const pulseKey = useRef(0);
+  const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeScenario = scenarios[game?.scenario ?? scenarioChoice];
   const ScenarioIcon = activeScenario.icon;
@@ -131,6 +147,27 @@ export function useGameSession() {
     setSavedSession(null);
   }
 
+  // Describe the meter movement caused by one resolved step. Threshold crossings
+  // are recorded as a boolean so the interface can mark them as an event even
+  // when the underlying number only moved by a single point.
+  function pulseMeters(previous: Game | null, next: Game) {
+    if (!previous) return;
+    const impact = next.impact - previous.impact;
+    const continuity = next.continuity - previous.continuity;
+    const impactCritical = previous.impact < IMPACT_CRITICAL && next.impact >= IMPACT_CRITICAL;
+    const continuityAtRisk = previous.continuity > CONTINUITY_AT_RISK && next.continuity <= CONTINUITY_AT_RISK;
+    if (!impact && !continuity && !impactCritical && !continuityAtRisk) return;
+    pulseKey.current += 1;
+    setMeterPulse({ key: pulseKey.current, impact, continuity, impactCritical, continuityAtRisk });
+    if (pulseTimer.current) clearTimeout(pulseTimer.current);
+    pulseTimer.current = setTimeout(() => setMeterPulse(null), 1400);
+  }
+
+  function clearMeterPulse() {
+    if (pulseTimer.current) clearTimeout(pulseTimer.current);
+    setMeterPulse(null);
+  }
+
   function start(index = scenarioChoice) {
     if (busyRef.current) return;
     clearStoredSession();
@@ -150,6 +187,7 @@ export function useGameSession() {
     setDebrief(false);
     setNewConfirm(false);
     setPendingUndo(null);
+    clearMeterPulse();
     setAnnouncement("New investigation started.");
     setActiveWorkspace("command");
     playFeedback("open", soundEnabled, hapticsEnabled);
@@ -169,6 +207,7 @@ export function useGameSession() {
     setInlineReport(null);
     setSavedSession(null);
     setPendingUndo(null);
+    clearMeterPulse();
     setAnnouncement(`Resumed ${scenarios[session.game.scenario].title}.`);
     setActiveWorkspace(session.game.pendingDecision || session.game.pendingCommand || session.game.pendingSetPiece ? "command" : "investigate");
     scrollToTop();
@@ -194,6 +233,7 @@ export function useGameSession() {
       const requiresDialog = !!result.revealed || !!result.inject || !!result.adversaryEvent || next.status !== "playing";
       setDie(result.raw);
       setGame(next);
+      pulseMeters(current, next);
       if (next.pendingDecision || next.pendingCommand || next.pendingSetPiece || next.status !== "playing") setActiveWorkspace("command");
       setReport(requiresDialog ? result : null);
       setInlineReport(requiresDialog ? null : result);
@@ -226,6 +266,7 @@ export function useGameSession() {
     if (!current) return;
     const next = resolveDecision(current, choice);
     setGame(next);
+    pulseMeters(current, next);
     setPendingUndo(null);
     setActiveWorkspace(next.status === "playing" ? "investigate" : "command");
     playFeedback("decision", soundEnabled, hapticsEnabled);
@@ -245,12 +286,15 @@ export function useGameSession() {
     if (!current) return;
     const next = resolveResponse(current, choice);
     setGame(next);
+    pulseMeters(current, next);
     setPendingUndo(null);
     playFeedback(next.status === "won" ? "complete" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "won" ? "Response complete. After-action review available." : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
+    setAnnouncement(next.status === "won" ? "Response complete. The incident is standing down. The after-action review is ready when you are." : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
     if (next.status === "won") {
+      // The stand-down panel is the player's arrival point. The review opens on
+      // request so the resolution is seen before the analysis.
+      setActiveWorkspace("command");
       recordProgress(next);
-      setDebrief(true);
     }
   }
 
@@ -259,6 +303,7 @@ export function useGameSession() {
     if (!current) return;
     const next = resolveCommand(current, choice);
     setGame(next);
+    pulseMeters(current, next);
     setPendingUndo(null);
     setActiveWorkspace("investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
@@ -270,6 +315,7 @@ export function useGameSession() {
     if (!current) return;
     const next = resolveSetPiece(current, choice);
     setGame(next);
+    pulseMeters(current, next);
     setPendingUndo(null);
     setActiveWorkspace("investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
@@ -287,6 +333,7 @@ export function useGameSession() {
     if (!current) return;
     const next = resolveMapAction(current, nodeId, action);
     setGame(next);
+    pulseMeters(current, next);
     const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
     setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? "Isolation" : "Monitoring", game: current } : null);
     playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
@@ -298,6 +345,7 @@ export function useGameSession() {
     setGame(pendingUndo.game);
     setReport(null);
     setInlineReport(null);
+    clearMeterPulse();
     setAnnouncement(`Undid ${pendingUndo.label}.`);
     setPendingUndo(null);
   }
@@ -380,6 +428,7 @@ export function useGameSession() {
     setInlineReport(null);
     setSelected(null);
     setDebrief(false);
+    clearMeterPulse();
     setAdaptiveScore(false);
   }
 
@@ -461,7 +510,10 @@ export function useGameSession() {
     localStorage.setItem(SESSION_KEY, serialiseSession(game, guided, fastResolve));
   }, [game, guided, fastResolve]);
 
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(() => () => {
+    timers.current.forEach(clearTimeout);
+    if (pulseTimer.current) clearTimeout(pulseTimer.current);
+  }, []);
 
   useEffect(() => {
     const context = (document as Document & { modelContext?: { registerTool: (tool: unknown, options: { signal: AbortSignal }) => void | Promise<void> } }).modelContext;
@@ -540,6 +592,7 @@ export function useGameSession() {
     report, setReport,
     inlineReport, setInlineReport,
     pendingUndo,
+    meterPulse,
     ended,
     // Interface state
     rules, setRules,

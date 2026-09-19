@@ -285,3 +285,118 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
 .start-button{position:sticky;bottom:14px;z-index:5;box-shadow:0 12px 24px #0b1210cc}
 @media(max-height:900px){.briefing-screen{padding-top:52px}.mission-symbol{margin:18px 0 14px}.mission-panel>p{min-height:0}}
 @media(max-width:650px){.start-button{position:static;box-shadow:none}.storage-notice{margin:0 18px}}
+
+/* Impact feedback and end-state resolution.
+   Every animation in this block moves only transform and opacity. The case meters
+   keep their existing width transitions. Curves decelerate (expo/quart out) and no
+   beat overshoots past 1.02. Exits are shorter than their entrances. Staggers step
+   by index. Each animation is neutralised again under prefers-reduced-motion, and
+   every value it carries is also present as static text. */
+.impact-meter,.continuity-meter{position:relative}
+
+/* Three-beat reveal entrance: settle at 0.95, overshoot to 1.02, rest at 1. */
+@keyframes stage-entrance{
+  0%{opacity:0;transform:scale(.95)}
+  60%{opacity:1;transform:scale(1.02)}
+  100%{opacity:1;transform:scale(1)}
+}
+@keyframes stage-glow{0%{opacity:0}35%{opacity:1}100%{opacity:0}}
+.attack-card.revealed{animation:stage-entrance .25s cubic-bezier(.16,1,.3,1) both}
+.attack-card.revealed:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;box-shadow:inset 0 0 0 1px var(--stage-color),inset 0 0 26px color-mix(in srgb,var(--stage-color) 42%,transparent);animation:stage-glow .55s cubic-bezier(.16,1,.3,1) both}
+.attack-grid .attack-card:nth-child(2).revealed,.attack-grid .attack-card:nth-child(2).revealed:after{animation-delay:70ms}
+.attack-grid .attack-card:nth-child(3).revealed,.attack-grid .attack-card:nth-child(3).revealed:after{animation-delay:150ms}
+.attack-grid .attack-card:nth-child(4).revealed,.attack-grid .attack-card:nth-child(4).revealed:after{animation-delay:235ms}
+
+/* Stand-down settle for the four revealed stages once the incident is closed. */
+@keyframes stage-standdown{0%{transform:scale(1.02) translateY(-3px)}60%{transform:scale(.998) translateY(1px)}100%{transform:none}}
+.attack-section.resolved .attack-card.revealed{animation:stage-standdown .5s cubic-bezier(.16,1,.3,1) both}
+.attack-section.resolved .attack-card.revealed:after{animation:none;opacity:0}
+.attack-section.resolved .attack-grid .attack-card:nth-child(2).revealed{animation-delay:90ms}
+.attack-section.resolved .attack-grid .attack-card:nth-child(3).revealed{animation-delay:190ms}
+.attack-section.resolved .attack-grid .attack-card:nth-child(4).revealed{animation-delay:300ms}
+
+/* Floating meter delta: entrance 0.22s, hold, exit 0.16s (about 70% of the entrance). */
+@keyframes meter-delta-float{
+  0%{opacity:0;transform:translateY(6px) scale(.96);animation-timing-function:cubic-bezier(.16,1,.3,1)}
+  19%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:linear}
+  86%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.55,0,1,.45)}
+  100%{opacity:0;transform:translateY(-18px) scale(1)}
+}
+.meter-delta{position:absolute;top:-11px;right:0;z-index:3;padding:1px 6px;border-radius:999px;border:1px solid #6d7f57;background:#101a15f2;color:#cfe3c2;font:600 .8125rem ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.02em;pointer-events:none;animation:meter-delta-float 1.15s linear both}
+.meter-delta.adverse{border-color:#9c6250;background:#2a1d18f2;color:#f0a487}
+.meter-delta.favourable{border-color:#5f7a4c;background:#152018f2;color:var(--lime)}
+
+/* Threshold crossing ring: a single decelerating shockwave when a meter enters critical. */
+@keyframes meter-cross{0%{opacity:.9;transform:scale(.93)}40%{opacity:.45;transform:scale(1)}100%{opacity:0;transform:scale(1.04)}}
+.meter-crossing{position:absolute;inset:-6px;z-index:2;border-radius:9px;border:1px solid #ff967d;box-shadow:0 0 0 2px #ff967d2e,0 0 20px #ff967d52;pointer-events:none;opacity:0;animation:meter-cross .9s cubic-bezier(.16,1,.3,1) both}
+/* Static emphasis while the crossing flag is set, so a reduced-motion player
+   still sees the meter marked as crossed once the ring is suppressed. */
+.impact-meter.crossing,.continuity-meter.crossing{border-radius:9px;background:#ff967d12;box-shadow:inset 0 0 0 1px #ff967d55}
+
+/* Response phases: containment drops in, assurance scans across, recovery lifts. */
+.response-stage{display:block}
+@keyframes response-contain{0%{opacity:0;transform:translateY(-8px) scale(1.01)}100%{opacity:1;transform:none}}
+@keyframes response-assure{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+@keyframes response-recover{0%{opacity:0;transform:translateY(14px) scale(.99)}100%{opacity:1;transform:none}}
+.response-panel[data-phase=containment] .response-stage{animation:response-contain .3s cubic-bezier(.16,1,.3,1) backwards}
+.response-panel[data-phase=assurance] .response-stage{animation:response-assure .3s cubic-bezier(.16,1,.3,1) backwards}
+.response-panel[data-phase=recovery] .response-stage{animation:response-recover .3s cubic-bezier(.16,1,.3,1) backwards}
+@keyframes option-drop{0%{opacity:0;transform:translateY(-10px)}100%{opacity:1;transform:none}}
+@keyframes option-scan{0%{opacity:0;transform:translateX(12px)}100%{opacity:1;transform:none}}
+@keyframes option-rise{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:none}}
+.response-options button{animation-duration:.3s;animation-timing-function:cubic-bezier(.16,1,.3,1);animation-fill-mode:backwards;animation-delay:calc(var(--option-index,0) * 70ms)}
+.response-panel[data-phase=containment] .response-options button{animation-name:option-drop}
+.response-panel[data-phase=assurance] .response-options button{animation-name:option-scan;animation-delay:calc(var(--option-index,0) * 60ms)}
+.response-panel[data-phase=recovery] .response-options button{animation-name:option-rise;animation-delay:calc(var(--option-index,0) * 80ms)}
+@keyframes sequence-confirm{0%{opacity:.4;transform:scale(.94)}100%{opacity:1;transform:none}}
+.response-sequence span.active{animation:sequence-confirm .34s cubic-bezier(.16,1,.3,1) backwards}
+
+/* End states: stand-down, quiet closure and drill stamp are three separate beats. */
+.resolution{position:relative}
+@keyframes resolution-standdown{0%{opacity:0;transform:translateY(12px) scale(1.02)}100%{opacity:1;transform:none}}
+.resolution-won .end-banner{animation:resolution-standdown .42s cubic-bezier(.16,1,.3,1) backwards}
+.resolution-won .end-banner{border-color:#6f8a55;background:#c3ee8d0f}
+@keyframes resolution-sweep{0%{opacity:0;transform:scaleX(.06)}18%{opacity:1}70%{opacity:.6}100%{opacity:0;transform:scaleX(1)}}
+.resolution-sweep{position:absolute;left:0;right:0;top:-12px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--lime),transparent);transform-origin:left center;pointer-events:none;opacity:0;animation:resolution-sweep .9s cubic-bezier(.16,1,.3,1) both}
+@keyframes resolution-step-in{0%{opacity:0;transform:translateX(-10px)}100%{opacity:1;transform:none}}
+.resolution-steps{list-style:none;margin:-14px 0 24px;padding:0;display:grid;gap:7px}
+.resolution-steps li{display:flex;align-items:center;gap:9px;font-size:.875rem;line-height:1.45;color:#c3d2bd;animation:resolution-step-in .34s cubic-bezier(.16,1,.3,1) backwards}
+.resolution-steps li svg{color:var(--lime);flex:0 0 auto}
+.resolution-steps li:nth-child(1){animation-delay:180ms}
+.resolution-steps li:nth-child(2){animation-delay:270ms}
+.resolution-steps li:nth-child(3){animation-delay:380ms}
+@keyframes resolution-lost-in{0%{opacity:0}55%{opacity:.55;transform:translateY(7px)}100%{opacity:1;transform:none}}
+.resolution-lost .end-banner{animation:resolution-lost-in .68s cubic-bezier(.33,0,.2,1) backwards}
+.end-lost{border-color:#6a534a;background:#1c1613}
+.end-lost h2{color:#e2cabd}
+.end-lost p{color:#b6a396}
+.end-lost .end-icon{color:#c08a76}
+.resolution-note{margin:0 0 24px;padding:12px 15px;border-left:2px solid #7c6257;background:#1a1512;color:#bda69b;font-size:.8125rem;line-height:1.5;animation:resolution-lost-in .68s cubic-bezier(.33,0,.2,1) 120ms backwards}
+@keyframes resolution-stamp-in{0%{opacity:0;transform:rotate(-5deg) scale(1.02)}100%{opacity:1;transform:none}}
+.resolution-exercise .end-banner{animation:resolution-stamp-in .46s cubic-bezier(.16,1,.3,1) backwards}
+.end-exercise{border-color:#7b6c3f;background:#221f14}
+.end-exercise h2{color:#eadfb4}
+.end-exercise p{color:#bfb894}
+.end-exercise .end-icon{color:#dcc069}
+.resolution-stamp{position:absolute;right:14px;bottom:6px;border:2px solid #a08c4c;border-radius:4px;padding:4px 9px;color:#d8c168;font:700 .75rem ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.18em;transform-origin:right bottom;pointer-events:none;opacity:0;animation:resolution-stamp-in .46s cubic-bezier(.16,1,.3,1) .28s both}
+
+/* Debrief arrival: the review lands in beats rather than appearing all at once. */
+@keyframes debrief-beat{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:none}}
+@keyframes debrief-beat-won{0%{opacity:0;transform:translateY(12px) scale(1.015)}100%{opacity:1;transform:none}}
+.debrief-dialog [data-slot=dialog-header]{animation:debrief-beat .36s cubic-bezier(.16,1,.3,1) backwards}
+.debrief-dialog .debrief-stats{animation:debrief-beat .36s cubic-bezier(.16,1,.3,1) 80ms backwards}
+.debrief-dialog .score-card{animation:debrief-beat .36s cubic-bezier(.16,1,.3,1) 160ms backwards}
+.debrief-dialog .advanced-review{animation:debrief-beat .36s cubic-bezier(.16,1,.3,1) 230ms backwards}
+.debrief-dialog[data-outcome=won] .score-card{animation-name:debrief-beat-won;animation-duration:.46s}
+.debrief-dialog[data-outcome=lost] [data-slot=dialog-header]{animation-duration:.5s;animation-timing-function:cubic-bezier(.33,0,.2,1)}
+
+@media(prefers-reduced-motion:reduce){
+  .attack-card.revealed,.attack-card.revealed:after,.attack-section.resolved .attack-card.revealed{animation:none}
+  .attack-card.revealed:after{opacity:0}
+  .meter-delta{animation:none}
+  .meter-crossing{animation:none;opacity:0}
+  .response-stage,.response-options button,.response-sequence span.active{animation:none}
+  .resolution-won .end-banner,.resolution-lost .end-banner,.resolution-exercise .end-banner,.resolution-sweep,.resolution-steps li,.resolution-note{animation:none}
+  .resolution-stamp{animation:none;opacity:1;transform:none}
+  .debrief-dialog [data-slot=dialog-header],.debrief-dialog .debrief-stats,.debrief-dialog .score-card,.debrief-dialog .advanced-review{animation:none}
+}

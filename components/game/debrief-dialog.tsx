@@ -15,7 +15,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
 
   return (
     <Dialog open={debrief} onOpenChange={setDebrief}>
-      <DialogContent className="game-dialog wide-dialog debrief-dialog">
+      <DialogContent className="game-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"}>
         <DialogHeader>
           <div className="eyebrow">AFTER-ACTION REVIEW</div>
           <DialogTitle>{game?.status === "won" ? `${outcome?.grade} / ${outcome?.title}` : game?.status === "exercise" ? "Exercise concluded." : "The response window closed."}</DialogTitle>

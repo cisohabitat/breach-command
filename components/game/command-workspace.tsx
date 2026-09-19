@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
-import { Activity, ArrowRight, Check, Flag, LockKeyhole, Trophy } from "lucide-react";
+import { Activity, ArrowRight, Check, LockKeyhole } from "lucide-react";
 import { CommandEvent } from "@/components/game/command-event";
+import { EndState } from "@/components/game/end-state";
 import { ResponsePanel } from "@/components/game/response-panel";
 import { SectorBoard } from "@/components/game/sector-board";
 import { SectorSetPiece } from "@/components/game/sector-set-piece";
@@ -12,15 +13,15 @@ import type { GameSession } from "@/hooks/use-game-session";
 
 export function CommandWorkspace({ session }: { session: GameSession }) {
   const {
-    game, activeWorkspace, ended, outcome, tutorial,
-    setActiveWorkspace, setDebrief, respond, command, sectorDecision,
+    game, activeWorkspace, ended, tutorial,
+    setActiveWorkspace, respond, command, sectorDecision,
   } = session;
 
   if (!game) return null;
 
   return (
     <>
-      <section className="attack-section" hidden={activeWorkspace !== "command"}>
+      <section className={`attack-section ${game.status === "won" ? "resolved" : ""}`} hidden={activeWorkspace !== "command"}>
         <div className="section-heading"><h2>Attack chain</h2><span className="mono muted">{game.revealed.length} / 4 REVEALED</span></div>
         <div className="attack-grid">
           {stages.map((stage, index) => {
@@ -47,14 +48,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       {activeWorkspace === "command" && <SectorOperationalScene game={game} />}
 
       {activeWorkspace === "command" && (ended ? (
-        <section className="end-banner">
-          <div className="end-icon">{game.status === "won" ? <Trophy /> : <Flag />}</div>
-          <div>
-            <h2>{game.status === "won" ? outcome?.title : game.status === "exercise" ? "This was an authorised exercise." : "The incident outran the response."}</h2>
-            <p>{game.status === "won" ? `Outcome ${outcome?.grade}, ${outcome?.breakdown.total}/100. Review how investigation and response choices shaped the result.` : "The captain has unsealed the case. Review the evidence and decisions."}</p>
-          </div>
-          <button className="primary-button" onClick={() => setDebrief(true)}>View debrief <ArrowRight size={17} /></button>
-        </section>
+        <EndState session={session} />
       ) : game.status === "response" ? (
         <ResponsePanel game={game} onChoose={respond} />
       ) : (<>

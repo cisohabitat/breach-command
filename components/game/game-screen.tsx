@@ -5,12 +5,12 @@ import { CommandWorkspace } from "@/components/game/command-workspace";
 import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
 import { BriefingWorkspace } from "@/components/game/briefing-workspace";
 import { gameModes, getOperationalLabel, getTurnLimit } from "@/lib/advanced-game";
-import type { GameSession } from "@/hooks/use-game-session";
+import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, type GameSession } from "@/hooks/use-game-session";
 
 export function GameScreen({ session }: { session: GameSession }) {
   const {
     game, activeScenario, config, ended, activeWorkspace, setActiveWorkspace,
-    tutorial, dismissTutorial, setRules,
+    tutorial, dismissTutorial, setRules, meterPulse,
   } = session;
 
   if (!game) return null;
@@ -25,15 +25,27 @@ export function GameScreen({ session }: { session: GameSession }) {
             <div>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : "Window closed"}</div>
             <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Turns remaining" />
           </div>
-          <div className={`impact-meter ${game.impact >= 70 ? "critical" : ""}`}>
+          <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>
             <span className="mono">BUSINESS IMPACT</span><strong>{game.impact}</strong>
             <Progress value={game.impact} aria-label="Business impact" />
-            <small>{game.impact < 40 ? "Contained" : game.impact < 70 ? "Rising" : "Critical"}</small>
+            <small>{game.impact < 40 ? "Contained" : game.impact < IMPACT_CRITICAL ? "Rising" : "Critical"}</small>
+            {meterPulse?.impactCritical && <span key={`impact-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
+            {meterPulse && meterPulse.impact !== 0 && (
+              <span key={`impact-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.impact > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
+                {meterPulse.impact > 0 ? "+" : "−"}{Math.abs(meterPulse.impact)}
+              </span>
+            )}
           </div>
-          <div className={`continuity-meter ${game.continuity <= 45 ? "critical" : ""}`}>
+          <div className={`continuity-meter ${game.continuity <= CONTINUITY_AT_RISK ? "critical" : ""} ${meterPulse?.continuityAtRisk ? "crossing" : ""}`}>
             <span className="mono">{getOperationalLabel(game).toUpperCase()}</span><strong>{game.continuity}</strong>
             <Progress value={game.continuity} aria-label={getOperationalLabel(game)} />
-            <small>{game.continuity > 75 ? "Stable" : game.continuity > 45 ? "Degraded" : "At risk"}</small>
+            <small>{game.continuity > 75 ? "Stable" : game.continuity > CONTINUITY_AT_RISK ? "Degraded" : "At risk"}</small>
+            {meterPulse?.continuityAtRisk && <span key={`continuity-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
+            {meterPulse && meterPulse.continuity !== 0 && (
+              <span key={`continuity-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.continuity < 0 ? "adverse" : "favourable"}`} aria-hidden="true">
+                {meterPulse.continuity > 0 ? "+" : "−"}{Math.abs(meterPulse.continuity)}
+              </span>
+            )}
           </div>
         </div>
       </section>
