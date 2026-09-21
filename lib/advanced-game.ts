@@ -198,6 +198,9 @@ export type Game = {
   nodePosture: Record<string, NodePosture>;
   mapActionsRemaining: number;
   mapHistory: MapActionRecord[];
+  // Rapid coordination: a seasoned command absorbs one unlucky action per
+  // operation without handing the adversary tempo for it.
+  graceRemaining: number;
   // Set for operations that promise reproducibility (Daily Operation and any
   // challenge code). Null leaves procedure rolls on the unseeded generator, so
   // ordinary campaign play stays unpredictable.
@@ -543,20 +546,24 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   const campaignTier = Math.max(0, Math.min(3, setup.campaignTier ?? 0));
   const campaignReadiness = mode === "campaign" ? setup.readiness ?? 50 : 50;
   const campaignTrust = mode === "campaign" ? setup.leadershipTrust ?? 50 : 50;
-  const turnLimit = Math.max(5, difficulties[difficulty].maxTurns - (mode === "ironman" ? 1 : 0) + (campaignReadiness >= 75 ? 1 : 0));
+  // Unresolved access is the campaign's memory: the actor did not start from
+  // nothing this time. It costs pressure, objective progress and, past three
+  // threads, opening tempo.
+  const threads = mode === "campaign" ? Math.min(5, Math.max(0, setup.unresolvedThreads ?? 0)) : 0;
+  const turnLimit = Math.max(5, difficulties[difficulty].maxTurns - (mode === "ironman" ? 1 : 0) + (campaignReadiness >= 75 ? 1 : 0) - (mode === "campaign" && campaignReadiness < 30 ? 1 : 0));
   const variant = setup.variant ?? { id: `${scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 };
   const campaignRoute = setup.campaignRoute ?? "common-ground";
   const routeImpact = mode === "campaign" && campaignRoute === "breakwater" ? -4 : 0;
   const routeContinuity = mode !== "campaign" ? 0 : campaignRoute === "breakwater" ? -4 : campaignRoute === "common-ground" ? 3 : 0;
   const routeObjective = mode === "campaign" && campaignRoute === "watchtower" ? 5 : 0;
-  const startingImpact = difficulties[difficulty].startImpact + (mode === "escalation" ? 12 : 0) - (campaignTier >= 2 ? 5 : 0) + (campaignTrust < 35 ? 5 : campaignTrust >= 75 ? -3 : 0) + variant.impact + routeImpact;
+  const startingImpact = difficulties[difficulty].startImpact + (mode === "escalation" ? 12 : 0) - (campaignTier >= 2 ? 5 : 0) + threads * 2 + (campaignTrust < 35 ? 5 : campaignTrust >= 75 ? -3 : 0) + variant.impact + routeImpact;
   const startingContinuity = 100 + (campaignTier >= 3 ? 5 : 0) + (campaignReadiness >= 60 ? 3 : campaignReadiness < 30 ? -5 : 0) + variant.continuity + routeContinuity;
   return {
     scenario,
     difficulty,
     chain: scenarios[scenario].choices.map(options => options[random(options.length)]),
     revealed: [],
-    established: shuffle(procedures.map(p => p.id), random).slice(0, campaignTier >= 1 ? 5 : 4),
+    established: shuffle(procedures.map(p => p.id), random).slice(0, campaignTier >= 3 ? 6 : campaignTier >= 1 ? 5 : 4),
     lastUsed: {},
     turns: [],
     failures: 0,
@@ -571,7 +578,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     responseScore: 0,
     hypothesis: null,
     hypothesisHistory: [],
-    adversaryTempo: difficulty === "crisis" || mode === "escalation" ? 1 : 0,
+    adversaryTempo: Math.min(3, (difficulty === "crisis" || mode === "escalation" ? 1 : 0) + (threads >= 3 ? 1 : 0)),
     adversaryEvent: null,
     adversaryProfile: profiles[random(profiles.length)],
     adversaryMemory: { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
@@ -584,7 +591,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     sectorHealth: mode === "escalation" ? 88 : 100,
     sectorHistory: [],
     objective: objectiveForScenario(scenario, random(2)),
-    objectiveProgress: clamp((mode === "escalation" ? 18 : 5) + (difficulty === "crisis" ? 8 : 0) + (mode === "campaign" ? (setup.unresolvedThreads ?? 0) * 3 : 0) + variant.objective + routeObjective),
+    objectiveProgress: clamp((mode === "escalation" ? 18 : 5) + (difficulty === "crisis" ? 8 : 0) + threads * 3 + variant.objective + routeObjective),
     campaignTier,
     focusedNode: infrastructureTopologies[scenario].nodes[1].id,
     evidence: [],
@@ -597,7 +604,8 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     caseTheory: null,
     caseTheoryHistory: [],
     nodePosture: Object.fromEntries(infrastructureTopologies[scenario].nodes.map(node => [node.id, "normal" as NodePosture])),
-    mapActionsRemaining: Math.max(1, 3 - (mode === "expert" ? 1 : 0) - (difficulty === "crisis" ? 1 : 0)),
+    mapActionsRemaining: Math.max(1, 3 - (mode === "expert" ? 1 : 0) - (difficulty === "crisis" ? 1 : 0) + (campaignTier >= 2 ? 1 : 0) - (mode === "campaign" && campaignTrust < 35 ? 1 : 0)),
+    graceRemaining: campaignTier >= 2 ? 1 : 0,
     mapHistory: [],
     seed: typeof setup.seed === "number" && Number.isFinite(setup.seed) ? setup.seed : null,
   };
@@ -781,6 +789,35 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
   return { parts, total: parts.reduce((sum, part) => sum + part.value, 0) };
 }
 
+export type HypothesisStanding = {
+  level: "none" | "untested" | "holding" | "weakening" | "unsupported";
+  label: string;
+  detail: string;
+  spent: number;
+  sources: number;
+  turnsSinceConfirmation: number;
+};
+
+// Repeated negative results against the same explanation are themselves
+// evidence. This reads only the player's own record — which of the declared
+// hypothesis's evidence sources have been spent since the last confirmation,
+// and what came back — so it never consults the hidden chain. It says the
+// current reading is weakening; it never says which reading is right.
+export function getHypothesisStanding(game: Game): HypothesisStanding {
+  const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
+  if (!hypothesis) return { level: "none", label: "No working hypothesis", detail: "Record the explanation you are testing. Until you do, a procedure collects but settles nothing.", spent: 0, sources: 0, turnsSinceConfirmation: 0 };
+  const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
+  const since = game.turns.filter(turn => turn.number > lastConfirmation);
+  const spentSources = new Set(since.filter(turn => turn.hypothesis === hypothesis.id && !turn.revealed && hypothesis.procedures.includes(turn.procedure)).map(turn => turn.procedure));
+  const spent = spentSources.size;
+  const sources = hypothesis.procedures.length;
+  const ledger = `${spent} of this reading's ${sources} evidence source${sources === 1 ? "" : "s"} ${spent === 1 ? "has" : "have"} been spent since the last confirmation`;
+  if (spent === 0) return { level: "untested", label: "Untested", detail: `${hypothesis.title} has not yet been put to one of its own evidence sources since the last confirmation.`, spent, sources, turnsSinceConfirmation: since.length };
+  if (spent * 2 < sources) return { level: "holding", label: "Holding", detail: `${ledger}, without result. Too early to abandon the reading.`, spent, sources, turnsSinceConfirmation: since.length };
+  if (spent < sources) return { level: "weakening", label: "Weakening", detail: `${ledger}, without result. Absence across its own sources is evidence against this reading, not just bad luck.`, spent, sources, turnsSinceConfirmation: since.length };
+  return { level: "unsupported", label: "Poorly supported", detail: `Every one of this reading's evidence sources has been spent since the last confirmation and none produced a stage. On the evidence you hold, another explanation now fits better.`, spent, sources, turnsSinceConfirmation: since.length };
+}
+
 export type DiscriminatingRead = { level: "high" | "moderate" | "broad"; label: string; detail: string; spent: number };
 
 // A read built only from what the player can already see: their own declared
@@ -888,6 +925,11 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   } else if (success) {
     narrative = "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.";
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
+  } else if (g.graceRemaining > 0) {
+    // Rapid coordination absorbs the first unlucky action of the operation. The
+    // team reorients on its own time rather than the adversary's.
+    g.graceRemaining -= 1;
+    narrative = "The action did not produce evidence, but the team reorients on its own time: coordination absorbed the setback before the actor could use it.";
   } else if (planningBonus > 0) {
     // A sound action that the dice refused. The route under test was the one
     // predicted and the source was one that hypothesis relies on, so the team

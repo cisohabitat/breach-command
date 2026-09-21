@@ -19,9 +19,9 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   return (
     <div className="investigation-dashboard">
       <div className="investigation-context">
+        {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
         <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
         <SpecialistTransmission game={game} />
-        {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
         <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />
       </div>
       <div className="investigation-actions" role="region" aria-label="Investigation actions" tabIndex={0}>

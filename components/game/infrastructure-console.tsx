@@ -25,7 +25,9 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             </button>;
           })}
         </div>
-        <div className="topology-routes" role="group" aria-label="Trust relationships">{topology.edges.map((edge, index) => {
+        <details className="topology-detail">
+          <summary>Trust relationships<span>{topology.edges.length} paths · {topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length} blocked</span></summary>
+          <div className="topology-routes" role="group" aria-label="Trust relationships">{topology.edges.map((edge, index) => {
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
           return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>
             <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
@@ -34,13 +36,17 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             <i className="route-status">{isolated ? "BLOCKED" : index < Math.max(0, activeStage - 1) ? "CONFIRMED" : index === Math.max(0, activeStage - 1) ? "SUSPECTED" : "UNASSESSED"}</i>
           </div>;
         })}</div>
+        </details>
       </div>
       <div className="map-command-bar">
         <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{criticalFocus ? "CRITICAL DEPENDENCY · " : ""}{posture === "normal" ? "No active control" : posture}</em></span></div>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>Spend 1 action · next procedure +2 · impact −2</small></span></button>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>Spend 1 · impact −{criticalFocus ? 8 : 5} · continuity −{criticalFocus ? 10 : 5}</small></span></button>
       </div>
-      <p className="map-intel">Critical dependency: {topology.criticalRule} Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
+      <details className="map-intel-detail">
+        <summary>Dependency and control notes<span>{game.revealed.length ? `${game.revealed.length} technique${game.revealed.length === 1 ? "" : "s"} confirmed` : "no techniques confirmed"}</span></summary>
+        <p className="map-intel">Critical dependency: {topology.criticalRule} Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
+      </details>
     </section>
   );
 }

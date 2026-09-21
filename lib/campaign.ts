@@ -57,8 +57,8 @@ export function campaignRank(xp: number) {
 export function unlockedCapabilities(xp: number) {
   return [
     { title: "Evidence fusion", unlocked: xp >= 75, detail: "One additional evidence procedure begins established." },
-    { title: "Rapid coordination", unlocked: xp >= 200, detail: "Operations begin with five less business impact." },
-    { title: "Continuity command", unlocked: xp >= 450, detail: "Operations begin with an additional continuity reserve." },
+    { title: "Rapid coordination", unlocked: xp >= 200, detail: "One more command action, five less starting impact, and the first unlucky action of an operation no longer hands the actor tempo." },
+    { title: "Continuity command", unlocked: xp >= 450, detail: "A sixth established procedure and a deeper continuity reserve." },
   ];
 }
 
@@ -90,8 +90,12 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     ? [...current.completed, game.scenario]
     : current.completed;
   const modeReward = game.mode === "expert" ? 1.5 : game.mode === "escalation" ? 1.4 : game.mode === "ironman" ? 1.35 : game.mode === "daily" ? 1.15 : 1;
-  const reward = Math.max(10, Math.round(score * (game.difficulty === "crisis" ? 1.35 : game.difficulty === "operational" ? 1.15 : 1) * modeReward));
   const won = game.status === "won";
+  // Seniority follows results. An operation that was not resolved still teaches
+  // something, but a command that keeps losing should not reach the same tier as
+  // one that keeps winning — otherwise progression measures attendance.
+  const outcomeShare = won ? 1 : game.status === "exercise" ? 0.6 : 0.4;
+  const reward = Math.max(6, Math.round(score * (game.difficulty === "crisis" ? 1.35 : game.difficulty === "operational" ? 1.15 : 1) * modeReward * outcomeShare));
   // A drill is not a defeat. The team investigated activity that turned out to be
   // authorised: nothing was missed, no access was left open, and the command
   // record should not read as though the incident got away.

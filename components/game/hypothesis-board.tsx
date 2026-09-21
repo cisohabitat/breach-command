@@ -2,6 +2,7 @@ import { BrainCircuit, Gauge } from "lucide-react";
 import {
   getAttributionRead,
   getAdversaryState,
+  getHypothesisStanding,
   hypotheses,
   procedures,
   type Game,
@@ -16,6 +17,8 @@ export function HypothesisBoard({
   onChoose: (id: HypothesisId) => void;
 }) {
   const attribution = getAttributionRead(game);
+  // Expert operations withhold every read, this one included.
+  const standing = game.mode === "expert" ? null : getHypothesisStanding(game);
   return (
     <section className="hypothesis-board" aria-labelledby="hypothesis-heading">
       <div className="hypothesis-heading">
@@ -33,6 +36,16 @@ export function HypothesisBoard({
           <Gauge size={14} /> ACTOR: {getAdversaryState(game).toUpperCase()}
         </span>
       </div>
+      {standing && standing.level !== "none" && (
+        <div className={`hypothesis-standing level-${standing.level}`} role="status">
+          <span className="eyebrow">CURRENT READING</span>
+          <strong>{standing.label}</strong>
+          <span className="standing-meter" aria-hidden="true">
+            {Array.from({ length: standing.sources }).map((_, index) => <i key={index} className={index < standing.spent ? "spent" : ""} />)}
+          </span>
+          <p>{standing.detail}</p>
+        </div>
+      )}
       <div className="hypothesis-options">
         {hypotheses.map(hypothesis => {
           const evidenceSources = hypothesis.procedures

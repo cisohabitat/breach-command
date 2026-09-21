@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {getDiscriminatingRead,getHypothesisLedger,getLossReason,getModifierBreakdown,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,procedures,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
+import {getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getLossReason,getModifierBreakdown,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,hypotheses,procedures,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {adversaryObjectives,modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -116,6 +116,55 @@ for(const attack of attacks)assert.ok(!/^[A-Z][a-z]+ and [a-z]+ records show/.te
 // Every assessed objective explains what its outbound stage is for, so a chain
 // ending in exfiltration never looks disconnected from the intent behind it.
 for(const [id,objective] of Object.entries(adversaryObjectives))assert.ok(objective.outbound.length>=80,`${id} explains its outbound stage`);
+
+// Repeated negative results against the declared reading are surfaced during
+// play, from the player's own record. It must never consult the hidden chain.
+let standingRun=(()=>{const b=baseline();b.established=[];b.injectDeck=[];return setHypothesis(b,"identity");})();
+assert.equal(getHypothesisStanding(baseline()).level,"none","no declared reading, nothing under test");
+assert.equal(getHypothesisStanding(standingRun).level,"untested","a fresh reading starts untested");
+const identitySources=hypotheses.find(item=>item.id==="identity")!.procedures;
+for(let i=0;i<identitySources.length;i++){
+  standingRun=playTurn(standingRun,identitySources[i],2);
+  if(standingRun.pendingDecision)standingRun=resolveDecision(standingRun,"observe");
+  if(standingRun.pendingCommand)standingRun=resolveCommand(standingRun,"a");
+  if(standingRun.pendingSetPiece)standingRun=resolveSetPiece(standingRun,"a");
+}
+const spentStanding=getHypothesisStanding(standingRun);
+assert.equal(spentStanding.spent,identitySources.length,"every source of the reading was spent without result");
+assert.equal(spentStanding.level,"unsupported","a reading whose every source came back empty is poorly supported");
+assert.ok(spentStanding.detail.length>40,"and the reason is stated");
+assert.deepEqual(getHypothesisStanding({...standingRun,chain:["token","role","vault","apikey"]}),spentStanding,"the standing never consults the hidden chain");
+// A confirmation resets the reckoning: the sources spent before it no longer count.
+assert.equal(getHypothesisStanding({...standingRun,turns:standingRun.turns.map((turn,index)=>index===0?{...turn,revealed:"phish"}:turn)}).spent,identitySources.length-1,"only sources spent since the last confirmation count");
+
+// Campaign standing changes what an operation has to work with, and a command
+// that keeps losing does not reach the same tier as one that keeps winning.
+const profile=(over:object)=>newGame(0,"operational",()=>0,{mode:"campaign",...over});
+const recruit=profile({campaignTier:0,readiness:50,leadershipTrust:50,unresolvedThreads:0});
+const decorated=profile({campaignTier:3,readiness:90,leadershipTrust:90,unresolvedThreads:0});
+const struggling=profile({campaignTier:1,readiness:20,leadershipTrust:25,unresolvedThreads:5});
+assert.ok(decorated.turnLimit>recruit.turnLimit&&recruit.turnLimit>struggling.turnLimit,"readiness moves the investigation window both ways");
+assert.ok(decorated.established.length>recruit.established.length,"seniority establishes more evidence sources");
+assert.ok(decorated.mapActionsRemaining>recruit.mapActionsRemaining,"seniority buys a command action");
+assert.ok(struggling.mapActionsRemaining<recruit.mapActionsRemaining,"lost leadership trust costs one");
+assert.ok(struggling.impact>recruit.impact&&struggling.objectiveProgress>recruit.objectiveProgress,"unresolved access is carried into the next operation");
+assert.ok(struggling.adversaryTempo>recruit.adversaryTempo,"past three open threads the actor opens with tempo");
+assert.equal(decorated.graceRemaining,1,"rapid coordination absorbs one unlucky action");
+assert.equal(recruit.graceRemaining,0);
+// The grace is spent once and only on an action that was not already protected.
+const graced=playTurn({...decorated,chain:["phish","spray","task","https"],established:[],injectDeck:[],hypothesis:null} as Game,"dns",2);
+assert.equal(graced.graceRemaining,0,"the grace is consumed");
+assert.equal(graced.adversaryTempo,decorated.adversaryTempo,"and the actor takes no tempo for that action");
+const afterGrace=playTurn(graced,"cloud",2);
+assert.ok(afterGrace.adversaryTempo>graced.adversaryTempo,"the next unlucky action costs as usual");
+// Seniority follows results.
+const record={...defaultCampaign,leadershipTrust:60,readiness:60,streak:2};
+const base=newGame(0,"operational",()=>0);
+const wonXp=recordCampaignResult(record,{...base,status:"won"},70).xp;
+const lostXp=recordCampaignResult(record,{...base,status:"lost"},70).xp;
+const drillXp=recordCampaignResult(record,{...base,status:"exercise"},70).xp;
+assert.ok(wonXp>drillXp&&drillXp>lostXp,"a win outranks a drill, and a drill outranks a defeat");
+assert.ok(lostXp>0,"a defeat still teaches something");
 
 // The modifier the player is shown before committing is the same computation the
 // roll resolves with, minus the one term that must stay hidden.

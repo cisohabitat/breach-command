@@ -15,10 +15,13 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)} title={objectiveTheory[id].question}>{objectiveTheory[id].title}</button>)}</div>
       </div>
       {!game.evidence.length ? <div className="evidence-empty"><Search size={20} /><p>Successful procedures will place findings here. Select two findings to test whether they form a causal sequence.</p></div> : <>
-        <div className="evidence-timeline" role="group" aria-label="Evidence timeline">{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
-        <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
-          <span>{item.id} · T+{item.turn}</span><strong>{item.title}</strong><small>{item.system} · {item.source}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.confidence} CONFIDENCE</em>
-        </button>)}</div>
+        <details className="evidence-detail" open={game.evidence.length <= 3}>
+          <summary>Findings<span>{game.evidence.length} collected · {selected.length} selected</span></summary>
+          <div className="evidence-timeline" role="group" aria-label="Evidence timeline">{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
+          <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
+            <span>{item.id} · T+{item.turn}</span><strong>{item.title}</strong><small>{item.system} · {item.source}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.confidence} CONFIDENCE</em>
+          </button>)}</div>
+        </details>
         <div className="relationship-assessment" role="group" aria-label="Relationship assessment">
           <span>YOUR ASSESSMENT</span>
           <button className={assessment === "causal" ? "active" : ""} aria-pressed={assessment === "causal"} onClick={() => setAssessment("causal")}>Causal sequence</button>

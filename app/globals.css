@@ -511,3 +511,33 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
 .modifier-breakdown li>small{grid-column:1/-1;font-size:var(--type-micro);color:var(--text-soft);line-height:var(--leading-compact)}
 .modifier-breakdown li.pending>strong{color:var(--text-soft)}
 .procedure-card .spent-label{display:block;margin-top:5px;font-size:var(--type-micro);letter-spacing:.06em;color:#c0a98f}
+
+/* The sticky index must not land on top of the heading it jumped to. */
+#debrief-score,#debrief-hypothesis,#debrief-timeline,#debrief-decisions,#debrief-chain,#debrief-campaign{scroll-margin-top:58px}
+
+/* How the declared reading is holding up against the player's own results. */
+.hypothesis-standing{display:grid;gap:4px;margin:12px 0 0;padding:11px 13px;border:1px solid var(--line);border-left-width:3px;border-radius:9px}
+.hypothesis-standing strong{font-weight:500;font-size:var(--type-body)}
+.hypothesis-standing p{margin:2px 0 0;color:var(--text-soft);font-size:var(--type-caption);line-height:var(--leading-base)}
+.standing-meter{display:flex;gap:4px;margin-top:2px}
+.standing-meter i{width:22px;height:4px;border-radius:2px;background:#2b3a2f}
+.standing-meter i.spent{background:currentColor}
+.hypothesis-standing.level-untested{border-left-color:#7d8a80;color:#9fb3a3}
+.hypothesis-standing.level-holding{border-left-color:var(--lime);color:var(--lime)}
+.hypothesis-standing.level-weakening{border-left-color:#e8c968;color:#e8c968}
+.hypothesis-standing.level-unsupported{border-left-color:#ff967d;color:#ff967d}
+.hypothesis-standing strong,.hypothesis-standing .eyebrow{color:inherit}
+
+/* Reference material folds away so the decision surfaces own the column. Each
+   summary carries the state it hides, so collapsing costs no situational
+   awareness. */
+.topology-detail,.map-intel-detail,.evidence-detail{margin-top:12px}
+.topology-detail>summary,.map-intel-detail>summary,.evidence-detail>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;min-height:40px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:var(--type-caption)}
+.topology-detail>summary::-webkit-details-marker,.map-intel-detail>summary::-webkit-details-marker,.evidence-detail>summary::-webkit-details-marker{display:none}
+.topology-detail>summary:focus-visible,.map-intel-detail>summary:focus-visible,.evidence-detail>summary:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.topology-detail>summary:hover,.map-intel-detail>summary:hover,.evidence-detail>summary:hover{border-color:#4d6642}
+.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span{color:var(--text-soft);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:var(--type-micro)}
+.topology-detail>summary::after,.map-intel-detail>summary::after,.evidence-detail>summary::after{content:"+";margin-left:auto;color:var(--text-soft);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.topology-detail[open]>summary::after,.map-intel-detail[open]>summary::after,.evidence-detail[open]>summary::after{content:"−"}
+.topology-detail[open]>.topology-routes,.map-intel-detail[open]>.map-intel,.evidence-detail[open]>.evidence-timeline{margin-top:11px}
+.map-intel-detail .map-intel{margin:11px 0 0}

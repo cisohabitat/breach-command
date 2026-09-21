@@ -2,7 +2,7 @@ import { scenarios, difficulties, infrastructureTopologies, adversaryProfiles, t
 import type { NodePosture } from "./advanced-game";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 12;
+export const SESSION_VERSION = 13;
 
 export type SavedSession = {
   version: number;
@@ -99,6 +99,7 @@ export function parseSession(raw: string): SavedSession | null {
       caseTheoryHistory: Array.isArray(game.caseTheoryHistory) ? game.caseTheoryHistory : [],
       nodePosture: Object.fromEntries(nodeIds.length ? nodeIds.map(id => [id, knownPosture.includes(storedPosture[id]) ? storedPosture[id] : "normal"]) : [["boundary", storedPosture.boundary ?? "normal"]]),
       mapActionsRemaining: Number.isFinite(game.mapActionsRemaining) ? game.mapActionsRemaining : 3,
+      graceRemaining: Number.isFinite(game.graceRemaining) ? Math.max(0, Math.min(1, Number(game.graceRemaining))) : 0,
       mapHistory: Array.isArray(game.mapHistory) ? game.mapHistory : [],
       turns: game.turns.map(turn => ({
         ...turn,
