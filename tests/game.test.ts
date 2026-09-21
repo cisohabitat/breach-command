@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,procedures,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
+import {getDiscriminatingRead,getHypothesisLedger,getModifierBreakdown,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,procedures,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -65,6 +65,54 @@ const reroute=(difficulty:Difficulty)=>{
 };
 assert.equal(reroute("crisis").changed,true,"the crisis adversary re-routes on its escalation beat");
 assert.equal(reroute("operational").changed,false,"ordinary difficulties only re-route when the response presses");
+
+// The modifier the player is shown before committing is the same computation the
+// roll resolves with, minus the one term that must stay hidden.
+const previewBase=(()=>{const b=baseline();b.established=["endpoint"];b.nextModifier=1;return b;})();
+for(const plan of [{scope:"focused",intensity:"balanced"},{scope:"enterprise",intensity:"exhaustive"},{scope:"focused",intensity:"rapid"}] as const){
+  for(const procedure of ["endpoint","identity","dns"]){
+    const preview=getModifierBreakdown(previewBase,procedure,plan);
+    const resolved=playTurn(previewBase,procedure,10,plan).turns[0];
+    assert.equal(preview.total,resolved.modifier-resolved.planningBonus,`${procedure}/${plan.scope}/${plan.intensity} preview matches resolution`);
+    assert.ok(!preview.parts.some(part=>/hypothesis/i.test(part.label)),"the planning bonus is never shown before the roll");
+  }
+}
+// Every term the resolution can apply is named in the preview.
+assert.deepEqual(getModifierBreakdown(previewBase,"endpoint").parts.map(part=>part.label),
+  ["Established","Carried","Specialist","Focus","Focused","Balanced","Expert mode"]);
+assert.equal(getModifierBreakdown({...previewBase,mode:"expert"},"identity").parts.find(part=>part.label==="Expert mode")?.value,-1);
+
+// The pre-action read is built from declared state only. Rewriting the hidden
+// chain underneath it must not change a single word of it.
+const readBase=(()=>{const b=baseline();return setHypothesis(b,"identity");})();
+const readA=getDiscriminatingRead(readBase,"identity");
+const readB=getDiscriminatingRead({...readBase,chain:["token","role","vault","apikey"]},"identity");
+assert.deepEqual(readA,readB,"the read never consults the hidden chain");
+assert.equal(readA.level,"high","a source the declared hypothesis predicts tests that hypothesis");
+assert.equal(getDiscriminatingRead(readBase,"server").level,"moderate","a source it does not predict collects without testing");
+assert.equal(getDiscriminatingRead(baseline(),"identity").level,"broad","with no hypothesis declared nothing is under test");
+const spentRun=playTurn(readBase,"dns",2);
+assert.equal(getDiscriminatingRead(spentRun,"dns").spent,1,"a source spent without exposing a stage is counted");
+
+// The planning bonus and the hypothesis score answer to the same fact, so a turn
+// that earned the bonus can never be scored as a wrong prediction.
+let ledgerRun=baseline();ledgerRun.established=[];ledgerRun=setHypothesis(ledgerRun,"endpoint");
+ledgerRun=playTurn(ledgerRun,"email",12);
+if(ledgerRun.pendingDecision)ledgerRun=resolveDecision(ledgerRun,"observe");
+for(const turn of ledgerRun.turns)if(turn.planningBonus>0)assert.equal(turn.hypothesisMatched,true,"the planning bonus implies a matched prediction");
+const ledger=getHypothesisLedger(ledgerRun);
+assert.equal(ledger.length,ledgerRun.turns.length,"the ledger accounts for every turn");
+assert.ok(ledger.every(row=>row.verdict.length>20),"every turn is given a reason");
+assert.equal(ledger[0].matched,ledgerRun.turns[0].hypothesisMatched);
+assert.equal(ledger[0].discriminating,ledgerRun.turns[0].discriminating);
+// A restored session keeps the ledger intact.
+const ledgerSaved=parseSession(serialiseSession(ledgerRun,true,false));
+assert.equal(ledgerSaved?.game.turns[0].hypothesisTarget,ledgerRun.turns[0].hypothesisTarget,"the hypothesis test survives a save");
+assert.equal(ledgerSaved?.game.turns[0].hypothesisMatched,ledgerRun.turns[0].hypothesisMatched);
+// A save written before these fields existed degrades to an unscored turn.
+const legacyTurn=parseSession(JSON.stringify({version:11,savedAt:new Date().toISOString(),game:{...ledgerRun,turns:ledgerRun.turns.map(turn=>{const legacy={...turn} as Record<string,unknown>;delete legacy.hypothesisTarget;delete legacy.hypothesisMatched;delete legacy.discriminating;return legacy;})},guided:true,fastResolve:false}));
+assert.equal(legacyTurn?.game.turns[0].hypothesisTarget,null,"a legacy turn carries no hypothesis test");
+assert.equal(legacyTurn?.game.turns[0].hypothesisMatched,false);
 g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);assert.ok(g.pendingDecision);g=resolveDecision(g,"act");assert.equal(g.status,"response");g=resolveResponse(g,"credential");assert.equal(g.status,"response");g=resolveResponse(g,"verify");assert.equal(g.status,"response");g=resolveResponse(g,"rebuild");assert.equal(g.status,"won");assert.ok(getOutcome(g).grade);assert.ok(getCounterfactuals(g).length);
 g=baseline();for(let i=0;i<14&&g.status==="playing";i++){if(g.pendingSetPiece){g=resolveSetPiece(g,"a");continue;}if(g.pendingCommand){g=resolveCommand(g,"a");continue;}const action=nextEvidenceSource(g);assert.ok(action);g=playTurn(g,action.id,2);}assert.equal(g.status,"lost");
 assert.equal(getAdversaryState(newGame(0,"crisis",()=>0)),"Maneuvering");assert.equal(difficulties.crisis.maxTurns,9);

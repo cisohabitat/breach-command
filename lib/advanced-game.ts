@@ -113,6 +113,12 @@ export type Turn = {
   specialistBonus: number;
   sectorChange: number;
   objectiveChange: number;
+  // What the working hypothesis was actually tested against on this turn. The
+  // planning bonus, the score and the after-action ledger all read these, so the
+  // number the player is given and the reason they are given it cannot drift.
+  hypothesisTarget: string | null;
+  hypothesisMatched: boolean;
+  discriminating: boolean;
 };
 // Five decision verbs replace the single observe/act binary. Each verb moves the
 // operational picture differently: evidence and tempo, service continuity, sector
@@ -753,6 +759,43 @@ export function getDecisionOptions(game: Game) {
   return { attack, options, observe: find("observe"), act: find("act") };
 }
 
+export type ModifierPart = { label: string; value: number; detail: string };
+
+// Every part of the roll the player is entitled to know before committing. The
+// planning bonus is deliberately absent: it depends on whether the hypothesis
+// matches the next hidden stage, so showing it here would let a player read the
+// answer off the interface by cycling hypotheses. playTurn adds it on resolution
+// and the after-action ledger explains it afterwards.
+export function getModifierBreakdown(game: Game, procedure: string, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }) {
+  const specialist = specialists[game.specialist];
+  const focusNode = infrastructureTopologies[game.scenario].nodes.find(node => node.id === game.focusedNode);
+  const parts: ModifierPart[] = [
+    { label: "Established", value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
+    { label: "Carried", value: game.nextModifier, detail: "Carried from the previous turn's event or decision." },
+    { label: "Specialist", value: specialist.procedures.includes(procedure as never) && game.specialistFatigue < 5 ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },
+    { label: "Focus", value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: `The focused node covers this source${focusNode ? `: ${focusNode.label}.` : "."}` },
+    { label: procedureScopes[plan.scope].title, value: procedureScopes[plan.scope].modifier, detail: procedureScopes[plan.scope].description },
+    { label: procedureIntensities[plan.intensity].title, value: procedureIntensities[plan.intensity].modifier, detail: procedureIntensities[plan.intensity].description },
+    { label: "Expert mode", value: game.mode === "expert" ? -1 : 0, detail: "Expert operations resolve every procedure one harder." },
+  ];
+  return { parts, total: parts.reduce((sum, part) => sum + part.value, 0) };
+}
+
+export type DiscriminatingRead = { level: "high" | "moderate" | "broad"; label: string; detail: string; spent: number };
+
+// A read built only from what the player can already see: their own declared
+// hypothesis, that hypothesis's own evidence sources, and how often they have
+// already spent this source without it producing a stage. It never consults the
+// hidden chain, so it narrows the search without answering it.
+export function getDiscriminatingRead(game: Game, procedure: string): DiscriminatingRead {
+  const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
+  const spent = game.turns.filter(turn => turn.procedure === procedure && !turn.revealed).length;
+  const spentNote = spent ? ` Already spent ${spent} time${spent === 1 ? "" : "s"} here without exposing a stage.` : "";
+  if (!hypothesis) return { level: "broad", label: "Broad collection", detail: `No working hypothesis is recorded, so this action collects without testing an explanation.${spentNote}`, spent };
+  if (hypothesis.procedures.includes(procedure)) return { level: "high", label: "Tests your hypothesis", detail: `${hypothesis.title} predicts evidence in this source. A result here supports or weakens that reading directly.${spentNote}`, spent };
+  return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent };
+}
+
 export function playTurn(game: Game, procedure: string, forcedRoll?: number, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }): Game {
   if (game.status !== "playing") throw new Error("This investigation has ended.");
   if (game.pendingDecision) throw new Error("Resolve the evidence decision first.");
@@ -789,15 +832,18 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   g.adversaryMemory.procedureCounts[procedure] = (g.adversaryMemory.procedureCounts[procedure] ?? 0) + 1;
   const nextHidden = g.chain.find(id => !g.revealed.includes(id));
   const hypothesis = hypotheses.find(item => item.id === g.hypothesis);
-  const planningBonus = nextHidden && g.hypothesis === attackVector(nextHidden) && hypothesis?.procedures.includes(procedure) ? 2 : 0;
+  const hypothesisTarget = nextHidden ?? null;
+  const hypothesisMatched = !!nextHidden && !!g.hypothesis && g.hypothesis === attackVector(nextHidden);
+  // Whether this procedure was one of the sources that could have exposed the
+  // stage under test, regardless of how the roll landed.
+  const discriminating = !!nextHidden && attacks.find(item => item.id === nextHidden)!.detect.includes(procedure);
+  const planningBonus = hypothesisMatched && hypothesis?.procedures.includes(procedure) ? 2 : 0;
   const specialist = specialists[g.specialist];
   const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < 5 ? 1 : 0;
   const scope = procedureScopes[plan.scope];
   const intensity = procedureIntensities[plan.intensity];
   const focusNode = infrastructureTopologies[g.scenario].nodes.find(node => node.id === g.focusedNode)!;
-  const infrastructureBonus = focusNode.procedures.includes(procedure) ? 1 : 0;
-  const modeModifier = g.mode === "expert" ? -1 : 0;
-  const modifier = (g.established.includes(procedure) ? 2 : 0) + g.nextModifier + planningBonus + specialistBonus + infrastructureBonus + scope.modifier + intensity.modifier + modeModifier;
+  const modifier = getModifierBreakdown(g, procedure, plan).total + planningBonus;
   const total = raw + modifier;
   const success = total >= config.threshold;
   g.nextModifier = 0;
@@ -920,7 +966,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.specialist === "communications") impactChange -= 2;
   g.impact = clamp(g.impact + impactChange);
   g.continuity = clamp(g.continuity + continuityChange);
-  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange });
+  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange, hypothesisTarget, hypothesisMatched, discriminating });
   if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
   else if (exerciseEnd && g.revealed.length >= 2 && g.revealed.length < 4) g.status = "exercise";
   else if (number >= g.turnLimit && g.revealed.length < 4) g.status = "lost";
@@ -1202,8 +1248,9 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   const decisionQuality = decisionItems.length ? decisionItems.reduce((sum, quality) => sum + quality, 0) / (decisionItems.length * 5) : 0;
   const decisions = Math.round(decisionQuality * 15);
   const response = Math.round(clamp(game.responseScore, 0, 55) / 55 * 20);
-  const aligned = game.turns.filter(turn => turn.revealed && turn.hypothesis === attackVector(turn.revealed)).length;
-  const hypothesis = game.revealed.length ? Math.round(aligned / game.revealed.length * 10) : 0;
+  const tested = game.turns.filter(turn => turn.hypothesis && turn.hypothesisTarget);
+  const aligned = tested.filter(turn => turn.hypothesisMatched).length;
+  const hypothesis = tested.length ? Math.round(aligned / tested.length * 10) : 0;
   return { investigation, impact, continuity, decisions, response, hypothesis, total: investigation + impact + continuity + decisions + response + hypothesis };
 }
 
@@ -1213,6 +1260,41 @@ export function getOutcome(game: Game) {
   if (breakdown.total >= 68) return { grade: "B", title: "Stable, with residual risk", detail: "The incident is contained, but the review identifies avoidable exposure or disruption.", breakdown };
   if (breakdown.total >= 52) return { grade: "C", title: "Costly stabilisation", detail: "Services are recovering, but uncertainty and operational cost remain high.", breakdown };
   return { grade: "D", title: "Fragile recovery", detail: "The immediate crisis passed, but the response left significant residual risk.", breakdown };
+}
+
+export type HypothesisLedgerRow = {
+  turn: number;
+  procedure: string;
+  predicted: string | null;
+  testedAgainst: string;
+  discriminating: boolean;
+  matched: boolean;
+  bonus: number;
+  verdict: string;
+};
+
+export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
+  return game.turns.map(turn => {
+    const target = turn.hypothesisTarget;
+    const stage = target ? stages[attacks.find(item => item.id === target)!.stage].name : "Every stage was already confirmed";
+    const predicted = turn.hypothesis ? hypotheses.find(item => item.id === turn.hypothesis)!.title : null;
+    const verdict = !target ? "No stage left to predict, so this turn could not score."
+      : !turn.hypothesis ? "No working hypothesis was recorded, so this turn could not score."
+      : turn.hypothesisMatched
+        ? (turn.planningBonus > 0 ? "Correct, and the procedure was one of its evidence sources: full credit and the planning bonus."
+          : "Correct about the route, but the procedure was not one of the hypothesis's evidence sources: credit without the planning bonus.")
+        : "The route under test was not the one predicted, so this turn scored nothing.";
+    return {
+      turn: turn.number,
+      procedure: procedures.find(item => item.id === turn.procedure)!.title,
+      predicted,
+      testedAgainst: stage,
+      discriminating: turn.discriminating,
+      matched: turn.hypothesisMatched,
+      bonus: turn.planningBonus,
+      verdict,
+    };
+  });
 }
 
 export function getCounterfactuals(game: Game) {

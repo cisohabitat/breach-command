@@ -2,7 +2,7 @@ import { scenarios, difficulties, infrastructureTopologies, adversaryProfiles, t
 import type { NodePosture } from "./advanced-game";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 11;
+export const SESSION_VERSION = 12;
 
 export type SavedSession = {
   version: number;
@@ -104,6 +104,9 @@ export function parseSession(raw: string): SavedSession | null {
         ...turn,
         plan: turn.plan ?? { scope: "focused", intensity: "balanced" },
         specialistBonus: Number.isFinite(turn.specialistBonus) ? turn.specialistBonus : 0,
+        hypothesisTarget: typeof turn.hypothesisTarget === "string" ? turn.hypothesisTarget : null,
+        hypothesisMatched: turn.hypothesisMatched === true,
+        discriminating: turn.discriminating === true,
         sectorChange: Number.isFinite(turn.sectorChange) ? turn.sectorChange : 0,
         objectiveChange: Number.isFinite(turn.objectiveChange) ? turn.objectiveChange : 0,
       })),

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { ArrowRight, Printer, Star, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { adversaryObjectives, attacks, getAdversaryProfile, getCounterfactuals, getOperationalLabel, gameModes, hypotheses, procedureIntensities, procedureScopes, procedures, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
+import { adversaryObjectives, attacks, getAdversaryProfile, getCounterfactuals, getHypothesisLedger, getOperationalLabel, gameModes, hypotheses, procedureIntensities, procedureScopes, procedures, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { specialistReaction } from "@/lib/phase9";
 import { unlockedCapabilities } from "@/lib/campaign";
@@ -22,12 +22,24 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? `${game.revealed.length} of 4 stages found in ${game.turns.length} turns. This is a learning outcome, not a security assessment.` : ""}</DialogDescription>
         </DialogHeader>
         {game && outcome && <>
+          <nav className="debrief-index" aria-label="Review sections">
+            {[
+              ["debrief-score", "Score"],
+              ["debrief-hypothesis", "Hypothesis"],
+              ["debrief-timeline", "Timeline"],
+              ["debrief-decisions", "Decisions"],
+              ["debrief-chain", "Attack chain"],
+              ["debrief-campaign", "Campaign"],
+            ].map(([id, label]) => (
+              <button key={id} type="button" onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}>{label}</button>
+            ))}
+          </nav>
           <div className="debrief-stats">
             <div><strong>{game.turns.filter(turn => turn.success).length}/{game.turns.length}</strong><span>Rolls succeeded</span></div>
             <div><strong>{game.impact}</strong><span>Final impact</span></div>
             <div><strong>{game.continuity}</strong><span>{getOperationalLabel(game)}</span></div>
           </div>
-          <section className="score-card">
+          <section className="score-card" id="debrief-score">
             <div className="score-total"><span>FINAL SCORE</span><strong>{outcome.breakdown.total}<small>/100</small></strong></div>
             <div className="score-breakdown">
               {[
@@ -39,6 +51,21 @@ export function DebriefDialog({ session }: { session: GameSession }) {
                 ["Hypothesis accuracy", outcome.breakdown.hypothesis, 10],
               ].map(([label, value, maximum]) => <div key={String(label)}><span>{label}</span><strong>{value}/{maximum}</strong></div>)}
             </div>
+          </section>
+          <section className="hypothesis-ledger" id="debrief-hypothesis">
+            <span className="eyebrow">HYPOTHESIS ACCURACY · {outcome.breakdown.hypothesis}/10</span>
+            <p className="ledger-rule">A turn scores when the route you predicted is the route the next unconfirmed stage actually used. Only the hypothesis standing when you act is tested, so revising before you act costs nothing. Choosing one of that hypothesis&rsquo;s own evidence sources adds the +2 planning bonus on top.</p>
+            {getHypothesisLedger(game).map(row => (
+              <div key={row.turn} className={row.matched ? "matched" : "missed"}>
+                <span>{String(row.turn).padStart(2, "0")}</span>
+                <p>
+                  <strong>{row.predicted ? `Predicted: ${row.predicted}` : "No hypothesis recorded"}</strong>
+                  <small>Tested against {row.testedAgainst.toLowerCase()} · {row.procedure} {row.discriminating ? "could have exposed it" : "could not have exposed it"}</small>
+                  <em>{row.verdict}</em>
+                </p>
+                <b>{row.matched ? "CREDIT" : "NO CREDIT"}{row.bonus > 0 ? ` · +${row.bonus}` : ""}</b>
+              </div>
+            ))}
           </section>
           <section className="advanced-review">
             <div><strong>{game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0)}</strong><span>Hypothesis revisions</span></div>
@@ -53,7 +80,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p></div>
             <div><span className="eyebrow">COMMAND TEAM</span><strong>{namedSpecialists[game.specialist].name} · fatigue {game.specialistFatigue}/6</strong><p>{gameModes[game.mode].title} operation against {getAdversaryProfile(game).title}. Team fatigue and leadership confidence carry into the next campaign mission.</p></div>
           </section>
-          <section className="timeline">
+          <section className="timeline" id="debrief-timeline">
             <span className="eyebrow">EVIDENCE &amp; DECISION TIMELINE</span>
             {game.turns.map(turn => (
               <div key={turn.number}>
@@ -63,7 +90,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             ))}
           </section>
           {(game.decisions.length > 0 || game.commandHistory.length > 0 || game.setPieceHistory.length > 0) && (
-            <div className="decision-summary">
+            <div className="decision-summary" id="debrief-decisions">
               <span className="eyebrow">YOUR DECISIONS</span>
               {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.rationale}</em><em>Impact {record.impactChange >= 0 ? "+" : ""}{record.impactChange} · {getOperationalLabel(game).toLowerCase()} {record.continuityChange >= 0 ? "+" : ""}{record.continuityChange} · Tempo {record.tempoChange >= 0 ? "+" : ""}{record.tempoChange} · Sector {record.sectorChange >= 0 ? "+" : ""}{record.sectorChange} · Objective {record.objectiveChange >= 0 ? "+" : ""}{record.objectiveChange}</em>{record.adaptedTo && <em>Actor adaptation: {record.adaptationReason ?? `the hidden route changed to ${attacks.find(attack => attack.id === record.adaptedTo)?.title}.`}</em>}</p>)}
               {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Command event:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
@@ -77,7 +104,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           )}
           <section className="counterfactuals"><span className="eyebrow">WHAT MIGHT HAVE CHANGED</span>{getCounterfactuals(game).map((item, index) => <p key={index}>{item}</p>)}</section>
           <section className="evidence-review"><span className="eyebrow">EVIDENCE RECONSTRUCTION</span>{game.evidence.map(item => <div key={item.id}><strong>{item.id} · {item.title}</strong><span>{item.system} · {item.source} · {item.confidence}</span><p>{item.detail}</p></div>)}</section>
-          <div className="debrief-chain">
+          <div className="debrief-chain" id="debrief-chain">
             {game.chain.map((id, index) => {
               const attack = attacks.find(item => item.id === id)!;
               const tactic = ["Initial Access", "Lateral Movement", "Persistence", "Command and Control / Exfiltration"][index];
@@ -85,7 +112,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             })}
           </div>
           <section className="debrief-learning"><h3>Take this back to your team</h3><p>{game.turns.some(turn => turn.success && !turn.revealed) ? "Some actions passed without finding new evidence. Did each action separate plausible explanations, or simply use an available tool?" : "Which evidence sources or decision authorities would be weakest in a real response?"}</p><p>{activeScenario.lesson}</p></section>
-          <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
+          <section className="capability-review" id="debrief-campaign"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
           <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
           <section className="specialist-reaction"><span className="eyebrow">TEAM AFTER-ACTION NOTE · COHESION {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status === "won", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
           <section className="mastery-panel"><div><span className="eyebrow">SCENARIO MASTERY</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>

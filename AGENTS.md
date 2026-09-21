@@ -53,6 +53,9 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Response is a three-stage sequence: containment, assurance, then recovery. Do not bypass the assurance gate.
 - Infrastructure monitoring and isolation consume scarce map actions. Their node posture and action history are persistent game state and must migrate safely.
 - Clamp impact, continuity, sector health and objective progress to their documented ranges.
+- The modifier shown before an action and the modifier the roll resolves with are one computation, `getModifierBreakdown`. `playTurn` adds only the planning bonus on top, and that bonus must never appear in the preview: it depends on the hidden chain, so showing it would let a player read the answer off the interface by cycling hypotheses.
+- Anything shown before an action, including `getDiscriminatingRead`, may use only state the player has already declared or observed. It must return the same value when the hidden chain is rewritten underneath it, and `tests/game.test.ts` asserts this.
+- Each turn records what its hypothesis was tested against. The planning bonus, `getScoreBreakdown` and `getHypothesisLedger` all read those fields, so the bonus a player is given and the score they are graded on cannot disagree.
 - Challenge codes must reproduce the same scenario configuration and random sequence. A reproducible operation carries `Game.seed`, and `playTurn` derives its d20 from the seed and the turn index. Leave `seed` null for ordinary campaign play.
 - Any new persistent `Game` field requires a `SESSION_VERSION` increment and a safe migration in `lib/session.ts`.
 - Any new campaign field requires a backward-compatible default in `parseCampaign`.

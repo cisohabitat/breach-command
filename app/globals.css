@@ -451,3 +451,63 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
 .operation-status>[data-slot=progress]>div{background:#6d8f63}
 @media(max-width:850px){.objective-meter{width:150px}}
 @media(max-width:650px){.objective-meter{width:auto}.operation-status{max-width:none;margin-top:9px}.operation-status>.mono{font-size:var(--type-micro)}}
+
+/* A dialog that is on its way out is no longer a dialog. The registry exit
+   animation kept the closed node mounted for its 200ms duration, which left the
+   previous result — often emptied of its content by then — sitting in the
+   accessibility tree, and left its overlay intercepting the click meant for the
+   control behind it. Dropping the exit animation makes the presence layer
+   unmount the node in the same frame the state closes. Entrances are untouched. */
+[data-slot=dialog-content][data-state=closed],
+[data-slot=dialog-overlay][data-state=closed],
+[data-slot=alert-dialog-content][data-state=closed],
+[data-slot=alert-dialog-overlay][data-state=closed],
+[data-slot=sheet-content][data-state=closed],
+[data-slot=sheet-overlay][data-state=closed]{animation:none;pointer-events:none}
+
+/* The review is long by design. A sticky index lets a reader reach the section
+   they want without scrolling past the other nine. */
+.debrief-index{position:sticky;top:-4px;z-index:4;display:flex;flex-wrap:wrap;gap:6px;padding:8px 0 10px;margin:-2px 0 4px;background:var(--popover);border-bottom:1px solid var(--line)}
+.debrief-index button{min-height:34px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--text-soft);font-size:var(--type-caption);letter-spacing:.02em}
+.debrief-index button:hover{color:var(--lime);border-color:#4d6642}
+
+/* Why the hypothesis score is what it is, turn by turn. */
+.hypothesis-ledger{border:1px solid var(--line);border-radius:10px;padding:16px 17px 8px}
+.hypothesis-ledger .ledger-rule{margin:7px 0 13px;color:var(--text-soft);font-size:var(--type-caption);line-height:var(--leading-base);max-width:82ch}
+.hypothesis-ledger>div{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 13px;align-items:baseline;padding:10px 0;border-top:1px solid #23302799}
+.hypothesis-ledger>div>span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:var(--type-caption);color:var(--text-soft)}
+.hypothesis-ledger>div p{margin:0;display:grid;gap:3px;min-width:0}
+.hypothesis-ledger>div strong{font-weight:500;font-size:var(--type-body)}
+.hypothesis-ledger>div small,.hypothesis-ledger>div em{font-size:var(--type-caption);color:var(--text-soft);font-style:normal;line-height:var(--leading-compact)}
+.hypothesis-ledger>div b{justify-self:end;white-space:nowrap;font:600 var(--type-micro) ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.07em;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--text-soft)}
+.hypothesis-ledger>div.matched b{border-color:#5f7a4c;color:var(--lime)}
+.hypothesis-ledger>div.missed b{border-color:#6b5a4e;color:#d6a98f}
+@media(max-width:650px){
+  .hypothesis-ledger{padding:13px 13px 4px}
+  .hypothesis-ledger>div{grid-template-columns:auto minmax(0,1fr);row-gap:6px}
+  .hypothesis-ledger>div b{grid-column:2;justify-self:start}
+  .debrief-index{gap:5px}
+  .debrief-index button{min-height:36px;padding:5px 10px}
+}
+
+/* What the action buys, and what the roll is made of. Both are built from state
+   the player already holds, so neither narrows the answer for them. */
+.alignment-notice.level-high{border-left:3px solid var(--lime)}
+.alignment-notice.level-moderate{border-left:3px solid #e8c968}
+.alignment-notice.level-broad{border-left:3px solid #7d8a80}
+.alignment-notice strong{font-weight:600;color:var(--foreground)}
+/* Folded away by default: available before committing, never in the way. */
+.modifier-details{margin-top:10px}
+.modifier-details>summary{cursor:pointer;list-style:none;display:grid;gap:2px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:var(--type-caption)}
+.modifier-details>summary::-webkit-details-marker{display:none}
+.modifier-details>summary:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.modifier-details>summary span{color:var(--text-soft);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:var(--type-micro);overflow-wrap:anywhere}
+.modifier-details[open]>summary{border-bottom-left-radius:0;border-bottom-right-radius:0}
+.modifier-details[open] .modifier-breakdown{border-top:0;border-top-left-radius:0;border-top-right-radius:0}
+.modifier-breakdown{list-style:none;margin:0;padding:0;display:grid;gap:1px;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--line)}
+.modifier-breakdown li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:9px 12px;background:var(--popover)}
+.modifier-breakdown li>span{font-size:var(--type-caption)}
+.modifier-breakdown li>strong{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:600;font-size:var(--type-caption);color:var(--lime)}
+.modifier-breakdown li>small{grid-column:1/-1;font-size:var(--type-micro);color:var(--text-soft);line-height:var(--leading-compact)}
+.modifier-breakdown li.pending>strong{color:var(--text-soft)}
+.procedure-card .spent-label{display:block;margin-top:5px;font-size:var(--type-micro);letter-spacing:.06em;color:#c0a98f}

@@ -120,7 +120,6 @@ export function useGameSession() {
   const [backupInput, setBackupInput] = useState("");
   const [backupMessage, setBackupMessage] = useState("");
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
-  const [criticalAnnouncement, setCriticalAnnouncement] = useState("");
   const [storageNotice, setStorageNotice] = useState("");
   const [pendingUndo, setPendingUndo] = useState<{ label: string; game: Game } | null>(null);
   const [meterPulse, setMeterPulse] = useState<MeterPulse | null>(null);
@@ -272,7 +271,6 @@ export function useGameSession() {
       setInlineReport(requiresDialog ? null : result);
       const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
       setPendingUndo(quick && next.status === "playing" && !blockedNow ? { label: procedures.find(item => item.id === id)?.title ?? "Procedure", game: current } : null);
-      setCriticalAnnouncement(next.impact >= IMPACT_CRITICAL || next.continuity <= CONTINUITY_AT_RISK || next.objectiveProgress >= OBJECTIVE_IMMINENT ? `Warning. Business impact ${next.impact}. ${getOperationalLabel(next)} ${next.continuity}. Adversary progress ${next.objectiveProgress}.` : "");
       setRolling(false);
       setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}. Adversary progress is ${next.objectiveProgress}.`);
       playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
@@ -664,6 +662,13 @@ export function useGameSession() {
     } catch {}
     return () => lifecycle.abort();
   }, []);
+
+  // Derived, never stored: the warning can only ever describe the meters as they
+  // are now, and it clears itself the moment the operation is no longer running.
+  const criticalAnnouncement = game && game.status === "playing"
+    && (game.impact >= IMPACT_CRITICAL || game.continuity <= CONTINUITY_AT_RISK || game.objectiveProgress >= OBJECTIVE_IMMINENT)
+    ? `Warning. Business impact ${game.impact}. ${getOperationalLabel(game)} ${game.continuity}. Adversary progress ${game.objectiveProgress}.`
+    : "";
 
   const answer = game && question === "scope" ? activeScenario.scope
     : question === "constraints" ? activeScenario.constraints

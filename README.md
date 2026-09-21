@@ -17,6 +17,8 @@ The player takes command of one of ten fictional cyber incidents. Each operation
 7. Declare and revise a case theory for the adversary objective, then test it against causal evidence.
 8. Execute containment, assurance and recovery decisions, then review the reconstructed incident.
 
+Before committing an action the interface names what it buys — whether it tests the hypothesis you have declared, merely collects, or tests nothing because no hypothesis is recorded — and how many times that source has already been spent without exposing a stage. The roll's modifier can be expanded into its parts. All of it is built from what the player has already declared or seen; the planning bonus stays hidden until the roll, because showing it would answer the question under investigation.
+
 Procedure checks use a d20, but evidence-led reasoning now carries more weight than tool familiarity. Correct hypotheses receive a larger bonus than established procedures or specialist familiarity. Used procedures cool down, while failed actions, actor tempo and sector pressure can end an operation before the chain is found.
 
 ## Major systems
@@ -42,7 +44,7 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Three-stage response:** containment is followed by an assurance gate and deliberate recovery, with isolated infrastructure restored only after the response completes. Containment, assurance and recovery options are authored per sector, so disruption, service cost and residual risk reflect the incident's own constraint while the strict three-stage sequence is preserved.
 - **Three-act campaign:** progression tracks experience, trust, readiness, unresolved access, mastery, team cohesion and command doctrine, leading to one of four endings.
 - **Challenge codes:** compact `BC-...` codes reproduce a scenario, difficulty, mode, specialist and random seed. A seeded operation replays its procedure rolls as well as its configuration, so the same code produces the same incident on any device.
-- **After-action review:** scoring, timelines, decision quality, evidence reconstruction, actor adaptation and counterfactuals support facilitated learning.
+- **After-action review:** scoring, timelines, decision quality, evidence reconstruction, actor adaptation and counterfactuals support facilitated learning. A hypothesis ledger explains the accuracy score turn by turn — what was predicted, which stage it was tested against, whether the procedure could have exposed that stage, and why the turn did or did not score — and a sticky section index makes the long review navigable.
 - **Accessible, responsive play:** dedicated phone, tablet and desktop layouts that recompose at nine width breakpoints, plus optional procedural sound, adaptive music, haptics, high contrast, reduced motion and guided reflection. `pnpm test:a11y` runs axe against the assignment screen, the overlays and the command workspace from 320 px to 1280 px and requires zero violations.
 - **Offline and local-first play:** the installable PWA caches core assets, and only complete same-origin responses are ever cached. Sessions, campaign progress, settings and anonymous balance counters remain on the device. A browser that refuses local storage still plays a complete operation from memory and says so. Portable backup text can transfer progress without an account.
 

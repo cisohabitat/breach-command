@@ -73,6 +73,32 @@ test.describe("accessibility audit", () => {
     await expectNoViolations(page, "command workspace");
   });
 
+  // The after-action review is the longest surface in the game and gained a
+  // section index and a per-turn ledger, so it is audited in its own right.
+  test("the after-action review", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openGame(page);
+    await page.locator("details.advanced-setup > summary").click();
+    for (const name of ["Fast resolution", "Bot commander"]) {
+      const control = page.getByRole("switch", { name });
+      if (await control.getAttribute("aria-checked") !== "true") await control.click();
+    }
+    await page.getByRole("button", { name: /Begin investigation/i }).click();
+    await page.getByRole("button", { name: /Assume command/i }).click();
+    await expect(page.locator("[data-resolution]")).toBeVisible({ timeout: 90_000 });
+    await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/i }).click();
+    await expect(page.getByText("AFTER-ACTION REVIEW", { exact: true })).toBeVisible();
+    await expectNoViolations(page, "after-action review");
+
+    // The section index has to actually reach its sections.
+    const index = page.getByRole("navigation", { name: "Review sections" });
+    await expect(index).toBeVisible();
+    await index.getByRole("button", { name: "Hypothesis" }).click();
+    await expect(page.locator("#debrief-hypothesis")).toBeVisible();
+    await expect(page.locator("#debrief-hypothesis").getByText(/HYPOTHESIS ACCURACY/)).toBeVisible();
+  });
+
   // Every topbar control keeps a name at the width where its label is hidden.
   test("topbar controls keep their names when labels are hidden", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
