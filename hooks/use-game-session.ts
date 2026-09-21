@@ -48,9 +48,11 @@ import { campaignAct, campaignEnding, campaignTier, defaultCampaign, parseCampai
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
 import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
-import { decodeChallenge, encodeChallenge, seededChallengeRandom } from "@/lib/phase8";
+import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
 import { chooseBotAction, type BotAction } from "@/lib/game-bot";
+import { usePreferences } from "@/hooks/use-preferences";
+import { useChallengeCode } from "@/hooks/use-challenge-code";
 
 type WorkspaceView = "command" | "investigate" | "briefing";
 
@@ -98,10 +100,6 @@ export function useGameSession() {
   const [savedSession, setSavedSession] = useState<SavedSession | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const [settings, setSettings] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const [highContrast, setHighContrast] = useState(false);
-  const [musicEnabled, setMusicEnabled] = useState(true);
   const [mode, setMode] = useState<GameMode>("campaign");
   const [specialist, setSpecialist] = useState<SpecialistId>("hunter");
   const [actionScope, setActionScope] = useState<ProcedureScope>("focused");
@@ -109,18 +107,19 @@ export function useGameSession() {
   const [missionBriefing, setMissionBriefing] = useState(false);
   const [tutorial, setTutorial] = useState(false);
   const [telemetry, setTelemetry] = useState<BalanceTelemetry>(() => readTelemetry());
-  const [challengeSeed, setChallengeSeed] = useState(() => {
-    const now = new Date();
-    return Number(`${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`);
-  });
-  const [challengeInput, setChallengeInput] = useState("");
-  const [challengeActive, setChallengeActive] = useState(false);
-  const [challengeMessage, setChallengeMessage] = useState("");
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   const [backupInput, setBackupInput] = useState("");
   const [backupMessage, setBackupMessage] = useState("");
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
   const [storageNotice, setStorageNotice] = useState("");
+  const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast } = usePreferences(setStorageNotice);
+  const { challengeSeed, challengeActive, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
+    setScenarioChoice(setup.scenario);
+    setDifficulty(setup.difficulty);
+    setMode(setup.mode);
+    setSpecialist(setup.specialist);
+  });
+
   const [pendingUndo, setPendingUndo] = useState<{ label: string; game: Game } | null>(null);
   const [meterPulse, setMeterPulse] = useState<MeterPulse | null>(null);
   const [botEnabled, setBotEnabled] = useState(false);
@@ -154,7 +153,7 @@ export function useGameSession() {
   const currentRoute = campaignRoutes[currentRouteId];
   const previewVariant = incidentVariant(scenarioChoice, currentRouteId, challengeSeed);
   const finalEnding = campaignEnding(campaign);
-  const challengeCode = encodeChallenge({ scenario: scenarioChoice, difficulty, mode, specialist, seed: challengeSeed });
+  const challengeCode = codeFor(scenarioChoice, difficulty, mode, specialist);
 
   function clearStoredSession() {
     removeStored(SESSION_KEY);
@@ -425,21 +424,6 @@ export function useGameSession() {
     } catch { setBackupMessage("Backup not recognised. Paste a complete Breach Command backup."); }
   }
 
-  function loadChallengeCode() {
-    const setup = decodeChallenge(challengeInput);
-    if (!setup) { setChallengeMessage("Code not recognised. Check every character and try again."); return; }
-    setScenarioChoice(setup.scenario); setDifficulty(setup.difficulty); setMode(setup.mode); setSpecialist(setup.specialist); setChallengeSeed(setup.seed);
-    setChallengeActive(true);
-    setChallengeMessage("Challenge loaded. Review the assignment and begin when ready.");
-  }
-
-  function generateSeed() {
-    const seed = 100000 + Math.floor(Math.random() * 900000);
-    setChallengeSeed(seed);
-    setChallengeActive(true);
-    setChallengeMessage("New challenge generated.");
-  }
-
   function recordProgress(result: Game) {
     if (botRunRef.current) return;
     const marker = `${result.scenario}:${result.status}:${result.turns.length}:${result.responseChoices.join("-")}`;
@@ -551,24 +535,10 @@ export function useGameSession() {
     const loadTimer = setTimeout(() => {
       setCampaign(parseCampaign(readStored(CAMPAIGN_KEY)));
       if (!storageWritable()) setStorageNotice("This browser is not allowing saved data, so progress from this visit will not be kept.");
-      const preferences = readStored("breach-command.preferences");
-      if (preferences) {
-        try {
-          const parsed = JSON.parse(preferences) as { sound?: boolean; music?: boolean; haptics?: boolean; highContrast?: boolean };
-          setSoundEnabled(parsed.sound !== false);
-          setMusicEnabled(parsed.music !== false);
-          setHapticsEnabled(parsed.haptics !== false);
-          setHighContrast(parsed.highContrast === true);
-        } catch { setStorageNotice("Stored settings could not be read, so defaults are in use."); }
-      }
     }, 0);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
     return () => clearTimeout(loadTimer);
   }, []);
-
-  useEffect(() => {
-    writeStored("breach-command.preferences", JSON.stringify({ sound: soundEnabled, music: musicEnabled, haptics: hapticsEnabled, highContrast }));
-  }, [soundEnabled, musicEnabled, hapticsEnabled, highContrast]);
 
 
   useEffect(() => {
@@ -580,7 +550,7 @@ export function useGameSession() {
     };
     window.addEventListener("keydown", handleKeyboard);
     return () => window.removeEventListener("keydown", handleKeyboard);
-  }, []);
+  }, [setSoundEnabled]);
 
   useEffect(() => {
     campaignRef.current = campaign;

@@ -11,6 +11,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Preserve the rule-based computer Incident Captain. Do not introduce a required AI service, account, backend or network dependency.
 - Keep campaign, session, preferences and telemetry data local to the player's browser.
 - Reach local storage only through `lib/storage.ts`. Storage can be blocked or full, and the game must keep playing and say so rather than fault.
+- A hook that both reads stored state on mount and writes it on change must not write before it has read. Every effect runs on mount, so an ungated write puts the defaults straight over the player's settings. `tests/e2e/persistence.spec.ts` covers this from the outside.
 
 ## Technical baseline
 
@@ -25,7 +26,9 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 - `app/page.tsx`: application shell only — topbar, live regions, storage notice and overlay mounting.
 - `hooks/use-game-session.ts`: game, session and campaign state, every transition, effect and derived readout.
-- `app/globals.css`: visual system, game layouts and responsive behaviour.
+- `hooks/use-preferences.ts`: audio, haptics and contrast, loaded once and persisted after.
+- `hooks/use-challenge-code.ts`: the shareable configuration — seed, code field and whether the operation is reproducible.
+- `app/globals.css`: visual system, game layouts and responsive behaviour. One declaration per line, nested by block; keep it that way so a rule change is a one-line diff.
 - `components/game/`: focused gameplay surfaces. Prefer a new component here when a coherent game system would otherwise make `app/page.tsx` substantially harder to follow.
 - `lib/game.ts`: scenarios, procedures, attacks and baseline rules data.
 - `lib/advanced-game.ts`: authoritative game state and transition engine.
@@ -37,8 +40,9 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `lib/storage.ts`: the only local-storage accessor. It answers instead of throwing.
 - `lib/feedback.ts`: sound, music and haptic feedback.
 - `lib/telemetry.ts`: device-local balance counters.
-- `tests/game.test.ts`: deterministic rule checks and complete simulations.
+- `tests/*.test.ts`: the engine suite, run by `node --test`. One file per concern — engine, campaign, reads, session, content, simulation — so a failure in one reports without stopping the rest.
 - `tests/e2e/accessibility.spec.ts`: axe audit across the supported widths and overlays.
+- `tests/e2e/persistence.spec.ts`: local storage survives a page load and a reload.
 - `public/sw.js`: offline cache. Increment the cache name when deployed assets or application behaviour change.
 
 ## Game-engine invariants
@@ -106,7 +110,7 @@ pnpm build
 git diff --check
 ```
 
-Run `pnpm test:a11y` for any change to markup, labels or the responsive rules that hide them; it must report zero violations. For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194 and 1280 px widths. Treat 768–834 px portrait and 1024–1194 px landscape as explicit iPad targets. A successful build does not replace interaction and responsive checks.
+Run `pnpm test:a11y` for any change to markup, labels or the responsive rules that hide them; it must report zero violations, and `pnpm test:persistence` for any change to stored state. `pnpm test:e2e` runs every browser suite. For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194 and 1280 px widths. Treat 768–834 px portrait and 1024–1194 px landscape as explicit iPad targets. A successful build does not replace interaction and responsive checks.
 
 ## Publication
 

@@ -8,8 +8,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "test": "node tests/game.test.ts",
+    "test": "node --test \"tests/*.test.ts\"",
     "test:a11y": "playwright test tests/e2e/accessibility.spec.ts",
+    "test:e2e": "playwright test",
+    "test:persistence": "playwright test tests/e2e/persistence.spec.ts",
     "test:responsive": "playwright test tests/e2e/responsive-game.spec.ts",
     "test:responsive:headed": "playwright test tests/e2e/responsive-game.spec.ts --headed",
     "test:responsive:install": "playwright install chromium",

@@ -83,12 +83,13 @@ pnpm test
 pnpm test:responsive:install # first run only
 pnpm test:responsive
 pnpm test:a11y
+pnpm test:persistence
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm build
 ```
 
-`pnpm test` includes deterministic rule checks and 1,230 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover. `pnpm test:a11y` runs an axe audit over the assignment screen at every supported width and over the field guide, settings and command surfaces at a phone width; the narrow widths matter because the topbar hides its button labels below 431 px.
+`pnpm test` runs the engine suites under `node --test` — one file per concern, so a failure reports rather than stopping the run — with deterministic rule checks and 1,230 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover. `pnpm test:a11y` runs an axe audit over the assignment screen at every supported width and over the field guide, settings and command surfaces at a phone width; the narrow widths matter because the topbar hides its button labels below 431 px.
 
 ## Architecture
 
@@ -96,6 +97,8 @@ pnpm build
 | --- | --- |
 | `app/page.tsx` | Application shell: topbar, workspace switch, live regions and overlay mounting |
 | `hooks/use-game-session.ts` | Game, session and campaign state, every transition, effect and derived readout |
+| `hooks/use-preferences.ts` | Audio, haptics and contrast, loaded once and persisted after |
+| `hooks/use-challenge-code.ts` | Seed, challenge code and whether the operation is reproducible |
 | `app/globals.css` | Tactical visual system, motion and responsive layouts |
 | `components/game/` | Workspaces, gameplay boards, maps, dialogs, end states and the tutorial |
 | `components/ui/` | The interface primitives the game actually imports |
@@ -110,9 +113,10 @@ pnpm build
 | `lib/storage.ts` | Non-throwing local-storage access |
 | `lib/feedback.ts` | Audio and haptic feedback |
 | `lib/telemetry.ts` | Device-local balance counters |
-| `tests/game.test.ts` | Engine assertions and full-game simulations |
+| `tests/*.test.ts` | Engine, campaign, reads, session, content and simulation suites (`node --test`) |
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
+| `tests/e2e/persistence.spec.ts` | Stored settings survive a load and a reload |
 | `playwright.config.ts` | Deterministic Chromium test runner and local preview lifecycle |
 
 The interface is built with Next.js 16, React 19 and TypeScript and deployed as a native Next.js application on Vercel.
