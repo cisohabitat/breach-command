@@ -119,6 +119,10 @@ export type Turn = {
   hypothesisTarget: string | null;
   hypothesisMatched: boolean;
   discriminating: boolean;
+  // True when the turn exposed a stage other than the one it was testing: the
+  // source is shared between routes and surfaced something further along. It is
+  // a find, but not a prediction, and the score keys to the prediction.
+  windfall: boolean;
 };
 // Five decision verbs replace the single observe/act binary. Each verb moves the
 // operational picture differently: evidence and tempo, service continuity, sector
@@ -731,7 +735,9 @@ export const plainLanguage: Record<string, string> = {
   "bounded containment": "Shutting down one specific path rather than the whole service, so less of the business stops.",
   "assurance gate": "The step between stopping the attack and restoring service, where you check the environment is actually clean.",
   "residual risk": "What is still uncertain after you act — the part of the problem the chosen option does not settle.",
-  "causal sequence": "One finding plausibly caused or enabled the other, rather than the two merely happening around the same time.",
+  "causal sequence": "One finding is what the next one needed — consecutive stages of the intrusion, or two steps on the same route. Two things on the same system at the same time are not thereby related.",
+  "evidence boundary": "How far out you are currently looking. Widening it brings connected systems into the investigation and costs time.",
+  "assurance": "Checking the environment is genuinely clean before you put the service back.",
   "exfiltration": "Data being taken out of the organisation.",
   "persistence": "A foothold the intruder can return through after a reboot or a password change.",
   "lateral movement": "Moving from the first system compromised to other systems inside the network.",
@@ -995,7 +1001,7 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
     inconclusive ? ` ${inconclusive} earlier attempt${inconclusive === 1 ? "" : "s"} failed before producing a result, which settles nothing.` : "",
   ].join("");
   if (!hypothesis) return { level: "broad", label: "Broad collection", detail: `No working hypothesis is recorded, so this action collects without testing an explanation.${spentNote}`, spent, inconclusive };
-  if (hypothesis.procedures.includes(procedure)) return { level: "high", label: "Tests your hypothesis", detail: `${hypothesis.title} predicts evidence in this source. A result here supports or weakens that reading directly.${spentNote}`, spent, inconclusive };
+  if (hypothesis.procedures.includes(procedure)) return { level: "high", label: "One of this reading's own sources", detail: `${hypothesis.title} relies on this source, so an empty result here counts against that reading. A discovery may still turn out to sit on another route — the sources overlap.${spentNote}`, spent, inconclusive };
   return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent, inconclusive };
 }
 
@@ -1205,7 +1211,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.specialist === "communications") impactChange -= 2;
   g.impact = clamp(g.impact + impactChange);
   g.continuity = clamp(g.continuity + continuityChange);
-  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange, hypothesisTarget, hypothesisMatched, discriminating });
+  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange, hypothesisTarget, hypothesisMatched, discriminating, windfall: !!revealed && revealed !== hypothesisTarget });
   if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
   else if (exerciseEnd && g.revealed.length >= 2 && g.revealed.length < 4) settle(g, "exercise");
   else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");
@@ -1420,13 +1426,20 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const valid = !!firstAttack && !!secondAttack && (Math.abs(firstAttack.stage - secondAttack.stage) <= 1 || attackVector(firstAttack.id) === attackVector(secondAttack.id));
   const correct = (assessment === "causal") === valid;
   const theoryAligned = correct && valid && game.caseTheory === game.objective;
+  const basis = firstAttack && secondAttack
+    ? Math.abs(firstAttack.stage - secondAttack.stage) <= 1
+      ? `they sit in consecutive stages of the chain — ${stages[firstAttack.stage].name.toLowerCase()} then ${stages[secondAttack.stage].name.toLowerCase()} — so one is what the next one needed`
+      : attackVector(firstAttack.id) === attackVector(secondAttack.id)
+        ? `both sit on the ${hypotheses.find(item => item.id === attackVector(firstAttack.id))!.title.toLowerCase()} route, so they are steps in the same line of access`
+        : ""
+    : "";
   const finding = correct
     ? valid
-      ? `${first.title} and ${second.title} form a credible causal sequence across ${first.system} and ${second.system}.`
-      : `${first.title} and ${second.title} overlap in time, but the available evidence does not establish causation.`
+      ? `${first.title} and ${second.title} form a credible causal sequence: ${basis}.`
+      : `${first.title} and ${second.title} overlap in time, but nothing links them: they are neither consecutive stages nor steps on the same route, and appearing on ${first.system} and ${second.system} is not a relationship.`
     : valid
-      ? "The findings were assessed as coincidental, but their sequence and shared attack path support causation."
-      : "The findings were treated as causal, but timing alone does not establish a dependable relationship.";
+      ? `These were assessed as coincidental, but ${basis}, which is what a causal sequence looks like.`
+      : `These were treated as causal on timing alone. Two findings close together, or on the same system, are not thereby related — a sequence needs consecutive stages or a shared route.`;
   return {
     ...game,
     nextModifier: correct ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
@@ -1506,6 +1519,9 @@ export type HypothesisLedgerRow = {
   procedure: string;
   predicted: string | null;
   testedAgainst: string;
+  actualRoute: string | null;
+  found: string | null;
+  windfall: boolean;
   discriminating: boolean;
   matched: boolean;
   bonus: number;
@@ -1515,19 +1531,29 @@ export type HypothesisLedgerRow = {
 export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
   return game.turns.map(turn => {
     const target = turn.hypothesisTarget;
-    const stage = target ? stages[attacks.find(item => item.id === target)!.stage].name : "Every stage was already confirmed";
+    const targetAttack = target ? attacks.find(item => item.id === target)! : null;
+    const stage = targetAttack ? stages[targetAttack.stage].name : "Every stage was already confirmed";
+    const actualRoute = targetAttack ? hypotheses.find(item => item.id === targetAttack.vector)!.title : null;
     const predicted = turn.hypothesis ? hypotheses.find(item => item.id === turn.hypothesis)!.title : null;
+    const found = turn.revealed ? attacks.find(item => item.id === turn.revealed)!.title : null;
+    const windfallNote = turn.windfall
+      ? ` You did expose ${found}, further along the chain — that source is shared between routes, so it was a find rather than a correct prediction.`
+      : "";
     const verdict = !target ? "No stage left to predict, so this turn could not score."
       : !turn.hypothesis ? "No working hypothesis was recorded, so this turn could not score."
       : turn.hypothesisMatched
-        ? (turn.planningBonus > 0 ? "Correct, and the procedure was one of its evidence sources: full credit and the planning bonus."
-          : "Correct about the route, but the procedure was not one of the hypothesis's evidence sources: credit without the planning bonus.")
-        : "The route under test was not the one predicted, so this turn scored nothing.";
+        ? (turn.planningBonus > 0
+          ? `Correct: ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit and the planning bonus.${windfallNote}`
+          : `Correct about the route — ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route — but the procedure was not one of that reading's sources, so no planning bonus.${windfallNote}`)
+        : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}, so the prediction scored nothing.${windfallNote}`;
     return {
       turn: turn.number,
       procedure: procedures.find(item => item.id === turn.procedure)!.title,
       predicted,
       testedAgainst: stage,
+      actualRoute,
+      found,
+      windfall: turn.windfall,
       discriminating: turn.discriminating,
       matched: turn.hypothesisMatched,
       bonus: turn.planningBonus,

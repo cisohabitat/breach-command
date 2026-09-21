@@ -68,7 +68,9 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Training discloses exactly one thing the player could not derive: the `clue` on the next unconfirmed stage. It names what was observed, never the technique or the source that would expose it, and it is available at Training difficulty only. Without it the opening hypothesis is a coin flip between four routes and the game teaches nothing.
 - Absence is evidence only when the check completed. A failed roll settles nothing about a source, so `getHypothesisStanding` and `getDiscriminatingRead` count it as inconclusive and never against the reading.
 - Anything shown before an action, including `getDiscriminatingRead` and `getHypothesisStanding`, may use only state the player has already declared or observed, with the Training clue as the single stated exception. It must return the same value when the hidden chain is rewritten underneath it, and `tests/game.test.ts` asserts this.
-- Each turn records what its hypothesis was tested against. The planning bonus, `getScoreBreakdown` and `getHypothesisLedger` all read those fields, so the bonus a player is given and the score they are graded on cannot disagree.
+- Each turn records what its hypothesis was tested against. The planning bonus, `getScoreBreakdown` and `getHypothesisLedger` all read those fields, so the bonus a player is given and the score they are graded on cannot disagree. The bonus is applied before the roll resolves, so the stage under test is the only thing any of them can key to.
+- A source shared between routes can expose a stage further along than the one under test. That is a find, not a correct prediction: the turn is marked `windfall`, and the ledger must name the route the stage under test actually used, so a score of nothing is checkable against what the player saw.
+- Evidence correlation is valid on consecutive stages or a shared route, and the result text must say which. Naming the two systems taught that sharing a node is the reason, which it is not.
 - Challenge codes must reproduce the same scenario configuration and random sequence. A reproducible operation carries `Game.seed`, and `playTurn` derives its d20 from the seed and the turn index. Leave `seed` null for ordinary campaign play.
 - Any new persistent `Game` field requires a `SESSION_VERSION` increment and a safe migration in `lib/session.ts`.
 - Any new campaign field requires a backward-compatible default in `parseCampaign`.
@@ -85,6 +87,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Support widths from 320 px mobile screens through desktop without horizontal page overflow, clipped text or unreachable controls.
 - Keep essential tap targets at least 40 px high, preferably 44 px on mobile.
 - Never rely on colour alone to communicate state.
+- Scope and intensity persist between turns. The selection says so in words as well as colour, carries `aria-pressed`, and the carried plan is stated before the options and on the procedure heading outside the sheet — a plan that silently stays selected accumulates impact and fatigue a beginner never chose.
 - A meter change is shown with its direction, through `describeChange`. Impact rising is bad and continuity rising is good; a bare signed number leaves a new player guessing which.
 - Field vocabulary carries a plain-language translation in `plainLanguage`, and the review opens with four plain sentences from `getBeginnerReview` before any scoring.
 - Business impact, service integrity and adversary progress are the three readouts that decide an operation and share the top row. The investigation window stays subordinate to them; it rarely ends an operation.

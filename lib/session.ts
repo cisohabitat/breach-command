@@ -2,7 +2,7 @@ import { scenarios, difficulties, infrastructureTopologies, adversaryProfiles, t
 import type { NodePosture } from "./advanced-game";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 13;
+export const SESSION_VERSION = 14;
 
 export type SavedSession = {
   version: number;
@@ -108,6 +108,7 @@ export function parseSession(raw: string): SavedSession | null {
         hypothesisTarget: typeof turn.hypothesisTarget === "string" ? turn.hypothesisTarget : null,
         hypothesisMatched: turn.hypothesisMatched === true,
         discriminating: turn.discriminating === true,
+        windfall: turn.windfall === true,
         sectorChange: Number.isFinite(turn.sectorChange) ? turn.sectorChange : 0,
         objectiveChange: Number.isFinite(turn.objectiveChange) ? turn.objectiveChange : 0,
       })),

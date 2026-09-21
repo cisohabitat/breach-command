@@ -6989,3 +6989,28 @@ awareness. */
 .procedure-card .spent-label.inconclusive {
   color:#9fb3a3;
 }
+/* The plan persists between turns, so the selection says so in words as well as
+in colour, and the carried plan is stated before the options. */
+.procedure-planner .plan-selected {
+  float:right;
+  font:600 var(--type-micro) ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.08em;
+  color:var(--lime);
+}
+.procedure-planner button.active {
+  box-shadow:inset 0 0 0 1px var(--lime);
+}
+.carried-plan {
+  margin:12px 0 0;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  border-left:3px solid var(--lime);
+  border-radius:9px;
+  font-size:var(--type-caption);
+  color:var(--text-soft);
+  line-height:var(--leading-base);
+}
+.carried-plan strong {
+  color:var(--foreground);
+  font-weight:500;
+}

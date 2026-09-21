@@ -4,12 +4,12 @@ import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { InfrastructureConsole } from "@/components/game/infrastructure-console";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
-import { getCoachPrompt } from "@/lib/advanced-game";
+import { getCoachPrompt, procedureIntensities, procedureScopes } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
   const {
-    game, guided, guidance, trainingPrompt, rolling, fastResolve,
+    game, guided, guidance, trainingPrompt, rolling, fastResolve, actionScope, actionIntensity,
     inlineReport, setInlineReport, pendingUndo, undo,
     focusInfrastructure, mapAction, chooseHypothesis, correlate, chooseCaseTheory, run, setSelected,
   } = session;
@@ -45,7 +45,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
           <section className="procedure-section">
             <div className="section-heading">
               <div><h2>Investigation procedures</h2><p>Choose one action per turn. Used actions cool down for three turns.</p></div>
-              <span className="established-key">+2 Established</span>
+              <span className="established-key">{procedureScopes[actionScope].title} · {procedureIntensities[actionIntensity].title}</span>
             </div>
             {guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}</span></div>}
             {trainingPrompt && (

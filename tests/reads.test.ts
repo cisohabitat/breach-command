@@ -146,3 +146,50 @@ test("speaks plainly to a player who is new to the subject", () => {
   const correlated = getBeginnerReview(correlateEvidence(run, ["E1", "E2"], "causal"));
   assert.notEqual(correlated.gap, uncorrelated.gap, "and moves on once the player has done it");
 });
+
+test("explains a score the player can check against what they saw", () => {
+  // A source shared between routes can expose a stage further along than the one
+  // under test. That is a find, not a correct prediction, and the record has to
+  // say which it was or "no credit" reads as arbitrary.
+  const run = (() => { const b = baseline(); b.established = []; b.injectDeck = []; return setHypothesis(b, "identity"); })();
+  const windfall = playTurn(run, "identity", 20);
+  assert.equal(windfall.turns[0].revealed, "spray", "identity exposed the movement stage");
+  assert.notEqual(windfall.turns[0].revealed, windfall.turns[0].hypothesisTarget, "which was not the stage under test");
+  assert.equal(windfall.turns[0].windfall, true, "so the turn is recorded as a windfall");
+  const row = getHypothesisLedger(windfall)[0];
+  assert.ok(row.actualRoute, "the ledger names the route the stage under test actually used");
+  assert.ok(row.verdict.includes(row.actualRoute!.toLowerCase()), "and says it in the verdict");
+  assert.ok(row.verdict.includes("further along the chain"), "and does not leave the find unexplained");
+  assert.equal(row.found, "Internal password spraying");
+
+  // An ordinary turn is not a windfall, and a miss names both routes so the
+  // player can see what they got wrong.
+  const direct = playTurn(run, "email", 20);
+  assert.equal(direct.turns[0].windfall, false);
+  const miss = playTurn(setHypothesis(run, "cloud"), "email", 20);
+  const missRow = getHypothesisLedger(miss)[0];
+  assert.ok(!missRow.matched);
+  assert.ok(missRow.verdict.includes("not cloud control-plane abuse"), "the verdict names the prediction that failed");
+
+  // The correlation result states why a sequence is causal. Naming the two
+  // systems taught that sharing a node is the reason, which it is not.
+  const withEvidence = { ...baseline(), evidence: [
+    { id: "E1", turn: 1, title: "Initial access", source: "Email", system: "User access", confidence: "HIGH" as const, supports: "phish", detail: "A" },
+    { id: "E2", turn: 2, title: "Movement", source: "Identity", system: "User access", confidence: "HIGH" as const, supports: "spray", detail: "B" },
+  ] };
+  const causal = correlateEvidence(withEvidence, ["E1", "E2"], "causal").correlations[0];
+  assert.equal(causal.correct, true);
+  assert.ok(/consecutive stages/.test(causal.finding), "it names stage adjacency as the basis");
+  assert.ok(!/across User access and User access/.test(causal.finding), "and never offers the shared system as the reason");
+
+  const unrelated = { ...baseline(), evidence: [
+    { id: "E1", turn: 1, title: "Initial access", source: "Email", system: "User access", confidence: "HIGH" as const, supports: "phish", detail: "A" },
+    { id: "E2", turn: 2, title: "Noise", source: "Cloud", system: "User access", confidence: "LOW" as const, supports: null, detail: "B" },
+  ] };
+  const wrong = correlateEvidence(unrelated, ["E1", "E2"], "causal").correlations[0];
+  assert.equal(wrong.correct, false);
+  assert.ok(/not thereby related/.test(wrong.finding), "a wrong causal call is told why timing and location are not enough");
+
+  assert.ok(plainLanguage["evidence boundary"], "the vocabulary a playtest asked about is translated");
+  assert.ok(/consecutive stages|same route/.test(plainLanguage["causal sequence"]), "and the causal rule is stated in the glossary too");
+});
