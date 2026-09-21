@@ -20,7 +20,7 @@ import {
   setCaseTheory,
   availableIn,
   getLead,
-  getSuggestion,
+  getTrainingPrompt,
   guidanceLevel,
   responseOptionsFor,
   getOutcome,
@@ -143,7 +143,7 @@ export function useGameSession() {
   const config = game ? difficulties[game.difficulty] : difficulties[difficulty];
   const decision = game ? getDecisionOptions(game) : null;
   const guidance = game ? guidanceLevel(game, guided) : "off";
-  const suggestion = game ? getSuggestion(game, guided) : null;
+  const trainingPrompt = game ? getTrainingPrompt(game, guided) : null;
   const responseProfile = game ? responseOptionsFor(game) : null;
   const outcome = game ? getOutcome(game) : null;
   const activeHypothesis = game ? hypotheses.find(item => item.id === game.hypothesis) : null;
@@ -706,7 +706,7 @@ export function useGameSession() {
     config,
     decision,
     guidance,
-    suggestion,
+    trainingPrompt,
     responseProfile,
     outcome,
     activeHypothesis,

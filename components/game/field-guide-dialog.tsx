@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { plainLanguage } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function FieldGuideDialog({ session }: { session: GameSession }) {
@@ -15,6 +16,15 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
             <div><span>2</span><p><strong>Test it</strong>Run a procedure marked “Hypothesis evidence”. Every procedure uses one turn.</p></div>
             <div><span>3</span><p><strong>Decide</strong>When a stage is confirmed, choose a command response: observe, act, attribute, contain or notify.</p></div>
             <div><span>4</span><p><strong>Respond</strong>Reveal all four stages, then contain, assure and recover the service.</p></div>
+          </section>
+          <section className="plain-language" aria-label="Plain language">
+            <h3>Plain language</h3>
+            <p>The interface uses the vocabulary a response team would use. Here is what each term means in ordinary words.</p>
+            <dl>
+              {Object.entries(plainLanguage).map(([term, meaning]) => (
+                <div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>
+              ))}
+            </dl>
           </section>
           <div className="rules-grid">
             <section><h3>01 / Objective</h3><p>Reveal four hidden attack stages before the turn limit or impact reaches 100. Then complete containment, assurance and recovery decisions.</p></section>

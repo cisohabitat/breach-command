@@ -721,13 +721,144 @@ export function nextEvidenceSource(game: Game) {
   return procedures.find(procedure => !availableIn(game, procedure.id));
 }
 
+// The interface uses the field's own vocabulary, which is right for the subject
+// and wrong for a first-time player reading it cold. Every term here is one a
+// playtest reported needing translated.
+export const plainLanguage: Record<string, string> = {
+  "privileged tier": "Accounts with powerful administrative access — the ones that can change anything.",
+  "trust boundary": "The line between two systems that are allowed to rely on each other. Crossing it is how an intruder spreads.",
+  "actor tempo": "How quickly the intruder is moving. It rises when you give them time and falls when you press them.",
+  "bounded containment": "Shutting down one specific path rather than the whole service, so less of the business stops.",
+  "assurance gate": "The step between stopping the attack and restoring service, where you check the environment is actually clean.",
+  "residual risk": "What is still uncertain after you act — the part of the problem the chosen option does not settle.",
+  "causal sequence": "One finding plausibly caused or enabled the other, rather than the two merely happening around the same time.",
+  "exfiltration": "Data being taken out of the organisation.",
+  "persistence": "A foothold the intruder can return through after a reboot or a password change.",
+  "lateral movement": "Moving from the first system compromised to other systems inside the network.",
+  "attribution": "Working out who is behind the activity, from how they behave rather than from a name.",
+  "continuity": "Whether the essential service is still running for the people who depend on it.",
+};
+
+export type BeginnerReview = { strength: string; gap: string; concept: string; next: string };
+
+// The full review is written for someone who already knows the trade. A first
+// operation needs four sentences before any of it: one thing that went well, one
+// that did not, the idea behind it, and one concrete change to try.
+export function getBeginnerReview(game: Game): BeginnerReview {
+  const breakdown = getScoreBreakdown(game);
+  const tested = game.turns.filter(turn => turn.hypothesis && turn.hypothesisTarget);
+  const aligned = tested.filter(turn => turn.hypothesisMatched).length;
+  const emptySuccesses = game.turns.filter(turn => turn.success && !turn.revealed).length;
+  const revisions = game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0);
+
+  const strength = game.revealed.length === 4
+    ? `You confirmed the whole attack chain — all four stages — in ${game.turns.length} turns.`
+    : game.impact <= 40
+      ? `You kept business impact down to ${game.impact} while the picture was still forming, which buys the team room to work.`
+      : `You confirmed ${game.revealed.length} of 4 stages under real pressure, and the record you built is where the next shift starts.`;
+
+  if (!game.correlations.length && game.evidence.length >= 2) return {
+    strength,
+    gap: `You collected ${game.evidence.length} findings but never tested how any two of them relate.`,
+    concept: "Two things happening close together is not the same as one causing the other. Saying which it is — and being willing to be wrong — is the core of the work.",
+    next: "Next operation, once you hold two findings, select them in the evidence workspace and decide whether one plausibly enabled the other before you run another procedure.",
+  };
+  if (tested.length && aligned * 2 < tested.length) return {
+    strength,
+    gap: `Your working hypothesis matched the route actually under test on ${aligned} of ${tested.length} turns${revisions === 0 ? ", and you never revised it" : ""}.`,
+    concept: "A hypothesis is a prediction you are trying to break, not a label to keep. When the evidence sources it predicts come back empty, that is the evidence telling you to change it.",
+    next: "Next operation, watch the reading's standing on the hypothesis board. When it says weakening, change the reading before you spend another turn.",
+  };
+  if (emptySuccesses >= 3) return {
+    strength,
+    gap: `${emptySuccesses} of your successful checks produced no new stage.`,
+    concept: "A check that succeeds but finds nothing has still cost a turn. Choosing where to look matters more than how hard you look.",
+    next: "Next operation, prefer a source your current reading actually predicts — the card says so before you commit — over whichever tool is available.",
+  };
+  if (breakdown.response < 12) return {
+    strength,
+    gap: "The response cost more service than it needed to for the assurance it bought.",
+    concept: "Containment, assurance and recovery each trade disruption against certainty. The most thorough option is not automatically the right one.",
+    next: "Next operation, read what each response option leaves as residual risk, and pick the cheapest one that closes the risk you actually confirmed.",
+  };
+  return {
+    strength,
+    gap: "Nothing stands out as a misunderstanding in this operation.",
+    concept: "The habit to keep is the one you just used: predict, test with a source that can settle it, then revise when it cannot.",
+    next: "Next operation, try a harder difficulty or a sector you have not commanded, and see whether the same reasoning holds when the pressure is different.",
+  };
+}
+
+export type TrainingPrompt = {
+  step: "declare" | "revise" | "correlate" | "test" | "decide";
+  title: string;
+  detail: string;
+  sources: { id: string; title: string }[];
+  clue: string | null;
+};
+
 /**
- * Player-facing suggestion. Only the training path receives the answer, so normal
- * play and expert operations never hand the player the optimal move.
+ * The player-facing training aid. It used to hand back nextEvidenceSource — the
+ * solver's answer — which walked the player to every stage while the rest of the
+ * interface told them the same action tested nothing. Following it produced a
+ * complete attack chain and a hypothesis score of three out of ten.
+ *
+ * It now prompts the next step in the reasoning instead: declare a reading, test
+ * it with one of its own sources, revise it when its own sources come back empty,
+ * and correlate the findings once there are two to compare. Every branch reads
+ * only what the player has declared or observed, so the aid can no longer
+ * contradict the discriminating read, and no player-facing helper returns the
+ * solver's answer at any difficulty.
  */
-export function getSuggestion(game: Game, guided = false) {
+export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | null {
   if (guidanceLevel(game, guided) !== "training") return null;
-  return nextEvidenceSource(game);
+  const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
+  // The one thing Training discloses that the player could not derive: the
+  // observable pointing at the next unconfirmed stage. Every technique carries a
+  // clue describing what was noticed, and without it the opening hypothesis is a
+  // coin flip between four routes, which teaches nothing. It names what was seen,
+  // never the technique behind it and never the source that would expose it.
+  const hidden = game.chain.find(id => !game.revealed.includes(id));
+  const clue = hidden ? attacks.find(item => item.id === hidden)!.clue : null;
+  if (!hypothesis) return {
+    step: "declare",
+    title: "Start with an explanation",
+    detail: "Record the intrusion route you think is in play. You can change it whenever the evidence stops fitting.",
+    sources: [],
+    clue,
+  };
+  if (game.pendingDecision) return {
+    step: "decide",
+    title: "Weigh the decision, not the tool",
+    detail: "Compare what each response buys you against what it costs the service and the evidence. There is no option here that is right in every incident.",
+    sources: [],
+    clue: null,
+  };
+  const open = hypothesis.procedures.filter(id => !availableIn(game, id)).map(id => ({ id, title: procedures.find(procedure => procedure.id === id)!.title }));
+  const standing = getHypothesisStanding(game);
+  if (standing.level === "weakening" || standing.level === "unsupported") return {
+    step: "revise",
+    title: "Your reading is running out of support",
+    detail: `${standing.detail} Read the current observation again and pick the explanation that accounts for it, then test that one.`,
+    sources: [],
+    clue,
+  };
+  if (game.evidence.length >= 2 && !game.correlations.length) return {
+    step: "correlate",
+    title: "Two findings can be compared",
+    detail: "Select two findings in the evidence workspace and decide whether one plausibly enabled the other, or whether they only overlap in time. Testing that judgement is part of the work.",
+    sources: [],
+    clue: null,
+  };
+  return {
+    step: "test",
+    title: `Test ${hypothesis.title.toLowerCase()}`,
+    detail: open.length
+      ? "These are the evidence sources this reading predicts. A result in one of them moves the question; a source it does not predict only collects."
+      : "Every source this reading predicts is cooling down. Collect elsewhere this turn, or record a different reading and test that.",
+    sources: open,
+    clue: standing.level === "untested" ? clue : null,
+  };
 }
 
 export function getDecisionOptions(game: Game) {
@@ -767,7 +898,28 @@ export function getDecisionOptions(game: Game) {
   return { attack, options, observe: find("observe"), act: find("act") };
 }
 
-export type ModifierPart = { label: string; value: number; detail: string };
+export type ModifierPart = { label: string; value: number; detail: string; suppressed?: boolean };
+
+// A bare signed number leaves a new player guessing which way is good: impact
+// rising is bad, continuity and sector confidence rising are good. Every meter
+// delta the interface shows says which.
+const meterDirection: Record<string, { label: string; risesIsGood: boolean }> = {
+  impact: { label: "Impact", risesIsGood: false },
+  continuity: { label: "Continuity", risesIsGood: true },
+  sector: { label: "Sector confidence", risesIsGood: true },
+  objective: { label: "Actor progress", risesIsGood: false },
+  tempo: { label: "Actor tempo", risesIsGood: false },
+};
+
+export function describeChange(meter: keyof typeof meterDirection | string, value: number) {
+  const direction = meterDirection[meter];
+  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+  const amount = `${sign}${Math.abs(value)}`;
+  if (!direction) return `${meter} ${amount}`;
+  if (value === 0) return `${direction.label} unchanged`;
+  const good = value > 0 ? direction.risesIsGood : !direction.risesIsGood;
+  return `${direction.label} ${amount} ${good ? "better" : "worse"}`;
+}
 
 // Every part of the roll the player is entitled to know before committing. The
 // planning bonus is deliberately absent: it depends on whether the hypothesis
@@ -780,7 +932,9 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
   const parts: ModifierPart[] = [
     { label: "Established", value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
     { label: "Carried", value: game.nextModifier, detail: "Carried from the previous turn's event or decision." },
-    { label: "Specialist", value: specialist.procedures.includes(procedure as never) && game.specialistFatigue < 5 ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },
+    specialist.procedures.includes(procedure as never) && game.specialistFatigue >= 5
+      ? { label: "Specialist", value: 0, suppressed: true, detail: `${specialist.title} works this source, but at fatigue ${game.specialistFatigue} of 6 the bonus no longer applies. Rest comes from finishing the operation.` }
+      : { label: "Specialist", value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },
     { label: "Focus", value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: `The focused node covers this source${focusNode ? `: ${focusNode.label}.` : "."}` },
     { label: procedureScopes[plan.scope].title, value: procedureScopes[plan.scope].modifier, detail: procedureScopes[plan.scope].description },
     { label: procedureIntensities[plan.intensity].title, value: procedureIntensities[plan.intensity].modifier, detail: procedureIntensities[plan.intensity].description },
@@ -795,6 +949,7 @@ export type HypothesisStanding = {
   detail: string;
   spent: number;
   sources: number;
+  inconclusive: number;
   turnsSinceConfirmation: number;
 };
 
@@ -805,20 +960,24 @@ export type HypothesisStanding = {
 // current reading is weakening; it never says which reading is right.
 export function getHypothesisStanding(game: Game): HypothesisStanding {
   const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
-  if (!hypothesis) return { level: "none", label: "No working hypothesis", detail: "Record the explanation you are testing. Until you do, a procedure collects but settles nothing.", spent: 0, sources: 0, turnsSinceConfirmation: 0 };
+  if (!hypothesis) return { level: "none", label: "No working hypothesis", detail: "Record the explanation you are testing. Until you do, a procedure collects but settles nothing.", spent: 0, sources: 0, inconclusive: 0, turnsSinceConfirmation: 0 };
   const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
   const since = game.turns.filter(turn => turn.number > lastConfirmation);
-  const spentSources = new Set(since.filter(turn => turn.hypothesis === hypothesis.id && !turn.revealed && hypothesis.procedures.includes(turn.procedure)).map(turn => turn.procedure));
-  const spent = spentSources.size;
+  const own = since.filter(turn => turn.hypothesis === hypothesis.id && hypothesis.procedures.includes(turn.procedure));
+  const checked = new Set(own.filter(turn => turn.success && !turn.revealed).map(turn => turn.procedure));
+  const inconclusive = new Set(own.filter(turn => !turn.success).map(turn => turn.procedure).filter(id => !checked.has(id))).size;
+  const spent = checked.size;
   const sources = hypothesis.procedures.length;
-  const ledger = `${spent} of this reading's ${sources} evidence source${sources === 1 ? "" : "s"} ${spent === 1 ? "has" : "have"} been spent since the last confirmation`;
-  if (spent === 0) return { level: "untested", label: "Untested", detail: `${hypothesis.title} has not yet been put to one of its own evidence sources since the last confirmation.`, spent, sources, turnsSinceConfirmation: since.length };
-  if (spent * 2 < sources) return { level: "holding", label: "Holding", detail: `${ledger}, without result. Too early to abandon the reading.`, spent, sources, turnsSinceConfirmation: since.length };
-  if (spent < sources) return { level: "weakening", label: "Weakening", detail: `${ledger}, without result. Absence across its own sources is evidence against this reading, not just bad luck.`, spent, sources, turnsSinceConfirmation: since.length };
-  return { level: "unsupported", label: "Poorly supported", detail: `Every one of this reading's evidence sources has been spent since the last confirmation and none produced a stage. On the evidence you hold, another explanation now fits better.`, spent, sources, turnsSinceConfirmation: since.length };
+  const common = { spent, sources, inconclusive, turnsSinceConfirmation: since.length };
+  const unresolved = inconclusive ? ` ${inconclusive} further attempt${inconclusive === 1 ? "" : "s"} failed outright, which settles nothing either way.` : "";
+  const ledger = `${spent} of this reading's ${sources} evidence source${sources === 1 ? "" : "s"} ${spent === 1 ? "has" : "have"} been checked since the last confirmation and came back empty`;
+  if (spent === 0) return { level: "untested", label: "Untested", detail: `${hypothesis.title} has not yet been confirmed or ruled out by one of its own evidence sources since the last confirmation.${unresolved}`, ...common };
+  if (spent * 2 < sources) return { level: "holding", label: "Holding", detail: `${ledger}. Too early to abandon the reading.${unresolved}`, ...common };
+  if (spent < sources) return { level: "weakening", label: "Weakening", detail: `${ledger}. Absence across its own sources is evidence against this reading, not just bad luck.${unresolved}`, ...common };
+  return { level: "unsupported", label: "Poorly supported", detail: `Every one of this reading's evidence sources has now been checked since the last confirmation and none produced a stage. On the evidence you hold, another explanation fits better.${unresolved}`, ...common };
 }
 
-export type DiscriminatingRead = { level: "high" | "moderate" | "broad"; label: string; detail: string; spent: number };
+export type DiscriminatingRead = { level: "high" | "moderate" | "broad"; label: string; detail: string; spent: number; inconclusive: number };
 
 // A read built only from what the player can already see: their own declared
 // hypothesis, that hypothesis's own evidence sources, and how often they have
@@ -826,11 +985,18 @@ export type DiscriminatingRead = { level: "high" | "moderate" | "broad"; label: 
 // hidden chain, so it narrows the search without answering it.
 export function getDiscriminatingRead(game: Game, procedure: string): DiscriminatingRead {
   const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
-  const spent = game.turns.filter(turn => turn.procedure === procedure && !turn.revealed).length;
-  const spentNote = spent ? ` Already spent ${spent} time${spent === 1 ? "" : "s"} here without exposing a stage.` : "";
-  if (!hypothesis) return { level: "broad", label: "Broad collection", detail: `No working hypothesis is recorded, so this action collects without testing an explanation.${spentNote}`, spent };
-  if (hypothesis.procedures.includes(procedure)) return { level: "high", label: "Tests your hypothesis", detail: `${hypothesis.title} predicts evidence in this source. A result here supports or weakens that reading directly.${spentNote}`, spent };
-  return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent };
+  // A completed check that found nothing is a result. A failed roll is not: it
+  // tells the player nothing about the source, and must not read as though it did.
+  const attempts = game.turns.filter(turn => turn.procedure === procedure);
+  const spent = attempts.filter(turn => turn.success && !turn.revealed).length;
+  const inconclusive = attempts.filter(turn => !turn.success).length;
+  const spentNote = [
+    spent ? ` Checked ${spent} time${spent === 1 ? "" : "s"} here with no stage found.` : "",
+    inconclusive ? ` ${inconclusive} earlier attempt${inconclusive === 1 ? "" : "s"} failed before producing a result, which settles nothing.` : "",
+  ].join("");
+  if (!hypothesis) return { level: "broad", label: "Broad collection", detail: `No working hypothesis is recorded, so this action collects without testing an explanation.${spentNote}`, spent, inconclusive };
+  if (hypothesis.procedures.includes(procedure)) return { level: "high", label: "Tests your hypothesis", detail: `${hypothesis.title} predicts evidence in this source. A result here supports or weakens that reading directly.${spentNote}`, spent, inconclusive };
+  return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent, inconclusive };
 }
 
 const terminal = (status: GameStatus) => status === "won" || status === "lost" || status === "exercise";
@@ -1032,7 +1198,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (plan.intensity === "exhaustive") continuityChange -= sector.exhaustiveContinuity;
   const scopeSector = plan.scope === "enterprise" ? -sector.enterpriseBias : -sector.focusedBias;
   const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)) + (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0) + protection + scopeSector + sectorSpecific + (g.specialist === "communications" ? sector.commsRecovery : 0)));
-  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : planningBonus > 0 ? 1 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
+  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : planningBonus > 0 ? 1 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
   g.sectorHealth = clamp(g.sectorHealth + sectorChange);
   g.sectorHistory.push(g.sectorHealth);
   g.objectiveProgress = clamp(g.objectiveProgress + objectiveChange);

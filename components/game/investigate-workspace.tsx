@@ -9,7 +9,7 @@ import type { GameSession } from "@/hooks/use-game-session";
 
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
   const {
-    game, guided, guidance, suggestion, rolling, fastResolve,
+    game, guided, guidance, trainingPrompt, rolling, fastResolve,
     inlineReport, setInlineReport, pendingUndo, undo,
     focusInfrastructure, mapAction, chooseHypothesis, correlate, chooseCaseTheory, run, setSelected,
   } = session;
@@ -48,7 +48,16 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
               <span className="established-key">+2 Established</span>
             </div>
             {guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}</span></div>}
-            {suggestion && <div className="guide-nudge"><GraduationCap size={15} /><span><strong>Training aid:</strong> Suggested next evidence source: {suggestion.title}. The chain is still yours to confirm.</span></div>}
+            {trainingPrompt && (
+              <div className={`guide-nudge training-prompt step-${trainingPrompt.step}`}>
+                <GraduationCap size={15} />
+                <span>
+                  <strong>{trainingPrompt.title}.</strong> {trainingPrompt.detail}
+                  {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: {trainingPrompt.clue}</b>}
+                  {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(" · ")}</b>}
+                </span>
+              </div>
+            )}
             {!game.hypothesis && <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong>Choose the explanation that best fits the current intelligence. Matching evidence then earns the reasoning bonus.</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>

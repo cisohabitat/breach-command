@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { ArrowRight, Printer, Star, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { adversaryObjectives, attacks, getAdversaryProfile, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, gameModes, hypotheses, procedureIntensities, procedureScopes, procedures, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
+import { adversaryObjectives, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, gameModes, hypotheses, procedureIntensities, procedureScopes, procedures, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { specialistReaction } from "@/lib/phase9";
 import { unlockedCapabilities } from "@/lib/campaign";
@@ -22,6 +22,20 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? `${game.status === "lost" ? `${getLossReason(game).detail} ` : ""}${game.revealed.length} of 4 stages found in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}. This is a learning outcome, not a security assessment.` : ""}</DialogDescription>
         </DialogHeader>
         {game && outcome && <>
+          <section className="first-read" aria-label="Before the detail">
+            <span className="eyebrow">BEFORE THE DETAIL</span>
+            {(() => {
+              const review = getBeginnerReview(game);
+              return (
+                <dl>
+                  <div><dt>What went well</dt><dd>{review.strength}</dd></div>
+                  <div><dt>What to look at</dt><dd>{review.gap}</dd></div>
+                  <div><dt>The idea behind it</dt><dd>{review.concept}</dd></div>
+                  <div><dt>One thing to try</dt><dd>{review.next}</dd></div>
+                </dl>
+              );
+            })()}
+          </section>
           <nav className="debrief-index" aria-label="Review sections">
             {[
               ["debrief-score", "Score"],

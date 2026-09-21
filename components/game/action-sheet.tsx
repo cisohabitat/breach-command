@@ -1,6 +1,6 @@
 import { CheckCheck, CircleHelp, Dices } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { getDiscriminatingRead, getModifierBreakdown, procedureIntensities, procedureScopes, type ProcedureIntensity, type ProcedureScope } from "@/lib/advanced-game";
+import { describeChange, getDiscriminatingRead, getModifierBreakdown, procedureIntensities, procedureScopes, type ProcedureIntensity, type ProcedureScope } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function ActionSheet({ session }: { session: GameSession }) {
@@ -20,8 +20,8 @@ export function ActionSheet({ session }: { session: GameSession }) {
         {proc && game && <>
           <div className="action-note"><span className="eyebrow">HYPOTHESIS CHECK</span><p>{proc.question}</p></div>
           <div className="procedure-planner">
-            <div><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}</strong><small>{procedureScopes[id].description}</small><small className="plan-effects">ROLL {procedureScopes[id].modifier >= 0 ? "+" : ""}{procedureScopes[id].modifier} · IMPACT +{procedureScopes[id].impact} · ACTOR PROGRESS {procedureScopes[id].objective >= 0 ? "+" : "−"}{Math.abs(procedureScopes[id].objective)}</small></button>)}</div></div>
-            <div><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}</strong><small>{procedureIntensities[id].description}</small><small className="plan-effects">ROLL {procedureIntensities[id].modifier >= 0 ? "+" : ""}{procedureIntensities[id].modifier} · IMPACT {procedureIntensities[id].impact >= 0 ? "+" : "−"}{Math.abs(procedureIntensities[id].impact)}{procedureIntensities[id].cooldown ? ` · COOLDOWN +${procedureIntensities[id].cooldown}` : ""}</small></button>)}</div></div>
+            <div><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}</strong><small>{procedureScopes[id].description}</small><small className="plan-effects">Roll {procedureScopes[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureScopes[id].modifier)} · {describeChange("impact", procedureScopes[id].impact)} · {describeChange("objective", procedureScopes[id].objective)}</small></button>)}</div></div>
+            <div><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}</strong><small>{procedureIntensities[id].description}</small><small className="plan-effects">Roll {procedureIntensities[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureIntensities[id].modifier)} · {describeChange("impact", procedureIntensities[id].impact)}{procedureIntensities[id].cooldown ? ` · Cooldown +${procedureIntensities[id].cooldown} turn` : ""}</small></button>)}</div></div>
           </div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
             <BrainLabel aligned={procedureAligned} />
@@ -37,12 +37,12 @@ export function ActionSheet({ session }: { session: GameSession }) {
           </div>
           {breakdown && (
             <details className="modifier-details">
-              <summary>How this modifier is calculated<span>{breakdown.parts.filter(part => part.value !== 0).map(part => `${part.label} ${part.value > 0 ? "+" : ""}${part.value}`).join(" · ") || "Nothing applies"}</span></summary>
+              <summary>How this modifier is calculated<span>{breakdown.parts.filter(part => part.value !== 0).map(part => `${part.label} ${part.value > 0 ? "+" : ""}${part.value}`).join(" · ") || (breakdown.parts.some(part => part.suppressed) ? "One bonus is unavailable — see why" : "Nothing applies")}</span></summary>
               <ul className="modifier-breakdown">
-                {breakdown.parts.filter(part => part.value !== 0).map(part => (
-                  <li key={part.label}><span>{part.label}</span><strong>{part.value > 0 ? "+" : ""}{part.value}</strong><small>{part.detail}</small></li>
+                {breakdown.parts.filter(part => part.value !== 0 || part.suppressed).map(part => (
+                  <li key={part.label} className={part.suppressed ? "suppressed" : ""}><span>{part.label}</span><strong>{part.suppressed ? "—" : `${part.value > 0 ? "+" : ""}${part.value}`}</strong><small>{part.detail}</small></li>
                 ))}
-                {breakdown.parts.every(part => part.value === 0) && <li><span>No modifiers apply</span><strong>0</strong><small>This is a plain d20 against the difficulty threshold.</small></li>}
+                {breakdown.parts.every(part => part.value === 0 && !part.suppressed) && <li><span>No modifiers apply</span><strong>0</strong><small>This is a plain d20 against the difficulty threshold.</small></li>}
                 <li className="pending"><span>Hypothesis</span><strong>+2?</strong><small>Added on resolution only if your working hypothesis matches the next unresolved stage. It is not shown in advance, because that would answer the question you are investigating.</small></li>
               </ul>
             </details>

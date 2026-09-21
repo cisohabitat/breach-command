@@ -48,7 +48,7 @@ export function ProcedureGrid({
             className={`procedure-card ${established ? "established" : ""} ${cooldown ? "cooling" : ""} ${aligned ? "hypothesis-aligned" : ""}`}
             disabled={disabled || cooldown > 0 || !!game.pendingDecision}
             onClick={() => onChoose(procedure.id)}
-            aria-label={`${procedure.title}${established ? ", established, plus 2" : ""}${aligned ? ", supports current hypothesis" : ""}${read && read.spent ? `, spent ${read.spent} times without exposing a stage` : ""}${cooldown ? `, available in ${cooldown} turns` : ""}`}
+            aria-label={`${procedure.title}${established ? ", established, plus 2" : ""}${aligned ? ", supports current hypothesis" : ""}${read && read.spent ? `, checked ${read.spent} times with no stage found` : read && read.inconclusive ? `, ${read.inconclusive} attempts failed without a result` : ""}${cooldown ? `, available in ${cooldown} turns` : ""}`}
           >
             <div className="procedure-top">
               <span className="procedure-icon"><Icon size={20} /></span>
@@ -59,7 +59,8 @@ export function ProcedureGrid({
             <h3>{procedure.title}</h3>
             <p>{procedure.short}</p>
             {aligned && !cooldown && <small className="alignment-label">HYPOTHESIS EVIDENCE</small>}
-            {read && read.spent > 0 && !cooldown && <small className="spent-label">SPENT {read.spent}× · NO STAGE FOUND</small>}
+            {read && !cooldown && read.spent > 0 && <small className="spent-label">CHECKED {read.spent}× · NO STAGE FOUND</small>}
+            {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} ATTEMPT{read.inconclusive === 1 ? "" : "S"} FAILED · INCONCLUSIVE</small>}
             <div className="procedure-bottom">
               <span>{cooldown ? "ON COOLDOWN" : established ? "ESTABLISHED" : "STANDARD"}</span>
               {!cooldown && <ChevronRight size={15} />}

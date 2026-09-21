@@ -6919,3 +6919,73 @@ awareness. */
 .map-intel-detail .map-intel {
   margin:11px 0 0;
 }
+/* Four sentences before the full review, for a first operation. */
+.first-read {
+  border:1px solid var(--line);
+  border-left:3px solid var(--lime);
+  border-radius:10px;
+  padding:14px 16px;
+  margin-bottom:4px;
+}
+.first-read dl {
+  margin:9px 0 0;
+  display:grid;
+  gap:9px;
+}
+.first-read dt {
+  font-size:var(--type-micro);
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:var(--text-soft);
+}
+.first-read dd {
+  margin:2px 0 0;
+  font-size:var(--type-body);
+  line-height:var(--leading-base);
+  max-width:80ch;
+}
+/* The glossary in the field guide. */
+.plain-language dl {
+  margin:10px 0 0;
+  display:grid;
+  gap:8px;
+}
+.plain-language dt {
+  font-weight:500;
+  text-transform:capitalize;
+}
+.plain-language dd {
+  margin:1px 0 0;
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+  max-width:80ch;
+}
+/* The training aid now prompts a step in the reasoning. */
+.training-prompt .prompt-clue {
+  display:block;
+  margin-top:6px;
+  font-weight:400;
+  font-style:italic;
+  color:var(--foreground);
+}
+.training-prompt .prompt-sources {
+  display:block;
+  margin-top:5px;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:var(--type-micro);
+  letter-spacing:.04em;
+  color:var(--lime);
+}
+.training-prompt.step-revise {
+  border-left:3px solid #e8c968;
+}
+.training-prompt.step-correlate {
+  border-left:3px solid #b49cf4;
+}
+.modifier-breakdown li.suppressed > strong {
+  color:var(--text-soft);
+}
+.procedure-card .spent-label.inconclusive {
+  color:#9fb3a3;
+}

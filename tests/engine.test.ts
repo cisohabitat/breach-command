@@ -1,7 +1,7 @@
 // Turn resolution, blocking states, end states and the decision layer.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,type Difficulty,type Game} from "../lib/advanced-game.ts";
+import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypotheses,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,type Difficulty,type Game} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -200,23 +200,65 @@ test("never mutates the game a transition was given", () => {
   assert.equal(newGame(0,"operational",()=>0,{mode:"campaign",campaignRoute:"common-ground",variant:{id:"0-x",title:"t",briefing:"b",modifier:"m",impact:0,continuity:-10,objective:0}}).continuity,93,"a campaign operation keeps the common-ground reserve");
 });
 
-test("keeps the solver behind the guidance gate", () => {
-  // The engine's solver stays behind an explicit guidance gate. Normal play and
-  // expert operations never receive the optimal move; only the training path does.
-  // The balance simulations below call nextEvidenceSource directly.
+test("teaches the reasoning instead of handing over the answer", () => {
+  // The solver stays a simulation tool. No player-facing helper may return it at
+  // any difficulty, because following it produced a complete attack chain and a
+  // hypothesis score of three out of ten: it taught which button to press.
   const ordinary=baseline();
-  assert.equal(getSuggestion(ordinary),null,"normal play must not be handed the next evidence source");
-  assert.equal(getSuggestion(ordinary,true),null,"guided reflection prompts without revealing the answer");
+  assert.equal(getTrainingPrompt(ordinary),null,"normal play receives no training aid");
+  assert.equal(getTrainingPrompt(ordinary,true),null,"guided reflection is not the training path");
   assert.equal(guidanceLevel(ordinary,false),"off");
   assert.equal(guidanceLevel(ordinary,true),"reflection");
-  assert.ok(nextEvidenceSource(ordinary),"the underlying solver still resolves an evidence source");
-  const trainingGame=newGame(0,"training",()=>0);
-  assert.equal(guidanceLevel(trainingGame,true),"training");
-  assert.ok(getSuggestion(trainingGame,true),"the training path receives the suggested evidence source");
-  assert.equal(getSuggestion(trainingGame,false),null,"the training aid still requires guidance to be enabled");
+  assert.ok(nextEvidenceSource(ordinary),"the solver still resolves a source for the simulations");
   const expertGame=newGame(0,"operational",()=>0,{mode:"expert"});
   assert.equal(guidanceLevel(expertGame,true),"off","expert mode never receives guidance");
-  assert.equal(getSuggestion(expertGame,true),null);
+  assert.equal(getTrainingPrompt(expertGame,true),null);
+
+  const training=newGame(0,"training",()=>0);
+  assert.equal(guidanceLevel(training,true),"training");
+  assert.equal(getTrainingPrompt(training,false),null,"the aid still requires guidance to be enabled");
+  assert.equal(getTrainingPrompt(training,true)?.step,"declare","with no reading recorded it asks for one");
+
+  // Once a reading is declared the aid names that reading's own sources, so it
+  // can never contradict the discriminating read shown on the same cards.
+  const declared=setHypothesis({...training,chain:["phish","spray","task","https"],established:[]} as Game,"identity");
+  const testing=getTrainingPrompt(declared,true)!;
+  assert.equal(testing.step,"test");
+  const identitySources=hypotheses.find(item=>item.id==="identity")!.procedures;
+  assert.ok(testing.sources.length>0,"it names sources to try");
+  for(const source of testing.sources){
+    assert.ok(identitySources.includes(source.id),`${source.id} is one of the declared reading's own sources`);
+    assert.equal(getDiscriminatingRead(declared,source.id).level,"high","every suggested source tests the declared reading");
+  }
+  // Training discloses exactly one thing the player could not derive: the
+  // observation pointing at the next unconfirmed stage. Everything else in the
+  // prompt is built from declared state, so rewriting the chain moves the clue
+  // and nothing besides.
+  const rewritten=getTrainingPrompt({...declared,chain:["token","role","vault","apikey"]} as Game,true)!;
+  assert.deepEqual({...rewritten,clue:null},{...testing,clue:null},"only the observation depends on the chain");
+  assert.ok(testing.clue,"training surfaces the observation behind the next stage");
+  assert.notEqual(rewritten.clue,testing.clue,"and it follows the chain it describes");
+  for(const prompt of [testing,rewritten]){
+    for(const procedure of procedures)assert.ok(!prompt.clue!.includes(procedure.title),`the observation never names ${procedure.title}`);
+    for(const attack of attacks)assert.ok(!prompt.clue!.includes(attack.title),`the observation never names ${attack.title}`);
+  }
+  // Outside training there is no aid at all, so no observation leaks with it.
+  const operational=setHypothesis(newGame(0,"operational",()=>0),"identity");
+  assert.equal(getTrainingPrompt(operational,true),null,"only the training path receives the observation");
+
+  // When the reading's own sources come back empty, the aid asks for a revision
+  // rather than walking the player to the next stage.
+  let failing=declared;
+  for(const source of identitySources){
+    failing=playTurn({...failing,injectDeck:[]},source,20);
+    if(failing.pendingDecision)failing=resolveDecision(failing,"observe");
+    if(failing.pendingCommand)failing=resolveCommand(failing,"a");
+    if(failing.pendingSetPiece)failing=resolveSetPiece(failing,"a");
+  }
+  const standing=getHypothesisStanding(failing);
+  if(standing.level==="weakening"||standing.level==="unsupported"){
+    assert.equal(getTrainingPrompt(failing,true)?.step,"revise","a reading its own sources cannot support prompts a revision");
+  }
 });
 
 test("moves each decision verb by its own terms", () => {

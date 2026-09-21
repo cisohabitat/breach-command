@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getModifierBreakdown,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,hypotheses,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
+import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getModifierBreakdown,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,hypotheses,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -21,18 +21,31 @@ test("attributes a finding to the source that produced it", () => {
 test("reports how the declared reading is holding up", () => {
   // Repeated negative results against the declared reading are surfaced during
   // play, from the player's own record. It must never consult the hidden chain.
-  let standingRun=(()=>{const b=baseline();b.established=[];b.injectDeck=[];return setHypothesis(b,"identity");})();
+  const identitySources=hypotheses.find(item=>item.id==="identity")!.procedures;
+  // A chain none of this reading's sources can expose, so a completed check
+  // against it is a genuine empty result rather than a discovery.
+  const blindChain=[0,1,2,3].map(stage=>attacks.find(attack=>attack.stage===stage&&!attack.detect.some(source=>identitySources.includes(source)))!.id);
+  let standingRun=(()=>{const b=baseline();b.established=[];b.injectDeck=[];b.chain=blindChain;return setHypothesis(b,"identity");})();
   assert.equal(getHypothesisStanding(baseline()).level,"none","no declared reading, nothing under test");
   assert.equal(getHypothesisStanding(standingRun).level,"untested","a fresh reading starts untested");
-  const identitySources=hypotheses.find(item=>item.id==="identity")!.procedures;
+
+  // A roll that failed settles nothing about the source, so it must not count
+  // against the reading. Absence is only evidence when the check completed.
+  const unlucky=playTurn({...standingRun,injectDeck:[]},identitySources[0],1);
+  const unluckyStanding=getHypothesisStanding(unlucky);
+  assert.equal(unluckyStanding.spent,0,"a failed roll is not a negative result");
+  assert.equal(unluckyStanding.inconclusive,1,"it is reported as inconclusive instead");
+  assert.equal(unluckyStanding.level,"untested","and it cannot weaken the reading");
+  assert.ok(unluckyStanding.detail.includes("settles nothing"),"the player is told why it does not count");
+
   for(let i=0;i<identitySources.length;i++){
-    standingRun=playTurn(standingRun,identitySources[i],2);
+    standingRun=playTurn({...standingRun,injectDeck:[]},identitySources[i],20);
     if(standingRun.pendingDecision)standingRun=resolveDecision(standingRun,"observe");
     if(standingRun.pendingCommand)standingRun=resolveCommand(standingRun,"a");
     if(standingRun.pendingSetPiece)standingRun=resolveSetPiece(standingRun,"a");
   }
   const spentStanding=getHypothesisStanding(standingRun);
-  assert.equal(spentStanding.spent,identitySources.length,"every source of the reading was spent without result");
+  assert.equal(spentStanding.spent,identitySources.length,"every source of the reading was checked and came back empty");
   assert.equal(spentStanding.level,"unsupported","a reading whose every source came back empty is poorly supported");
   assert.ok(spentStanding.detail.length>40,"and the reason is stated");
   assert.deepEqual(getHypothesisStanding({...standingRun,chain:["token","role","vault","apikey"]}),spentStanding,"the standing never consults the hidden chain");
@@ -66,8 +79,13 @@ test("shows the modifier it will resolve with", () => {
   assert.equal(readA.level,"high","a source the declared hypothesis predicts tests that hypothesis");
   assert.equal(getDiscriminatingRead(readBase,"server").level,"moderate","a source it does not predict collects without testing");
   assert.equal(getDiscriminatingRead(baseline(),"identity").level,"broad","with no hypothesis declared nothing is under test");
-  const spentRun=playTurn(readBase,"dns",2);
-  assert.equal(getDiscriminatingRead(spentRun,"dns").spent,1,"a source spent without exposing a stage is counted");
+  const checkedRun=playTurn({...readBase,injectDeck:[]},"dns",20);
+  assert.equal(getDiscriminatingRead(checkedRun,"dns").spent,1,"a completed check that found nothing is counted");
+  assert.equal(getDiscriminatingRead(checkedRun,"dns").inconclusive,0);
+  const failedRun=playTurn({...readBase,injectDeck:[]},"dns",1);
+  assert.equal(getDiscriminatingRead(failedRun,"dns").spent,0,"a failed roll is not a result");
+  assert.equal(getDiscriminatingRead(failedRun,"dns").inconclusive,1,"it is reported as an inconclusive attempt");
+  assert.ok(getDiscriminatingRead(failedRun,"dns").detail.includes("settles nothing"));
 
   // The planning bonus and the hypothesis score answer to the same fact, so a turn
   // that earned the bonus can never be scored as a wrong prediction.
@@ -89,4 +107,42 @@ test("shows the modifier it will resolve with", () => {
   assert.equal(legacyTurn?.game.turns[0].hypothesisTarget,null,"a legacy turn carries no hypothesis test");
   assert.equal(legacyTurn?.game.turns[0].hypothesisMatched,false);
   g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);assert.ok(g.pendingDecision);g=resolveDecision(g,"act");assert.equal(g.status,"response");g=resolveResponse(g,"credential");assert.equal(g.status,"response");g=resolveResponse(g,"verify");assert.equal(g.status,"response");g=resolveResponse(g,"rebuild");assert.equal(g.status,"won");assert.ok(getOutcome(g).grade);assert.ok(getCounterfactuals(g).length);
+});
+
+test("speaks plainly to a player who is new to the subject", () => {
+  // A bare signed number leaves a beginner guessing which way is good.
+  assert.equal(describeChange("impact", 4), "Impact +4 worse");
+  assert.equal(describeChange("continuity", 4), "Continuity +4 better");
+  assert.equal(describeChange("sector", -4), "Sector confidence −4 worse");
+  assert.equal(describeChange("objective", -2), "Actor progress −2 better");
+  assert.equal(describeChange("impact", 0), "Impact unchanged");
+  for (const meter of ["impact", "continuity", "sector", "objective"]) {
+    for (const value of [-3, 3]) {
+      const text = describeChange(meter, value);
+      assert.ok(/better|worse/.test(text), `${meter} ${value} says which way it goes`);
+    }
+  }
+
+  // Every term a playtest reported needing translated has a translation, and
+  // none of them explains the term with itself.
+  assert.ok(Object.keys(plainLanguage).length >= 10);
+  for (const [term, meaning] of Object.entries(plainLanguage) as [string, string][]) {
+    assert.ok(meaning.length > 30, `${term} is actually explained`);
+    assert.ok(!meaning.toLowerCase().startsWith(term.toLowerCase()), `${term} is not defined by restating itself`);
+  }
+
+  // The review leads with four plain sentences, and it names the gap the player
+  // actually left rather than the first one in the list.
+  const run = baseline();
+  run.evidence = [
+    { id: "E1", turn: 1, title: "Initial access", source: "Email", system: "User access", confidence: "HIGH", supports: "phish", detail: "A" },
+    { id: "E2", turn: 2, title: "Movement", source: "Identity", system: "Admin plane", confidence: "HIGH", supports: "spray", detail: "B" },
+  ];
+  const uncorrelated = getBeginnerReview(run);
+  for (const line of [uncorrelated.strength, uncorrelated.gap, uncorrelated.concept, uncorrelated.next]) {
+    assert.ok(line.length > 30, "every line says something");
+  }
+  assert.ok(/never tested how any two/.test(uncorrelated.gap), "it names the correlation that was never tested");
+  const correlated = getBeginnerReview(correlateEvidence(run, ["E1", "E2"], "causal"));
+  assert.notEqual(correlated.gap, uncorrelated.gap, "and moves on once the player has done it");
 });
