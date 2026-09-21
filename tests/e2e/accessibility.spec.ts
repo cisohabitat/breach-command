@@ -87,8 +87,16 @@ test.describe("accessibility audit", () => {
     await page.getByRole("button", { name: /Begin investigation/i }).click();
     await page.getByRole("button", { name: /Assume command/i }).click();
     await expect(page.locator("[data-resolution]")).toBeVisible({ timeout: 90_000 });
-    await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/i }).click();
-    await expect(page.getByText("AFTER-ACTION REVIEW", { exact: true })).toBeVisible();
+    // The bot opens the review itself a beat after the operation resolves, so
+    // either the click gets there first or the bot does. Retrying the whole step
+    // keeps a lost race from failing the audit.
+    const heading = page.getByText("AFTER-ACTION REVIEW", { exact: true });
+    const openReview = page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/i });
+    await expect(async () => {
+      if (await heading.isVisible()) return;
+      await openReview.click({ timeout: 2_000 });
+      await expect(heading).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
     await expectNoViolations(page, "after-action review");
 
     // The section index has to actually reach its sections.

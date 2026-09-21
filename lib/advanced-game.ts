@@ -796,6 +796,31 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
   return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent };
 }
 
+const terminal = (status: GameStatus) => status === "won" || status === "lost" || status === "exercise";
+
+// A terminated operation holds no blocking state. Every end-state check routes
+// through here, so the interface can never be left asking for a decision the
+// engine would refuse.
+function settle(g: Game, status: GameStatus): Game {
+  g.status = status;
+  if (terminal(status)) {
+    g.pendingDecision = null;
+    g.pendingCommand = null;
+    g.pendingSetPiece = null;
+  }
+  return g;
+}
+
+// Why the operation ended, in its own terms. The investigation window is only
+// one of five ways to lose and was previously named for all of them.
+export function getLossReason(game: Game): { title: string; detail: string } {
+  if (game.objectiveProgress >= 100) return { title: "The adversary completed its objective", detail: `${adversaryObjectives[game.objective].title} reached 100 before the response closed the route.` };
+  if (game.impact >= 100) return { title: "Business impact reached its limit", detail: "Exposure grew faster than the investigation could reduce it." };
+  if (game.continuity <= 0) return { title: "The essential service stopped", detail: `${scenarioDynamics[game.scenario].label} fell to zero and the operation was taken out of the response team's hands.` };
+  if (game.sectorHealth <= 0) return { title: "Sector confidence collapsed", detail: `${sectorSystems[game.scenario].title} fell to zero while the chain was still open.` };
+  return { title: "The investigation window closed", detail: `${game.revealed.length} of 4 stages were confirmed in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}.` };
+}
+
 export function playTurn(game: Game, procedure: string, forcedRoll?: number, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }): Game {
   if (game.status !== "playing") throw new Error("This investigation has ended.");
   if (game.pendingDecision) throw new Error("Resolve the evidence decision first.");
@@ -858,11 +883,17 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     g.revealed.push(match);
     g.pendingDecision = match;
     impactChange = 1;
-    narrative = attacks.find(attack => attack.id === match)!.evidence;
+    narrative = `${procedures.find(item => item.id === procedure)!.title} at ${focusNode.label} — ${attacks.find(attack => attack.id === match)!.evidence}`;
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (success) {
     narrative = "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.";
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
+  } else if (planningBonus > 0) {
+    // A sound action that the dice refused. The route under test was the one
+    // predicted and the source was one that hypothesis relies on, so the team
+    // keeps its footing: the actor takes no tempo it did not earn, and its
+    // objective barely moves. Reasoning is protected; certainty is not.
+    narrative = "The action did not produce evidence this time, but the reasoning held: the route under test was the right one to ask about, and the team keeps its footing.";
   } else {
     narrative = "The action did not produce reliable evidence. The actor gains freedom while the team reorients.";
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
@@ -878,7 +909,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       system: focusNode.label,
       confidence: revealed || plan.intensity === "exhaustive" ? "HIGH" : "MODERATE",
       supports: revealed,
-      detail: revealed ? narrative : `The finding at ${focusNode.label} is credible but does not yet establish a hidden attack stage.`,
+      detail: revealed ? attacks.find(attack => attack.id === revealed)!.evidence : `The finding at ${focusNode.label} is credible but does not yet establish a hidden attack stage.`,
     });
   }
 
@@ -959,7 +990,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (plan.intensity === "exhaustive") continuityChange -= sector.exhaustiveContinuity;
   const scopeSector = plan.scope === "enterprise" ? -sector.enterpriseBias : -sector.focusedBias;
   const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)) + (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0) + protection + scopeSector + sectorSpecific + (g.specialist === "communications" ? sector.commsRecovery : 0)));
-  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
+  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : planningBonus > 0 ? 1 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
   g.sectorHealth = clamp(g.sectorHealth + sectorChange);
   g.sectorHistory.push(g.sectorHealth);
   g.objectiveProgress = clamp(g.objectiveProgress + objectiveChange);
@@ -967,9 +998,9 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   g.impact = clamp(g.impact + impactChange);
   g.continuity = clamp(g.continuity + continuityChange);
   g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange, hypothesisTarget, hypothesisMatched, discriminating });
-  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
-  else if (exerciseEnd && g.revealed.length >= 2 && g.revealed.length < 4) g.status = "exercise";
-  else if (number >= g.turnLimit && g.revealed.length < 4) g.status = "lost";
+  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
+  else if (exerciseEnd && g.revealed.length >= 2 && g.revealed.length < 4) settle(g, "exercise");
+  else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");
   else if (!g.pendingDecision && number === 2 && g.revealed.length < 4) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {
     const ids = Object.keys(commandEvents) as CommandEventId[];
@@ -1121,7 +1152,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
     objectiveChange: g.objectiveProgress - before.objective,
   });
   g.pendingDecision = null;
-  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
+  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
   else if (g.revealed.length === 4) g.status = "response";
   else if (g.turns.length === 2 && !g.setPieceHistory.length) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   return g;
@@ -1150,7 +1181,7 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   const communicationsBonus = g.specialist === "communications" && eventId === "leadership" ? 1 : 0;
   g.commandHistory.push({ event: eventId, choice, title: option.title, quality: Math.min(5, option.quality + communicationsBonus), effect: option.signal });
   g.pendingCommand = null;
-  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
+  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
   return g;
 }
 
@@ -1165,7 +1196,7 @@ export function resolveSetPiece(game: Game, choice: "a" | "b"): Game {
   g.objectiveProgress = clamp(g.objectiveProgress + option.objective);
   g.setPieceHistory.push({ event: event.id, choice, title: option.title, quality: option.quality, effect: option.detail });
   g.pendingSetPiece = null;
-  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
+  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
   return g;
 }
 

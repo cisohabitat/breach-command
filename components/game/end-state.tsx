@@ -1,5 +1,5 @@
 import { ArrowRight, Check, CircleSlash, ClipboardCheck, ShieldCheck } from "lucide-react";
-import { getOperationalLabel } from "@/lib/advanced-game";
+import { getLossReason, getOperationalLabel } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 // Three end states, three different beats. A win is a stand-down that the
@@ -39,9 +39,9 @@ export function EndState({ session }: { session: GameSession }) {
         <div className="end-banner end-lost">
           <div className="end-icon"><CircleSlash /></div>
           <div>
-            <span className="eyebrow">RESPONSE WINDOW CLOSED</span>
-            <h2>The incident outran the response.</h2>
-            <p>{game.revealed.length} of 4 stages were confirmed before the investigation window closed, leaving impact at {game.impact}. No stand-down was issued.</p>
+            <span className="eyebrow">OPERATION CLOSED</span>
+            <h2>{getLossReason(game).title}.</h2>
+            <p>{getLossReason(game).detail} {game.revealed.length} of 4 stages were confirmed, leaving impact at {game.impact}. No stand-down was issued.</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>Review the record <ArrowRight size={17} /></button>
         </div>

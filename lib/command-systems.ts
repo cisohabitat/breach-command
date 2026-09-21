@@ -33,12 +33,17 @@ export const procedureIntensities = {
   exhaustive: { title: "Exhaustive", description: "Increase confidence, but consume time and specialist capacity.", modifier: 2, impact: 5, cooldown: 1 },
 } as const;
 
+// `outbound` explains how the confirmed outbound stage serves the assessed
+// objective. Without it a chain ending in exfiltration can look disconnected
+// from an objective of disruption or pre-positioning, when in practice the same
+// channel carries the operator's commands and the information used to time the
+// effect.
 export const adversaryObjectives = {
-  exfiltration: { title: "Strategic data theft", tell: "The actor is staging and moving high-value information.", pressure: "DATA EXPOSURE" },
-  disruption: { title: "Service disruption", tell: "The actor is positioning to interrupt an essential service.", pressure: "DISRUPTION READINESS" },
-  fraud: { title: "Financial manipulation", tell: "The actor is seeking trusted transactions and approval paths.", pressure: "FRAUD POSITION" },
-  espionage: { title: "Long-term collection", tell: "The actor values durable access and low-noise collection.", pressure: "COLLECTION POSITION" },
-  preposition: { title: "Strategic pre-positioning", tell: "The actor is mapping dependencies for later operational effect.", pressure: "PRE-POSITIONING" },
+  exfiltration: { title: "Strategic data theft", tell: "The actor is staging and moving high-value information.", pressure: "DATA EXPOSURE", outbound: "The outbound stage is the objective itself: the channel carries the collected material out, and its volume and timing are the measure of what was lost." },
+  disruption: { title: "Service disruption", tell: "The actor is positioning to interrupt an essential service.", pressure: "DISRUPTION READINESS", outbound: "The outbound stage serves disruption twice over: it carries the operator's commands to the systems that will be interrupted, and it removes the configuration and scheduling detail needed to time the interruption for maximum effect." },
+  fraud: { title: "Financial manipulation", tell: "The actor is seeking trusted transactions and approval paths.", pressure: "FRAUD POSITION", outbound: "The outbound stage carries approval patterns, counterparty detail and timing out, and carries instructions back in, so the manipulation can be made to look routine." },
+  espionage: { title: "Long-term collection", tell: "The actor values durable access and low-noise collection.", pressure: "COLLECTION POSITION", outbound: "The outbound stage is the collection pipeline: low and slow by design, sized to stay under the thresholds that would expose it." },
+  preposition: { title: "Strategic pre-positioning", tell: "The actor is mapping dependencies for later operational effect.", pressure: "PRE-POSITIONING", outbound: "The outbound stage is reconnaissance leaving, not value: dependency maps, contact paths and operating schedules that make a later effect precise. Its modest volume is the point, not a reassurance." },
 } as const;
 
 // Each sector now combines a distinct base loss with its own mechanical terms,

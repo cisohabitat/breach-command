@@ -4,11 +4,15 @@ import { attacks, getOperationalLabel, procedureIntensities, procedureScopes, pr
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
-  const { report, game, ended, decision, config, dismissReport, decide } = session;
+  const { report, game, ended, config, dismissReport, decide } = session;
+  // A decision belongs to a running operation. Once the operation has ended the
+  // options are not offered, whatever the engine left behind.
+  const decision = game?.status === "playing" ? session.decision : null;
+  const awaitingDecision = !!decision && !!game?.pendingDecision;
 
   return (
     <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
-      <DialogContent className="game-dialog report-dialog" showCloseButton={!game?.pendingDecision} onEscapeKeyDown={event => { if (game?.pendingDecision) event.preventDefault(); }}>
+      <DialogContent className="game-dialog report-dialog" showCloseButton={!awaitingDecision} onEscapeKeyDown={event => { if (awaitingDecision) event.preventDefault(); }}>
         <DialogHeader>
           <div className="eyebrow">CAPTAIN’S REPORT <span className="separator">/</span> TURN {report?.number}</div>
           <DialogTitle>{report?.revealed ? "Evidence confirmed." : report?.success ? "No new attack identified." : "The action was unsuccessful."}</DialogTitle>
@@ -47,7 +51,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             </section>}
           </div>
           <p className="report-impact small muted">Business impact changed by {report.impactChange >= 0 ? "+" : ""}{report.impactChange}; {getOperationalLabel(game).toLowerCase()} changed by {report.continuityChange}. Decision quality is explained in the debrief.</p>
-          {game.pendingDecision ? <p className="report-gate" role="status">Resolve the operational decision above to continue. This report stays open until the choice is recorded.</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}<ArrowRight size={17} /></button>}
+          {awaitingDecision ? <p className="report-gate" role="status">Resolve the operational decision above to continue. This report stays open until the choice is recorded.</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}<ArrowRight size={17} /></button>}
         </>}
       </DialogContent>
     </Dialog>

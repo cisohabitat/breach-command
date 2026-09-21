@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { ArrowRight, Printer, Star, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { adversaryObjectives, attacks, getAdversaryProfile, getCounterfactuals, getHypothesisLedger, getOperationalLabel, gameModes, hypotheses, procedureIntensities, procedureScopes, procedures, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
+import { adversaryObjectives, attacks, getAdversaryProfile, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, gameModes, hypotheses, procedureIntensities, procedureScopes, procedures, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { specialistReaction } from "@/lib/phase9";
 import { unlockedCapabilities } from "@/lib/campaign";
@@ -18,8 +18,8 @@ export function DebriefDialog({ session }: { session: GameSession }) {
       <DialogContent className="game-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"}>
         <DialogHeader>
           <div className="eyebrow">AFTER-ACTION REVIEW</div>
-          <DialogTitle>{game?.status === "won" ? `${outcome?.grade} / ${outcome?.title}` : game?.status === "exercise" ? "Exercise concluded." : "The response window closed."}</DialogTitle>
-          <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? `${game.revealed.length} of 4 stages found in ${game.turns.length} turns. This is a learning outcome, not a security assessment.` : ""}</DialogDescription>
+          <DialogTitle>{game?.status === "won" ? `${outcome?.grade} / ${outcome?.title}` : game?.status === "exercise" ? "Exercise concluded." : game ? `${getLossReason(game).title}.` : ""}</DialogTitle>
+          <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? `${game.status === "lost" ? `${getLossReason(game).detail} ` : ""}${game.revealed.length} of 4 stages found in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}. This is a learning outcome, not a security assessment.` : ""}</DialogDescription>
         </DialogHeader>
         {game && outcome && <>
           <nav className="debrief-index" aria-label="Review sections">
@@ -77,7 +77,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           </section>
           <section className="mission-consequences">
             <div><span className="eyebrow">SECTOR OUTCOME</span><strong>{game.sectorHealth}/100 · {sectorSystems[game.scenario].title}</strong><p>{sectorSystems[game.scenario].rule}</p></div>
-            <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p></div>
+            <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p>{game.revealed.includes(game.chain[3]) && <p className="intent-link"><strong>{attacks.find(attack => attack.id === game.chain[3])?.title}:</strong> {adversaryObjectives[game.objective].outbound}</p>}</div>
             <div><span className="eyebrow">COMMAND TEAM</span><strong>{namedSpecialists[game.specialist].name} · fatigue {game.specialistFatigue}/6</strong><p>{gameModes[game.mode].title} operation against {getAdversaryProfile(game).title}. Team fatigue and leadership confidence carry into the next campaign mission.</p></div>
           </section>
           <section className="timeline" id="debrief-timeline">

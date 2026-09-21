@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import {getDiscriminatingRead,getHypothesisLedger,getModifierBreakdown,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,procedures,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
+import {getDiscriminatingRead,getHypothesisLedger,getLossReason,getModifierBreakdown,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,procedures,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
-import {modeRandom} from "../lib/command-systems.ts";
+import {adversaryObjectives,modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
 import {campaignAct,campaignEnding,defaultCampaign,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
 import {campaignRoutes,incidentVariant,routeForCampaign} from "../lib/phase9.ts";
@@ -65,6 +65,57 @@ const reroute=(difficulty:Difficulty)=>{
 };
 assert.equal(reroute("crisis").changed,true,"the crisis adversary re-routes on its escalation beat");
 assert.equal(reroute("operational").changed,false,"ordinary difficulties only re-route when the response presses");
+
+// A finished operation holds nothing outstanding. A turn that both reveals a
+// stage and crosses a losing threshold used to end the game with the evidence
+// decision still pending, which left the report dialog asking for a choice the
+// engine refused and no way to reach the review.
+const edge=(over:Partial<Game>)=>{const b=baseline();b.established=["endpoint"];b.injectDeck=[];return playTurn({...b,...over} as Game,"email",18);};
+for(const [label,over] of [
+  ["the adversary finishes its objective",{objectiveProgress:99}],
+  ["business impact reaches its limit",{impact:99}],
+  ["the fourth stage lands on the final turn",{revealed:["spray","task","https"],objectiveProgress:99,turnLimit:1}],
+  ["the window closes on a reveal",{turnLimit:1}],
+] as [string,Partial<Game>][]){
+  const ended=edge(over);
+  assert.ok(["lost","exercise","won"].includes(ended.status),`${label} ends the operation`);
+  assert.equal(ended.pendingDecision,null,`${label} leaves no evidence decision owed`);
+  assert.equal(ended.pendingCommand,null,`${label} leaves no command event owed`);
+  assert.equal(ended.pendingSetPiece,null,`${label} leaves no sector decision owed`);
+  assert.throws(()=>resolveDecision(ended,"observe"),/No evidence decision/,`${label} cannot be resolved further`);
+}
+
+// The loss banner names the cause, not the investigation window every time.
+assert.equal(getLossReason(edge({objectiveProgress:99})).title,"The adversary completed its objective");
+assert.equal(getLossReason(edge({impact:99})).title,"Business impact reached its limit");
+assert.equal(getLossReason(edge({turnLimit:1})).title,"The investigation window closed");
+assert.ok(getLossReason(edge({turnLimit:1})).detail.includes("1 turn."),"the reason counts turns in plain English");
+const continuityLoss={...baseline(),continuity:1,established:[],injectDeck:[]} as Game;
+assert.equal(getLossReason(playTurn(continuityLoss,"dns",2)).title,"The essential service stopped");
+const sectorLoss={...baseline(),sectorHealth:1,established:[],injectDeck:[]} as Game;
+assert.equal(getLossReason(playTurn(sectorLoss,"dns",2)).title,"Sector confidence collapsed");
+
+// A sound action the dice refused does not hand the actor tempo it did not earn.
+const soundBase=(()=>{const b=baseline();b.established=[];b.injectDeck=[];return setHypothesis(b,"endpoint");})();
+const soundFail=playTurn(soundBase,"endpoint",2);
+assert.ok(soundFail.turns[0].planningBonus>0,"the action was aligned with a correct prediction");
+assert.equal(soundFail.turns[0].success,false,"and the roll still failed");
+assert.equal(soundFail.adversaryTempo,soundBase.adversaryTempo,"a sound but unlucky action does not accelerate the actor");
+const looseFail=playTurn({...soundBase,hypothesis:"cloud"} as Game,"endpoint",2);
+assert.equal(looseFail.adversaryTempo,soundBase.adversaryTempo+1,"an unaligned failure still does");
+assert.ok(soundFail.turns[0].objectiveChange<looseFail.turns[0].objectiveChange,"and the objective barely moves");
+
+// A revealed finding names the source that produced it, and the finding itself
+// stays source-neutral so it reads correctly from any of its three sources.
+const sourcedTurn=playTurn(soundBase,"email",18);
+assert.ok(sourcedTurn.turns[0].revealed,"the turn revealed a stage");
+assert.ok(sourcedTurn.turns[0].narrative.startsWith("Email investigation at "),"the report names the procedure and node that produced it");
+assert.equal(sourcedTurn.evidence.at(-1)!.detail,attacks.find(item=>item.id===sourcedTurn.turns[0].revealed)!.evidence,"the stored finding keeps its source fields separate from its body");
+for(const attack of attacks)assert.ok(!/^[A-Z][a-z]+ and [a-z]+ records show/.test(attack.evidence),`${attack.id} states a finding, not a log type`);
+
+// Every assessed objective explains what its outbound stage is for, so a chain
+// ending in exfiltration never looks disconnected from the intent behind it.
+for(const [id,objective] of Object.entries(adversaryObjectives))assert.ok(objective.outbound.length>=80,`${id} explains its outbound stage`);
 
 // The modifier the player is shown before committing is the same computation the
 // roll resolves with, minus the one term that must stay hidden.
@@ -361,6 +412,9 @@ for(const difficulty of Object.keys(difficulties) as Difficulty[])for(let s=0;s<
     const action=nextEvidenceSource(sim);assert.ok(action);sim=playTurn(sim,action.id);assert.ok(sim.turns.length<=difficulties[difficulty].maxTurns);assert.equal(new Set(sim.revealed).size,sim.revealed.length);
   }
   if(sim.status==="response"){sim=resolveResponse(sim,"credential");sim=resolveResponse(sim,"verify");sim=resolveResponse(sim,"rebuild");}
+  assert.equal(sim.pendingDecision,null,"a finished operation owes no evidence decision");
+  assert.equal(sim.pendingCommand,null,"a finished operation owes no command event");
+  assert.equal(sim.pendingSetPiece,null,"a finished operation owes no sector decision");
   totals[sim.status as keyof typeof totals]++;
 }
 const simulationCount=Object.keys(difficulties).length*scenarios.length*30;
