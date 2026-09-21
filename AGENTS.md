@@ -10,6 +10,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Keep the game fictional and educational. It must not connect to, scan or modify real infrastructure.
 - Preserve the rule-based computer Incident Captain. Do not introduce a required AI service, account, backend or network dependency.
 - Keep campaign, session, preferences and telemetry data local to the player's browser.
+- Reach local storage only through `lib/storage.ts`. Storage can be blocked or full, and the game must keep playing and say so rather than fault.
 
 ## Technical baseline
 
@@ -22,7 +23,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Repository map
 
-- `app/page.tsx`: top-level game flow, state orchestration, dialogs, settings, debrief and start screen.
+- `app/page.tsx`: application shell only — topbar, live regions, storage notice and overlay mounting.
+- `hooks/use-game-session.ts`: game, session and campaign state, every transition, effect and derived readout.
 - `app/globals.css`: visual system, game layouts and responsive behaviour.
 - `components/game/`: focused gameplay surfaces. Prefer a new component here when a coherent game system would otherwise make `app/page.tsx` substantially harder to follow.
 - `lib/game.ts`: scenarios, procedures, attacks and baseline rules data.
@@ -31,15 +33,17 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `lib/phase8.ts`: infrastructure maps, named specialists, sector set pieces and challenge-code encoding.
 - `lib/phase9.ts`: campaign routes, authored incident variants, objective theories and specialist reactions.
 - `lib/campaign.ts`: persistent progression, mastery, acts and campaign endings.
-- `lib/session.ts`: saved-session schema and migration.
+- `lib/session.ts`: saved-session schema, migration and rejection of impossible or future saves.
+- `lib/storage.ts`: the only local-storage accessor. It answers instead of throwing.
 - `lib/feedback.ts`: sound, music and haptic feedback.
 - `lib/telemetry.ts`: device-local balance counters.
 - `tests/game.test.ts`: deterministic rule checks and complete simulations.
+- `tests/e2e/accessibility.spec.ts`: axe audit across the supported widths and overlays.
 - `public/sw.js`: offline cache. Increment the cache name when deployed assets or application behaviour change.
 
 ## Game-engine invariants
 
-- Treat game state as immutable. Clone collections before changing them and return a new `Game` object from transitions.
+- Treat game state as immutable. Clone collections before changing them and return a new `Game` object from transitions. A new collection on `Game` belongs in every transition's clone block, and `tests/game.test.ts` asserts this for `playTurn`.
 - Keep hidden attack-chain information out of player-facing text until it has been revealed.
 - A procedure consumes one turn. Procedure cooldown, difficulty thresholds, turn limits and end-state checks must remain internally consistent.
 - Pending evidence decisions, command events and sector set pieces are blocking states. The player must resolve them before changing hypotheses, infrastructure focus or running another procedure.
@@ -47,7 +51,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Response is a three-stage sequence: containment, assurance, then recovery. Do not bypass the assurance gate.
 - Infrastructure monitoring and isolation consume scarce map actions. Their node posture and action history are persistent game state and must migrate safely.
 - Clamp impact, continuity, sector health and objective progress to their documented ranges.
-- Challenge codes must reproduce the same scenario configuration and random sequence.
+- Challenge codes must reproduce the same scenario configuration and random sequence. A reproducible operation carries `Game.seed`, and `playTurn` derives its d20 from the seed and the turn index. Leave `seed` null for ordinary campaign play.
 - Any new persistent `Game` field requires a `SESSION_VERSION` increment and a safe migration in `lib/session.ts`.
 - Any new campaign field requires a backward-compatible default in `parseCampaign`.
 - Campaign routes and incident variants must remain deterministic for the same challenge seed and campaign state.
@@ -89,7 +93,7 @@ pnpm build
 git diff --check
 ```
 
-For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194 and 1280 px widths. Treat 768–834 px portrait and 1024–1194 px landscape as explicit iPad targets. A successful build does not replace interaction and responsive checks.
+Run `pnpm test:a11y` for any change to markup, labels or the responsive rules that hide them; it must report zero violations. For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194 and 1280 px widths. Treat 768–834 px portrait and 1024–1194 px landscape as explicit iPad targets. A successful build does not replace interaction and responsive checks.
 
 ## Publication
 

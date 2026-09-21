@@ -41,18 +41,20 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Resolved endings:** a win stands the incident down, a loss closes the record with the unresolved stages noted, and an authorised exercise stops at the drill boundary. Each is a distinct presentation rather than one banner with different text.
 - **Three-stage response:** containment is followed by an assurance gate and deliberate recovery, with isolated infrastructure restored only after the response completes. Containment, assurance and recovery options are authored per sector, so disruption, service cost and residual risk reflect the incident's own constraint while the strict three-stage sequence is preserved.
 - **Three-act campaign:** progression tracks experience, trust, readiness, unresolved access, mastery, team cohesion and command doctrine, leading to one of four endings.
-- **Challenge codes:** compact `BC-...` codes reproduce a scenario, difficulty, mode, specialist and random seed.
+- **Challenge codes:** compact `BC-...` codes reproduce a scenario, difficulty, mode, specialist and random seed. A seeded operation replays its procedure rolls as well as its configuration, so the same code produces the same incident on any device.
 - **After-action review:** scoring, timelines, decision quality, evidence reconstruction, actor adaptation and counterfactuals support facilitated learning.
-- **Accessible, responsive play:** dedicated phone, tablet and desktop layouts that recompose at nine width breakpoints, plus optional procedural sound, adaptive music, haptics, high contrast, reduced motion and guided reflection. The audit suite reports no accessibility violations.
-- **Offline and local-first play:** the installable PWA caches core assets. Sessions, campaign progress, settings and anonymous balance counters remain on the device. Portable backup text can transfer progress without an account.
+- **Accessible, responsive play:** dedicated phone, tablet and desktop layouts that recompose at nine width breakpoints, plus optional procedural sound, adaptive music, haptics, high contrast, reduced motion and guided reflection. `pnpm test:a11y` runs axe against the assignment screen, the overlays and the command workspace from 320 px to 1280 px and requires zero violations.
+- **Offline and local-first play:** the installable PWA caches core assets, and only complete same-origin responses are ever cached. Sessions, campaign progress, settings and anonymous balance counters remain on the device. A browser that refuses local storage still plays a complete operation from memory and says so. Portable backup text can transfer progress without an account.
 
 The game does not call an AI service, inspect real systems or transmit incident information.
 
 ## Campaign and saves
 
-Campaign progression is stored in browser local storage. Mid-operation sessions are versioned and migrated by `lib/session.ts`; Ironman mode intentionally disables normal mid-operation saving. Clearing browser storage resets local progress.
+Campaign progression is stored in browser local storage. Mid-operation sessions are versioned and migrated by `lib/session.ts`, which refuses a save from a newer build or one describing a state the engine's own transitions could not produce. Ironman mode intentionally disables normal mid-operation saving. Clearing browser storage resets local progress.
 
-The settings panel can export a portable backup containing campaign progress and the current non-Ironman operation. Restoring the text validates its format before replacing the local campaign state.
+Every storage access goes through `lib/storage.ts`, which answers rather than throws. In a private window, with site data blocked, or against a full quota the game reports that nothing is being kept and continues from memory.
+
+The settings panel can export a portable backup containing campaign progress and the current non-Ironman operation. Restoring the text validates both halves before replacing anything: the campaign through `parseCampaign` and the operation through the same migration a local save goes through. An unreadable operation is reported and left out rather than stored.
 
 Daily Operation and challenge codes use deterministic seeds, allowing the same configuration to be replayed or shared. Scenario mastery awards one star for a successful recovery, two for a score of 74 or above, and three for a score of 88 or above.
 
@@ -76,12 +78,13 @@ Run the verification suite:
 pnpm test
 pnpm test:responsive:install # first run only
 pnpm test:responsive
+pnpm test:a11y
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm build
 ```
 
-`pnpm test` includes deterministic rule checks and 1,230 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover.
+`pnpm test` includes deterministic rule checks and 1,230 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover. `pnpm test:a11y` runs an axe audit over the assignment screen at every supported width and over the field guide, settings and command surfaces at a phone width; the narrow widths matter because the topbar hides its button labels below 431 px.
 
 ## Architecture
 
@@ -99,11 +102,13 @@ pnpm build
 | `lib/phase8.ts` | Infrastructure topologies, named team, set pieces and challenge codes |
 | `lib/phase9.ts` | Campaign routes, incident variants, objective theories and team reactions |
 | `lib/campaign.ts` | Persistent progression, acts, mastery and endings |
-| `lib/session.ts` | Versioned save format and migration |
+| `lib/session.ts` | Versioned save format, migration and save rejection |
+| `lib/storage.ts` | Non-throwing local-storage access |
 | `lib/feedback.ts` | Audio and haptic feedback |
 | `lib/telemetry.ts` | Device-local balance counters |
 | `tests/game.test.ts` | Engine assertions and full-game simulations |
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
+| `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
 | `playwright.config.ts` | Deterministic Chromium test runner and local preview lifecycle |
 
 The interface is built with Next.js 16, React 19 and TypeScript and deployed as a native Next.js application on Vercel.
