@@ -1,4 +1,3 @@
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
 import { attacks, availableIn, commandEvents, getObjectiveRead, hypotheses, infrastructureTopologies, procedures, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan } from "./advanced-game.ts";
 
 export type BotAction =

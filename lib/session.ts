@@ -1,9 +1,8 @@
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
-import { scenarios, difficulties, infrastructureTopologies, adversaryProfiles, type Game } from "./advanced-game.ts";
+import { scenarios, difficulties, infrastructureTopologies, adversaryProfiles, type Game, type GameStatus } from "./advanced-game.ts";
 import type { NodePosture } from "./advanced-game";
 
 export const SESSION_KEY = "breach-command.session";
-export const SESSION_VERSION = 10;
+export const SESSION_VERSION = 11;
 
 export type SavedSession = {
   version: number;
@@ -24,14 +23,30 @@ export function serialiseSession(game: Game, guided: boolean, fastResolve: boole
   return JSON.stringify(session);
 }
 
+// A save is only ever written by this device, but it is plain text in local
+// storage: it can be hand-edited, truncated, or restored from a backup written
+// by a newer build. Anything that would put the engine into a state its own
+// transitions cannot produce is rejected outright; anything merely missing is
+// defaulted.
+const statuses: GameStatus[] = ["playing", "response", "won", "lost", "exercise"];
+const bounded = (value: unknown, fallback: number, min = 0, max = 100) =>
+  Number.isFinite(value) ? Math.max(min, Math.min(max, Number(value))) : fallback;
+
 export function parseSession(raw: string): SavedSession | null {
   try {
     const parsed = JSON.parse(raw) as Partial<SavedSession>;
     if (!parsed || typeof parsed !== "object" || !parsed.game) return null;
+    // A save from a future build may carry fields this version cannot migrate.
+    if (Number.isFinite(parsed.version) && Number(parsed.version) > SESSION_VERSION) return null;
     const game = parsed.game as Game;
     if (!Number.isInteger(game.scenario) || !scenarios[game.scenario]) return null;
     if (!difficulties[game.difficulty]) return null;
     if (!Array.isArray(game.chain) || game.chain.length !== 4 || !Array.isArray(game.turns)) return null;
+    if (!Array.isArray(game.revealed) || game.revealed.length > 4) return null;
+    if (!statuses.includes(game.status)) return null;
+    // The response phase only exists once every stage has been revealed, so a
+    // save claiming otherwise did not come from a real playthrough.
+    if (game.status === "response" && game.revealed.length < 4) return null;
     const profile = game.adversaryProfile && adversaryProfiles[game.adversaryProfile] ? game.adversaryProfile : "ghost";
     // Topologies vary per scenario, so a restored session is re-keyed to the
     // nodes that exist on this incident's map. Legacy or stale node ids become
@@ -44,6 +59,17 @@ export function parseSession(raw: string): SavedSession | null {
     const migrated: Game = {
       ...game,
       adversaryProfile: profile,
+      impact: bounded(game.impact, 0),
+      continuity: bounded(game.continuity, 100),
+      failures: bounded(game.failures, 0, 0, 3),
+      nextModifier: bounded(game.nextModifier, 0, -5, 5),
+      adversaryTempo: bounded(game.adversaryTempo, 0, 0, 3),
+      responseScore: bounded(game.responseScore, 0, 0, 100),
+      established: Array.isArray(game.established) ? game.established : [],
+      lastUsed: game.lastUsed && typeof game.lastUsed === "object" ? game.lastUsed : {},
+      injectDeck: Array.isArray(game.injectDeck) ? game.injectDeck : [],
+      responseChoices: Array.isArray(game.responseChoices) ? game.responseChoices : [],
+      seed: typeof game.seed === "number" && Number.isFinite(game.seed) ? game.seed : null,
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],
       adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
       pendingCommand: game.pendingCommand ?? null,
@@ -52,10 +78,10 @@ export function parseSession(raw: string): SavedSession | null {
       turnLimit: Number.isFinite(game.turnLimit) ? game.turnLimit : difficulties[game.difficulty].maxTurns,
       specialist: game.specialist ?? "hunter",
       specialistFatigue: Number.isFinite(game.specialistFatigue) ? game.specialistFatigue : 0,
-      sectorHealth: Number.isFinite(game.sectorHealth) ? game.sectorHealth : 100,
+      sectorHealth: bounded(game.sectorHealth, 100),
       sectorHistory: Array.isArray(game.sectorHistory) ? game.sectorHistory : [],
       objective: game.objective ?? "espionage",
-      objectiveProgress: Number.isFinite(game.objectiveProgress) ? game.objectiveProgress : 5,
+      objectiveProgress: bounded(game.objectiveProgress, 5),
       campaignTier: Number.isFinite(game.campaignTier) ? game.campaignTier : 0,
       focusedNode,
       evidence: Array.isArray(game.evidence) ? game.evidence : [],

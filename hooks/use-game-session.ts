@@ -47,6 +47,7 @@ import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "
 import { campaignAct, campaignEnding, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
 import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
+import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { decodeChallenge, encodeChallenge, seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
 import { chooseBotAction, type BotAction } from "@/lib/game-bot";
@@ -108,6 +109,7 @@ export function useGameSession() {
     return Number(`${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`);
   });
   const [challengeInput, setChallengeInput] = useState("");
+  const [challengeActive, setChallengeActive] = useState(false);
   const [challengeMessage, setChallengeMessage] = useState("");
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   const [backupInput, setBackupInput] = useState("");
@@ -123,6 +125,7 @@ export function useGameSession() {
   const [botPaused, setBotPaused] = useState(false);
   const [botStatus, setBotStatus] = useState("Waiting for the operation to begin.");
   const stateRef = useRef(game);
+  const campaignRef = useRef(campaign);
   const busyRef = useRef(false);
   const botRunRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -150,7 +153,7 @@ export function useGameSession() {
   const challengeCode = encodeChallenge({ scenario: scenarioChoice, difficulty, mode, specialist, seed: challengeSeed });
 
   function clearStoredSession() {
-    localStorage.removeItem(SESSION_KEY);
+    removeStored(SESSION_KEY);
     setSavedSession(null);
   }
 
@@ -182,7 +185,11 @@ export function useGameSession() {
     const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
     const route = routeForCampaign(campaign);
     const automated = botEnabled;
-    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, challengeSeed) });
+    // Daily Operation and any challenge configuration promise that the same
+    // code replays the same operation, so those runs carry their seed into the
+    // procedure rolls. Ordinary campaign play stays unpredictable.
+    const reproducible = mode === "daily" || challengeActive;
+    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, challengeSeed), seed: reproducible ? challengeSeed : null });
     setGame(next);
     botRunRef.current = automated;
     setBotRun(automated);
@@ -190,7 +197,7 @@ export function useGameSession() {
     setBotPaused(false);
     setBotStatus(automated ? "Reviewing the mission briefing before the first move." : "Waiting for the operation to begin.");
     setGuided(mode === "expert" ? false : guided);
-    const tutorialComplete = localStorage.getItem("breach-command.tutorial-complete") === "true";
+    const tutorialComplete = readStored("breach-command.tutorial-complete") === "true";
     setTutorial(automated ? false : !tutorialComplete);
     setMissionBriefing(true);
     setSelected(null);
@@ -400,10 +407,16 @@ export function useGameSession() {
       const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null };
       if (payload.format !== "breach-command-backup") throw new Error("format");
       const nextCampaign = parseCampaign(JSON.stringify(payload.campaign));
+      // The operation travels as text too, so it is validated by the same
+      // migration the local save goes through before it is allowed to replace
+      // anything. An unreadable operation never blocks the campaign restore.
+      const restoredSession = typeof payload.session === "string" ? parseSession(payload.session) : null;
       setCampaign(nextCampaign);
-      localStorage.setItem(CAMPAIGN_KEY, JSON.stringify(nextCampaign));
-      if (typeof payload.session === "string") localStorage.setItem(SESSION_KEY, payload.session);
-      setBackupMessage("Progress restored. Return to assignments to load any saved operation.");
+      const storedCampaign = writeStored(CAMPAIGN_KEY, JSON.stringify(nextCampaign));
+      if (restoredSession) writeStored(SESSION_KEY, serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
+      if (!storedCampaign) setBackupMessage("Progress restored for this visit, but this browser is not allowing saved data.");
+      else if (typeof payload.session === "string" && !restoredSession) setBackupMessage("Campaign progress restored. The saved operation in this backup could not be read and was left out.");
+      else setBackupMessage("Progress restored. Return to assignments to load any saved operation.");
     } catch { setBackupMessage("Backup not recognised. Paste a complete Breach Command backup."); }
   }
 
@@ -411,12 +424,14 @@ export function useGameSession() {
     const setup = decodeChallenge(challengeInput);
     if (!setup) { setChallengeMessage("Code not recognised. Check every character and try again."); return; }
     setScenarioChoice(setup.scenario); setDifficulty(setup.difficulty); setMode(setup.mode); setSpecialist(setup.specialist); setChallengeSeed(setup.seed);
+    setChallengeActive(true);
     setChallengeMessage("Challenge loaded. Review the assignment and begin when ready.");
   }
 
   function generateSeed() {
     const seed = 100000 + Math.floor(Math.random() * 900000);
     setChallengeSeed(seed);
+    setChallengeActive(true);
     setChallengeMessage("New challenge generated.");
   }
 
@@ -428,11 +443,12 @@ export function useGameSession() {
     recordTelemetry(result.status === "won" ? "win" : "loss", { scenario: result.scenario });
     setTelemetry(readTelemetry());
     const score = getOutcome(result).breakdown.total;
-    setCampaign(current => {
-      const updated = recordCampaignResult(current, result, score);
-      localStorage.setItem(CAMPAIGN_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    // The updater stays pure; the campaign is persisted from the value it
+    // produced rather than from inside the reducer.
+    const updated = recordCampaignResult(campaignRef.current, result, score);
+    campaignRef.current = updated;
+    setCampaign(updated);
+    if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice("This browser is not allowing saved data, so campaign progress was not kept.");
   }
 
   function dismissReport() {
@@ -461,11 +477,11 @@ export function useGameSession() {
 
   function dismissTutorial() {
     setTutorial(false);
-    localStorage.setItem("breach-command.tutorial-complete", "true");
+    writeStored("breach-command.tutorial-complete", "true");
   }
 
   function restartTutorial() {
-    localStorage.removeItem("breach-command.tutorial-complete");
+    removeStored("breach-command.tutorial-complete");
     setTutorial(true);
     setSettings(false);
   }
@@ -513,13 +529,13 @@ export function useGameSession() {
   });
 
   useEffect(() => {
-    const stored = localStorage.getItem(SESSION_KEY);
+    const stored = readStored(SESSION_KEY);
     if (!stored) return;
     const session = parseSession(stored);
     const loadTimer = setTimeout(() => {
       if (session && session.game.status !== "won") setSavedSession(session);
       else if (!session) {
-        localStorage.removeItem(SESSION_KEY);
+        removeStored(SESSION_KEY);
         setStorageNotice("The saved operation on this device could not be restored and has been set aside.");
       }
     }, 0);
@@ -528,8 +544,9 @@ export function useGameSession() {
 
   useEffect(() => {
     const loadTimer = setTimeout(() => {
-      setCampaign(parseCampaign(localStorage.getItem(CAMPAIGN_KEY)));
-      const preferences = localStorage.getItem("breach-command.preferences");
+      setCampaign(parseCampaign(readStored(CAMPAIGN_KEY)));
+      if (!storageWritable()) setStorageNotice("This browser is not allowing saved data, so progress from this visit will not be kept.");
+      const preferences = readStored("breach-command.preferences");
       if (preferences) {
         try {
           const parsed = JSON.parse(preferences) as { sound?: boolean; music?: boolean; haptics?: boolean; highContrast?: boolean };
@@ -545,8 +562,9 @@ export function useGameSession() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("breach-command.preferences", JSON.stringify({ sound: soundEnabled, music: musicEnabled, haptics: hapticsEnabled, highContrast }));
+    writeStored("breach-command.preferences", JSON.stringify({ sound: soundEnabled, music: musicEnabled, haptics: hapticsEnabled, highContrast }));
   }, [soundEnabled, musicEnabled, hapticsEnabled, highContrast]);
+
 
   useEffect(() => {
     const handleKeyboard = (event: KeyboardEvent) => {
@@ -560,13 +578,19 @@ export function useGameSession() {
   }, []);
 
   useEffect(() => {
+    campaignRef.current = campaign;
+  }, [campaign]);
+
+  useEffect(() => {
     stateRef.current = game;
     if (game && musicEnabled) setAdaptiveScore(true, Math.max(game.impact, game.objectiveProgress, 100 - game.sectorHealth) / 100, game.scenario);
   }, [game, musicEnabled]);
 
   useEffect(() => {
     if (!game || game.mode === "ironman" || botRunRef.current) return;
-    localStorage.setItem(SESSION_KEY, serialiseSession(game, guided, fastResolve));
+    if (writeStored(SESSION_KEY, serialiseSession(game, guided, fastResolve))) return;
+    const notice = setTimeout(() => setStorageNotice("This browser is not allowing saved data, so this operation is being played from memory only."), 0);
+    return () => clearTimeout(notice);
   }, [game, guided, fastResolve]);
 
   useEffect(() => {

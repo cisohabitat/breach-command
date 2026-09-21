@@ -27,8 +27,8 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           The console stopped responding.
         </h1>
         <p style={{ color: "#aebfb3", lineHeight: 1.7, margin: "0 0 24px" }}>
-          This operation is saved on your device. Reloading returns you to the assignment screen with the current
-          investigation intact.
+          Reloading returns you to the assignment screen. Any operation this device was able to save is offered
+          again there; Ironman operations are not saved and will start over.
         </p>
         <button
           type="button"
@@ -45,7 +45,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
             cursor: "pointer",
           }}
         >
-          Reload the console
+          Restart the console
         </button>
       </div>
     </main>

@@ -1,10 +1,6 @@
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
 import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "./game.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
 import { adversaryObjectives, gameModes, objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type GameMode, type ProcedureIntensity, type ProcedurePlan, type ProcedureScope, type SpecialistId } from "./command-systems.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
-import { infrastructureTopologies, sectorSetPieces, type SetPieceId } from "./phase8.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
+import { infrastructureTopologies, sectorSetPieces, seededRoll, type SetPieceId } from "./phase8.ts";
 import { objectiveTheory, type CampaignRouteId, type IncidentVariant } from "./phase9.ts";
 
 export {
@@ -196,6 +192,10 @@ export type Game = {
   nodePosture: Record<string, NodePosture>;
   mapActionsRemaining: number;
   mapHistory: MapActionRecord[];
+  // Set for operations that promise reproducibility (Daily Operation and any
+  // challenge code). Null leaves procedure rolls on the unseeded generator, so
+  // ordinary campaign play stays unpredictable.
+  seed: number | null;
 };
 
 export type GameSetup = {
@@ -209,6 +209,7 @@ export type GameSetup = {
   doctrine?: "observe" | "act" | "balanced";
   campaignRoute?: CampaignRouteId;
   variant?: IncidentVariant;
+  seed?: number | null;
 };
 
 export const commandEvents = {
@@ -540,7 +541,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   const variant = setup.variant ?? { id: `${scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 };
   const campaignRoute = setup.campaignRoute ?? "common-ground";
   const routeImpact = mode === "campaign" && campaignRoute === "breakwater" ? -4 : 0;
-  const routeContinuity = mode === "campaign" && campaignRoute === "breakwater" ? -4 : campaignRoute === "common-ground" ? 3 : 0;
+  const routeContinuity = mode !== "campaign" ? 0 : campaignRoute === "breakwater" ? -4 : campaignRoute === "common-ground" ? 3 : 0;
   const routeObjective = mode === "campaign" && campaignRoute === "watchtower" ? 5 : 0;
   const startingImpact = difficulties[difficulty].startImpact + (mode === "escalation" ? 12 : 0) - (campaignTier >= 2 ? 5 : 0) + (campaignTrust < 35 ? 5 : campaignTrust >= 75 ? -3 : 0) + variant.impact + routeImpact;
   const startingContinuity = 100 + (campaignTier >= 3 ? 5 : 0) + (campaignReadiness >= 60 ? 3 : campaignReadiness < 30 ? -5 : 0) + variant.continuity + routeContinuity;
@@ -592,6 +593,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     nodePosture: Object.fromEntries(infrastructureTopologies[scenario].nodes.map(node => [node.id, "normal" as NodePosture])),
     mapActionsRemaining: mode === "expert" ? 2 : 3,
     mapHistory: [],
+    seed: typeof setup.seed === "number" && Number.isFinite(setup.seed) ? setup.seed : null,
   };
 }
 
@@ -759,12 +761,13 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (!procedures.some(item => item.id === procedure)) throw new Error("Unknown procedure.");
   if (availableIn(game, procedure) > 0) throw new Error("This procedure is cooling down.");
 
-  const raw = forcedRoll ?? randomInt(20) + 1;
+  const raw = forcedRoll ?? (game.seed === null ? randomInt(20) + 1 : seededRoll(game.seed, game.turns.length));
   if (!Number.isInteger(raw) || raw < 1 || raw > 20) throw new Error("Invalid d20 roll.");
   const g: Game = {
     ...game,
     chain: [...game.chain],
     revealed: [...game.revealed],
+    established: [...game.established],
     lastUsed: { ...game.lastUsed },
     turns: [...game.turns],
     injectDeck: [...game.injectDeck],
@@ -777,6 +780,9 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     correlations: [...game.correlations],
     setPieceHistory: [...game.setPieceHistory],
     caseTheoryHistory: [...game.caseTheoryHistory],
+    sectorHistory: [...game.sectorHistory],
+    nodePosture: { ...game.nodePosture },
+    mapHistory: [...game.mapHistory],
   };
   const config = difficulties[g.difficulty];
   const number = g.turns.length + 1;

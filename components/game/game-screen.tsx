@@ -19,7 +19,7 @@ export function GameScreen({ session }: { session: GameSession }) {
   return (
     <main className={`game-screen sector-theme-${game.scenario}`} id="main-content">
       <section className="game-heading">
-        <div><div className="eyebrow">CASE 0{game.scenario + 1} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()} <span className="separator">/</span> {gameModes[game.mode].title.toUpperCase()}</div><h1>{activeScenario.title}</h1></div>
+        <div><div className="eyebrow">CASE {String(game.scenario + 1).padStart(2, "0")} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()} <span className="separator">/</span> {gameModes[game.mode].title.toUpperCase()}</div><h1>{activeScenario.title}</h1></div>
         <div className="case-meters">
           <div className="turn-meter">
             <span className="mono">{game.status === "response" ? "RESPONSE PHASE" : ended ? "FINAL STATUS" : "INVESTIGATION WINDOW"}</span>

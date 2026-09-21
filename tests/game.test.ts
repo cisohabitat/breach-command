@@ -1,17 +1,10 @@
 import assert from "node:assert/strict";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,attacks,procedures,scenarios,getSuggestion,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,infrastructureTopologies,sectorSystems,getOutcome,getCounterfactuals,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {modeRandom} from "../lib/command-systems.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
-import {decodeChallenge,encodeChallenge,seededChallengeRandom} from "../lib/phase8.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
+import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
 import {campaignAct,campaignEnding,defaultCampaign,parseCampaign} from "../lib/campaign.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {campaignRoutes,incidentVariant,routeForCampaign} from "../lib/phase9.ts";
-// @ts-expect-error Native Node TypeScript execution requires the source extension.
 import {chooseBotAction,type BotAction} from "../lib/game-bot.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -82,6 +75,17 @@ assert.equal(saved?.version,SESSION_VERSION);
 assert.equal(saved?.game.turns.length,1);
 assert.equal(saved?.fastResolve,true);
 assert.equal(parseSession("{\"version\":2,\"game\":{}}"),null);
+// A save is plain text on the device: anything that could not have come out of
+// a real playthrough is refused rather than migrated into the engine.
+const sound=newGame(0,"operational",()=>0);
+const tampered=(over:Record<string,unknown>)=>parseSession(JSON.stringify({version:SESSION_VERSION,savedAt:new Date().toISOString(),game:{...sound,...over},guided:true,fastResolve:false}));
+assert.equal(tampered({status:"response",revealed:[]}),null,"the response phase cannot be entered with stages unrevealed");
+assert.equal(tampered({status:"transcendent"}),null,"an unknown status is refused");
+assert.equal(tampered({revealed:"all"}),null,"a malformed reveal list is refused");
+assert.equal(parseSession(JSON.stringify({version:SESSION_VERSION+1,savedAt:"",game:sound,guided:true,fastResolve:false})),null,"a save from a newer build is refused");
+assert.equal(tampered({impact:"lots"})?.game.impact,0,"a non-numeric meter falls back to its default");
+assert.equal(tampered({continuity:null})?.game.continuity,100);
+assert.equal(tampered({impact:9999})?.game.impact,100,"a restored meter stays inside its documented range");
 for(const a of attacks){assert.ok(a.detect.length>=3);for(const id of a.detect)assert.ok(procedures.some(p=>p.id===id));}
 for(const s of scenarios){assert.equal(s.choices.length,4);s.choices.forEach((choices,stage)=>choices.forEach(id=>assert.equal(attacks.find(a=>a.id===id)?.stage,stage)));}
 
@@ -137,6 +141,35 @@ assert.equal(immutableBaseline.mapActionsRemaining,snapshotActions,"map action d
 assert.equal(immutableBaseline.impact,snapshotImpact);
 assert.equal(immutableBaseline.nodePosture[immutableKey],"normal");
 assert.ok(isolated.sectorHealth<=snapshotSector);
+
+// playTurn is the transition that touches the most collections, so it is held to
+// the same standard as the rest: the game it is handed comes back untouched.
+const turnSource=baseline();
+const turnSnapshot=JSON.stringify(turnSource);
+const turnResult=playTurn(turnSource,"endpoint",9);
+assert.equal(JSON.stringify(turnSource),turnSnapshot,"playTurn must not mutate the game it was given");
+assert.notEqual(turnResult.sectorHistory,turnSource.sectorHistory,"the sector history is cloned, not shared");
+assert.equal(turnSource.sectorHistory.length,0,"the source keeps its own sector history");
+
+// A seeded operation reproduces its whole roll sequence, not only its setup, so
+// a challenge code replays the same incident on any device.
+const seededA=newGame(2,"operational",seededChallengeRandom(4242),{mode:"daily",seed:4242});
+const seededB=newGame(2,"operational",seededChallengeRandom(4242),{mode:"daily",seed:4242});
+assert.equal(seededA.seed,4242);
+const rollsOf=(start:Game)=>{let sim=start;const rolls:number[]=[];for(let i=0;i<3&&sim.status==="playing";i++){if(sim.pendingDecision){sim=resolveDecision(sim,"observe");continue;}if(sim.pendingCommand){sim=resolveCommand(sim,"a");continue;}if(sim.pendingSetPiece){sim=resolveSetPiece(sim,"a");continue;}const action=nextEvidenceSource(sim);assert.ok(action);sim=playTurn(sim,action.id);rolls.push(sim.turns.at(-1)!.raw);}return rolls;};
+assert.deepEqual(rollsOf(seededA),rollsOf(seededB),"the same seed reproduces the same roll sequence");
+assert.notDeepEqual(rollsOf(seededA),rollsOf(newGame(2,"operational",seededChallengeRandom(9999),{mode:"daily",seed:9999})),"a different seed produces a different sequence");
+assert.equal(newGame(2,"operational",()=>0).seed,null,"ordinary campaign play stays unseeded");
+assert.deepEqual([seededRoll(7,0),seededRoll(7,1),seededRoll(7,0)],[seededRoll(7,0),seededRoll(7,1),seededRoll(7,0)]);
+for(let i=0;i<40;i++){const roll=seededRoll(31337,i);assert.ok(Number.isInteger(roll)&&roll>=1&&roll<=20,`seeded roll ${roll} is a d20 result`);}
+// A restored seeded session resumes on the roll it would have produced.
+const seededResume=parseSession(serialiseSession(playTurn(seededA,nextEvidenceSource(seededA)!.id),true,false));
+assert.equal(seededResume?.game.seed,4242,"the seed survives a save and restore");
+
+// The campaign route only shapes a campaign. Every other mode starts from the
+// mode's own terms, with no route bonus applied.
+assert.equal(newGame(0,"operational",()=>0,{mode:"daily",campaignRoute:"common-ground",variant:{id:"0-x",title:"t",briefing:"b",modifier:"m",impact:0,continuity:-10,objective:0}}).continuity,90,"a non-campaign operation gets no route continuity");
+assert.equal(newGame(0,"operational",()=>0,{mode:"campaign",campaignRoute:"common-ground",variant:{id:"0-x",title:"t",briefing:"b",modifier:"m",impact:0,continuity:-10,objective:0}}).continuity,93,"a campaign operation keeps the common-ground reserve");
 
 // The engine's solver stays behind an explicit guidance gate. Normal play and
 // expert operations never receive the optimal move; only the training path does.

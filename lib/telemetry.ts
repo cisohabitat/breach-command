@@ -1,3 +1,5 @@
+import { readStored, removeStored, writeStored } from "./storage";
+
 export const TELEMETRY_KEY = "breach-command.balance";
 
 export type BalanceTelemetry = {
@@ -13,16 +15,14 @@ export type BalanceTelemetry = {
 export const emptyTelemetry: BalanceTelemetry = { operationsStarted: 0, operationsFinished: 0, wins: 0, losses: 0, turns: 0, procedures: {}, scenarios: {} };
 
 export function readTelemetry(): BalanceTelemetry {
-  if (typeof localStorage === "undefined") return emptyTelemetry;
   try {
-    const saved = JSON.parse(localStorage.getItem(TELEMETRY_KEY) ?? "null") as Partial<BalanceTelemetry> | null;
+    const saved = JSON.parse(readStored(TELEMETRY_KEY) ?? "null") as Partial<BalanceTelemetry> | null;
     if (!saved) return emptyTelemetry;
     return { ...emptyTelemetry, ...saved, procedures: saved.procedures ?? {}, scenarios: saved.scenarios ?? {} };
   } catch { return emptyTelemetry; }
 }
 
 export function recordTelemetry(event: "start" | "turn" | "win" | "loss", detail: { scenario?: number; procedure?: string } = {}) {
-  if (typeof localStorage === "undefined") return;
   const data = readTelemetry();
   if (event === "start") {
     data.operationsStarted += 1;
@@ -36,9 +36,9 @@ export function recordTelemetry(event: "start" | "turn" | "win" | "loss", detail
     data.operationsFinished += 1;
     data[event === "win" ? "wins" : "losses"] += 1;
   }
-  localStorage.setItem(TELEMETRY_KEY, JSON.stringify(data));
+  writeStored(TELEMETRY_KEY, JSON.stringify(data));
 }
 
 export function clearTelemetry() {
-  if (typeof localStorage !== "undefined") localStorage.removeItem(TELEMETRY_KEY);
+  removeStored(TELEMETRY_KEY);
 }

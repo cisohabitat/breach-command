@@ -37,7 +37,7 @@ export default function Home() {
         </Link>
         <div className="top-actions">
           <span className="solo-label"><Terminal size={14} /> SINGLE PLAYER</span>
-          <button className="quiet-button" onClick={() => setRules(true)}><BookOpen size={17} /><span>Field guide</span></button>
+          <button className="quiet-button" onClick={() => setRules(true)} aria-label="Field guide"><BookOpen size={17} /><span>Field guide</span></button>
           <button className="quiet-button" onClick={() => setSettings(true)} aria-label="Game settings"><Settings2 size={17} /><span>Settings</span></button>
           {game && <button className="quiet-button" disabled={rolling} onClick={() => setNewConfirm(true)} aria-label="New incident"><RotateCcw size={16} /><span>New incident</span></button>}
         </div>

@@ -176,6 +176,18 @@ export function decodeChallenge(code: string): ChallengeSetup | null {
   return checksum === Number(checksumRaw) && scenario >= 0 && scenario < 10 && difficulty && mode && specialist && Number.isSafeInteger(seed) ? { scenario, difficulty, mode, specialist, seed } : null;
 }
 
+// The nth d20 of a seeded operation is a pure function of the seed and the turn
+// index, so nothing about the roll stream has to be stored, serialised or
+// replayed: a challenge code reproduces the same sequence on any device, and a
+// saved session resumes on exactly the roll it would have produced.
+export function seededRoll(seed: number, index: number, faces = 20) {
+  let state = ((seed >>> 0) + Math.imul(index + 1, 0x9e3779b9)) >>> 0;
+  state = Math.imul(state ^ (state >>> 16), 0x21f0aaad) >>> 0;
+  state = Math.imul(state ^ (state >>> 15), 0x735a2d97) >>> 0;
+  state = (state ^ (state >>> 15)) >>> 0;
+  return (state % faces) + 1;
+}
+
 export function seededChallengeRandom(seed: number) {
   let state = seed >>> 0;
   return (max: number) => { state = (state * 1664525 + 1013904223) >>> 0; return state % max; };
