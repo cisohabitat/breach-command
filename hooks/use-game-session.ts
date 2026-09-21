@@ -61,11 +61,16 @@ export type MeterPulse = {
   key: number;
   impact: number;
   continuity: number;
+  objective: number;
   impactCritical: boolean;
   continuityAtRisk: boolean;
+  objectiveImminent: boolean;
 };
 export const IMPACT_CRITICAL = 70;
 export const CONTINUITY_AT_RISK = 45;
+// Adversary progress is the clock that actually closes most operations, so it
+// gets the same threshold treatment as the other two pressure readouts.
+export const OBJECTIVE_IMMINENT = 70;
 
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -164,11 +169,13 @@ export function useGameSession() {
     if (!previous) return;
     const impact = next.impact - previous.impact;
     const continuity = next.continuity - previous.continuity;
+    const objective = next.objectiveProgress - previous.objectiveProgress;
     const impactCritical = previous.impact < IMPACT_CRITICAL && next.impact >= IMPACT_CRITICAL;
     const continuityAtRisk = previous.continuity > CONTINUITY_AT_RISK && next.continuity <= CONTINUITY_AT_RISK;
-    if (!impact && !continuity && !impactCritical && !continuityAtRisk) return;
+    const objectiveImminent = previous.objectiveProgress < OBJECTIVE_IMMINENT && next.objectiveProgress >= OBJECTIVE_IMMINENT;
+    if (!impact && !continuity && !objective && !impactCritical && !continuityAtRisk && !objectiveImminent) return;
     pulseKey.current += 1;
-    setMeterPulse({ key: pulseKey.current, impact, continuity, impactCritical, continuityAtRisk });
+    setMeterPulse({ key: pulseKey.current, impact, continuity, objective, impactCritical, continuityAtRisk, objectiveImminent });
     if (pulseTimer.current) clearTimeout(pulseTimer.current);
     pulseTimer.current = setTimeout(() => setMeterPulse(null), 1400);
   }
@@ -265,9 +272,9 @@ export function useGameSession() {
       setInlineReport(requiresDialog ? null : result);
       const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
       setPendingUndo(quick && next.status === "playing" && !blockedNow ? { label: procedures.find(item => item.id === id)?.title ?? "Procedure", game: current } : null);
-      setCriticalAnnouncement(next.impact >= 70 || next.continuity <= 45 ? `Warning. Business impact ${next.impact}. ${getOperationalLabel(next)} ${next.continuity}.` : "");
+      setCriticalAnnouncement(next.impact >= IMPACT_CRITICAL || next.continuity <= CONTINUITY_AT_RISK || next.objectiveProgress >= OBJECTIVE_IMMINENT ? `Warning. Business impact ${next.impact}. ${getOperationalLabel(next)} ${next.continuity}. Adversary progress ${next.objectiveProgress}.` : "");
       setRolling(false);
-      setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
+      setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}. Adversary progress is ${next.objectiveProgress}.`);
       playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
         procedure: result.procedure,
         success: result.success,

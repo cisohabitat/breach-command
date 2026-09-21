@@ -92,6 +92,10 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
   const modeReward = game.mode === "expert" ? 1.5 : game.mode === "escalation" ? 1.4 : game.mode === "ironman" ? 1.35 : game.mode === "daily" ? 1.15 : 1;
   const reward = Math.max(10, Math.round(score * (game.difficulty === "crisis" ? 1.35 : game.difficulty === "operational" ? 1.15 : 1) * modeReward));
   const won = game.status === "won";
+  // A drill is not a defeat. The team investigated activity that turned out to be
+  // authorised: nothing was missed, no access was left open, and the command
+  // record should not read as though the incident got away.
+  const drill = game.status === "exercise";
   const specialistFatigue = Object.fromEntries(Object.entries(current.specialistFatigue).map(([id, fatigue]) => [id, Math.max(0, fatigue - 1)]));
   specialistFatigue[game.specialist] = Math.max(0, Math.min(6, game.specialistFatigue));
   const mastery = score >= 88 ? 3 : score >= 74 ? 2 : won ? 1 : 0;
@@ -101,19 +105,19 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
   };
   const actorSightings = { ...current.actorSightings, [game.adversaryProfile]: (current.actorSightings[game.adversaryProfile] ?? 0) + 1 };
   const bond = current.specialistBonds[game.specialist] ?? 35;
-  const specialistBonds = { ...current.specialistBonds, [game.specialist]: Math.max(0, Math.min(100, bond + (won ? (score >= 82 ? 8 : 5) : 2) - (game.specialistFatigue >= 6 ? 2 : 0))) };
+  const specialistBonds = { ...current.specialistBonds, [game.specialist]: Math.max(0, Math.min(100, bond + (won ? (score >= 82 ? 8 : 5) : drill ? 3 : 2) - (game.specialistFatigue >= 6 ? 2 : 0))) };
   return {
     completed,
     xp: current.xp + reward,
     bestScores: { ...current.bestScores, [String(game.scenario)]: Math.max(prior, score) },
     operations: current.operations + 1,
-    leadershipTrust: Math.max(0, Math.min(100, current.leadershipTrust + (won ? Math.round((score - 50) / 8) : -8))),
-    readiness: Math.max(0, Math.min(100, current.readiness + (won ? 5 : -3))),
-    streak: won ? current.streak + 1 : 0,
+    leadershipTrust: Math.max(0, Math.min(100, current.leadershipTrust + (won ? Math.round((score - 50) / 8) : drill ? 0 : -8))),
+    readiness: Math.max(0, Math.min(100, current.readiness + (won ? 5 : drill ? 2 : -3))),
+    streak: won ? current.streak + 1 : drill ? current.streak : 0,
     specialistFatigue,
     mastery: { ...current.mastery, [String(game.scenario)]: Math.max(current.mastery[String(game.scenario)] ?? 0, mastery) },
     commandPosture,
-    unresolvedThreads: Math.max(0, current.unresolvedThreads + (won && game.objectiveProgress < 65 ? -1 : 1)),
+    unresolvedThreads: Math.max(0, current.unresolvedThreads + (drill ? 0 : won && game.objectiveProgress < 65 ? -1 : 1)),
     actorSightings,
     specialistBonds,
     routeHistory: [...current.routeHistory, game.campaignRoute].slice(-12),

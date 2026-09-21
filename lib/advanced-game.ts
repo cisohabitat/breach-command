@@ -578,7 +578,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     sectorHealth: mode === "escalation" ? 88 : 100,
     sectorHistory: [],
     objective: objectiveForScenario(scenario, random(2)),
-    objectiveProgress: clamp((mode === "escalation" ? 18 : 5) + (mode === "campaign" ? (setup.unresolvedThreads ?? 0) * 3 : 0) + variant.objective + routeObjective),
+    objectiveProgress: clamp((mode === "escalation" ? 18 : 5) + (difficulty === "crisis" ? 8 : 0) + (mode === "campaign" ? (setup.unresolvedThreads ?? 0) * 3 : 0) + variant.objective + routeObjective),
     campaignTier,
     focusedNode: infrastructureTopologies[scenario].nodes[1].id,
     evidence: [],
@@ -591,7 +591,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     caseTheory: null,
     caseTheoryHistory: [],
     nodePosture: Object.fromEntries(infrastructureTopologies[scenario].nodes.map(node => [node.id, "normal" as NodePosture])),
-    mapActionsRemaining: mode === "expert" ? 2 : 3,
+    mapActionsRemaining: Math.max(1, 3 - (mode === "expert" ? 1 : 0) - (difficulty === "crisis" ? 1 : 0)),
     mapHistory: [],
     seed: typeof setup.seed === "number" && Number.isFinite(setup.seed) ? setup.seed : null,
   };
@@ -866,7 +866,17 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
         inject.effectLabel = `Additional discovery: ${attacks.find(item => item.id === injectReveal)!.title}.`;
       } else inject.effectLabel = "All stages are already revealed.";
     }
-    if (inject.effect === "end") exerciseEnd = true;
+    if (inject.effect === "end") {
+      // Standing an operation down as an authorised exercise is a conclusion the
+      // investigation reaches, not one it is handed. Below two confirmed stages
+      // there is not enough attributed behaviour to support that call, so the
+      // controller clears only part of the activity and the operation continues.
+      if (g.revealed.length >= 2) exerciseEnd = true;
+      else {
+        impactChange -= 8;
+        inject.effectLabel = "Part of the activity is confirmed as authorised. Business pressure falls and the investigation continues.";
+      }
+    }
   }
 
   let adversaryEvent: string | null = null;
@@ -879,6 +889,15 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     impactChange += profile.pressure + g.adversaryTempo * 2;
     continuityChange -= 2 + g.adversaryTempo;
     g.adversaryEvent = adversaryEvent;
+    if (g.difficulty === "crisis" && g.revealed.length < 4) {
+      const openStage = g.chain.findIndex(id => !g.revealed.includes(id));
+      const adaptation = openStage >= 0 ? selectAdaptation(g, openStage, g.chain[openStage]) : null;
+      if (adaptation) {
+        g.chain[openStage] = adaptation.id;
+        adversaryEvent = `${adversaryEvent} ${scenarioDynamics[g.scenario].reaction}`;
+        g.adversaryEvent = adversaryEvent;
+      }
+    }
   }
   const sector = sectorSystems[g.scenario];
   const protection = g.specialist === "continuity" ? 3 : g.specialist === "ot" && [2, 8].includes(g.scenario) ? 3 : 0;
@@ -894,7 +913,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (plan.intensity === "exhaustive") continuityChange -= sector.exhaustiveContinuity;
   const scopeSector = plan.scope === "enterprise" ? -sector.enterpriseBias : -sector.focusedBias;
   const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)) + (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0) + protection + scopeSector + sectorSpecific + (g.specialist === "communications" ? sector.commsRecovery : 0)));
-  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
+  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
   g.sectorHealth = clamp(g.sectorHealth + sectorChange);
   g.sectorHistory.push(g.sectorHealth);
   g.objectiveProgress = clamp(g.objectiveProgress + objectiveChange);
@@ -903,7 +922,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   g.continuity = clamp(g.continuity + continuityChange);
   g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange });
   if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) g.status = "lost";
-  else if (exerciseEnd && g.revealed.length < 4) g.status = "exercise";
+  else if (exerciseEnd && g.revealed.length >= 2 && g.revealed.length < 4) g.status = "exercise";
   else if (number >= g.turnLimit && g.revealed.length < 4) g.status = "lost";
   else if (!g.pendingDecision && number === 2 && g.revealed.length < 4) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {

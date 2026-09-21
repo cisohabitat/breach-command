@@ -3,7 +3,7 @@ import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveS
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
-import {campaignAct,campaignEnding,defaultCampaign,parseCampaign} from "../lib/campaign.ts";
+import {campaignAct,campaignEnding,defaultCampaign,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
 import {campaignRoutes,incidentVariant,routeForCampaign} from "../lib/phase9.ts";
 import {chooseBotAction,type BotAction} from "../lib/game-bot.ts";
 
@@ -20,7 +20,51 @@ g=baseline();g=playTurn(g,"endpoint",20);assert.equal(g.turns[0].inject?.reason,
 g=baseline();g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(g.turns[2].inject?.reason,"Three failed rolls");assert.equal(g.failures,0);assert.ok(g.turns[2].adversaryEvent);assert.ok(g.continuity<100);
 g=baseline();g.injectDeck=[2];g=playTurn(g,"endpoint",20);assert.equal(availableIn(g,"endpoint"),0,"restoration override");
 g=baseline();g.injectDeck=[3];g=playTurn(g,"endpoint",20);assert.equal(g.revealed.length,2);assert.ok(g.pendingDecision);
-g=baseline();g.injectDeck=[8];g=playTurn(g,"email",20);assert.equal(g.status,"exercise");
+// Standing down as an authorised exercise is a conclusion the investigation
+// reaches, not one the deck hands it. Below two confirmed stages the controller
+// clears part of the activity and the operation continues.
+g=baseline();g.injectDeck=[8];g=playTurn(g,"email",20);
+assert.equal(g.status,"playing","an early drill draw does not end the operation");
+assert.ok(g.turns[0].inject?.effectLabel.includes("authorised"),"the cleared activity is reported");
+const drillControl=playTurn({...baseline(),injectDeck:[0]},"email",20);
+const drillCleared=playTurn({...baseline(),injectDeck:[8]},"email",20);
+assert.ok(drillCleared.impact<drillControl.impact,"clearing part of the activity relieves business pressure");
+g=baseline();g.revealed=["phish","spray"];g.injectDeck=[8];g=playTurn(g,"email",20);
+assert.equal(g.status,"exercise","two confirmed stages support the drill conclusion");
+assert.ok(g.revealed.length>=2,"a drill only concludes on attributed behaviour");
+
+// A drill is not a defeat. It costs no trust, keeps the streak and leaves no
+// unresolved access, while a genuine loss still does all three.
+const commandRecord={...defaultCampaign,leadershipTrust:60,readiness:60,streak:3};
+const drillOperation={...newGame(0,"operational",()=>0),status:"exercise" as const};
+const afterDrill=recordCampaignResult(commandRecord,drillOperation,40);
+assert.equal(afterDrill.leadershipTrust,60,"a drill does not cost leadership trust");
+assert.equal(afterDrill.streak,3,"a drill does not break the streak");
+assert.equal(afterDrill.unresolvedThreads,0,"a drill leaves no unresolved access");
+assert.ok(afterDrill.readiness>60,"exercising the process builds readiness");
+const afterLoss=recordCampaignResult(commandRecord,{...drillOperation,status:"lost"},40);
+assert.ok(afterLoss.leadershipTrust<60&&afterLoss.streak===0&&afterLoss.unresolvedThreads===1,"a defeat still costs trust, the streak and an open thread");
+
+// Crisis is a different operation, not the same one with tighter numbers: fewer
+// command actions, an objective clock that is already moving and moves faster,
+// and an adversary that re-routes on its own beat without being pressed.
+const crisisStart=newGame(0,"crisis",()=>0);
+const steadyStart=newGame(0,"operational",()=>0);
+assert.equal(crisisStart.mapActionsRemaining,2,"crisis spends one fewer command action");
+assert.equal(newGame(0,"crisis",()=>0,{mode:"expert"}).mapActionsRemaining,1,"an expert crisis is tighter again");
+assert.equal(steadyStart.mapActionsRemaining,3);
+assert.ok(crisisStart.objectiveProgress>steadyStart.objectiveProgress,"the crisis objective clock starts moving");
+const crisisTurn=playTurn({...crisisStart,chain:["phish","spray","task","https"],established:[],injectDeck:[]},"dns",2);
+const steadyTurn=playTurn({...steadyStart,chain:["phish","spray","task","https"],established:[],injectDeck:[]},"dns",2);
+assert.ok(crisisTurn.turns[0].objectiveChange>steadyTurn.turns[0].objectiveChange,"crisis advances the objective faster each turn");
+const reroute=(difficulty:Difficulty)=>{
+  let sim=newGame(0,difficulty,()=>0);sim.chain=["phish","spray","task","https"];sim.established=[];sim.injectDeck=[];
+  const opening=[...sim.chain];
+  for(const procedure of ["server","dns"]){if(sim.status!=="playing"||sim.pendingDecision||sim.pendingCommand||sim.pendingSetPiece)break;sim=playTurn(sim,procedure,2);}
+  return {changed:JSON.stringify(sim.chain)!==JSON.stringify(opening),event:sim.adversaryEvent};
+};
+assert.equal(reroute("crisis").changed,true,"the crisis adversary re-routes on its escalation beat");
+assert.equal(reroute("operational").changed,false,"ordinary difficulties only re-route when the response presses");
 g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);assert.ok(g.pendingDecision);g=resolveDecision(g,"act");assert.equal(g.status,"response");g=resolveResponse(g,"credential");assert.equal(g.status,"response");g=resolveResponse(g,"verify");assert.equal(g.status,"response");g=resolveResponse(g,"rebuild");assert.equal(g.status,"won");assert.ok(getOutcome(g).grade);assert.ok(getCounterfactuals(g).length);
 g=baseline();for(let i=0;i<14&&g.status==="playing";i++){if(g.pendingSetPiece){g=resolveSetPiece(g,"a");continue;}if(g.pendingCommand){g=resolveCommand(g,"a");continue;}const action=nextEvidenceSource(g);assert.ok(action);g=playTurn(g,action.id,2);}assert.equal(g.status,"lost");
 assert.equal(getAdversaryState(newGame(0,"crisis",()=>0)),"Maneuvering");assert.equal(difficulties.crisis.maxTurns,9);

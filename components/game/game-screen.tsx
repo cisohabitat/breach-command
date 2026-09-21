@@ -6,7 +6,7 @@ import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
 import { BriefingWorkspace } from "@/components/game/briefing-workspace";
 import { BotControl } from "@/components/game/bot-control";
 import { gameModes, getOperationalLabel, getTurnLimit } from "@/lib/advanced-game";
-import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, type GameSession } from "@/hooks/use-game-session";
+import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
 
 export function GameScreen({ session }: { session: GameSession }) {
   const {
@@ -19,13 +19,19 @@ export function GameScreen({ session }: { session: GameSession }) {
   return (
     <main className={`game-screen sector-theme-${game.scenario}`} id="main-content">
       <section className="game-heading">
-        <div><div className="eyebrow">CASE {String(game.scenario + 1).padStart(2, "0")} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()} <span className="separator">/</span> {gameModes[game.mode].title.toUpperCase()}</div><h1>{activeScenario.title}</h1></div>
-        <div className="case-meters">
-          <div className="turn-meter">
+        <div className="game-identity">
+          <div className="eyebrow">CASE {String(game.scenario + 1).padStart(2, "0")} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()} <span className="separator">/</span> {gameModes[game.mode].title.toUpperCase()}</div>
+          <h1>{activeScenario.title}</h1>
+          {/* The investigation window rarely decides an operation, so it reads as
+              context under the title rather than competing with the three
+              pressures that do. */}
+          <div className="operation-status">
             <span className="mono">{game.status === "response" ? "RESPONSE PHASE" : ended ? "FINAL STATUS" : "INVESTIGATION WINDOW"}</span>
-            <div>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : "Window closed"}</div>
-            <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Turns remaining" />
+            <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> of {getTurnLimit(game)} turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : "Window closed"}</span>
+            <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Investigation window remaining" />
           </div>
+        </div>
+        <div className="case-meters">
           <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>
             <span className="mono">BUSINESS IMPACT</span><strong>{game.impact}</strong>
             <Progress value={game.impact} aria-label="Business impact" />
@@ -45,6 +51,17 @@ export function GameScreen({ session }: { session: GameSession }) {
             {meterPulse && meterPulse.continuity !== 0 && (
               <span key={`continuity-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.continuity < 0 ? "adverse" : "favourable"}`} aria-hidden="true">
                 {meterPulse.continuity > 0 ? "+" : "−"}{Math.abs(meterPulse.continuity)}
+              </span>
+            )}
+          </div>
+          <div className={`objective-meter ${game.objectiveProgress >= OBJECTIVE_IMMINENT ? "critical" : ""} ${meterPulse?.objectiveImminent ? "crossing" : ""}`}>
+            <span className="mono">ADVERSARY PROGRESS</span><strong>{game.objectiveProgress}</strong>
+            <Progress value={game.objectiveProgress} aria-label="Adversary progress" />
+            <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}</small>
+            {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
+            {meterPulse && meterPulse.objective !== 0 && (
+              <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
+                {meterPulse.objective > 0 ? "+" : "−"}{Math.abs(meterPulse.objective)}
               </span>
             )}
           </div>
