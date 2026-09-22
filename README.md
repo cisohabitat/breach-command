@@ -28,6 +28,7 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 ## Major systems
 
 - **Ten sector scenarios:** enterprise IT, healthcare, energy, maritime, cloud, shared services, government, telecommunications, water and financial clearing.
+- **Eleven procedures, every one inside the reasoning system:** each is predicted by at least one working hypothesis and every technique can be reached through its own route, so no evidence source is reduced to a lucky find.
 - **Seventy-two original techniques:** eighteen per stage, each with its own detectable evidence sources, so every incident draws a different set of investigative procedures rather than the same rotation.
 - **Three difficulty levels:** Training, Operational and Crisis. Training shortens the procedure cooldown by a turn so a beginner is rarely left without a source their reading predicts. Crisis is a different operation rather than the same one with tighter numbers: one fewer command action, an adversary objective that is already moving and advances faster every turn, and an adversary that re-routes the next unrevealed stage on its own escalation beat instead of waiting to be pressed.
 - **Five modes:** Campaign, Daily Operation, Ironman, Escalation and Expert.

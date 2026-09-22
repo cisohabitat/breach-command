@@ -26,10 +26,29 @@ test("resolves a turn, its decision and its cooldown", () => {
   n=resolveDecision(n,"observe");assert.equal(n.nextModifier,2);assert.equal(n.impact,30);assert.equal(n.pendingDecision,null);
   n=playTurn(n,"dns",9);assert.equal(n.turns[1].total,12);assert.equal(n.nextModifier,0);n=resolveSetPiece(n,"a");assert.throws(()=>playTurn(n,"endpoint",15),/cooling/);
   g=baseline();g=setHypothesis(g,"endpoint");g=playTurn(g,"endpoint",7);assert.equal(g.turns[0].planningBonus,2);assert.equal(g.turns[0].total,11);
-  g=baseline();g=playTurn(g,"endpoint",20);assert.equal(g.turns[0].inject?.reason,"Natural 20");const oldPivot=g.chain[1];g=resolveDecision(g,"act");assert.equal(g.nextModifier,-1);assert.equal(g.impact,18);assert.notEqual(g.chain[1],oldPivot);assert.ok(g.adversaryEvent);
+    // This deck opens with an unfavourable card. A natural 20 used to take it and
+  // raise business pressure, which is the game contradicting its own loudest
+  // signal; it now reaches past it to the relief card behind.
+  g=baseline();g=playTurn(g,"endpoint",20);assert.equal(g.turns[0].inject?.reason,"Natural 20");assert.equal(g.turns[0].inject?.effect,"relief","a natural 20 never hands the player a penalty");const oldPivot=g.chain[1];g=resolveDecision(g,"act");assert.equal(g.nextModifier,-1);assert.equal(g.impact,2);assert.notEqual(g.chain[1],oldPivot);assert.ok(g.adversaryEvent);
   g=baseline();g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(g.turns[2].inject?.reason,"Three failed rolls");assert.equal(g.failures,0);assert.ok(g.turns[2].adversaryEvent);assert.ok(g.continuity<100);
   g=baseline();g.injectDeck=[2];g=playTurn(g,"endpoint",20);assert.equal(availableIn(g,"endpoint"),0,"restoration override");
+  // A stage the partner hands over has to leave a finding, or the player holds a
+  // confirmed stage they cannot select in the evidence workspace.
   g=baseline();g.injectDeck=[3];g=playTurn(g,"endpoint",20);assert.equal(g.revealed.length,2);assert.ok(g.pendingDecision);
+  assert.equal(g.turns[0].inject?.id,"partner","the partner card was the one drawn");
+  const partnerFinding=g.evidence.find(item=>item.supports===g.turns[0].injectReveal);
+  assert.ok(partnerFinding,"the disclosed stage leaves a correlatable finding");
+  assert.equal(partnerFinding!.source,"Partner disclosure","attributed to where it came from");
+  assert.equal(g.evidence.filter(item=>item.supports).length,2,"alongside the stage the procedure found");
+
+  // A critical roll is the loudest signal the game sends; what it draws has to
+  // agree with it. Deck order puts an unfavourable card first either way.
+  const deck=[1,0];
+  assert.equal(playTurn((()=>{const b=baseline();b.injectDeck=[...deck];return b;})(),"endpoint",20).turns[0].inject?.effect,"bonus","a natural 20 reaches past the penalty");
+  assert.equal(playTurn((()=>{const b=baseline();b.injectDeck=[0,1];return b;})(),"email",1).turns[0].inject?.effect,"penalty","and a natural 1 reaches past the bonus");
+  // The authorised stand-down is neither reward nor punishment, and a natural 20
+  // must still be able to draw it or the ending all but disappears.
+  assert.equal(playTurn((()=>{const b=baseline();b.injectDeck=[8];b.revealed=[b.chain[0],b.chain[1]];return b;})(),"endpoint",20).status,"exercise","a natural 20 can still stand the operation down");
 });
 
 test("earns the drill conclusion rather than drawing it", () => {

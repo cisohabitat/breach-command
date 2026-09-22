@@ -17,16 +17,20 @@ export type { Difficulty, HypothesisId };
 export { adversaryObjectives, gameModes, infrastructureTopologies, procedureIntensities, procedureScopes, sectorSetPieces, sectorSystems, specialists };
 export type { AdversaryObjectiveId, GameMode, ProcedureIntensity, ProcedurePlan, ProcedureScope, SpecialistId };
 
+// A critical roll is the loudest feedback the game gives, so what it draws has to
+// agree with it: a natural 20 must never hand the player a penalty and a natural 1
+// must never hand them a gift. Valence decides which end of the deck each
+// trigger reaches into; a run of failed rolls still draws from the whole deck.
 const injects = [
-  { id: "expert", title: "A specialist joins", text: "A responder helps focus the next investigative plan.", effect: "bonus", effectLabel: "Analytical advantage on the next procedure." },
-  { id: "delay", title: "Access approval delayed", text: "Coordination friction slows the next action while business impact grows.", effect: "penalty", effectLabel: "The next action is harder and pressure rises." },
-  { id: "restored", title: "Collection pipeline restored", text: "A repaired pipeline lets you revisit a used procedure early.", effect: "restore", effectLabel: "One cooling-down procedure becomes available." },
-  { id: "partner", title: "Partner shares evidence", text: "A trusted partner supplies a validated finding.", effect: "reveal", effectLabel: "One hidden stage is revealed, if any remain." },
-  { id: "press", title: "Leadership wants an update", text: "Leaders ask whether the essential service is safe. Uncertainty carries a cost.", effect: "pressure", effectLabel: "Business pressure rises." },
-  { id: "backup", title: "A useful evidence copy", text: "Retained telemetry improves the next investigation.", effect: "bonus", effectLabel: "Analytical advantage on the next procedure." },
-  { id: "noise", title: "An alert flood", text: "Unrelated alerts reduce analyst attention and delay decisions.", effect: "penalty", effectLabel: "The next action is harder and pressure rises." },
-  { id: "operations", title: "Operations stabilises service", text: "A workaround buys the investigation team time.", effect: "relief", effectLabel: "Business pressure falls." },
-  { id: "exercise", title: "Authorised exercise confirmed", text: "The controller confirms that the activity belongs to an authorised test.", effect: "end", effectLabel: "Exercise ends." },
+  { id: "expert", valence: "good", title: "A specialist joins", text: "A responder helps focus the next investigative plan.", effect: "bonus", effectLabel: "Analytical advantage on the next procedure." },
+  { id: "delay", valence: "bad", title: "Access approval delayed", text: "Coordination friction slows the next action while business impact grows.", effect: "penalty", effectLabel: "The next action is harder and pressure rises." },
+  { id: "restored", valence: "good", title: "Collection pipeline restored", text: "A repaired pipeline lets you revisit a used procedure early.", effect: "restore", effectLabel: "One cooling-down procedure becomes available." },
+  { id: "partner", valence: "good", title: "Partner shares evidence", text: "A trusted partner supplies a validated finding.", effect: "reveal", effectLabel: "One hidden stage is revealed, if any remain." },
+  { id: "press", valence: "bad", title: "Leadership wants an update", text: "Leaders ask whether the essential service is safe. Uncertainty carries a cost.", effect: "pressure", effectLabel: "Business pressure rises." },
+  { id: "backup", valence: "good", title: "A useful evidence copy", text: "Retained telemetry improves the next investigation.", effect: "bonus", effectLabel: "Analytical advantage on the next procedure." },
+  { id: "noise", valence: "bad", title: "An alert flood", text: "Unrelated alerts reduce analyst attention and delay decisions.", effect: "penalty", effectLabel: "The next action is harder and pressure rises." },
+  { id: "operations", valence: "good", title: "Operations stabilises service", text: "A workaround buys the investigation team time.", effect: "relief", effectLabel: "Business pressure falls." },
+  { id: "exercise", valence: "neutral", title: "Authorised exercise confirmed", text: "The controller confirms that the activity belongs to an authorised test.", effect: "end", effectLabel: "Exercise ends." },
 ];
 
 export const adversaryProfiles = {
@@ -1179,7 +1183,16 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   let exerciseEnd = false;
   const reason = raw === 1 ? "Natural 1" : raw === 20 ? "Natural 20" : g.failures >= 3 ? "Three failed rolls" : null;
   if (reason && g.injectDeck.length) {
-    const index = g.injectDeck.shift()!;
+    // A natural 20 may also land the authorised stand-down, which is neutral: it
+    // is a conclusion the investigation has earned, not a punishment. Excluding it
+    // here is what dropped the exercise ending from six per cent of operations to
+    // one when the valence rule first went in.
+    const wanted = raw === 20 ? ["good", "neutral"] : raw === 1 ? ["bad"] : null;
+    // The deck stays shuffled and each card is still drawn once; a critical roll
+    // reaches past cards of the wrong valence rather than reshuffling. If none of
+    // the wanted kind is left, the next card is taken as before.
+    const position = wanted ? Math.max(0, g.injectDeck.findIndex(item => wanted.includes(injects[item].valence))) : 0;
+    const index = g.injectDeck.splice(position, 1)[0];
     inject = { ...injects[index], reason };
     if (g.failures >= 3) g.failures = 0;
     if (inject.effect === "bonus") g.nextModifier = 2;
@@ -1200,6 +1213,22 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
         g.pendingDecision = g.pendingDecision ?? injectReveal;
         inject.effectLabel = `Additional discovery: ${attacks.find(item => item.id === injectReveal)!.title}.`;
       } else inject.effectLabel = "All stages are already revealed.";
+    }
+    if (injectReveal) {
+      // A stage revealed by the partner used to leave nothing in the evidence
+      // workspace, so a player could hold four confirmed stages and be unable to
+      // correlate one of them. The finding is recorded like any other, attributed
+      // to where it came from.
+      g.evidence.push({
+        id: `E${number}-partner`,
+        turn: number,
+        title: `${attacks.find(item => item.id === injectReveal)!.title} evidence`,
+        source: "Partner disclosure",
+        system: focusNode.label,
+        confidence: "HIGH",
+        supports: injectReveal,
+        detail: attacks.find(item => item.id === injectReveal)!.evidence,
+      });
     }
     if (inject.effect === "end") {
       // Standing an operation down as an authorised exercise is a conclusion the

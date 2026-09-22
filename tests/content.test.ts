@@ -1,7 +1,7 @@
 // Data invariants the authored content has to keep.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {newGame,attacks,procedures,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
+import {newGame,attacks,hypotheses,procedures,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
 import {adversaryObjectives} from "../lib/command-systems.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
 
@@ -44,4 +44,31 @@ test("keeps the technique pool and topologies distinct", () => {
   const seedB=newGame(6,"crisis",seededChallengeRandom(90210),{mode:"daily"});
   assert.deepEqual(seedA.chain,seedB.chain);assert.equal(seedA.adversaryProfile,seedB.adversaryProfile);assert.deepEqual(seedA.injectDeck,seedB.injectDeck);
   assert.deepEqual(Object.keys(seedA.nodePosture).sort(),infrastructureTopologies[6].nodes.map(n=>n.id).sort(),"posture is keyed to the scenario topology");
+});
+
+test("keeps every procedure inside the reasoning system", () => {
+  // DNS review and Email investigation were listed by no route at all, so two of
+  // the eleven procedures could never earn the planning bonus and only ever
+  // turned up stages as windfalls. A player has no way to read that as anything
+  // but the game contradicting itself.
+  const listed = new Set(hypotheses.flatMap(item => item.procedures));
+  const orphans = procedures.filter(item => !listed.has(item.id)).map(item => item.id);
+  assert.deepEqual(orphans, [], "every procedure is predicted by at least one reading");
+
+  // And a route only lists sources that mostly detect its own techniques. A route
+  // list built from broad sources stops discriminating, which is the whole point
+  // of declaring one.
+  for (const hypothesis of hypotheses) {
+    let own = 0;
+    let all = 0;
+    for (const attack of attacks) for (const source of attack.detect) if (hypothesis.procedures.includes(source)) { all++; if (attack.vector === hypothesis.id) own++; }
+    assert.ok(own / all >= 0.3, `${hypothesis.id} predicts sources that mostly detect its own route (${Math.round(own / all * 100)}%)`);
+  }
+
+  // Every technique stays reachable through its own route, so no stage can only
+  // ever be found by accident.
+  for (const attack of attacks) {
+    const route = hypotheses.find(item => item.id === attack.vector)!;
+    assert.ok(attack.detect.some(source => route.procedures.includes(source)), `${attack.id} can be found by reasoning, not only by luck`);
+  }
 });
