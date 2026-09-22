@@ -17,6 +17,8 @@ The player takes command of one of ten fictional cyber incidents. Each operation
 7. Declare and revise a case theory for the adversary objective, then test it against causal evidence.
 8. Execute containment, assurance and recovery decisions, then review the reconstructed incident.
 
+The Investigate column keeps a standing summary of what the team already knows — the incident timeline, the observations the captain has released, the stages confirmed so far and the one signal still unverified — so an operation above Training, where the teaching prompts stop, does not open on four routes and nothing else.
+
 The working hypothesis carries a standing readout built from the player's own results: how many of that reading's evidence sources have been spent since the last confirmation, and whether it is holding, weakening or poorly supported. Absence across a reading's own sources is evidence against it, and the game says so during the operation rather than only in the review.
 
 Before committing an action the interface names what it buys — whether it tests the hypothesis you have declared, merely collects, or tests nothing because no hypothesis is recorded — and how many times that source has already been spent without exposing a stage. The roll's modifier can be expanded into its parts. All of it is built from what the player has already declared or seen; the planning bonus stays hidden until the roll, because showing it would answer the question under investigation.

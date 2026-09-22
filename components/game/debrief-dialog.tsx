@@ -82,12 +82,14 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             ))}
           </section>
           <section className="advanced-review">
+            <div><strong>{game.revealed.length}/4</strong><span>Attack stages confirmed</span></div>
+            <div><strong>{game.evidence.filter(item => item.supports).length}</strong><span>Findings that confirmed a stage</span></div>
+            <div><strong>{game.evidence.filter(item => !item.supports).length}</strong><span>Findings that settled nothing</span></div>
+            <div><strong>{game.correlations.filter(item => item.valid).length}/{game.correlations.length}</strong><span>Causal relationships supported</span></div>
             <div><strong>{game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0)}</strong><span>Hypothesis revisions</span></div>
             <div><strong>{game.turns.filter(turn => turn.planningBonus > 0).length}</strong><span>Evidence-aligned actions</span></div>
             <div><strong>{game.commandHistory.length}</strong><span>Command events resolved</span></div>
-            <div><strong>{game.turns.filter(turn => turn.success && !turn.revealed).length}</strong><span>Successful but non-discriminating actions</span></div>
-            <div><strong>{game.evidence.length}</strong><span>Evidence findings preserved</span></div>
-            <div><strong>{game.correlations.filter(item => item.valid).length}/{game.correlations.length}</strong><span>Causal relationships supported</span></div>
+            <div><strong>{game.setPieceHistory.length}</strong><span>Sector decisions resolved</span></div>
           </section>
           <section className="mission-consequences">
             <div><span className="eyebrow">SECTOR OUTCOME</span><strong>{game.sectorHealth}/100 · {sectorSystems[game.scenario].title}</strong><p>{sectorSystems[game.scenario].rule}</p></div>

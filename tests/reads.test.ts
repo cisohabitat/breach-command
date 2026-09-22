@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getModifierBreakdown,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,hypotheses,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
+import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,hypotheses,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -177,6 +177,25 @@ test("speaks plainly to a player who is new to the subject", () => {
   assert.ok(/only 3 of 5 turns/.test(graded([true, true, true, false, false]).gap), "a partly correct reading is named, not waved through");
   assert.ok(/separate skills/.test(graded([true, true, true, false, false]).concept), "and the two skills are told apart");
   assert.ok(/Nothing stands out/.test(graded([true, true, true]).gap), "while a clean record still gets the all-clear");
+});
+
+test("restates what the player has been told without adding to it", () => {
+  // Operational takes the training aid away, so this panel is all a newcomer has
+  // in front of them. It may only repeat the briefing and their own findings.
+  const start = baseline();
+  const opening = getKnownFacts(start);
+  assert.ok(opening.timeline.length > 10, "the incident timeline is restated");
+  assert.equal(opening.observations.length, 1, "observations arrive at the pace the captain releases them");
+  assert.deepEqual(opening.confirmed, [], "and nothing is confirmed before a stage is found");
+  assert.equal(opening.unverified, null, "the unverified signal waits until the captain offers it");
+  assert.deepEqual(getKnownFacts({ ...start, chain: ["token", "role", "vault", "apikey"] }), opening, "it never consults the hidden chain");
+
+  const found = playTurn((() => { const b = baseline(); b.injectDeck = []; return b; })(), "endpoint", 20);
+  const after = getKnownFacts(found);
+  assert.deepEqual(after.confirmed, [attacks.find(attack => attack.id === found.revealed[0])!.title], "a confirmed stage is named once it is revealed");
+  for (const title of after.confirmed) {
+    assert.ok(found.revealed.some(id => attacks.find(attack => attack.id === id)!.title === title), "and only stages the player has revealed appear");
+  }
 });
 
 test("explains a score the player can check against what they saw", () => {

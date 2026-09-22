@@ -6872,10 +6872,10 @@ the player already holds, so neither narrows the answer for them. */
 /* Reference material folds away so the decision surfaces own the column. Each
 summary carries the state it hides, so collapsing costs no situational
 awareness. */
-.topology-detail,.map-intel-detail,.evidence-detail {
+.topology-detail,.map-intel-detail,.evidence-detail,.known-facts {
   margin-top:12px;
 }
-.topology-detail>summary,.map-intel-detail>summary,.evidence-detail>summary {
+.topology-detail>summary,.map-intel-detail>summary,.evidence-detail>summary,.known-facts>summary {
   cursor:pointer;
   list-style:none;
   display:flex;
@@ -6889,28 +6889,28 @@ awareness. */
   border-radius:9px;
   font-size:var(--type-caption);
 }
-.topology-detail>summary::-webkit-details-marker,.map-intel-detail>summary::-webkit-details-marker,.evidence-detail>summary::-webkit-details-marker {
+.topology-detail>summary::-webkit-details-marker,.map-intel-detail>summary::-webkit-details-marker,.evidence-detail>summary::-webkit-details-marker,.known-facts>summary::-webkit-details-marker {
   display:none;
 }
-.topology-detail>summary:focus-visible,.map-intel-detail>summary:focus-visible,.evidence-detail>summary:focus-visible {
+.topology-detail>summary:focus-visible,.map-intel-detail>summary:focus-visible,.evidence-detail>summary:focus-visible,.known-facts>summary:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
-.topology-detail>summary:hover,.map-intel-detail>summary:hover,.evidence-detail>summary:hover {
+.topology-detail>summary:hover,.map-intel-detail>summary:hover,.evidence-detail>summary:hover,.known-facts>summary:hover {
   border-color:#4d6642;
 }
-.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span {
+.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span {
   color:var(--text-soft);
   font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
   font-size:var(--type-micro);
 }
-.topology-detail>summary::after,.map-intel-detail>summary::after,.evidence-detail>summary::after {
+.topology-detail>summary::after,.map-intel-detail>summary::after,.evidence-detail>summary::after,.known-facts>summary::after {
   content:"+";
   margin-left:auto;
   color:var(--text-soft);
   font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
 }
-.topology-detail[open]>summary::after,.map-intel-detail[open]>summary::after,.evidence-detail[open]>summary::after {
+.topology-detail[open]>summary::after,.map-intel-detail[open]>summary::after,.evidence-detail[open]>summary::after,.known-facts[open]>summary::after {
   content:"−";
 }
 .topology-detail[open]>.topology-routes,.map-intel-detail[open]>.map-intel,.evidence-detail[open]>.evidence-timeline {
@@ -6918,6 +6918,62 @@ awareness. */
 }
 .map-intel-detail .map-intel {
   margin:11px 0 0;
+}
+/* What the player has already been told and already found, kept in front of them
+   once the training aid is gone. Confirmed and unverified are labelled in words,
+   never by colour alone. */
+.known-facts>summary svg {
+  margin-right:7px;
+  color:var(--text-soft);
+  vertical-align:-2px;
+}
+.known-facts>p,.known-facts>ul {
+  margin:11px 0 0;
+  padding:0;
+  font-size:var(--type-caption);
+  line-height:var(--leading-normal);
+}
+.known-facts ul {
+  list-style:none;
+  display:grid;
+  gap:6px;
+}
+.known-facts li {
+  padding-left:14px;
+  position:relative;
+  color:var(--text-soft);
+}
+.known-facts li::before {
+  content:"·";
+  position:absolute;
+  left:3px;
+  color:var(--text-soft);
+}
+.known-timeline {
+  color:var(--text-soft);
+}
+.known-confirmed li {
+  color:var(--text);
+}
+.known-confirmed li::before {
+  content:none;
+}
+.known-facts b {
+  display:inline-block;
+  margin-right:7px;
+  padding:1px 6px;
+  border:1px solid var(--line);
+  border-radius:4px;
+  color:var(--text-soft);
+  font:500 var(--type-micro) ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.04em;
+}
+.known-confirmed b {
+  border-color:#4d6642;
+  color:var(--lime);
+}
+.known-unverified {
+  color:var(--text-soft);
 }
 /* Four sentences before the full review, for a first operation. */
 .first-read {

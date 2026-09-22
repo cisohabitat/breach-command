@@ -7,6 +7,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
   const [selected, setSelected] = useState<string[]>([]);
   const [assessment, setAssessment] = useState<"causal" | "coincidental">("causal");
   const toggle = (id: string) => setSelected(current => current.includes(id) ? current.filter(item => item !== id) : current.length < 2 ? [...current, id] : [current[1], id]);
+  const confirmed = game.evidence.filter(item => item.supports).length;
   return (
     <section className="evidence-workspace" aria-label="Evidence correlation workspace">
       <div className="map-heading"><div><span className="eyebrow">EVIDENCE WORKSPACE</span><h2>Build the causal picture</h2></div><span className="focus-instruction"><Braces size={14} /> {game.correlations.length} correlations tested</span></div>
@@ -14,12 +15,15 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
         <div><GitBranch size={17} /><span><strong>Case theory</strong><small>Declare intent, then test it against causal evidence.</small></span></div>
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)} title={objectiveTheory[id].question}>{objectiveTheory[id].title}</button>)}</div>
       </div>
-      {!game.evidence.length ? <div className="evidence-empty"><Search size={20} /><p>Successful procedures will place findings here. Select two findings to test whether they form a causal sequence.</p></div> : <>
+      {!game.evidence.length ? <div className="evidence-empty"><Search size={20} /><p>Successful procedures will place findings here. A check can succeed and still settle nothing — that is recorded too. Select two findings to test whether they form a causal sequence.</p></div> : <>
         <details className="evidence-detail" open={game.evidence.length <= 3}>
-          <summary>Findings<span>{game.evidence.length} collected · {selected.length} selected</span></summary>
+          {/* A finding is not a stage. A check that succeeds without exposing one is
+              kept because it still narrows the search, so the count has to say which
+              kind each is or a beginner reads every row as a technique they found. */}
+          <summary>Findings<span>{confirmed} confirmed a stage · {game.evidence.length - confirmed} settled nothing · {selected.length} selected</span></summary>
           <div className="evidence-timeline" role="group" aria-label="Evidence timeline">{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
           <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
-            <span>{item.id} · T+{item.turn}</span><strong>{item.title}</strong><small>{item.system} · {item.source}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.confidence} CONFIDENCE</em>
+            <span>{item.id} · T+{item.turn}</span><strong>{item.title}</strong><small>{item.system} · {item.source}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? "CONFIRMED A STAGE" : "SETTLED NOTHING"} · {item.confidence} CONFIDENCE</em>
           </button>)}</div>
         </details>
         <div className="relationship-assessment" role="group" aria-label="Relationship assessment">

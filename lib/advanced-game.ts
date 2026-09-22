@@ -698,6 +698,26 @@ export function getLead(game: Game) {
   return scenario.leads[index] + reaction + decoy;
 }
 
+export type KnownFacts = { timeline: string; observations: string[]; confirmed: string[]; unverified: string | null };
+
+// Operational and above withdraw the training aid, which left the opening with
+// nothing on screen but a choice of four routes: the briefing's observations were
+// a workspace away and a click deep. This restates what the player has already
+// been told and already found — no hidden-chain state, so it can sit in front of
+// them for the whole operation.
+export function getKnownFacts(game: Game): KnownFacts {
+  const scenario = scenarios[game.scenario];
+  const index = Math.min(scenario.leads.length - 1, Math.floor(game.turns.length / 3));
+  return {
+    timeline: scenario.timeline,
+    observations: scenario.leads.slice(0, index + 1),
+    confirmed: game.revealed.map(id => attacks.find(attack => attack.id === id)!.title),
+    // Named as unverified because it is: the same signal the captain offers, kept
+    // apart from the observations so the distinction is the lesson, not a trap.
+    unverified: game.turns.length >= 2 ? getAdversaryProfile(game).unverifiedSignal : null,
+  };
+}
+
 export type GuidanceLevel = "off" | "reflection" | "training";
 
 // Guidance is deliberately scoped. Expert mode never receives it, guided

@@ -2,6 +2,7 @@ import { BrainCircuit, GraduationCap, Sparkles, X } from "lucide-react";
 import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { InfrastructureConsole } from "@/components/game/infrastructure-console";
+import { KnownFacts } from "@/components/game/known-facts";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
 import { cooldownWindow, getCoachPrompt, procedureIntensities, procedureScopes } from "@/lib/advanced-game";
@@ -20,6 +21,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
     <div className="investigation-dashboard">
       <div className="investigation-context">
         {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
+        {!game.pendingCommand && !game.pendingSetPiece && <KnownFacts game={game} />}
         <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
         <SpecialistTransmission game={game} />
         <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />
