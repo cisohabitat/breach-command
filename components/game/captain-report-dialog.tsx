@@ -1,12 +1,16 @@
 import { ArrowRight, BrainCircuit, CheckCheck, Eye, MessagesSquare, Shield, ShieldCheck, Siren, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
+import { attacks, getHypothesisStanding, hypothesisSources, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
   const { report, game, ended, config, dismissReport, decide } = session;
   // A decision belongs to a running operation. Once the operation has ended the
   // options are not offered, whatever the engine left behind.
+  // Expert operations withhold every read, this one included.
+  const standing = game && game.mode !== "expert" ? getHypothesisStanding(game) : null;
+  const settled = !!report && !!game && report.success && !report.revealed && !report.injectReveal
+    && !!game.hypothesis && hypothesisSources(game, game.hypothesis).includes(report.procedure);
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
 
@@ -29,6 +33,18 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>Sector {report.sectorChange >= 0 ? "+" : ""}{report.sectorChange}</span><span>Actor objective +{report.objectiveChange}</span></div>
               <p className="report-narrative">{report.narrative}</p>
               {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
+              {/* A completed check against one of the reading's own sources is the only
+                  turn that settles anything by finding nothing, and this is where the
+                  player is looking when it lands. A failed roll settles nothing, and
+                  neither does a source the reading never predicted, so neither gets
+                  this block — saying otherwise would teach the wrong inference. */}
+              {settled && standing && (
+                <div className={`report-standing level-${standing.level}`}>
+                  <span className="eyebrow">WHERE THE READING STANDS NOW</span>
+                  <strong>{standing.label}</strong>
+                  <p>{standing.detail}</p>
+                </div>
+              )}
               {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">ACTOR MOVEMENT</span><p>{report.adversaryEvent}</p></div></div>}
             </section>
             {(report.inject || decision) && <section className="report-briefing" aria-label="Operational update">

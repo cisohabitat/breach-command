@@ -268,7 +268,11 @@ export function useGameSession() {
       if (interval) clearInterval(interval);
       const next = playTurn(current, id, undefined, plan);
       const result = next.turns.at(-1)!;
-      const requiresDialog = !!result.revealed || !!result.inject || !!result.adversaryEvent || next.status !== "playing";
+      // Fast resolution is the switch that means "skip the ceremony". Without it
+      // every turn gets the captain's report, including the turn that found
+      // nothing — which is the turn whose result most needs explaining, and which
+      // used to pass with only a strip in the column the player had just left.
+      const requiresDialog = !quick || !!result.revealed || !!result.inject || !!result.adversaryEvent || next.status !== "playing";
       setDie(result.raw);
       setGame(next);
       pulseMeters(current, next);

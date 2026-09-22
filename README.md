@@ -19,6 +19,8 @@ The player takes command of one of ten fictional cyber incidents. Each operation
 
 The Investigate column keeps a standing summary of what the team already knows — the incident timeline, the observations the captain has released, the stages confirmed so far and the one signal still unverified — so an operation above Training, where the teaching prompts stop, does not open on four routes and nothing else.
 
+Every turn ends in the captain's report unless fast resolution is switched on, and a check that completed without exposing a stage says what it settled: which of the declared reading's sources have now come back empty, and whether that reading is holding, weakening or poorly supported. A failed roll settles nothing and says so.
+
 Hypothesis accuracy credits the reasoning, not only the answer. A turn scores in full when the declared reading matched the stage under test, and half when the reading was wrong but properly tested — one of its own evidence sources spent and the check completed — which rules that reading out. The half is paid once per reading, so revising is rewarded and returning to a reading whose sources came back empty is not.
 
 The working hypothesis carries a standing readout built from the player's own results: how many of that reading's evidence sources have been spent since the last confirmation, and whether it is holding, weakening or poorly supported. Absence across a reading's own sources is evidence against it, and the game says so during the operation rather than only in the review.

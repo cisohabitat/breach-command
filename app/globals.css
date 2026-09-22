@@ -4770,6 +4770,30 @@ html,body {
 .hypothesis-detail,.hypothesis-compare {
   display:none;
 }
+/* What a completed check that found nothing actually settled. It sits in the
+   captain's report because that is where the player is looking when the turn
+   lands, and it is marked by a rule and a heading, never by colour alone. */
+.report-standing {
+  margin-top:12px;
+  padding:12px 13px;
+  border:1px solid var(--line);
+  border-left:3px solid #3d5040;
+  border-radius:8px;
+}
+.report-standing strong {
+  display:block;
+  margin-top:3px;
+  color:var(--text);
+}
+.report-standing p {
+  margin:5px 0 0;
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+}
+.report-standing.level-weakening,.report-standing.level-unsupported {
+  border-left-color:var(--lime);
+}
 .investigation-dashboard {
   display:grid;
   /* The reading sits above the reference material on the left, the actions hold
