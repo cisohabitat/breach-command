@@ -1,9 +1,9 @@
-import { attacks, availableIn, commandEvents, getObjectiveRead, hypotheses, infrastructureTopologies, procedures, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan } from "./advanced-game.ts";
+import { attacks, availableIn, commandEvents, getObjectiveRead, hypotheses, infrastructureTopologies, procedures, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
 
 export type BotAction =
   | { type: "decision"; choice: DecisionChoice; reason: string }
   | { type: "command"; choice: "a" | "b"; reason: string }
-  | { type: "set-piece"; choice: "a" | "b"; reason: string }
+  | { type: "set-piece"; choice: SetPieceChoice; reason: string }
   | { type: "response"; choice: string; reason: string }
   | { type: "hypothesis"; hypothesis: HypothesisId; reason: string }
   | { type: "case-theory"; objective: AdversaryObjectiveId; reason: string }
@@ -39,12 +39,14 @@ function chooseCommand(game: Game): BotAction {
 
 function chooseSetPiece(game: Game): BotAction {
   const event = sectorSetPieces[game.scenario];
-  const utility = (choice: "a" | "b") => {
+  const utility = (choice: SetPieceChoice) => {
     const option = event[choice];
     const continuityWeight = game.continuity <= 55 ? 3 : 1;
     return option.quality * 4 - option.impact - Math.max(0, -option.continuity) * continuityWeight + option.sector - option.objective;
   };
-  const choice = utility("a") >= utility("b") ? "a" : "b";
+  // The graduated measure is often the best available trade, so it is weighed on
+  // the same terms as the two extremes rather than treated as a tie-breaker.
+  const choice = (["a", "c", "b"] as const).reduce((best, item) => utility(item) > utility(best) ? item : best);
   return { type: "set-piece", choice, reason: `Choosing ${event[choice].title.toLowerCase()} to protect the sector under current pressure.` };
 }
 

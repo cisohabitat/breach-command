@@ -3177,6 +3177,19 @@ html,body {
   color:#aab9a5;
   letter-spacing:.01em;
 }
+/* Why the two meters can disagree. The divergent state is marked by a rule and a
+   heading as well as by tone, never by colour alone. */
+.sector-read {
+  margin-bottom:9px;
+  padding-left:10px;
+  border-left:2px solid #3d5040;
+}
+.sector-read strong {
+  color:var(--text);
+}
+.sector-read.diverged {
+  border-left-color:var(--lime);
+}
 .command-feed {
   grid-column:1/-1;
   display:grid;
@@ -3951,7 +3964,9 @@ html,body {
 }
 .set-piece-options {
   display:grid;
-  grid-template-columns:1fr 1fr;
+  /* Three measures now: decisive, narrow and permissive. Auto-fit keeps them on
+     one row where there is room and wraps rather than leaving a ragged pair. */
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:9px;
   margin-top:15px;
 }

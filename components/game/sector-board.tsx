@@ -1,6 +1,6 @@
 import { Activity, Crosshair, Radio, Users } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { getAttributionRead, getObjectiveRead, sectorSystems, specialists, adversaryObjectives, type Game } from "@/lib/advanced-game";
+import { getAttributionRead, getObjectiveRead, getSectorRead, sectorSystems, specialists, adversaryObjectives, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 
 export function SectorBoard({ game }: { game: Game }) {
@@ -9,12 +9,14 @@ export function SectorBoard({ game }: { game: Game }) {
   const specialist = specialists[game.specialist];
   const person = namedSpecialists[game.specialist];
   const attribution = getAttributionRead(game);
+  const read = getSectorRead(game);
   const transmission = sector.transmissions[Math.min(sector.transmissions.length - 1, Math.floor(game.turns.length / 3))];
   return (
     <section className="sector-board" aria-label="Sector and adversary command picture">
       <div className="sector-card">
         <div className="sector-title"><Activity size={18} /><span><small>{sector.unit}</small><strong>{sector.title}</strong></span><b>{game.sectorHealth}</b></div>
         <Progress value={game.sectorHealth} aria-label={sector.unit} />
+        <p className={`sector-read ${read.diverged ? "diverged" : ""}`}><strong>{read.headline}.</strong> {read.detail}</p>
         <p>{sector.rule}</p>
       </div>
       <div className="objective-card">

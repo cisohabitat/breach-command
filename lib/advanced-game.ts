@@ -92,7 +92,8 @@ export type AdversaryMemory = {
 export type CommandRecord = { event: CommandEventId; choice: "a" | "b"; title: string; quality: number; effect: string };
 export type EvidenceItem = { id: string; turn: number; title: string; source: string; system: string; confidence: "LOW" | "MODERATE" | "HIGH"; supports: string | null; detail: string };
 export type CorrelationRecord = { evidence: [string, string]; valid: boolean; assessment: "causal" | "coincidental"; correct: boolean; finding: string };
-export type SetPieceRecord = { event: SetPieceId; choice: "a" | "b"; title: string; quality: number; effect: string };
+export type SetPieceChoice = "a" | "b" | "c";
+export type SetPieceRecord = { event: SetPieceId; choice: SetPieceChoice; title: string; quality: number; effect: string };
 export type MapAction = "monitor" | "isolate";
 export type NodePosture = "normal" | "monitored" | "isolated" | "restored";
 export type MapActionRecord = { node: string; action: MapAction; turn: number; effect: string };
@@ -719,6 +720,34 @@ export function getKnownFacts(game: Game): KnownFacts {
     // Named as unverified because it is: the same signal the captain offers, kept
     // apart from the observations so the distinction is the lesson, not a trap.
     unverified: game.turns.length >= 2 ? getAdversaryProfile(game).unverifiedSignal : null,
+  };
+}
+
+export type SectorRead = { headline: string; detail: string; diverged: boolean };
+
+// The two meters measure different things and a player can watch one fall while
+// the other holds without being told why. Treatment continuity is the service the
+// organisation is delivering right now; the process safety margin is how much
+// room is left before the sector's own limit. Reduced output with the margin
+// intact is a normal operating picture, and so is the reverse. This reads only
+// the two values and the sector's own labels.
+export function getSectorRead(game: Game): SectorRead {
+  const service = scenarioDynamics[game.scenario].label;
+  const margin = sectorSystems[game.scenario].title;
+  const gap = game.continuity - game.sectorHealth;
+  if (Math.abs(gap) < 25) return {
+    headline: `${service} and ${margin.toLowerCase()} are moving together`,
+    diverged: false,
+    detail: `${service} is what the organisation is delivering right now. ${margin} is how much room is left before the sector's own limit. Both are holding at a similar level, so what the service shows is roughly what the sector has left.`,
+  };
+  return gap > 0 ? {
+    headline: `${service} is holding while ${margin.toLowerCase()} is not`,
+    diverged: true,
+    detail: `The organisation is still delivering, but the margin behind it is thin: ${margin.toLowerCase()} is at ${game.sectorHealth} against ${service.toLowerCase()} at ${game.continuity}. Service looks normal from outside and there is little room left for the next thing to go wrong.`,
+  } : {
+    headline: `${margin} is holding while ${service.toLowerCase()} is not`,
+    diverged: true,
+    detail: `Delivery is degraded but the sector's limit is not close: ${service.toLowerCase()} is at ${game.continuity} against ${margin.toLowerCase()} at ${game.sectorHealth}. Running reduced while the margin stays intact is a deliberate trade, and it is usually the safer one.`,
   };
 }
 
@@ -1476,7 +1505,7 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   return g;
 }
 
-export function resolveSetPiece(game: Game, choice: "a" | "b"): Game {
+export function resolveSetPiece(game: Game, choice: SetPieceChoice): Game {
   if (game.status !== "playing" || !game.pendingSetPiece) throw new Error("No sector decision is pending.");
   const event = sectorSetPieces[game.scenario];
   const option = event[choice];

@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {newGame,attacks,hypotheses,procedures,responseProfiles,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
+import {sectorSetPieces} from "../lib/phase8.ts";
 import {adversaryObjectives} from "../lib/command-systems.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
 
@@ -110,6 +111,23 @@ test("gives each sector a chain it could not lend to another", () => {
   for (const scenario of scenarios) for (const id of scenario.choices.flat()) uses[id] = (uses[id] ?? 0) + 1;
   for (const scenario of scenarios) {
     const exclusive = scenario.choices.flat().filter(id => uses[id] === 1);
-    assert.ok(exclusive.length >= 2, `${scenario.sector} keeps techniques of its own (${exclusive.length}: ${exclusive.join(", ") || "none"})`);
+    assert.ok(exclusive.length >= 3, `${scenario.sector} keeps techniques of its own (${exclusive.length}: ${exclusive.join(", ") || "none"})`);
+  }
+});
+
+test("offers a graduated measure in every sector decision", () => {
+  // "Stop it" or "carry on" is not the shape of a real incident decision. Every
+  // sector decision carries a narrow middle measure, and it earns its place by
+  // costing effort rather than by dominating: it protects less than the decisive
+  // option and concedes less than the permissive one.
+  for (const piece of sectorSetPieces) {
+    const { a, b, c } = piece;
+    assert.ok(c.title && c.detail.length > 30, `${piece.id} states what the middle measure actually does`);
+    assert.equal(new Set([a.title, b.title, c.title]).size, 3, `${piece.id} offers three distinct measures`);
+    assert.ok(c.objective > a.objective, `${piece.id}: the narrow measure slows the adversary less than the decisive one`);
+    assert.ok(c.objective < b.objective, `${piece.id}: and more than carrying on regardless`);
+    assert.ok(c.sector < a.sector && c.sector > b.sector, `${piece.id}: its sector effect sits between the two`);
+    assert.ok(c.continuity >= a.continuity, `${piece.id}: it never costs more service than the decisive option`);
+    assert.ok(c.quality >= 4, `${piece.id}: applying a control narrowly is defensible command judgement`);
   }
 });

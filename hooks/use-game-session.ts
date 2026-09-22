@@ -42,6 +42,7 @@ import {
   type AdversaryObjectiveId,
   type DecisionChoice,
   type MapAction,
+  type SetPieceChoice,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
 import { campaignAct, campaignEnding, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
@@ -346,7 +347,7 @@ export function useGameSession() {
     setAnnouncement(`Command decision recorded. Business impact is ${next.impact}.`);
   }
 
-  function sectorDecision(choice: "a" | "b") {
+  function sectorDecision(choice: SetPieceChoice) {
     const current = stateRef.current;
     if (!current) return;
     const next = resolveSetPiece(current, choice);
