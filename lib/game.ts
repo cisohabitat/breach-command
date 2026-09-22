@@ -124,10 +124,10 @@ export const difficulties: Record<Difficulty,{title:string;description:string;th
 };
 
 export const hypotheses: {id:HypothesisId;title:string;premise:string;procedures:string[]}[] = [
-  {id:"identity",title:"Identity-led intrusion",premise:"A valid account, session or trust path is being abused.",procedures:["identity","firewall","cloud","hunt"]},
-  {id:"endpoint",title:"Compromised host",premise:"Execution on an endpoint or server is driving the incident.",procedures:["endpoint","forensic","server","hunt"]},
-  {id:"application",title:"Application or supplier path",premise:"A public service, integration or trusted package is the entry route.",procedures:["server","network","firewall","intel"]},
-  {id:"cloud",title:"Cloud control-plane abuse",premise:"Tokens, roles or cloud services are being used outside their intended boundary.",procedures:["cloud","identity","network","hunt"]},
+  {id:"identity",title:"Identity-led intrusion",premise:"A valid account, session or trust relationship is carrying the activity — on the way in, while it moves, and when data leaves.",procedures:["identity","firewall","cloud","hunt"]},
+  {id:"endpoint",title:"Compromised host",premise:"Code running on an endpoint or server is carrying the activity, from the first process to whatever it sends out.",procedures:["endpoint","forensic","server","hunt"]},
+  {id:"application",title:"Application or supplier path",premise:"A public-facing service or internet-borne channel is carrying the activity — an exposed application or supplier package on the way in, the open web, DNS or a hosting service on the way out.",procedures:["server","network","firewall","intel"]},
+  {id:"cloud",title:"Cloud control-plane abuse",premise:"Tokens, roles and cloud services are being used outside their intended boundary, in the control plane and through its own storage and integrations.",procedures:["cloud","identity","network","hunt"]},
 ];
 
 export const scenarioDynamics = [

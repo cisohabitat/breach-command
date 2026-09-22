@@ -1,7 +1,7 @@
 // Turn resolution, blocking states, end states and the decision layer.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypotheses,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,type Difficulty,type Game} from "../lib/advanced-game.ts";
+import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypotheses,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,type Difficulty,type Game} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -14,6 +14,13 @@ test("resolves a turn, its decision and its cooldown", () => {
   let g=baseline();
   let n=playTurn(g,"endpoint",9);
   assert.equal(n.turns[0].total,11);assert.equal(n.revealed[0],"phish");assert.equal(n.pendingDecision,"phish");assert.equal(g.turns.length,0);assert.equal(availableIn(n,"endpoint"),3);
+  // The card counts the turns a player must skip, which is the window minus the
+  // turn they just spent. The Investigate heading states the same number in
+  // words, so these must not drift apart.
+  assert.equal(availableIn(n,"endpoint"),cooldownWindow(n)-1,"the count shown is the window minus the turn just spent");
+  const trained=(()=>{const b=newGame(0,"training");b.injectDeck=[];return playTurn(b,"endpoint",9);})();
+  assert.equal(cooldownWindow(trained),3,"training uses the shorter window");
+  assert.equal(availableIn(trained,"endpoint"),2,"which skips two turns, not three");
   assert.throws(()=>playTurn(n,"identity",20),/decision/);
   assert.equal(getDecisionOptions(n)?.observe.title,"Trace the access path");
   n=resolveDecision(n,"observe");assert.equal(n.nextModifier,2);assert.equal(n.impact,30);assert.equal(n.pendingDecision,null);

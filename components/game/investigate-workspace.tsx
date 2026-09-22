@@ -4,7 +4,7 @@ import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { InfrastructureConsole } from "@/components/game/infrastructure-console";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
-import { getCoachPrompt, procedureIntensities, procedureScopes } from "@/lib/advanced-game";
+import { cooldownWindow, getCoachPrompt, procedureIntensities, procedureScopes } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
@@ -44,7 +44,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {!game.pendingCommand && !game.pendingSetPiece && (
           <section className="procedure-section">
             <div className="section-heading">
-              <div><h2>Investigation procedures</h2><p>Choose one action per turn. Used actions cool down for three turns.</p></div>
+              <div><h2>Investigation procedures</h2><p>Choose one action per turn. A used action is unavailable for the next {cooldownWindow(game) === 3 ? "two turns" : "three turns"}, and its card counts the turns down.</p></div>
               <span className="established-key">{procedureScopes[actionScope].title} · {procedureIntensities[actionIntensity].title}</span>
             </div>
             {guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}</span></div>}

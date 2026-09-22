@@ -70,6 +70,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <div className="challenge-console">
             <div><span className="eyebrow">SCENARIO CODE</span><button onClick={generateSeed}><RefreshCw size={14} /> New seed</button></div>
             <code>{challengeCode}</code>
+            <p className="muted small">A code reproduces the incident, its variant and its dice. Campaign standing is not part of it, so two commands at different seniority will see different modifiers from the same code.</p>
             <div className="challenge-load"><input aria-label="Challenge code" value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder="Enter a BC challenge code" /><button onClick={loadChallengeCode}>Load</button></div>
             {challengeMessage && <p aria-live="polite">{challengeMessage}</p>}
           </div>

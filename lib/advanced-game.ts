@@ -678,10 +678,16 @@ export function setCaseTheory(game: Game, objective: AdversaryObjectiveId): Game
   return { ...game, caseTheory: objective, caseTheoryHistory: [...game.caseTheoryHistory, { turn: game.turns.length + 1, objective }] };
 }
 
+// How many turns pass before a used procedure comes back. The count the player
+// sees on a cooling card is one less than this, because the turn they spent is
+// part of the window — say it in turns skipped wherever it is written down.
+export function cooldownWindow(game: Game) {
+  return game.difficulty === "training" ? 3 : 4;
+}
+
 export function availableIn(game: Game, id: string) {
   if (game.lastUsed[id] === undefined) return 0;
-  const window = game.difficulty === "training" ? 3 : 4;
-  return Math.max(0, game.lastUsed[id] + window - (game.turns.length + 1));
+  return Math.max(0, game.lastUsed[id] + cooldownWindow(game) - (game.turns.length + 1));
 }
 
 export function getLead(game: Game) {
@@ -788,6 +794,16 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     gap: "The response cost more service than it needed to for the assurance it bought.",
     concept: "Containment, assurance and recovery each trade disruption against certainty. The most thorough option is not automatically the right one.",
     next: "Next operation, read what each response option leaves as residual risk, and pick the cheapest one that closes the risk you actually confirmed.",
+  };
+  // Picking sources that find things and reading the route correctly are two
+  // different skills, and a run can do the first well while getting the second
+  // wrong. Telling such a player that nothing stands out tells them they were
+  // right when the score already said they were not.
+  if (tested.length && aligned < tested.length) return {
+    strength,
+    gap: `Your evidence selection worked, but the reading you were testing matched the route the stage actually used on only ${aligned} of ${tested.length} turns.`,
+    concept: "Finding a stage and classifying it are separate skills. A source can turn one up while the route you named for it is wrong, which is why the score counts them apart.",
+    next: `Next operation, when a finding lands, check which route it belonged to before choosing the next procedure${revisions === 0 ? " — you kept one reading for the whole of this operation" : ""}.`,
   };
   return {
     strength,
@@ -1151,7 +1167,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     if (inject.effect === "pressure") impactChange += 8;
     if (inject.effect === "relief") impactChange -= 8;
     if (inject.effect === "restore") {
-      const cooling = Object.keys(g.lastUsed).filter(id => g.lastUsed[id] + 4 > number + 1).sort((a, b) => g.lastUsed[a] - g.lastUsed[b]);
+      const cooling = Object.keys(g.lastUsed).filter(id => g.lastUsed[id] + cooldownWindow(g) > number + 1).sort((a, b) => g.lastUsed[a] - g.lastUsed[b]);
       if (cooling.length) {
         delete g.lastUsed[cooling[0]];
         inject.effectLabel = `${procedures.find(item => item.id === cooling[0])!.title} is available again.`;

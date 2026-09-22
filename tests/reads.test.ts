@@ -156,6 +156,27 @@ test("speaks plainly to a player who is new to the subject", () => {
   assert.ok(/never tested how any two/.test(uncorrelated.gap), "it names the correlation that was never tested");
   const correlated = getBeginnerReview(correlateEvidence(run, ["E1", "E2"], "causal"));
   assert.notEqual(correlated.gap, uncorrelated.gap, "and moves on once the player has done it");
+
+  // A run can pick good sources and still label the route wrong. Telling that
+  // player nothing stands out contradicts the score they are about to read.
+  // A completed response and a tested correlation, so the branches ahead of the
+  // hypothesis reading are all satisfied and it is the reading being judged.
+  const clean = (() => {
+    const b = baseline();
+    b.correlations = [{ id: "C1", turn: 2, evidence: ["E1", "E2"], assessment: "causal", correct: true, verdict: "x" }] as never;
+    b.responseScore = 50;
+    return b;
+  })();
+  const oneTurn = playTurn(baseline(), "endpoint", 20).turns[0];
+  const graded = (matched: boolean[]) => getBeginnerReview({
+    ...clean,
+    turns: matched.map((hypothesisMatched, index) => ({
+      ...oneTurn, number: index + 1, hypothesis: "identity", hypothesisTarget: "phish", hypothesisMatched, success: true, revealed: "phish",
+    })),
+  });
+  assert.ok(/only 3 of 5 turns/.test(graded([true, true, true, false, false]).gap), "a partly correct reading is named, not waved through");
+  assert.ok(/separate skills/.test(graded([true, true, true, false, false]).concept), "and the two skills are told apart");
+  assert.ok(/Nothing stands out/.test(graded([true, true, true]).gap), "while a clean record still gets the all-clear");
 });
 
 test("explains a score the player can check against what they saw", () => {
