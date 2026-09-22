@@ -679,7 +679,9 @@ export function setCaseTheory(game: Game, objective: AdversaryObjectiveId): Game
 }
 
 export function availableIn(game: Game, id: string) {
-  return game.lastUsed[id] === undefined ? 0 : Math.max(0, game.lastUsed[id] + 4 - (game.turns.length + 1));
+  if (game.lastUsed[id] === undefined) return 0;
+  const window = game.difficulty === "training" ? 3 : 4;
+  return Math.max(0, game.lastUsed[id] + window - (game.turns.length + 1));
 }
 
 export function getLead(game: Game) {
@@ -860,8 +862,8 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     step: "test",
     title: `Test ${hypothesis.title.toLowerCase()}`,
     detail: open.length
-      ? "These are the evidence sources this reading predicts. A result in one of them moves the question; a source it does not predict only collects."
-      : "Every source this reading predicts is cooling down. Collect elsewhere this turn, or record a different reading and test that.",
+      ? "These are the sources this reading predicts, and the only ones that can settle it: an empty result in one of them counts against the reading. They are not the only way to expose a stage — a source this reading does not predict can still turn one up, it just will not answer your question."
+      : "Every source this reading predicts is cooling down. Another source can still expose a stage without settling the reading, so collect where you can this turn, or record a different reading and test that.",
     sources: open,
     clue: standing.level === "untested" ? clue : null,
   };
@@ -935,9 +937,15 @@ export function describeChange(meter: keyof typeof meterDirection | string, valu
 export function getModifierBreakdown(game: Game, procedure: string, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }) {
   const specialist = specialists[game.specialist];
   const focusNode = infrastructureTopologies[game.scenario].nodes.find(node => node.id === game.focusedNode);
+  // A run of failed rolls is variance, not a misreading, and an operation decided
+  // by it teaches nothing. The bonus is read from the player's own turn record, is
+  // shown in the preview like any other part, and clears the moment one lands.
+  let consecutiveFailures = 0;
+  for (let index = game.turns.length - 1; index >= 0 && !game.turns[index].success; index--) consecutiveFailures++;
   const parts: ModifierPart[] = [
     { label: "Established", value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
     { label: "Carried", value: game.nextModifier, detail: "Carried from the previous turn's event or decision." },
+    { label: "Persistence", value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
     specialist.procedures.includes(procedure as never) && game.specialistFatigue >= 5
       ? { label: "Specialist", value: 0, suppressed: true, detail: `${specialist.title} works this source, but at fatigue ${game.specialistFatigue} of 6 the bonus no longer applies. Rest comes from finishing the operation.` }
       : { label: "Specialist", value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },

@@ -67,8 +67,19 @@ test("shows the modifier it will resolve with", () => {
   }
   // Every term the resolution can apply is named in the preview.
   assert.deepEqual(getModifierBreakdown(previewBase,"endpoint").parts.map(part=>part.label),
-    ["Established","Carried","Specialist","Focus","Focused","Balanced","Expert mode"]);
+    ["Established","Carried","Persistence","Specialist","Focus","Focused","Balanced","Expert mode"]);
   assert.equal(getModifierBreakdown({...previewBase,mode:"expert"},"identity").parts.find(part=>part.label==="Expert mode")?.value,-1);
+
+  // Two failed rolls in a row is variance. The bonus that answers it is read from
+  // the player's own record, shown before the action, and gone once one lands.
+  const persistence=(game:Game)=>getModifierBreakdown(game,"endpoint").parts.find(part=>part.label==="Persistence")!.value;
+  const sample=playTurn(previewBase,"identity",10).turns[0];
+  const failed=(number:number,success:boolean)=>({...sample,number,success});
+  assert.equal(persistence(previewBase),0,"no failures, no bonus");
+  assert.equal(persistence({...previewBase,turns:[failed(1,false)]}),0,"one failure is not yet a run");
+  assert.equal(persistence({...previewBase,turns:[failed(1,false),failed(2,false)]}),2,"two in a row earns it");
+  assert.equal(persistence({...previewBase,turns:[failed(1,false),failed(2,false),failed(3,true)]}),0,"a success clears it");
+  assert.equal(persistence({...previewBase,turns:[failed(1,true),failed(2,false),failed(3,false)]}),2,"and it counts back only to the last success");
 
   // The pre-action read is built from declared state only. Rewriting the hidden
   // chain underneath it must not change a single word of it.

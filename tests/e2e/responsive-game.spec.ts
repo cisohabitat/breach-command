@@ -1,4 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import {
+  attackVector, availableIn, newGame, nextEvidenceSource, playTurn, procedures,
+  resolveCommand, resolveDecision, resolveSetPiece, setHypothesis, type Game,
+} from "../../lib/advanced-game";
+import { SESSION_KEY, serialiseSession } from "../../lib/session";
 
 type AuditState = {
   decision: boolean;
@@ -117,6 +122,33 @@ async function enablePracticeRun(page: Page) {
   await expect(page.getByRole("region", { name: "Bot commander status" })).toBeVisible();
 }
 
+// The response sequence only opens once all four stages are confirmed, and a
+// bot run under a stubbed random source reaches that on the dice alone — it used
+// to, and an engine change flipped it, taking eleven tests with it. This builds
+// the same state from the engine instead: perfect rolls against the source that
+// exposes the next stage. An operation can still end early in an authorised
+// exercise, so it retries until one reaches the response phase.
+function responsePhaseGame(): Game {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    let game = newGame(0, "training");
+    for (let guard = 0; guard < 60 && game.status === "playing"; guard++) {
+      if (game.pendingDecision) { game = resolveDecision(game, "act"); continue; }
+      if (game.pendingCommand) { game = resolveCommand(game, "a"); continue; }
+      if (game.pendingSetPiece) { game = resolveSetPiece(game, "a"); continue; }
+      const unrevealed = game.chain.find(id => !game.revealed.includes(id));
+      if (unrevealed) game = setHypothesis(game, attackVector(unrevealed));
+      const wanted = nextEvidenceSource(game)?.id;
+      const procedure = wanted && availableIn(game, wanted) === 0
+        ? wanted
+        : procedures.find(item => availableIn(game, item.id) === 0)?.id;
+      if (!procedure) break;
+      game = playTurn(game, procedure, 20);
+    }
+    if (game.status === "response") return game;
+  }
+  throw new Error("could not build an operation that reaches the response phase");
+}
+
 test.describe("responsive interaction audit", () => {
   for (const viewport of viewports) {
     test("plays " + viewport.label + " from assignment through debrief", async ({ page }) => {
@@ -147,19 +179,59 @@ test.describe("responsive interaction audit", () => {
       await expect(resolution).toBeVisible({ timeout: 90_000 });
       await expectNoHorizontalOverflow(page, viewport.label + " resolution");
 
+      // A bot-run operation opens the review itself once it ends, and it may do so
+      // a beat after the resolution renders. Close it whenever it appears so the
+      // resolution screen behind it is the surface being audited, then open the
+      // review the way a player does. Checking and closing in one retried step
+      // avoids racing the bot's own timer.
+      const openDebrief = page.getByRole("dialog").filter({ hasText: "AFTER-ACTION REVIEW" });
       const review = page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/i });
+      await expect(async () => {
+        if (await openDebrief.count()) await page.keyboard.press("Escape");
+        await expect(review).toBeVisible({ timeout: 1_000 });
+      }).toPass({ timeout: 30_000 });
+
       await expectReachableTarget(page, review, "Open review");
       await review.click();
       await expect(page.getByText("AFTER-ACTION REVIEW", { exact: true })).toBeVisible();
       await expectNoHorizontalOverflow(page, viewport.label + " debrief");
 
       const audit = await page.evaluate(() => window.__breachResponsiveAudit);
-      expect(audit, viewport.label + " should record the exercised surfaces").toEqual({
-        decision: true,
+      // Whether a bot run wins is the engine's business, so this test audits only
+      // the surfaces every finished operation passes through. The response
+      // sequence is audited from a saved operation below, where reaching it does
+      // not depend on the dice.
+      expect(audit?.decision, viewport.label + " should have reached an evidence decision").toBe(true);
+      expect(audit?.debrief, viewport.label + " should have reached the review").toBe(true);
+    });
+
+    test("walks the response sequence at " + viewport.label, async ({ page }) => {
+      test.setTimeout(60_000);
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await installDeterministicAudit(page);
+      const session = serialiseSession(responsePhaseGame(), false, true);
+      await page.addInitScript(([key, value]) => {
+        try { localStorage.setItem(key, value); } catch {}
+      }, [SESSION_KEY, session] as const);
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+
+      const resume = page.getByRole("button", { name: "Resume", exact: true });
+      await expectReachableTarget(page, resume, "Resume saved operation");
+      await resume.click();
+
+      for (const stage of ["CONTAINMENT DECISION", "ASSURANCE GATE", "RECOVERY DECISION"] as const) {
+        await expect(page.getByText(stage, { exact: true })).toBeVisible();
+        await expectNoHorizontalOverflow(page, viewport.label + " " + stage.toLowerCase());
+        const choice = page.locator(".response-options > button").first();
+        await expectReachableTarget(page, choice, stage + " first option");
+        await choice.click();
+      }
+
+      const audit = await page.evaluate(() => window.__breachResponsiveAudit);
+      expect(audit, viewport.label + " should record the response surfaces").toMatchObject({
         containment: true,
         assurance: true,
         recovery: true,
-        debrief: true,
       });
     });
   }

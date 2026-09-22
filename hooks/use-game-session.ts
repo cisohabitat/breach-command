@@ -240,7 +240,11 @@ export function useGameSession() {
     setPendingUndo(null);
     clearMeterPulse();
     setAnnouncement(`Resumed ${scenarios[session.game.scenario].title}.`);
-    setActiveWorkspace(session.game.pendingDecision || session.game.pendingCommand || session.game.pendingSetPiece ? "command" : "investigate");
+    // A saved operation already in the response phase has no investigation left to
+    // resume into — that workspace is disabled — so the response sequence, which is
+    // itself a blocking decision, sends the player to Command like any other.
+    const blocked = session.game.pendingDecision || session.game.pendingCommand || session.game.pendingSetPiece || session.game.status === "response";
+    setActiveWorkspace(blocked ? "command" : "investigate");
     scrollToTop();
   }
 

@@ -61,6 +61,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Name the cause when an operation is lost. `getLossReason` distinguishes the objective, impact, continuity, sector and window endings; the investigation window is only one of five.
 - A technique's `evidence` states the finding, not the log that held it: it must read correctly from any of its three detect sources, so no `"<Source> and <source> records show"` leads. The presented narrative names the procedure and node that produced it.
 - A sound but unlucky action — one that earned the planning bonus and still failed the roll — does not hand the adversary tempo or objective progress. Reasoning is protected; certainty is not.
+- Two consecutive failed rolls add a persistence bonus to the next action. It is derived from the player's own turn record, it appears in `getModifierBreakdown` like any other part so the preview and the resolution stay one computation, and it clears on the first success. It is not difficulty-specific: measurement shows it moves the overall win rate by a point or two and leaves Crisis unchanged, because Crisis is lost to its other pressures rather than to the roll.
+- The procedure cooldown window is three turns at Training and four elsewhere. Training already withholds less; leaving a beginner with no source their declared reading predicts teaches nothing.
 - The modifier shown before an action and the modifier the roll resolves with are one computation, `getModifierBreakdown`. `playTurn` adds only the planning bonus on top, and that bonus must never appear in the preview: it depends on the hidden chain, so showing it would let a player read the answer off the interface by cycling hypotheses.
 - `getHypothesisStanding` reports how the declared reading is holding up from the player's own record — which of its evidence sources have been spent since the last confirmation, and with what result. Repeated absence across a reading's own sources is evidence against it and must be surfaced during play, never only in the review. It names the reading that is weakening; it never names the one that is right.
 - Campaign standing must change what an operation has to work with, not only its opening numbers: established sources, command actions, the investigation window and the rapid-coordination grace. Seniority follows results — `recordCampaignResult` scales the reward by outcome, so a command that keeps losing does not reach the tier of one that keeps winning.
@@ -87,6 +89,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Support widths from 320 px mobile screens through desktop without horizontal page overflow, clipped text or unreachable controls.
 - Keep essential tap targets at least 40 px high, preferably 44 px on mobile.
 - Never rely on colour alone to communicate state.
+- No overlay may place initial focus on a control that changes state. The action sheet's first tabbable control is a plan toggle, so it moves focus to the sheet itself on open; otherwise Space — the key that scrolls a dialog — commits a plan change, and Rapid sits two tabs from where focus lands.
 - Scope and intensity persist between turns. The selection says so in words as well as colour, carries `aria-pressed`, and the carried plan is stated before the options and on the procedure heading outside the sheet — a plan that silently stays selected accumulates impact and fatigue a beginner never chose.
 - A meter change is shown with its direction, through `describeChange`. Impact rising is bad and continuity rising is good; a bare signed number leaves a new player guessing which.
 - Field vocabulary carries a plain-language translation in `plainLanguage`, and the review opens with four plain sentences from `getBeginnerReview` before any scoring.
@@ -95,6 +98,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Keep main gameplay readable on phone, iPad and PC. Test start, investigation, decisions, response and debrief surfaces when changing shared layout rules.
 - The Investigate column leads with the working hypothesis, because every procedure is gated on it. Reference material — trust relationships, dependency notes, the findings list — folds away behind a summary that carries the state it hides, so collapsing costs no situational awareness.
 - Preserve the Command, Investigate and Briefing workspace separation. Blocking decisions return focus to Command; routine analytical actions remain in Investigate.
+- Resuming a saved operation opens the workspace that holds its next required decision. A save already in the response phase opens on Command, because Investigate is disabled there and the player would be looking at nothing.
 - Player-facing language should be concise, professional and operationally plausible. Avoid exaggerated claims and unnecessary jargon.
 
 ## Change discipline
@@ -118,8 +122,20 @@ pnpm build
 git diff --check
 ```
 
+`tests/e2e/responsive-game.spec.ts` builds the response phase from the engine and resumes it from a saved session. Do not make a browser fixture depend on a bot run winning under a stubbed random source: that run is decided by one constant, and a balance change silently takes the whole suite with it.
+
 Run `pnpm test:a11y` for any change to markup, labels or the responsive rules that hide them; it must report zero violations, and `pnpm test:persistence` for any change to stored state. `pnpm test:e2e` runs every browser suite. For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194 and 1280 px widths. Treat 768–834 px portrait and 1024–1194 px landscape as explicit iPad targets. A successful build does not replace interaction and responsive checks.
 
 ## Publication
 
 Production is [breach-command.vercel.app](https://breach-command.vercel.app), deployed from the existing Vercel project `breach-command`. Publish only a tested, committed source state and keep the private `cisohabitat/breach-command` repository synchronized with the deployed version.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { CheckCheck, CircleHelp, Dices } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { describeChange, getDiscriminatingRead, getModifierBreakdown, procedureIntensities, procedureScopes, type ProcedureIntensity, type ProcedureScope } from "@/lib/advanced-game";
@@ -8,6 +9,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
     proc, rolling, setSelected, game, run,
     actionScope, setActionScope, actionIntensity, setActionIntensity, procedureAligned, config,
   } = session;
+  const content = useRef<HTMLDivElement>(null);
 
   // Expert operations disable guidance entirely, so the read is withheld there.
   const read = proc && game && game.mode !== "expert" ? getDiscriminatingRead(game, proc.id) : null;
@@ -15,14 +17,22 @@ export function ActionSheet({ session }: { session: GameSession }) {
 
   return (
     <Sheet open={!!proc && !rolling} onOpenChange={open => { if (!open) setSelected(null); }}>
-      <SheetContent className="action-sheet" side="right">
+      <SheetContent
+        ref={content}
+        className="action-sheet"
+        side="right"
+        // The first tabbable control in this sheet is a plan toggle, so the dialog's own
+        // autofocus would put the keys used to read a dialog — Space to scroll, Tab to
+        // browse — onto controls that silently change the plan. Rapid sits two tabs away.
+        onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
+      >
         <SheetHeader><div className="eyebrow">PREPARE ACTION</div><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc?.description}</SheetDescription></SheetHeader>
         {proc && game && <p className="carried-plan" role="status">Carried from your last action: <strong>{procedureScopes[actionScope].title} scope</strong> and <strong>{procedureIntensities[actionIntensity].title} analysis</strong>. These stay selected until you change them.</p>}
         {proc && game && <>
           <div className="action-note"><span className="eyebrow">HYPOTHESIS CHECK</span><p>{proc.question}</p></div>
           <div className="procedure-planner">
-            <div><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">SELECTED</b>}</strong><small>{procedureScopes[id].description}</small><small className="plan-effects">Roll {procedureScopes[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureScopes[id].modifier)} · {describeChange("impact", procedureScopes[id].impact)} · {describeChange("objective", procedureScopes[id].objective)}</small></button>)}</div></div>
-            <div><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">SELECTED</b>}</strong><small>{procedureIntensities[id].description}</small><small className="plan-effects">Roll {procedureIntensities[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureIntensities[id].modifier)} · {describeChange("impact", procedureIntensities[id].impact)}{procedureIntensities[id].cooldown ? ` · Cooldown +${procedureIntensities[id].cooldown} turn` : ""}</small></button>)}</div></div>
+            <div role="group" aria-label="Scope"><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">SELECTED</b>}</strong><small>{procedureScopes[id].description}</small><small className="plan-effects">Roll {procedureScopes[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureScopes[id].modifier)} · {describeChange("impact", procedureScopes[id].impact)} · {describeChange("objective", procedureScopes[id].objective)}</small></button>)}</div></div>
+            <div role="group" aria-label="Intensity"><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">SELECTED</b>}</strong><small>{procedureIntensities[id].description}</small><small className="plan-effects">Roll {procedureIntensities[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureIntensities[id].modifier)} · {describeChange("impact", procedureIntensities[id].impact)}{procedureIntensities[id].cooldown ? ` · Cooldown +${procedureIntensities[id].cooldown} turn` : ""}</small></button>)}</div></div>
           </div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
             <BrainLabel aligned={procedureAligned} />
