@@ -1140,7 +1140,11 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     g.revealed.push(match);
     g.pendingDecision = match;
     impactChange = 1;
-    narrative = `${procedures.find(item => item.id === procedure)!.title} at ${focusNode.label} — ${attacks.find(attack => attack.id === match)!.evidence}`;
+    // The node is where collection was focused, not where the technique lives, and
+    // saying "Identity audit at the payment gateway" for a mailbox relay reads as
+    // the game asserting a location it has not established. Lead with the finding,
+    // then attribute the source and the focus for what they are.
+    narrative = `${attacks.find(attack => attack.id === match)!.evidence} Found by ${procedures.find(item => item.id === procedure)!.title.toLowerCase()} with collection focused on ${focusNode.label}.`;
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (success) {
     narrative = "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.";

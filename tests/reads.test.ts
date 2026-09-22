@@ -13,7 +13,13 @@ test("attributes a finding to the source that produced it", () => {
   const soundBase=(()=>{const b=baseline();b.established=[];b.injectDeck=[];return setHypothesis(b,"endpoint");})();
   const sourcedTurn=playTurn(soundBase,"email",18);
   assert.ok(sourcedTurn.turns[0].revealed,"the turn revealed a stage");
-  assert.ok(sourcedTurn.turns[0].narrative.startsWith("Email investigation at "),"the report names the procedure and node that produced it");
+  // The finding leads and the attribution follows. "Email investigation at the
+  // payment gateway" asserted a location the game had not established — the node
+  // is where collection was focused, which is what it now says.
+  const narrative=sourcedTurn.turns[0].narrative;
+  assert.ok(narrative.startsWith(attacks.find(attack=>attack.id===sourcedTurn.turns[0].revealed)!.evidence),"the finding is stated first, in its own words");
+  assert.ok(/Found by email investigation with collection focused on .+\.$/.test(narrative),"then the source and the collection focus, named for what they are");
+  assert.ok(!/ at /.test(narrative.split("Found by")[1] ?? ""),"and the node is never presented as the finding's location");
   assert.equal(sourcedTurn.evidence.at(-1)!.detail,attacks.find(item=>item.id===sourcedTurn.turns[0].revealed)!.evidence,"the stored finding keeps its source fields separate from its body");
   for(const attack of attacks)assert.ok(!/^[A-Z][a-z]+ and [a-z]+ records show/.test(attack.evidence),`${attack.id} states a finding, not a log type`);
 });

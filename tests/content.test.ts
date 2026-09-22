@@ -16,7 +16,12 @@ test("keeps the technique pool and topologies distinct", () => {
   // Expanded technique pool: seventy-two original techniques, eighteen per stage,
   // with detectable signatures spread so no single procedure dominates.
   assert.ok(attacks.length>=72,`expected at least 72 techniques, found ${attacks.length}`);
-  assert.deepEqual([0,1,2,3].map(stage=>attacks.filter(a=>a.stage===stage).length),[18,18,18,18],"eighteen techniques per stage");
+  // The pool grows as sectors get techniques of their own, so assert the property
+  // that matters — every stage draws from a pool of the same size — rather than a
+  // count that turns each authored addition into a test edit.
+  const perStage=[0,1,2,3].map(stage=>attacks.filter(a=>a.stage===stage).length);
+  assert.ok(perStage.every(count=>count>=18),`each stage has at least eighteen techniques, found ${perStage.join(", ")}`);
+  assert.equal(new Set(perStage).size,1,`every stage draws from a pool of the same size, found ${perStage.join(", ")}`);
   assert.equal(new Set(attacks.map(a=>a.id)).size,attacks.length,"technique ids are unique");
   const detectSignatures=new Set(attacks.map(a=>[...a.detect].sort().join("+")));
   assert.ok(detectSignatures.size>=40,`expected many distinct detect signatures, found ${detectSignatures.size}`);
@@ -93,5 +98,18 @@ test("makes the cheap response option a different call in each sector", () => {
       if (lenient) assert.ok(option.score >= 9, `${option.title} reads defensible and scores like it`);
       if (severe) assert.ok(option.score <= 6, `${option.title} reads reckless and scores like it`);
     }
+  }
+});
+
+test("gives each sector a chain it could not lend to another", () => {
+  // A chain assembled entirely from the shared pool reads as the sector's
+  // vocabulary painted onto a generic incident. Every scenario keeps at least two
+  // techniques no other scenario can draw, so moving the chain to another sector
+  // would mean changing the technical nouns, not just the briefing.
+  const uses: Record<string, number> = {};
+  for (const scenario of scenarios) for (const id of scenario.choices.flat()) uses[id] = (uses[id] ?? 0) + 1;
+  for (const scenario of scenarios) {
+    const exclusive = scenario.choices.flat().filter(id => uses[id] === 1);
+    assert.ok(exclusive.length >= 2, `${scenario.sector} keeps techniques of its own (${exclusive.length}: ${exclusive.join(", ") || "none"})`);
   }
 });

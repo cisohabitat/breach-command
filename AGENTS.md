@@ -89,6 +89,9 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Case-theory changes are blocked by every pending decision state and must never reveal the hidden objective.
 - Adversary identity remains progressively attributed. Do not expose the profile name in opening briefings or low-confidence operational text.
 - Evidence correlation records both the player's causal assessment and whether that assessment was correct. Timing alone must not be presented as causation.
+- Every scenario keeps at least two techniques no other scenario can draw, and `tests/content.test.ts` asserts it. A chain assembled entirely from the shared pool is the sector's vocabulary painted onto a generic incident: the test to apply is whether the chain could move to another sector without changing a single technical noun. Banking, government and telecommunications each had one such technique and now have three to five, which is why a settlement incident can run approver takeover, entitlement widening, payment-support tampering and reconciliation suppression rather than a cloud pipeline compromise under a banking headline.
+- The technique pool grows as sectors earn their own techniques. Assert that every stage draws from a pool of the same size, never a fixed count, or each authored addition becomes a test edit.
+- The node in a finding's narrative is where collection was focused, not where the technique lives. The finding leads in its own words and the attribution follows, because `Identity audit at the payment gateway` in front of a mailbox relay asserts a location the game never established.
 - New scenarios must include a topology, sector system, set piece, adversary profile mapping and complete four-stage choice sets.
 
 ## Experience requirements
