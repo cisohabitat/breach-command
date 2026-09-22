@@ -12,16 +12,18 @@ import {
   Search,
   Server,
   Shield,
+  Landmark,
 } from "lucide-react";
 import {
   availableIn,
   getDiscriminatingRead,
-  hypotheses,
-  procedures,
+  hypothesisSources,
+  proceduresFor,
   type Game,
 } from "@/lib/advanced-game";
 
-const icons = [HardDrive, KeyRound, Network, Shield, Mail, Server, Layers, Globe2, Search, Fingerprint, Radio];
+// The last icon belongs to the sector procedure, which is always listed last.
+const icons = [HardDrive, KeyRound, Network, Shield, Mail, Server, Layers, Globe2, Search, Fingerprint, Radio, Landmark];
 
 export function ProcedureGrid({
   game,
@@ -32,14 +34,14 @@ export function ProcedureGrid({
   disabled: boolean;
   onChoose: (id: string) => void;
 }) {
-  const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
+  const routeSources = game.hypothesis ? hypothesisSources(game, game.hypothesis) : [];
   return (
     <div className="procedure-grid">
-      {procedures.map((procedure, index) => {
+      {proceduresFor(game).map((procedure, index) => {
         const Icon = icons[index];
         const cooldown = availableIn(game, procedure.id);
         const established = game.established.includes(procedure.id);
-        const aligned = !!hypothesis?.procedures.includes(procedure.id);
+        const aligned = routeSources.includes(procedure.id);
         const read = game.mode === "expert" ? null : getDiscriminatingRead(game, procedure.id);
         return (
           <button

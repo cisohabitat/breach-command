@@ -1,6 +1,6 @@
 import { ArrowRight, BrainCircuit, CheckCheck, Eye, MessagesSquare, Shield, ShieldCheck, Siren, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, getOperationalLabel, procedureIntensities, procedureScopes, procedures, stages } from "@/lib/advanced-game";
+import { attacks, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
@@ -16,7 +16,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
         <DialogHeader>
           <div className="eyebrow">CAPTAIN’S REPORT <span className="separator">/</span> TURN {report?.number}</div>
           <DialogTitle>{report?.revealed ? "Evidence confirmed." : report?.success ? "No new attack identified." : "The action was unsuccessful."}</DialogTitle>
-          <DialogDescription>{report && procedures.find(procedure => procedure.id === report.procedure)?.title}</DialogDescription>
+          <DialogDescription>{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
         </DialogHeader>
         {report && game && <>
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>

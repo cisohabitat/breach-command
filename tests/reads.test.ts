@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,hypotheses,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
+import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,hypothesisSources,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -27,7 +27,7 @@ test("attributes a finding to the source that produced it", () => {
 test("reports how the declared reading is holding up", () => {
   // Repeated negative results against the declared reading are surfaced during
   // play, from the player's own record. It must never consult the hidden chain.
-  const identitySources=hypotheses.find(item=>item.id==="identity")!.procedures;
+  const identitySources=hypothesisSources(baseline(),"identity");
   // A chain none of this reading's sources can expose, so a completed check
   // against it is a genuine empty result rather than a discovery.
   const blindChain=[0,1,2,3].map(stage=>attacks.find(attack=>attack.stage===stage&&!attack.detect.some(source=>identitySources.includes(source)))!.id);

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {newGame,attacks,hypotheses,procedures,responseProfiles,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
 import {sectorSetPieces} from "../lib/phase8.ts";
+import {hypothesisSources, proceduresFor, sectorProcedures} from "../lib/advanced-game.ts";
 import {adversaryObjectives} from "../lib/command-systems.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
 
@@ -129,5 +130,36 @@ test("offers a graduated measure in every sector decision", () => {
     assert.ok(c.sector < a.sector && c.sector > b.sector, `${piece.id}: its sector effect sits between the two`);
     assert.ok(c.continuity >= a.continuity, `${piece.id}: it never costs more service than the decisive option`);
     assert.ok(c.quality >= 4, `${piece.id}: applying a control narrowly is defensible command judgement`);
+  }
+});
+
+test("gives every sector an investigative action of its own", () => {
+  // The eleven shared procedures are right — responders use the same evidence
+  // sources everywhere — but each sector also has a reconciliation only its own
+  // people would run. It has to be a procedure in every sense: offered in its own
+  // scenario, able to find something there, and able to earn the planning bonus.
+  assert.equal(sectorProcedures.length, scenarios.length, "one per scenario");
+  assert.equal(new Set(sectorProcedures.map(item => item.id)).size, sectorProcedures.length, "with distinct ids");
+  const shared = new Set(procedures.map(item => item.id));
+  for (const sector of sectorProcedures) assert.ok(!shared.has(sector.id), `${sector.id} is not one of the shared procedures`);
+
+  for (let index = 0; index < scenarios.length; index++) {
+    const game = newGame(index, "operational");
+    const sector = sectorProcedures[index];
+    const offered = proceduresFor(game);
+    assert.equal(offered.length, procedures.length + 1, `${scenarios[index].sector} offers the shared set plus its own`);
+    assert.ok(offered.some(item => item.id === sector.id), `${scenarios[index].sector} offers ${sector.id}`);
+    // Only in its own scenario.
+    for (const other of sectorProcedures) {
+      if (other.id !== sector.id) assert.ok(!offered.some(item => item.id === other.id), `${sector.id} does not appear outside its sector`);
+    }
+    // It can expose something in the scenario it belongs to.
+    const reachable = scenarios[index].choices.flat().filter(id => attacks.find(attack => attack.id === id)!.detect.includes(sector.id));
+    assert.ok(reachable.length >= 1, `${sector.id} can expose a technique this scenario draws`);
+    // And declaring its route makes it one of that reading's own sources.
+    assert.ok(hypothesisSources(game, sector.vector).includes(sector.id), `${sector.id} earns the planning bonus under ${sector.vector}`);
+    for (const route of hypotheses) {
+      if (route.id !== sector.vector) assert.ok(!hypothesisSources(game, route.id).includes(sector.id), `${sector.id} only aligns with its own route`);
+    }
   }
 });

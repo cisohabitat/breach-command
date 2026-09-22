@@ -1,4 +1,4 @@
-import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "./game.ts";
+import { attacks, procedures, sectorProcedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "./game.ts";
 import { adversaryObjectives, gameModes, objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type GameMode, type ProcedureIntensity, type ProcedurePlan, type ProcedureScope, type SpecialistId } from "./command-systems.ts";
 import { infrastructureTopologies, sectorSetPieces, seededRoll, type SetPieceId } from "./phase8.ts";
 import { objectiveTheory, type CampaignRouteId, type IncidentVariant } from "./phase9.ts";
@@ -6,6 +6,7 @@ import { objectiveTheory, type CampaignRouteId, type IncidentVariant } from "./p
 export {
   attacks,
   procedures,
+  sectorProcedures,
   scenarios,
   stages,
   difficulties,
@@ -690,6 +691,27 @@ export function cooldownWindow(game: Game) {
   return game.difficulty === "training" ? 3 : 4;
 }
 
+// The eleven shared procedures plus this sector's own one. Everything that lists,
+// looks up or validates a procedure goes through these, so the sector action is a
+// procedure in every sense rather than a special case bolted to the grid.
+export function proceduresFor(game: Game) {
+  return [...procedures, sectorProcedures[game.scenario]];
+}
+
+export function procedureById(game: Game, id: string) {
+  return proceduresFor(game).find(item => item.id === id);
+}
+
+// A reading's own evidence sources. The sector procedure joins the list when it
+// tests the same route, which is how it earns the planning bonus instead of
+// sitting outside the reasoning the rest of the interface asks for.
+export function hypothesisSources(game: Game, id: HypothesisId) {
+  const hypothesis = hypotheses.find(item => item.id === id);
+  if (!hypothesis) return [];
+  const sector = sectorProcedures[game.scenario];
+  return sector.vector === id ? [...hypothesis.procedures, sector.id] : hypothesis.procedures;
+}
+
 export function availableIn(game: Game, id: string) {
   if (game.lastUsed[id] === undefined) return 0;
   return Math.max(0, game.lastUsed[id] + cooldownWindow(game) - (game.turns.length + 1));
@@ -781,9 +803,9 @@ export function nextEvidenceSource(game: Game) {
   for (const attack of hidden) {
     const candidates = attack.detect.filter(id => !availableIn(game, id));
     candidates.sort((a, b) => Number(game.established.includes(b)) - Number(game.established.includes(a)));
-    if (candidates.length) return procedures.find(procedure => procedure.id === candidates[0]);
+    if (candidates.length) return procedureById(game, candidates[0]);
   }
-  return procedures.find(procedure => !availableIn(game, procedure.id));
+  return proceduresFor(game).find(procedure => !availableIn(game, procedure.id));
 }
 
 // The interface uses the field's own vocabulary, which is right for the subject
@@ -911,7 +933,7 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     sources: [],
     clue: null,
   };
-  const open = hypothesis.procedures.filter(id => !availableIn(game, id)).map(id => ({ id, title: procedures.find(procedure => procedure.id === id)!.title }));
+  const open = hypothesisSources(game, hypothesis.id).filter(id => !availableIn(game, id)).map(id => ({ id, title: procedureById(game, id)!.title }));
   const standing = getHypothesisStanding(game);
   if (standing.level === "weakening" || standing.level === "unsupported") return {
     step: "revise",
@@ -1046,11 +1068,12 @@ export function getHypothesisStanding(game: Game): HypothesisStanding {
   if (!hypothesis) return { level: "none", label: "No working hypothesis", detail: "Record the explanation you are testing. Until you do, a procedure collects but settles nothing.", spent: 0, sources: 0, inconclusive: 0, turnsSinceConfirmation: 0 };
   const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
   const since = game.turns.filter(turn => turn.number > lastConfirmation);
-  const own = since.filter(turn => turn.hypothesis === hypothesis.id && hypothesis.procedures.includes(turn.procedure));
+  const routeSources = hypothesisSources(game, hypothesis.id);
+  const own = since.filter(turn => turn.hypothesis === hypothesis.id && routeSources.includes(turn.procedure));
   const checked = new Set(own.filter(turn => turn.success && !turn.revealed).map(turn => turn.procedure));
   const inconclusive = new Set(own.filter(turn => !turn.success).map(turn => turn.procedure).filter(id => !checked.has(id))).size;
   const spent = checked.size;
-  const sources = hypothesis.procedures.length;
+  const sources = routeSources.length;
   const common = { spent, sources, inconclusive, turnsSinceConfirmation: since.length };
   const unresolved = inconclusive ? ` ${inconclusive} further attempt${inconclusive === 1 ? "" : "s"} failed outright, which settles nothing either way.` : "";
   const ledger = `${spent} of this reading's ${sources} evidence source${sources === 1 ? "" : "s"} ${spent === 1 ? "has" : "have"} been checked since the last confirmation and came back empty`;
@@ -1078,7 +1101,7 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
     inconclusive ? ` ${inconclusive} earlier attempt${inconclusive === 1 ? "" : "s"} failed before producing a result, which settles nothing.` : "",
   ].join("");
   if (!hypothesis) return { level: "broad", label: "Broad collection", detail: `No working hypothesis is recorded, so this action collects without testing an explanation.${spentNote}`, spent, inconclusive };
-  if (hypothesis.procedures.includes(procedure)) return { level: "high", label: "One of this reading's own sources", detail: `${hypothesis.title} relies on this source, so an empty result here counts against that reading. A discovery may still turn out to sit on another route — the sources overlap.${spentNote}`, spent, inconclusive };
+  if (hypothesisSources(game, hypothesis.id).includes(procedure)) return { level: "high", label: "One of this reading's own sources", detail: `${hypothesis.title} relies on this source, so an empty result here counts against that reading. A discovery may still turn out to sit on another route — the sources overlap.${spentNote}`, spent, inconclusive };
   return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent, inconclusive };
 }
 
@@ -1112,7 +1135,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (game.pendingDecision) throw new Error("Resolve the evidence decision first.");
   if (game.pendingCommand) throw new Error("Resolve the command event first.");
   if (game.pendingSetPiece) throw new Error("Resolve the sector decision first.");
-  if (!procedures.some(item => item.id === procedure)) throw new Error("Unknown procedure.");
+  if (!proceduresFor(game).some(item => item.id === procedure)) throw new Error("Unknown procedure.");
   if (availableIn(game, procedure) > 0) throw new Error("This procedure is cooling down.");
 
   const raw = forcedRoll ?? (game.seed === null ? randomInt(20) + 1 : seededRoll(game.seed, game.turns.length));
@@ -1148,7 +1171,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   // Whether this procedure was one of the sources that could have exposed the
   // stage under test, regardless of how the roll landed.
   const discriminating = !!nextHidden && attacks.find(item => item.id === nextHidden)!.detect.includes(procedure);
-  const planningBonus = hypothesisMatched && hypothesis?.procedures.includes(procedure) ? 2 : 0;
+  const planningBonus = hypothesisMatched && hypothesis && hypothesisSources(game, hypothesis.id).includes(procedure) ? 2 : 0;
   const specialist = specialists[g.specialist];
   const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < 5 ? 1 : 0;
   const scope = procedureScopes[plan.scope];
@@ -1173,7 +1196,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // saying "Identity audit at the payment gateway" for a mailbox relay reads as
     // the game asserting a location it has not established. Lead with the finding,
     // then attribute the source and the focus for what they are.
-    narrative = `${attacks.find(attack => attack.id === match)!.evidence} Found by ${procedures.find(item => item.id === procedure)!.title.toLowerCase()} with collection focused on ${focusNode.label}.`;
+    narrative = `${attacks.find(attack => attack.id === match)!.evidence} Found by ${procedureById(g, procedure)!.title.toLowerCase()} with collection focused on ${focusNode.label}.`;
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (success) {
     narrative = "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.";
@@ -1194,7 +1217,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   }
   if (success) {
-    const source = procedures.find(item => item.id === procedure)!;
+    const source = procedureById(g, procedure)!;
     const evidenceTitle = revealed ? `${attacks.find(item => item.id === revealed)!.title} evidence` : `${source.title} exception`;
     g.evidence.push({
       id: `E${number}-${procedure}`,
@@ -1236,7 +1259,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       const cooling = Object.keys(g.lastUsed).filter(id => g.lastUsed[id] + cooldownWindow(g) > number + 1).sort((a, b) => g.lastUsed[a] - g.lastUsed[b]);
       if (cooling.length) {
         delete g.lastUsed[cooling[0]];
-        inject.effectLabel = `${procedures.find(item => item.id === cooling[0])!.title} is available again.`;
+        inject.effectLabel = `${procedureById(g, cooling[0])!.title} is available again.`;
       } else inject.effectLabel = "No procedures are cooling down; no change.";
     }
     if (inject.effect === "reveal") {
@@ -1558,7 +1581,7 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
 export function getAdversaryRead(game: Game) {
   const memory = game.adversaryMemory;
   const favourite = Object.entries(memory.procedureCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const source = favourite ? procedures.find(item => item.id === favourite)?.title : null;
+  const source = favourite ? procedureById(game, favourite)?.title : null;
   const posture = memory.actChoices > memory.observeChoices ? "expects rapid intervention" : memory.observeChoices > memory.actChoices ? "expects evidence preservation" : "is still learning your command posture";
   const hypothesis = memory.hypothesisChanges >= 3 ? "Your frequent hypothesis changes are creating exploitable uncertainty." : memory.hypothesisChanges ? "The actor has observed changes in your investigative theory." : "Your investigative theory remains difficult to infer.";
   const campaignRead = game.campaignDoctrine === "balanced" ? "No dominant campaign doctrine is yet visible." : `Across operations, the group expects a predominantly ${game.campaignDoctrine === "act" ? "intervention-led" : "observation-led"} response.`;
@@ -1654,7 +1677,7 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
         : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}, so the prediction scored nothing.${windfallNote}`;
     return {
       turn: turn.number,
-      procedure: procedures.find(item => item.id === turn.procedure)!.title,
+      procedure: procedureById(game, turn.procedure)!.title,
       predicted,
       testedAgainst: stage,
       actualRoute,

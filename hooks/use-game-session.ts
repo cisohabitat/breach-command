@@ -3,7 +3,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
   attacks,
-  procedures,
   scenarios,
   hypotheses,
   difficulties,
@@ -43,6 +42,9 @@ import {
   type DecisionChoice,
   type MapAction,
   type SetPieceChoice,
+  hypothesisSources,
+  proceduresFor,
+  procedureById,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
 import { campaignAct, campaignEnding, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
@@ -139,7 +141,7 @@ export function useGameSession() {
 
   const activeScenario = scenarios[game?.scenario ?? scenarioChoice];
   const ScenarioIcon = activeScenario.icon;
-  const proc = procedures.find(procedure => procedure.id === selected);
+  const proc = game ? procedureById(game, selected ?? "") : undefined;
   const ended = !!game && ["won", "lost", "exercise"].includes(game.status);
   const config = game ? difficulties[game.difficulty] : difficulties[difficulty];
   const decision = game ? getDecisionOptions(game) : null;
@@ -148,7 +150,7 @@ export function useGameSession() {
   const responseProfile = game ? responseOptionsFor(game) : null;
   const outcome = game ? getOutcome(game) : null;
   const activeHypothesis = game ? hypotheses.find(item => item.id === game.hypothesis) : null;
-  const procedureAligned = !!proc && !!activeHypothesis?.procedures.includes(proc.id);
+  const procedureAligned = !!proc && !!game && !!activeHypothesis && hypothesisSources(game, activeHypothesis.id).includes(proc.id);
   const currentAct = campaignAct(campaign.completed.length);
   const currentRouteId = routeForCampaign(campaign);
   const currentRoute = campaignRoutes[currentRouteId];
@@ -274,7 +276,7 @@ export function useGameSession() {
       setReport(requiresDialog ? result : null);
       setInlineReport(requiresDialog ? null : result);
       const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
-      setPendingUndo(quick && next.status === "playing" && !blockedNow ? { label: procedures.find(item => item.id === id)?.title ?? "Procedure", game: current } : null);
+      setPendingUndo(quick && next.status === "playing" && !blockedNow ? { label: procedureById(current, id)?.title ?? "Procedure", game: current } : null);
       setRolling(false);
       setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}. Adversary progress is ${next.objectiveProgress}.`);
       playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
@@ -624,7 +626,7 @@ export function useGameSession() {
             adversaryState: getAdversaryState(current),
             discovered: current.revealed.map(id => attacks.find(attack => attack.id === id)?.title),
             lead: getLead(current),
-            procedures: procedures.map(procedure => ({
+            procedures: proceduresFor(current).map(procedure => ({
               id: procedure.id,
               title: procedure.title,
               established: current.established.includes(procedure.id),

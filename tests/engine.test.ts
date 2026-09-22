@@ -1,7 +1,7 @@
 // Turn resolution, blocking states, end states and the decision layer.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypotheses,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,type Difficulty,type Game} from "../lib/advanced-game.ts";
+import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,type Difficulty,type Game} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -250,7 +250,9 @@ test("teaches the reasoning instead of handing over the answer", () => {
   const declared=setHypothesis({...training,chain:["phish","spray","task","https"],established:[]} as Game,"identity");
   const testing=getTrainingPrompt(declared,true)!;
   assert.equal(testing.step,"test");
-  const identitySources=hypotheses.find(item=>item.id==="identity")!.procedures;
+  // The reading's own sources include this sector's procedure when it tests the
+  // same route, so read them from the game rather than the static route list.
+  const identitySources=hypothesisSources(g,"identity");
   assert.ok(testing.sources.length>0,"it names sources to try");
   for(const source of testing.sources){
     assert.ok(identitySources.includes(source.id),`${source.id} is one of the declared reading's own sources`);

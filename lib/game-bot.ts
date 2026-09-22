@@ -1,4 +1,4 @@
-import { attacks, availableIn, commandEvents, getObjectiveRead, hypotheses, infrastructureTopologies, procedures, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
+import { attacks, availableIn, commandEvents, getObjectiveRead, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
 
 export type BotAction =
   | { type: "decision"; choice: DecisionChoice; reason: string }
@@ -97,13 +97,13 @@ function rankProcedure(game: Game) {
   const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
   const topology = infrastructureTopologies[game.scenario];
   const focus = topology.nodes.find(node => node.id === game.focusedNode);
-  return procedures
+  return proceduresFor(game)
     .filter(procedure => availableIn(game, procedure.id) === 0)
     .map(procedure => {
       const uses = game.turns.filter(turn => turn.procedure === procedure.id).length;
       const recent = game.turns.slice(-2).some(turn => turn.procedure === procedure.id);
       const score = (game.established.includes(procedure.id) ? 4 : 0)
-        + (hypothesis?.procedures.includes(procedure.id) ? 5 : 0)
+        + (hypothesis && hypothesisSources(game, hypothesis.id).includes(procedure.id) ? 5 : 0)
         + (focus?.procedures.includes(procedure.id) ? 2 : 0)
         + (specialists[game.specialist].procedures.includes(procedure.id as never) && game.specialistFatigue < 5 ? 2 : 0)
         - uses * 2

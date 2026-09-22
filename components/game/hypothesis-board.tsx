@@ -4,7 +4,7 @@ import {
   getAdversaryState,
   getHypothesisStanding,
   hypotheses,
-  procedures,
+  procedureById, hypothesisSources,
   type Game,
   type HypothesisId,
 } from "@/lib/advanced-game";
@@ -48,8 +48,8 @@ export function HypothesisBoard({
       )}
       <div className="hypothesis-options">
         {hypotheses.map(hypothesis => {
-          const evidenceSources = hypothesis.procedures
-            .map(id => procedures.find(procedure => procedure.id === id)?.title)
+          const evidenceSources = hypothesisSources(game, hypothesis.id)
+            .map(id => procedureById(game, id)?.title)
             .filter(Boolean)
             .join(" · ");
           return (

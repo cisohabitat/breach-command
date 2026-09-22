@@ -1,7 +1,7 @@
 // The saved-session contract: what migrates, and what is refused.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {newGame,attacks,procedures,scenarios,infrastructureTopologies} from "../lib/advanced-game.ts";
+import {newGame,attacks,procedures,sectorProcedures,scenarios,infrastructureTopologies} from "../lib/advanced-game.ts";
 import {parseSession,SESSION_VERSION} from "../lib/session.ts";
 
 
@@ -17,7 +17,10 @@ test("refuses a save that no playthrough could produce", () => {
   assert.equal(tampered({impact:"lots"})?.game.impact,0,"a non-numeric meter falls back to its default");
   assert.equal(tampered({continuity:null})?.game.continuity,100);
   assert.equal(tampered({impact:9999})?.game.impact,100,"a restored meter stays inside its documented range");
-  for(const a of attacks){assert.ok(a.detect.length>=3);for(const id of a.detect)assert.ok(procedures.some(p=>p.id===id));}
+  // A technique's detect list may name the shared procedures or a sector's own
+  // one, so validate against both rather than the shared set alone.
+  const everyProcedure=new Set([...procedures.map(p=>p.id),...sectorProcedures.map(p=>p.id)]);
+  for(const a of attacks){assert.ok(a.detect.length>=3);for(const id of a.detect)assert.ok(everyProcedure.has(id),`${a.id} names a real procedure: ${id}`);}
   for(const s of scenarios){assert.equal(s.choices.length,4);s.choices.forEach((choices,stage)=>choices.forEach(id=>assert.equal(attacks.find(a=>a.id===id)?.stage,stage)));}
 });
 
