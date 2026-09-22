@@ -1,7 +1,7 @@
 // Data invariants the authored content has to keep.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {newGame,attacks,hypotheses,procedures,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
+import {newGame,attacks,hypotheses,procedures,responseProfiles,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
 import {adversaryObjectives} from "../lib/command-systems.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
 
@@ -70,5 +70,28 @@ test("keeps every procedure inside the reasoning system", () => {
   for (const attack of attacks) {
     const route = hypotheses.find(item => item.id === attack.vector)!;
     assert.ok(attack.detect.some(source => route.procedures.includes(source)), `${attack.id} can be found by reasoning, not only by luck`);
+  }
+});
+
+test("makes the cheap response option a different call in each sector", () => {
+  // The assurance shortcut and the patch-in-place recovery used to be identical
+  // in all ten profiles — same title, same disruption, confidence, residual and
+  // score — with only the description reworded. That is what taught players to
+  // reuse one pattern from sector five onward instead of reading the sector.
+  for (const [id, phase] of [["accelerate", "assurance"], ["patch", "recovery"]] as const) {
+    const options = responseProfiles.map(profile => profile[phase].find(item => item.id === id)!).filter(Boolean);
+    assert.equal(options.length, responseProfiles.length, `every sector offers ${id}`);
+    const scores = options.map(item => item.score);
+    assert.ok(Math.max(...scores) - Math.min(...scores) >= 5, `${id} is worth materially more in some sectors than others`);
+    assert.equal(new Set(options.map(item => item.title)).size, responseProfiles.length, `${id} is named for its own sector`);
+
+    // And the labels the player reads before choosing agree with the score, so
+    // the warning arrives before the decision rather than in the debrief.
+    for (const option of options) {
+      const lenient = option.confidence === "Moderate" && option.residual === "Moderate";
+      const severe = option.confidence === "Limited" && option.residual === "High";
+      if (lenient) assert.ok(option.score >= 9, `${option.title} reads defensible and scores like it`);
+      if (severe) assert.ok(option.score <= 6, `${option.title} reads reckless and scores like it`);
+    }
   }
 });

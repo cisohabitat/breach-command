@@ -270,12 +270,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the trusted service boundary", description: "Test identities, integrations and dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
       { id: "preserve", title: "Preserve business service evidence", description: "Retain approval, identity and application artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Use existing service checks to shorten the administrative freeze.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+      { id: "accelerate", title: "Accept the service owner's assurance", description: "Payroll and workflow owners can see their own data, so their sign-off carries real weight here.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 2, continuity: 5, score: 9 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the application tier from baseline", description: "Highest assurance for shared services, with the longest payroll interruption.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -13, score: 14 },
       { id: "restore", title: "Restore validated service backups", description: "Returns payroll and shared applications faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place and monitor", description: "Minimises payroll disruption and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+      { id: "patch", title: "Patch the application tier in place", description: "A shared application tier patches cleanly and the dependency map is well understood.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -6, continuity: 8, score: 10 },
     ],
   },
   {
@@ -288,12 +288,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the clinical boundary", description: "Prove identities, routes and dependent workflows before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -5, score: 13 },
       { id: "preserve", title: "Preserve clinical support evidence", description: "Retain volatile artefacts before the support path changes again.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -6, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the interruption using current clinical checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 8 },
+      { id: "accelerate", title: "Accept the clinical safety check", description: "Care teams verify records against their own independent checks, and every hour of manual working carries its own risk.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 3, continuity: 6, score: 11 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the support estate from baseline", description: "Highest assurance, with the longest period of manual clinical work.", disruption: "High", confidence: "Strong", residual: "Low", impact: -17, continuity: -16, score: 14 },
       { id: "restore", title: "Restore validated clinical backups", description: "Returns scheduling and records faster if integrity is sound.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -11, continuity: 3, score: 12 },
-      { id: "patch", title: "Patch in place and monitor", description: "Minimises clinical disruption and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -5, continuity: 8, score: 7 },
+      { id: "patch", title: "Patch in place under clinical supervision", description: "Keeps scheduling and records running while clinicians watch for anomalies they would recognise.", disruption: "Low", confidence: "Developing", residual: "High", impact: -5, continuity: 8, score: 9 },
     ],
   },
   {
@@ -306,12 +306,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the engineering boundary", description: "Test supplier routes and support dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -4, score: 14 },
       { id: "preserve", title: "Preserve support artefacts", description: "Retain jump-host and configuration evidence before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -6, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Use plant checks to shorten the maintenance interruption.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+      { id: "accelerate", title: "Accept the plant integrity check", description: "Plant instrumentation is independent of the support estate, so it can confirm what the support estate cannot.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 2, continuity: 5, score: 11 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the support estate from baseline", description: "Strongest assurance, with the longest engineering-capacity gap.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -12, score: 14 },
       { id: "restore", title: "Restore validated support backups", description: "Returns maintenance capability faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place and monitor", description: "Protects engineering capacity and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 7, score: 8 },
+      { id: "patch", title: "Patch in place behind the plant boundary", description: "The engineering boundary holds while the support estate is patched, and instrumentation would show a process deviation.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -6, continuity: 7, score: 11 },
     ],
   },
   {
@@ -324,12 +324,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the partner boundary", description: "Test portal identities and planning dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
       { id: "preserve", title: "Preserve booking evidence", description: "Retain portal and scheduling artefacts before the platform changes.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the manual window using current terminal checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 8 },
+      { id: "accelerate", title: "Accept the terminal's operational check", description: "Terminal checks confirm that bookings flow, not that they are trustworthy, and partner traffic keeps moving either way.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 6 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the booking platform from baseline", description: "Highest assurance, with the longest planning interruption.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -14, score: 14 },
       { id: "restore", title: "Restore validated scheduling backups", description: "Returns automated planning faster if integrity is sound.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 3, score: 12 },
-      { id: "patch", title: "Patch in place and monitor", description: "Protects terminal capacity and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+      { id: "patch", title: "Patch in place and keep the berth working", description: "Holds terminal capacity, but partner systems keep transacting against an estate you have not re-proved.", disruption: "Low", confidence: "Developing", residual: "High", impact: -6, continuity: 8, score: 7 },
     ],
   },
   {
@@ -342,12 +342,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the tenant boundary", description: "Test roles, trust policies and derived keys before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
       { id: "preserve", title: "Preserve control-plane evidence", description: "Retain audit history and key material before roles change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Use provider checks to shorten the automation interruption.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+      { id: "accelerate", title: "Accept the provider's platform assurance", description: "The provider attests to a control plane you cannot inspect, which is the plane under investigation.", disruption: "Low", confidence: "Limited", residual: "High", impact: 2, continuity: 5, score: 4 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the workload from a trusted image", description: "Highest assurance, with the longest automation gap.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -13, score: 14 },
       { id: "restore", title: "Restore validated workload snapshots", description: "Returns automation faster if snapshot integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch roles in place and monitor", description: "Protects workload availability and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+      { id: "patch", title: "Patch roles in place and monitor", description: "Keeps workloads running, but a role left in place is the same role the actor used.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 6 },
     ],
   },
   {
@@ -360,12 +360,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the shared boundary", description: "Prove the trust service and federation routes before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -4, score: 14 },
       { id: "preserve", title: "Preserve shared-service evidence", description: "Retain federation and identity artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the coordination pause using partner-visible checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+      { id: "accelerate", title: "Accept each tenant's own assurance", description: "Downstream tenants sign off on their own view, which leaves what they cannot see unexamined.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the shared platform from baseline", description: "Strongest assurance, with the longest coordination pause for partners.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -12, score: 14 },
       { id: "restore", title: "Restore validated shared backups", description: "Returns dependent organisations faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place and monitor", description: "Protects partner service and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+      { id: "patch", title: "Patch the shared platform in place", description: "A shared platform is patched once for every tenant, and staged rollout is routine work here.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -6, continuity: 8, score: 9 },
     ],
   },
   {
@@ -378,12 +378,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the public-service boundary", description: "Prove administrative routes and agency dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
       { id: "preserve", title: "Preserve administrative evidence", description: "Retain identity and application artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the administrative freeze using current service checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 8 },
+      { id: "accelerate", title: "Accept the department's service check", description: "Service checks show the counter is open. The authority to make administrative decisions is what is in question.", disruption: "Low", confidence: "Limited", residual: "High", impact: 3, continuity: 6, score: 5 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the public service from baseline", description: "Highest assurance, with the longest administrative pause.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -14, score: 14 },
       { id: "restore", title: "Restore validated service backups", description: "Returns citizen transactions faster if integrity is sound.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 3, score: 12 },
-      { id: "patch", title: "Patch in place and monitor", description: "Protects public capacity and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 7 },
+      { id: "patch", title: "Patch in place and keep services open", description: "Public capacity holds, but administrative decisions keep issuing from an estate still under suspicion.", disruption: "Low", confidence: "Developing", residual: "High", impact: -6, continuity: 8, score: 7 },
     ],
   },
   {
@@ -396,12 +396,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the core boundary", description: "Test routing control and management routes before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -3, score: 14 },
       { id: "preserve", title: "Preserve core evidence", description: "Retain routing and management artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -6, continuity: -4, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the change freeze using network health checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 6, score: 8 },
+      { id: "accelerate", title: "Accept the routing health check", description: "A compromised management plane reports healthy routing, because reporting healthy routing is what it is for.", disruption: "Low", confidence: "Limited", residual: "High", impact: 3, continuity: 6, score: 5 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the management core from baseline", description: "Strongest assurance, with the longest restriction of management change.", disruption: "High", confidence: "Strong", residual: "Low", impact: -20, continuity: -14, score: 14 },
       { id: "restore", title: "Restore validated core configuration", description: "Returns routing control faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -13, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place and monitor", description: "Protects connectivity and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -6, continuity: 8, score: 8 },
+      { id: "patch", title: "Patch the management plane in place", description: "Connectivity holds and the change window stays short, but the plane doing the reporting is the one being patched.", disruption: "Low", confidence: "Developing", residual: "High", impact: -6, continuity: 8, score: 9 },
     ],
   },
   {
@@ -414,12 +414,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the support boundary", description: "Test vendor routes and engineering dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
       { id: "preserve", title: "Preserve historian evidence", description: "Retain historian and configuration artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the manual period using current process checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 2, continuity: 5, score: 8 },
+      { id: "accelerate", title: "Accept the treatment safety check", description: "Manual supervision and physical process limits sit outside the compromised estate and can be trusted on their own terms.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 2, continuity: 5, score: 12 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the support environment from baseline", description: "Strongest assurance, with the longest manual-supervision period.", disruption: "High", confidence: "Strong", residual: "Low", impact: -17, continuity: -13, score: 14 },
       { id: "restore", title: "Restore validated support backups", description: "Returns engineering support faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -11, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place and monitor", description: "Protects the process safety margin and retains uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -5, continuity: 7, score: 8 },
+      { id: "patch", title: "Patch in place under manual supervision", description: "Supervision continues through the patch, and the process would show a deviation before an operator would.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -5, continuity: 7, score: 12 },
     ],
   },
   {
@@ -432,12 +432,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the clearing boundary", description: "Test approvals, roles and settlement dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -4, score: 14 },
       { id: "preserve", title: "Preserve settlement evidence", description: "Retain transaction and approval artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept operational assurance", description: "Shorten the review using current clearing checks.", disruption: "Low", confidence: "Developing", residual: "High", impact: 3, continuity: 5, score: 8 },
+      { id: "accelerate", title: "Accept the settlement reconciliation", description: "Reconciliation is the control being tested. Accepting its own output as assurance is the failure this incident is about.", disruption: "Low", confidence: "Limited", residual: "High", impact: 3, continuity: 5, score: 3 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the clearing service from baseline", description: "Highest assurance, with the longest settlement delay.", disruption: "High", confidence: "Strong", residual: "Low", impact: -19, continuity: -14, score: 14 },
       { id: "restore", title: "Restore validated settlement backups", description: "Returns clearing faster if backup integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place and monitor", description: "Meets the deadline and retains more uncertainty.", disruption: "Low", confidence: "Limited", residual: "High", impact: -5, continuity: 8, score: 8 },
+      { id: "patch", title: "Patch in place and clear the window", description: "The settlement window closes on time, on an estate whose approval path has not been re-proved.", disruption: "Low", confidence: "Limited", residual: "High", impact: -5, continuity: 8, score: 5 },
     ],
   },
 ];
