@@ -68,7 +68,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           </section>
           <section className="hypothesis-ledger" id="debrief-hypothesis">
             <span className="eyebrow">HYPOTHESIS ACCURACY · {outcome.breakdown.hypothesis}/10</span>
-            <p className="ledger-rule">A turn scores when the route you predicted is the route the next unconfirmed stage actually used. Only the hypothesis standing when you act is tested, so revising before you act costs nothing. Choosing one of that hypothesis&rsquo;s own evidence sources adds the +2 planning bonus on top.</p>
+            <p className="ledger-rule">A turn scores in full when the route you predicted is the route the next unconfirmed stage actually used. It scores half when the prediction was wrong but properly tested — you spent one of that reading&rsquo;s own evidence sources and the check completed, which rules the reading out. That credit is paid once per reading: declaring one again after its own sources came back empty earns nothing. A failed roll settles nothing either way. Only the hypothesis standing when you act is tested, so revising before you act costs nothing, and choosing one of that reading&rsquo;s own sources adds the +2 planning bonus on top.</p>
             {getHypothesisLedger(game).map(row => (
               <div key={row.turn} className={row.matched ? "matched" : "missed"}>
                 <span>{String(row.turn).padStart(2, "0")}</span>

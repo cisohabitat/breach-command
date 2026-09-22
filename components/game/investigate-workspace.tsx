@@ -19,8 +19,13 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
 
   return (
     <div className="investigation-dashboard">
-      <div className="investigation-context">
+      {/* The reading leads, because every procedure is gated on it. The actions come
+          next and the reference material after, so the grid a player touches every
+          turn is not six screens below the fold on a phone. */}
+      <div className="investigation-lead">
         {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
+      </div>
+      <div className="investigation-context">
         {!game.pendingCommand && !game.pendingSetPiece && <KnownFacts game={game} />}
         <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
         <SpecialistTransmission game={game} />

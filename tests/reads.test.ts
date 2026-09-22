@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,hypothesisSources,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
+import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -249,4 +249,25 @@ test("explains a score the player can check against what they saw", () => {
 
   assert.ok(plainLanguage["evidence boundary"], "the vocabulary a playtest asked about is translated");
   assert.ok(/consecutive stages|same route/.test(plainLanguage["causal sequence"]), "and the causal rule is stated in the glossary too");
+});
+
+test("credits a reading that was wrong but properly tested", () => {
+  // Scoring only exact matches made a careful player and a guesser indistinguish-
+  // able: measured over 800 operations, sound play and random play both landed
+  // around three out of ten while perfect knowledge scored ten. Ruling a reading
+  // out is the loop this game teaches, so it earns half a turn's credit.
+  const base = (() => { const b = baseline(); b.established = []; b.injectDeck = []; b.chain = ["phish", "spray", "task", "https"]; return b; })();
+  const sample = playTurn(base, "endpoint", 20).turns[0];
+  const turn = (fields: Partial<typeof sample>) => ({ ...sample, hypothesisTarget: "phish", revealed: null, injectReveal: null, ...fields });
+  const score = (turns: typeof sample[]) => getScoreBreakdown({ ...base, turns }).hypothesis;
+
+  const identitySource = hypothesisSources(base, "identity")[0];
+  const soundNegative = turn({ hypothesis: "identity", hypothesisMatched: false, success: true, procedure: identitySource });
+  const matched = turn({ hypothesis: "endpoint", hypothesisMatched: true, success: true, procedure: "endpoint" });
+
+  assert.equal(score([matched, matched]), 10, "a reading that matched every turn still scores full marks");
+  assert.equal(score([soundNegative, matched]), 8, "ruling one reading out and then matching beats matching alone once");
+  assert.equal(score([soundNegative, soundNegative]), 3, "but the same reading ruled out twice is credited once");
+  assert.equal(score([turn({ hypothesis: "identity", hypothesisMatched: false, success: false, procedure: identitySource })]), 0, "a failed roll settles nothing, so it earns nothing");
+  assert.equal(score([turn({ hypothesis: "identity", hypothesisMatched: false, success: true, procedure: "server" })]), 0, "and a source the reading does not predict cannot rule it out");
 });

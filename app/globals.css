@@ -1360,6 +1360,67 @@ a {
   }
 }
 @media(max-width:650px) {
+  .hypothesis-detail {
+    display:none;
+    gap:5px;
+    margin-top:11px;
+    padding:12px;
+    border:1px solid #3d5040;
+    border-radius:8px;
+    font-size:var(--type-caption);
+    line-height:var(--leading-base);
+  }
+  .hypothesis-detail strong {
+    color:var(--lime);
+  }
+  .hypothesis-detail span,.hypothesis-detail small {
+    color:var(--text-soft);
+  }
+  .hypothesis-compare {
+    display:block;
+    margin-top:9px;
+  }
+  .hypothesis-compare>summary {
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:4px 12px;
+    min-height:44px;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:var(--type-caption);
+  }
+  .hypothesis-compare>summary::-webkit-details-marker {
+    display:none;
+  }
+  .hypothesis-compare>summary:focus-visible {
+    outline:2px solid var(--lime);
+    outline-offset:2px;
+  }
+  .hypothesis-compare>summary span {
+    color:var(--text-soft);
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+    font-size:var(--type-micro);
+  }
+  .hypothesis-compare dl {
+    margin:9px 0 0;
+    display:grid;
+    gap:9px;
+  }
+  .hypothesis-compare dt {
+    color:var(--text);
+    font-size:var(--type-caption);
+  }
+  .hypothesis-compare dd {
+    margin:2px 0 0;
+    color:var(--text-soft);
+    font-size:var(--type-caption);
+    line-height:var(--leading-base);
+  }
   .topbar {
     min-height:74px;
     padding:14px 18px;
@@ -4704,14 +4765,35 @@ html,body {
 .director-live {
   margin-top:14px;
 }
+/* The folded pair only exists at phone width; wide screens show every premise on
+   its own card. */
+.hypothesis-detail,.hypothesis-compare {
+  display:none;
+}
 .investigation-dashboard {
   display:grid;
+  /* The reading sits above the reference material on the left, the actions hold
+     the right column. Stacked, the areas collapse to lead, actions, context — the
+     grid is what a player touches every turn, so it never sits last. */
   grid-template-columns:minmax(0,1.45fr) minmax(390px,1fr);
+  grid-template-areas:"lead actions" "context actions";
   gap:20px;
   align-items:start;
 }
-.investigation-context,.investigation-actions {
+.investigation-lead {
+  grid-area:lead;
+}
+.investigation-context {
+  grid-area:context;
+}
+.investigation-actions {
+  grid-area:actions;
+}
+.investigation-lead,.investigation-context,.investigation-actions {
   min-width:0;
+}
+.investigation-lead>*:last-child {
+  margin-bottom:0;
 }
 .investigation-dashboard .infrastructure-console {
   margin-top:0;
@@ -4867,6 +4949,64 @@ html,body {
   }
   .investigation-dashboard {
     grid-template-columns:1fr;
+    grid-template-areas:"lead" "actions" "context";
+  }
+  /* Four expanded premises are 955px on a phone and push the procedure grid three
+     screens down. Once a reading is recorded the cards give way to a compact
+     strip, and all four stay one tap away inside the comparison — where they are
+     still selectable, so changing the reading costs a tap, not a lost control. */
+  .hypothesis-board.has-reading .hypothesis-options {
+    display:none;
+  }
+  .hypothesis-options button>span,.hypothesis-options button>small {
+    display:none;
+  }
+  .hypothesis-options {
+    grid-template-columns:1fr 1fr;
+  }
+  .hypothesis-options button {
+    min-height:48px;
+    padding:12px;
+  }
+  .hypothesis-board.has-reading .hypothesis-detail {
+    display:grid;
+  }
+  /* The standing readout above already names the reading and how it is holding
+     up, so the strip carries only what it does not: the sources this reading
+     predicts. The premise is one tap away in the comparison. */
+  .hypothesis-detail>strong,.hypothesis-detail>span {
+    display:none;
+  }
+  .hypothesis-compare {
+    display:block;
+  }
+  .hypothesis-compare-options {
+    display:grid;
+    gap:8px;
+    margin-top:9px;
+  }
+  .hypothesis-compare-options button {
+    display:grid;
+    gap:4px;
+    min-height:44px;
+    padding:11px 12px;
+    text-align:left;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:transparent;
+    color:var(--text);
+    font-size:var(--type-caption);
+    line-height:var(--leading-base);
+  }
+  .hypothesis-compare-options button.active {
+    border-color:var(--lime);
+  }
+  .hypothesis-compare-options button span {
+    color:var(--text-soft);
+  }
+  .hypothesis-compare-options button:focus-visible {
+    outline:2px solid var(--lime);
+    outline-offset:2px;
   }
   .investigation-actions {
     position:static;

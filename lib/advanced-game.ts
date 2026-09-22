@@ -1631,7 +1631,27 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   const response = Math.round(clamp(game.responseScore, 0, 55) / 55 * 20);
   const tested = game.turns.filter(turn => turn.hypothesis && turn.hypothesisTarget);
   const aligned = tested.filter(turn => turn.hypothesisMatched).length;
-  const hypothesis = tested.length ? Math.round(aligned / tested.length * 10) : 0;
+  // A reading that was properly tested and came back empty is not a guess. The
+  // player predicted, spent one of that reading's own sources and got a real
+  // negative, which is the loop this game claims to teach — and scoring it zero
+  // is why a careful player and a random one both landed on three out of ten.
+  // It earns half credit once per reading, so revising is rewarded and repeating
+  // the same empty reading is not. A failed roll settles nothing and earns none.
+  // Ruling a reading out is worth credit once. Declaring it again after its own
+  // sources came back empty is the opposite of the lesson, so those turns earn
+  // nothing and still count in the denominator.
+  const ruledOut = new Set<string>();
+  let soundNegatives = 0;
+  for (const turn of tested) {
+    if (turn.revealed || turn.injectReveal) ruledOut.clear();
+    if (turn.hypothesisMatched || !turn.success) continue;
+    if (!hypothesisSources(game, turn.hypothesis!).includes(turn.procedure)) continue;
+    if (ruledOut.has(turn.hypothesis!)) continue;
+    ruledOut.add(turn.hypothesis!);
+    soundNegatives++;
+  }
+  const credit = aligned + soundNegatives * 0.5;
+  const hypothesis = tested.length ? Math.round(clamp(credit / tested.length, 0, 1) * 10) : 0;
   return { investigation, impact, continuity, decisions, response, hypothesis, total: investigation + impact + continuity + decisions + response + hypothesis };
 }
 

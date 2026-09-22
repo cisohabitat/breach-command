@@ -19,8 +19,9 @@ export function HypothesisBoard({
   const attribution = getAttributionRead(game);
   // Expert operations withhold every read, this one included.
   const standing = game.mode === "expert" ? null : getHypothesisStanding(game);
+  const active = hypotheses.find(item => item.id === game.hypothesis);
   return (
-    <section className="hypothesis-board" aria-labelledby="hypothesis-heading">
+    <section className={`hypothesis-board ${active ? "has-reading" : ""}`} aria-labelledby="hypothesis-heading">
       <div className="hypothesis-heading">
         <div>
           <BrainCircuit size={20} />
@@ -67,6 +68,34 @@ export function HypothesisBoard({
           );
         })}
       </div>
+      {/* At phone width the four premises are nine hundred pixels and push the
+          procedure grid three screens down, so there they fold: the reading you
+          have declared stays open and the rest sit one tap away. Nothing is lost,
+          and the summary carries the state it hides. */}
+      {active && (
+        <div className="hypothesis-detail">
+          <strong>{active.title}</strong>
+          <span>{active.premise}</span>
+          <small>Evidence: {hypothesisSources(game, active.id).map(id => procedureById(game, id)?.title).filter(Boolean).join(" · ")}</small>
+        </div>
+      )}
+      <details className="hypothesis-compare">
+        <summary>Compare all four readings<span>{active ? "change from " + active.title.toLowerCase() : "none recorded"}</span></summary>
+        <div className="hypothesis-compare-options">
+          {hypotheses.map(hypothesis => (
+            <button
+              key={hypothesis.id}
+              className={game.hypothesis === hypothesis.id ? "active" : ""}
+              disabled={!!game.pendingDecision}
+              onClick={() => onChoose(hypothesis.id)}
+              aria-pressed={game.hypothesis === hypothesis.id}
+            >
+              <strong>{hypothesis.title}</strong>
+              <span>{hypothesis.premise}</span>
+            </button>
+          ))}
+        </div>
+      </details>
     </section>
   );
 }

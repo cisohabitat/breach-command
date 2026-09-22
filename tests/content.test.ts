@@ -110,6 +110,12 @@ test("gives each sector a chain it could not lend to another", () => {
   // would mean changing the technical nouns, not just the briefing.
   const uses: Record<string, number> = {};
   for (const scenario of scenarios) for (const id of scenario.choices.flat()) uses[id] = (uses[id] ?? 0) + 1;
+  // Nothing authored may be unreachable. Rewiring a scenario's pool is how a
+  // technique quietly stops existing: `ci` sat in the deck for a round with no
+  // scenario able to draw it.
+  const orphans = attacks.filter(attack => !uses[attack.id]).map(attack => attack.id);
+  assert.deepEqual(orphans, [], "every technique is drawn by at least one scenario");
+
   for (const scenario of scenarios) {
     const exclusive = scenario.choices.flat().filter(id => uses[id] === 1);
     assert.ok(exclusive.length >= 3, `${scenario.sector} keeps techniques of its own (${exclusive.length}: ${exclusive.join(", ") || "none"})`);
