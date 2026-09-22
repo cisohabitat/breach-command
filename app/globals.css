@@ -7225,3 +7225,191 @@ in colour, and the carried plan is stated before the options. */
   color:var(--foreground);
   font-weight:500;
 }
+
+/* A phone screen is 844px and the chrome above the procedure grid was taking more
+   than half of it, so the grid a player touches every turn sat below the fold.
+   These rules come last on purpose: several earlier blocks set the same
+   properties for wider screens, and cascade order is what settles it. */
+@media(max-width:650px) {
+  /* A phone screen is 844px and the chrome above the procedure grid was taking
+     more than half of it. The three deciding readouts still share the top row and
+     still say their state in words; they lose the stacked layout, and the
+     investigation window — which rarely ends an operation — loses its bar. */
+  .game-identity .eyebrow .separator,.game-identity .eyebrow>span {
+    display:none;
+  }
+  .game-heading {
+    gap:10px;
+  }
+  .game-identity h1 {
+    font-size:var(--type-title);
+    line-height:1.15;
+  }
+  .operation-status {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:4px 8px;
+  }
+  .operation-status .turn-progress {
+    display:none;
+  }
+  .case-meters {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:6px;
+  }
+  .objective-meter {
+    grid-column:auto;
+  }
+  .case-meters>div {
+    display:grid;
+    gap:2px;
+    padding:8px;
+  }
+  .case-meters>div>.mono {
+    font-size:9px;
+    line-height:1.15;
+  }
+  .case-meters>div>strong {
+    font-size:20px;
+    line-height:1.1;
+  }
+  .case-meters>div>small {
+    font-size:10px;
+    line-height:1.15;
+  }
+  .case-meters [data-slot=progress] {
+    height:3px;
+  }
+  .game-identity .eyebrow {
+    font-size:9px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  /* The standing readout and the strip say the same thing twice on a phone. */
+  .hypothesis-board.has-reading .hypothesis-standing p {
+    display:none;
+  }
+  .hypothesis-board .hypothesis-heading small {
+    display:none;
+  }
+  .procedure-section .section-heading p {
+    font-size:var(--type-micro);
+  }
+  /* The cards themselves: the icon row and the bottom status line both restate
+     what the badge already says, so on a phone the card keeps its title, its
+     one-line description and the labels that carry state. */
+  .investigation-dashboard .procedure-card {
+    min-height:0;
+    padding:11px;
+    gap:5px;
+  }
+  .investigation-dashboard .procedure-top {
+    margin-bottom:4px;
+  }
+  .investigation-dashboard .procedure-card .procedure-icon {
+    display:none;
+  }
+  .investigation-dashboard .procedure-top {
+    justify-content:flex-end;
+  }
+  .investigation-dashboard .procedure-bottom {
+    display:none;
+  }
+  .investigation-dashboard .procedure-card h3 {
+    font-size:var(--type-caption);
+    line-height:1.2;
+  }
+  .investigation-dashboard .procedure-card p {
+    font-size:var(--type-micro);
+    line-height:1.3;
+  }
+  /* With a reading recorded, the board becomes a bar: what is declared, how it is
+     holding up, and the way to change it. The premises and the sources live one
+     tap down in the comparison, so the grid is on screen when the player acts. */
+  .hypothesis-board.has-reading .hypothesis-heading {
+    display:none;
+  }
+  .hypothesis-board.has-reading .hypothesis-standing {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:3px 8px;
+    padding:9px 11px;
+  }
+  .hypothesis-board.has-reading .hypothesis-standing .standing-meter {
+    display:none;
+  }
+  .hypothesis-board.has-reading .hypothesis-detail {
+    display:none;
+  }
+  .hypothesis-board.has-reading .hypothesis-compare {
+    margin-top:7px;
+  }
+  .standing-reading {
+  color:var(--text);
+  font-weight:500;
+}
+.hypothesis-compare-sources {
+    display:block;
+    margin-top:9px;
+    color:var(--text-soft);
+    font-size:var(--type-caption);
+    line-height:var(--leading-base);
+  }
+  /* Before a reading is recorded the four cards already are the comparison, so
+     the folded copy of it only costs height. */
+  .hypothesis-board:not(.has-reading) .hypothesis-compare {
+    display:none;
+  }
+  .procedure-section .section-heading {
+    display:block;
+  }
+  .procedure-section .section-heading .established-key {
+    display:inline-block;
+    margin-top:6px;
+  }
+  .investigation-dashboard {
+    gap:12px;
+  }
+  .workspace-shell {
+    padding-top:12px;
+  }
+  /* The tab label ran underneath its own count badge: the button is a flex row
+     and the label had no min-width, so it overflowed instead of shrinking. */
+  /* The tab label ran underneath its own count badge: the button is a flex row
+     and the label had nowhere to shrink to. Truncating the label to "Inv..." is
+     worse than dropping the count, which the workspace itself repeats. */
+  .workspace-tabs button>b {
+    display:none;
+  }
+  .workspace-tabs button>span {
+    min-width:0;
+  }
+  /* The reading and how it is holding up read as one phrase otherwise. */
+  .hypothesis-board.has-reading .hypothesis-standing strong {
+    padding:2px 7px;
+    border:1px solid #3d5040;
+    border-radius:999px;
+    font-size:var(--type-micro);
+  }
+  /* And the prompts above the grid say their piece in fewer lines. */
+  .procedure-section .section-heading {
+    gap:4px;
+  }
+  .procedure-section .section-heading h2 {
+    font-size:var(--type-lead);
+  }
+  .guide-nudge {
+    padding:10px 11px;
+    font-size:var(--type-micro);
+    line-height:1.35;
+  }
+  .hypothesis-gate {
+    padding:10px 11px;
+  }
+  .hypothesis-gate strong {
+    display:inline;
+  }
+}

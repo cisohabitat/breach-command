@@ -40,6 +40,7 @@ export function HypothesisBoard({
       {standing && standing.level !== "none" && (
         <div className={`hypothesis-standing level-${standing.level}`} role="status">
           <span className="eyebrow">CURRENT READING</span>
+          {active && <b className="standing-reading">{active.title}</b>}
           <strong>{standing.label}</strong>
           <span className="standing-meter" aria-hidden="true">
             {Array.from({ length: standing.sources }).map((_, index) => <i key={index} className={index < standing.spent ? "spent" : ""} />)}
@@ -95,6 +96,7 @@ export function HypothesisBoard({
             </button>
           ))}
         </div>
+        {active && <small className="hypothesis-compare-sources">Evidence this reading predicts: {hypothesisSources(game, active.id).map(id => procedureById(game, id)?.title).filter(Boolean).join(" · ")}</small>}
       </details>
     </section>
   );
