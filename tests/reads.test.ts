@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,glossaryParts,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,glossaryParts,getDiscriminatingRead,getHypothesisLedger,hypotheses,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -154,7 +154,7 @@ test("shows the modifier it will resolve with", () => {
   }
   // Every term the resolution can apply is named in the preview.
   assert.deepEqual(getModifierBreakdown(previewBase,"endpoint").parts.map(part=>part.label),
-    ["Established","Own source","Carried","Persistence","Specialist","Focus","Focused","Balanced","Expert mode"]);
+    ["Established","Own source","Since your last roll","Persistence","Specialist","Map focus","Focused","Balanced","Expert mode"]);
   // The own-source bonus follows the declared reading, not the hidden route, so
   // it reads the same whatever the chain is.
   const declared=setHypothesis(previewBase,"identity");
@@ -332,7 +332,7 @@ test("explains a score the player can check against what they saw", () => {
   ] };
   const wrong = correlateEvidence(unrelated, ["E1", "E2"], "causal").correlations[0];
   assert.equal(wrong.correct, false);
-  assert.ok(/not thereby related/.test(wrong.finding), "a wrong causal call is told why timing and location are not enough");
+  assert.ok(/not consecutive stages and sit on different routes|confirmed no stage/.test(wrong.finding), "a wrong causal call is told what rules the sequence out");
 
   assert.ok(plainLanguage["evidence boundary"], "the vocabulary a playtest asked about is translated");
   assert.ok(/consecutive stages|same route/.test(plainLanguage["causal sequence"]), "and the causal rule is stated in the glossary too");
@@ -479,4 +479,30 @@ test("marks glossary terms where they are read, once each", () => {
   assert.deepEqual(parts.filter(part=>part.term).map(part=>part.term),["control plane","token","privileged tier","endpoint","C2","beaconing"],"hyphenated, plural and longer terms are found, and each only once");
   assert.ok(!glossaryParts("Capitalise the endpoints' tokenisation").some(part=>part.term==="token"),"a term inside a longer word is not marked");
   for(const part of glossaryParts("An endpoint")) if(part.term) assert.ok(plainLanguage[part.term],"every marked term has a meaning");
+});
+
+test("the ledger pays each turn what the score pays it", () => {
+  // A wrong reading ruled out by its own source earned half in the score while
+  // its ledger row read "NO CREDIT · +1".
+  let game={...baseline(),injectDeck:[]} as Game;
+  const stage=attacks.find(attack=>attack.id===game.chain[0])!;
+  const start=game;
+  const pairs=hypotheses.filter(item=>item.id!==stage.vector).flatMap(item=>hypothesisSources(start,item.id).map(source=>({reading:item.id,source})));
+  game=pairs.map(pair=>playTurn(setHypothesis(start,pair.reading),pair.source,20)).find(next=>!next.turns[0].revealed&&getHypothesisLedger(next)[0].credit>0)!;
+  const row=getHypothesisLedger(game)[0];
+  assert.ok(!row.matched&&!game.turns[0].revealed,"the fixture is a wrong reading tested with its own source and found nothing");
+  assert.equal(row.credit,0.5,"it is paid half");
+  assert.ok(/half credit/.test(row.verdict),"and says so");
+  const total=getHypothesisLedger(game).reduce((sum,item)=>sum+item.credit,0);
+  assert.equal(getScoreBreakdown(game).hypothesis,Math.round(total/game.turns.length*10),"the rows add up to the score");
+});
+
+test("names the weakest decision rather than giving the all-clear", () => {
+  // A playtest was told "nothing stands out" beside calls graded one and two of five.
+  const run=resolveDecision(playTurn({...baseline(),injectDeck:[]},"endpoint",20),"attribute");
+  const done={...run,correlations:[{id:"C1",turn:1,evidence:["E1","E2"],assessment:"causal",correct:true,verdict:"x"}],responseScore:50,turns:run.turns.map(turn=>({...turn,hypothesis:turn.hypothesisTarget?"endpoint" as const:null,hypothesisMatched:true}))} as unknown as Game;
+  const weak={...done,decisions:done.decisions.map(item=>({...item,quality:1}))};
+  assert.ok(/weakest call/.test(getBeginnerReview(weak).gap),"a weak call is named");
+  assert.ok(/actor badge/.test(getBeginnerReview(weak).next),"with what to look at next time");
+  assert.ok(!/weakest call/.test(getBeginnerReview({...done,decisions:done.decisions.map(item=>({...item,quality:5}))}).gap),"and a sound one is not");
 });

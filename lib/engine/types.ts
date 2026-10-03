@@ -242,5 +242,7 @@ export type HypothesisLedgerRow = {
   discriminating: boolean;
   matched: boolean;
   bonus: number;
+  // 1 for the right route, 0.5 for a wrong one ruled out by its own source, else 0.
+  credit: number;
   verdict: string;
 };

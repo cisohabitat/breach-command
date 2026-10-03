@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
+  attacks,
   scenarios,
   hypotheses,
   difficulties,
@@ -671,7 +672,7 @@ export function useGameSession() {
   const answer = game && question === "scope" ? activeScenario.scope
     : question === "constraints" ? activeScenario.constraints
     : question === "impact" ? activeScenario.impact
-    : question === "known" ? `${activeScenario.timeline} ${getLead(game!)}`
+    : question === "known" ? `${activeScenario.timeline} ${getLead(game!)} ${game!.revealed.length ? `Confirmed so far: ${game!.revealed.map(id => attacks.find(attack => attack.id === id)!.title).join(", ")}.` : "No stage is confirmed yet."}`
     : question === "adversary" ? `${getObjectiveRead(game!).title}: ${getObjectiveRead(game!).detail} Current behaviour: ${getAdversaryState(game!)}. ${getAdversaryRead(game!)}`
     : question === "assumptions" ? "Treat alerts, valid credentials and successful procedures as evidence, not conclusions. Record one working hypothesis for each turn and revise it only when evidence no longer fits."
     : "";

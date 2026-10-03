@@ -1,5 +1,5 @@
 import { Activity, CircleDot, Crosshair, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
-import { attacks, describeChange, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
+import { attacks, describeMeterChange, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
 
 // The full cost of a map action, in the same words and directions every other
 // meter change uses. Sector margin and actor progress were missing, and the
@@ -9,10 +9,10 @@ function costLine(game: Game, nodeId: string, action: MapAction) {
   return [
     "Spend 1 action",
     change.modifier ? `next procedure +${change.modifier}` : null,
-    describeChange("impact", change.impact),
-    change.continuity ? describeChange("continuity", change.continuity) : null,
-    describeChange("sector", change.sector),
-    describeChange("objective", change.objective),
+    describeMeterChange(game, "impact", change.impact),
+    change.continuity ? describeMeterChange(game, "continuity", change.continuity) : null,
+    describeMeterChange(game, "sector", change.sector),
+    describeMeterChange(game, "objective", change.objective),
   ].filter(Boolean).join(" · ");
 }
 
@@ -36,7 +36,9 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
               <span className="node-icon">{nodePosture === "isolated" ? <Unplug size={18} /> : nodePosture === "monitored" ? <Eye size={18} /> : critical ? <ShieldAlert size={18} /> : state === "affected" ? <CircleDot size={18} /> : <Network size={18} />}</span>
               <small>{node.type}{critical ? " · CRITICAL" : ""}</small><strong>{node.label}</strong>
-              <em>{nodePosture === "isolated" ? "ISOLATED" : nodePosture === "monitored" ? "MONITORED" : nodePosture === "restored" ? "RESTORED" : game.focusedNode === node.id ? "SELECTED" : findings ? `${findings} FINDING${findings === 1 ? "" : "S"}` : state.toUpperCase()}</em>
+              {/* Selecting a node no longer hides its state: "SELECTED" in place of
+                  "AFFECTED" took the warning away from the node it was about. */}
+              <em>{game.focusedNode === node.id ? "SELECTED · " : ""}{nodePosture === "isolated" ? "ISOLATED" : nodePosture === "monitored" ? "MONITORED" : nodePosture === "restored" ? "RESTORED" : findings ? `${findings} FINDING${findings === 1 ? "" : "S"}` : state.toUpperCase()}</em>
             </button>;
           })}
         </div>

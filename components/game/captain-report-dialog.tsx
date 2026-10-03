@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { ArrowDown, ArrowRight, BrainCircuit, CheckCheck, CircleSlash, Eye, MessagesSquare, Shield, ShieldCheck, Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, describeChange, getHypothesisStanding, getLossReason, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
+import { attacks, describeMeterChange, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { Glossed } from "@/components/game/glossed";
@@ -56,9 +56,13 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
                 {report.success ? <CheckCheck size={23} aria-hidden="true" /> : <CircleSlash size={23} aria-hidden="true" />}
               </div>
-              <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>{describeChange("sector", report.sectorChange)}</span><span>{describeChange("objective", report.objectiveChange)}</span></div>
+              {/* The plan and the turn's movement are told apart: a playtest read
+                  "Focused: impact unchanged" in the sheet, then a rise here, as the
+                  game going back on its word. The reason says what moved them. */}
+              <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}</div>
+              <p className="turn-movement"><b>This turn:</b> {describeMeterChange(game, "impact", report.impactChange)} · {describeMeterChange(game, "continuity", report.continuityChange)} · {describeMeterChange(game, "sector", report.sectorChange)} · {describeMeterChange(game, "objective", report.objectiveChange)}. <span>{report.revealed ? "Finding a stage pushed the adversary back, though the turn still gave it time." : report.success ? "The check completed but found no stage, so the adversary used the time." : "The check failed, which gives the adversary the most time."}{report.adversaryEvent ? " It also made a move, below." : ""}</span></p>
               <p className="report-narrative"><Glossed text={report.narrative} /></p>
-              {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
+              {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small></div></div>}
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
                   is where the player is looking when it lands. A failed roll settles
@@ -71,6 +75,15 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   <p>{standing.detail}</p>
                 </div>
               )}
+              {/* Once a response is chosen, the report says what it did there and
+                  then rather than leaving it all to the debrief. */}
+              {!decision && game.decisions.filter(item => item.stage === report.revealed || item.stage === report.injectReveal).map(item => (
+                <div key={item.stage} className="decision-recorded" role="status">
+                  <span className="eyebrow">RESPONSE RECORDED</span>
+                  <strong>{item.title}</strong>
+                  <p>{item.effect} {describeMeterChange(game, "impact", item.impactChange)} · {describeMeterChange(game, "continuity", item.continuityChange)} · {describeMeterChange(game, "sector", item.sectorChange)}. How well it fitted the moment is judged in the review.</p>
+                </div>
+              ))}
               {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">ACTOR MOVEMENT</span><p>{report.adversaryEvent}</p></div></div>}
               {/* With a decision waiting, the inject joins the result: beside four
                   options it pushed the last one under the fold and left this
@@ -115,7 +128,6 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               )}
             </section>}
           </div>
-          <p className="report-impact small muted">{describeChange("impact", report.impactChange)}; {describeChange("continuity", report.continuityChange, getOperationalLabel(game))}. Decision quality is explained in the debrief.</p>
           {awaitingDecision ? <p className="report-gate" role="status">Resolve the operational decision above to continue. This report stays open until the choice is recorded.</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}<ArrowRight size={17} /></button>}
         </>}
       </DialogContent>
@@ -142,11 +154,17 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
     const settled = window.setTimeout(count, 320);
     scroller.addEventListener("scroll", count, { passive: true });
     window.addEventListener("resize", count);
+    // Opening "How these responses differ" pushes the options down without a
+    // scroll or a resize; the panel changing size is what says so.
+    const panel = list.current?.parentElement;
+    const resized = panel && typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => count()) : null;
+    if (panel) resized?.observe(panel);
     return () => {
       cancelAnimationFrame(frame);
       window.clearTimeout(settled);
       scroller.removeEventListener("scroll", count);
       window.removeEventListener("resize", count);
+      resized?.disconnect();
     };
   }, [list]);
   if (!hidden) return null;

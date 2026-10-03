@@ -2,7 +2,7 @@ import { useRef, type CSSProperties } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { CONTINUITY_AT_RISK } from "@/hooks/use-meter-pulse";
 import { ArrowRight, Zap, ShieldCheck, HeartPulse } from "lucide-react";
-import { describeChange, responseOptionsFor, type Game } from "@/lib/advanced-game";
+import { describeMeterChange, responseOptionsFor, type Game } from "@/lib/advanced-game";
 
 export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choice: string) => void }) {
   const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
@@ -10,6 +10,8 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
   const assurance = phase === "assurance";
   const profile = responseOptionsFor(game);
   const options = profile[phase];
+  const previousPhase = assurance ? "containment" : phase === "recovery" ? "assurance" : null;
+  const previous = previousPhase ? profile[previousPhase].find(option => option.id === game.responseChoices[game.responseChoices.length - 1]) : null;
   // Each phase brings new options, so the button just pressed is gone. Focus
   // moves to the new phase's heading rather than dropping to the page.
   const heading = useRef<HTMLHeadingElement>(null);
@@ -21,7 +23,11 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
       <div className="response-stage">
         <div className="response-heading">
           <span className="response-icon">{containment ? <Zap size={24} /> : assurance ? <ShieldCheck size={24} /> : <HeartPulse size={24} />}</span>
-          <div><span className="eyebrow">{containment ? "CONTAINMENT DECISION" : assurance ? "ASSURANCE GATE" : "RECOVERY DECISION"}</span><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p><p className="muted small"><strong>Sector constraint:</strong> {profile.constraint}</p></div>
+          <div><span className="eyebrow">{containment ? "CONTAINMENT DECISION" : assurance ? "ASSURANCE GATE" : "RECOVERY DECISION"}</span><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p>{containment
+            ? <p className="muted small"><strong>Sector constraint:</strong> {profile.constraint}</p>
+            // Each later phase opens on what the one before it did, in place of the
+            // constraint already read: a playtest saw no result between choices.
+            : previous && <p className="response-recorded"><strong>{assurance ? "Containment" : "Assurance"} recorded:</strong> {previous.title}. {describeMeterChange(game, "impact", previous.impact)} · {describeMeterChange(game, "continuity", previous.continuity)}.</p>}</div>
         </div>
         <div className="response-options">
           {options.map((option, index) => <button key={option.id} style={{ "--option-index": index } as CSSProperties} onClick={() => onChoose(option.id)}><strong>{option.title}</strong><span>{option.description}</span><small>{option.disruption} disruption · {option.confidence.toLowerCase()} confidence · {option.residual.toLowerCase()} residual risk</small><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /><ArrowRight size={17} /></button>)}
@@ -42,7 +48,7 @@ function OptionEffect({ game, impact, continuity }: { game: Game; impact: number
   const atRisk = !ends && game.continuity > CONTINUITY_AT_RISK && after.continuity <= CONTINUITY_AT_RISK;
   return (
     <small className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
-      {describeChange("impact", impact)} · {describeChange("continuity", continuity)}, to {after.continuity}
+      {describeMeterChange(game, "impact", impact)} · {describeMeterChange(game, "continuity", continuity)}, to {after.continuity}
       {ends && <b> · Ends the operation</b>}
       {atRisk && <b> · At risk</b>}
     </small>

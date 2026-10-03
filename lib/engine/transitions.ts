@@ -592,7 +592,11 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
       : `${first.title} and ${second.title} overlap in time, but nothing links them: they are neither consecutive stages nor steps on the same route, and appearing on ${first.system} and ${second.system} is not a relationship.`
     : valid
       ? `These were assessed as coincidental, but ${basis}, which is what a causal sequence looks like.`
-      : `These were treated as causal on timing alone. Two findings close together, or on the same system, are not thereby related — a sequence needs consecutive stages or a shared route.`;
+      : firstAttack && secondAttack
+        // A player judges on the story ("the stolen account led to the data
+        // theft"), and was told they had judged on timing. Say what rules it out.
+        ? `These were treated as causal, but ${stages[firstAttack.stage].name.toLowerCase()} and ${stages[secondAttack.stage].name.toLowerCase()} are not consecutive stages and sit on different routes, so neither could have led straight to the other. A story can connect almost any two findings; a sequence needs consecutive stages or a shared route.`
+        : `These were treated as causal, but a finding that confirmed no stage cannot be a step in the sequence. A sequence needs two confirmed stages, consecutive or on a shared route.`;
   const g: Game = {
     ...game,
     nextModifier: correct ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,

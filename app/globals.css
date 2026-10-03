@@ -1110,6 +1110,12 @@ a {
   display:block;
   margin-top:4px;
 }
+.discovery small {
+  display:block;
+  margin-top:3px;
+  font-size:var(--type-caption);
+  color:#b1c7a6;
+}
 .inject-box {
   background:#322e20;
   border:1px solid #6a6040;
@@ -4576,9 +4582,9 @@ html,body {
   letter-spacing:.01em;
 }
 .case-theory>div:last-child {
-  display:flex;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
   gap:6px;
-  flex-wrap:wrap;
   margin-top:11px;
 }
 .case-theory button {
@@ -4594,6 +4600,24 @@ html,body {
   border-color:var(--lime);
   background:#2a3d2b;
   color:#e5f1df;
+}
+/* Each theory carries its question in words, and the recorded one says so:
+   a touch screen never shows a title tooltip, and colour alone marked it. */
+.case-theory button {
+  display:grid;
+  gap:3px;
+  align-content:start;
+  text-align:left;
+}
+.case-theory button small {
+  color:var(--text-soft);
+  line-height:var(--leading-base);
+}
+.case-theory .plan-selected {
+  margin-left:8px;
+  font:600 var(--type-micro) ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.08em;
+  color:var(--lime);
 }
 .case-theory button:disabled {
   opacity:.55;
@@ -4733,7 +4757,7 @@ html,body {
   }
   .case-theory>div:last-child {
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:1fr;
   }
   .case-theory button {
     min-height:44px;
@@ -5972,9 +5996,6 @@ html,body {
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
-.report-impact {
-  margin-top:-2px;
-}
 .report-dialog .evidence-decision {
   padding:15px;
 }
@@ -6016,6 +6037,45 @@ html,body {
   color:#c9d8c2;
   font-style:normal;
   font-weight:400;
+}
+/* The previous response phase's choice and its effect, at the head of the next. */
+.response-recorded strong {
+  color:#dce8d5;
+  font-weight:600;
+}
+/* The response just chosen and what it did. */
+.decision-recorded {
+  display:grid;
+  gap:4px;
+  padding:12px 14px;
+  border:1px solid #4f6a45;
+  border-left:3px solid var(--lime);
+  border-radius:7px;
+  background:#16231a;
+}
+.decision-recorded strong {
+  font-size:var(--type-body);
+  font-weight:600;
+}
+.decision-recorded p {
+  margin:0;
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+  color:#c9d8c2;
+}
+/* What the turn moved, apart from the plan that was chosen. */
+.turn-movement {
+  margin:0;
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+  color:#c9d8c2;
+}
+.turn-movement b {
+  color:#e6eedf;
+  font-weight:600;
+}
+.turn-movement span {
+  color:var(--text-soft);
 }
 /* What each verb trades away, one tap down on a Training operation's first decision. */
 .decision-primer {
@@ -6545,6 +6605,19 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
   bottom:14px;
   z-index:5;
   box-shadow:0 12px 24px #0b1210cc;
+}
+/* On a laptop-height screen the sticky start sat over the difficulty cards on
+   first load. One row of case numbers and the variant without its paragraph
+   bring the difficulty above it. */
+@media(min-width:901px) and (max-height:900px) {
+  .mission-selector {
+    grid-template-columns:repeat(10,minmax(0,1fr));
+    gap:6px;
+    margin:18px 0 20px;
+  }
+  .variant-brief p {
+    display:none;
+  }
 }
 @media(max-height:900px) {
   .briefing-screen {
@@ -7407,6 +7480,10 @@ they want without scrolling past the other nine. */
   border-color:#6b5a4e;
   color:#d6a98f;
 }
+.hypothesis-ledger>details>div.half b {
+  border-color:#7a6d3f;
+  color:#e8c968;
+}
 @media(max-width:650px) {
   .hypothesis-ledger {
     padding:13px 13px 4px;
@@ -8005,7 +8082,7 @@ in colour, and the carried plan is stated before the options. */
   }
   .investigation-dashboard .procedure-card .established-label {
     font-family:var(--font-ui);
-    font-size:var(--type-caption);
+    font-size:var(--type-micro);
     font-weight:600;
     letter-spacing:0;
     text-transform:none;

@@ -78,17 +78,30 @@ export function getBeginnerReview(game: Game): BeginnerReview {
       ? "Next operation, keep your own tally of which of the reading's sources have come back empty from a completed check, and change the reading once they have, before you spend another turn."
       : "Next operation, watch the reading's standing on the hypothesis board. When it says weakening, change the reading before you spend another turn.",
   };
-  if (readyToCorrelate(game)) return {
+  // Two confirmed stages on the turn the operation ended left no turn to compare
+  // them in, and a playtest was told it "never tested" what it never could.
+  if (readyToCorrelate(game) && readyToCorrelate(recordBefore(game, game.turns.length - 1))) return {
     strength,
     gap: `You confirmed ${game.evidence.filter(item => item.supports).length} stages but never tested how any two of them relate.`,
     concept: "Two things happening close together is not the same as one causing the other. Saying which it is — and being willing to be wrong — is the core of the work.",
     next: "Next operation, once two findings have confirmed stages, select them in the evidence workspace and decide whether one plausibly enabled the other before you run another procedure.",
   };
-  if (emptySuccesses >= 3) return {
+  // Empty checks of the reading's own sources are the reading being ruled out,
+  // and telling that player to "prefer a source the reading predicts" told them
+  // to do what they had done twelve times.
+  const emptyOffReading = game.turns.filter(turn => turn.success && !turn.revealed && turn.hypothesis && !hypothesisSources(game, turn.hypothesis).includes(turn.procedure)).length;
+  if (emptySuccesses >= 3) return emptyOffReading * 2 >= emptySuccesses ? {
     strength,
-    gap: `${emptySuccesses} of your successful checks produced no new stage.`,
+    gap: `${emptySuccesses} of your successful checks produced no new stage, and ${emptyOffReading} of them used a source your reading did not predict.`,
     concept: "A check that succeeds but finds nothing has still cost a turn. Choosing where to look matters more than how hard you look.",
     next: "Next operation, prefer a source your current reading actually predicts — the card says so before you commit — over whichever tool is available.",
+  } : {
+    strength,
+    gap: `${emptySuccesses} of your successful checks produced no new stage, most of them from your reading's own sources.`,
+    concept: "An empty check of the reading's own source is not wasted: it is the evidence that the reading is wrong. The turns are lost when the reading is kept after it.",
+    next: game.mode === "expert"
+      ? "Next operation, change the reading after its own sources have come back empty twice at the same stage, before you spend another turn."
+      : "Next operation, when the reading's own sources come back empty, open the comparison of all four and move to one that is not marked as ruled out before you spend another turn.",
   };
   // Only a completed response has a cost to judge. A run that never reached it
   // would otherwise be told its response was too expensive.
@@ -107,6 +120,16 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     gap: `Your evidence selection worked, but the reading you were testing matched the route the stage actually used on only ${aligned} of ${tested.length} turns.`,
     concept: "Finding a stage and classifying it are separate skills. A source can turn one up while the route you named for it is wrong, which is why the score counts them apart.",
     next: `Next operation, when a finding lands, check which route it belonged to before choosing the next procedure${revisions === 0 ? " — you kept one reading for the whole of this operation" : ""}.`,
+  };
+  // The decisions are fifteen points of the score and a playtest was told
+  // nothing stood out beside calls graded one and two out of five. The weakest
+  // is named with the reason it was weak at the time.
+  const weakest = [...game.decisions].sort((a, b) => a.quality - b.quality)[0];
+  if (weakest && weakest.quality <= 2 && breakdown.decisions < 11) return {
+    strength,
+    gap: `Your weakest call was “${weakest.title}” on ${attacks.find(item => item.id === weakest.stage)?.title.toLowerCase() ?? "a confirmed stage"}: ${weakest.rationale.charAt(0).toLowerCase()}${weakest.rationale.slice(1)}`,
+    concept: "No response is right in every incident. What decides it is the pressure at that moment: how high business impact is, how fast the actor is moving, and how much margin the service and the sector have left.",
+    next: "Next operation, before choosing a response, look at business impact and the actor badge on the hypothesis board. Above about half, or once the actor is accelerating, act or contain; while both are low, watching or attributing is affordable.",
   };
   if (game.status === "lost") {
     const reason = getLossReason(game);
@@ -142,7 +165,6 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   const decisions = Math.round(decisionQuality * 15);
   const response = Math.round(clamp(game.responseScore, 0, 55) / 55 * 20);
   const tested = game.turns.filter(turn => turn.hypothesis && turn.hypothesisTarget);
-  const aligned = tested.filter(turn => turn.hypothesisMatched).length;
   // A reading that was properly tested and came back empty is not a guess. The
   // player predicted, spent one of that reading's own sources and got a real
   // negative, which is the loop this game claims to teach — and scoring it zero
@@ -155,18 +177,7 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   // record had already excluded. Measured over 800 operations, that took a
   // player choosing readings at random from 4.8 to 3.3 and one who never revises
   // from 5.4 to 4.4, while sound play stayed at 7.5.
-  const ruledOut = new Set<string>();
-  let soundNegatives = 0;
-  game.turns.forEach((turn, index) => {
-    if (turn.revealed || turn.injectReveal) ruledOut.clear();
-    if (!turn.hypothesis || !turn.hypothesisTarget || turn.hypothesisMatched || !turn.success) return;
-    if (!hypothesisSources(game, turn.hypothesis).includes(turn.procedure)) return;
-    if (ruledOut.has(turn.hypothesis)) return;
-    ruledOut.add(turn.hypothesis);
-    if (!getReadingOdds(recordBefore(game, index)).candidates[turn.hypothesis].open) return;
-    soundNegatives++;
-  });
-  const credit = aligned + soundNegatives * 0.5;
+  const credit = turnCredits(game).reduce((sum, item) => sum + item.credit, 0);
   const hypothesis = tested.length ? Math.round(clamp(credit / tested.length, 0, 1) * 10) : 0;
   return { investigation, impact, continuity, decisions, response, hypothesis, total: investigation + impact + continuity + decisions + response + hypothesis };
 }
@@ -213,8 +224,28 @@ export function getResultSummary(game: Game): string[] {
   return [heading, `${result} · ${record}`, ...(code ? [`Play the same operation: ${code}`] : [])];
 }
 
+// What each turn earned toward hypothesis accuracy, and why. The score and the
+// ledger both read this, so a row can never say "no credit" for a turn the
+// score paid half for.
+type TurnCredit = { credit: number; reason: "none" | "matched" | "tested" | "failed" | "other-source" | "repeated" | "excluded" };
+function turnCredits(game: Game): TurnCredit[] {
+  const ruledOut = new Set<string>();
+  return game.turns.map((turn, index): TurnCredit => {
+    if (turn.revealed || turn.injectReveal) ruledOut.clear();
+    if (!turn.hypothesis || !turn.hypothesisTarget) return { credit: 0, reason: "none" };
+    if (turn.hypothesisMatched) return { credit: 1, reason: "matched" };
+    if (!turn.success) return { credit: 0, reason: "failed" };
+    if (!hypothesisSources(game, turn.hypothesis).includes(turn.procedure)) return { credit: 0, reason: "other-source" };
+    if (ruledOut.has(turn.hypothesis)) return { credit: 0, reason: "repeated" };
+    ruledOut.add(turn.hypothesis);
+    if (!getReadingOdds(recordBefore(game, index)).candidates[turn.hypothesis].open) return { credit: 0, reason: "excluded" };
+    return { credit: 0.5, reason: "tested" };
+  });
+}
+
 export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
-  return game.turns.map(turn => {
+  const credits = turnCredits(game);
+  return game.turns.map((turn, index) => {
     const target = turn.hypothesisTarget;
     const targetAttack = target ? attacks.find(item => item.id === target)! : null;
     const stage = targetAttack ? stages[targetAttack.stage].name : "Every stage was already confirmed";
@@ -224,13 +255,22 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
     const windfallNote = turn.windfall
       ? ` You did expose ${found}, further along the chain — that source is shared between routes, so it was a find rather than a correct prediction.`
       : "";
+    const missNote: Record<TurnCredit["reason"], string> = {
+      none: "",
+      matched: "",
+      tested: "You tested it with one of its own sources and the check completed, which ruled it out: half credit.",
+      failed: "The roll failed, so the check settled nothing and the wrong prediction scored nothing.",
+      "other-source": "The procedure was not one of that reading's own sources, so it could not rule the reading out, and the prediction scored nothing.",
+      repeated: "This reading had already been tested with its own sources at this stage, so testing it again scored nothing.",
+      excluded: "Your earlier checks had already ruled that route out at this stage, so testing it scored nothing.",
+    };
     const verdict = !target ? "No stage left to predict, so this turn could not score."
       : !turn.hypothesis ? "No working hypothesis was recorded, so this turn could not score."
       : turn.hypothesisMatched
         ? (turn.planningBonus > 0
           ? `Correct: ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit, and the own-source bonus on the roll.${windfallNote}`
           : `Correct about the route — ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route — but the procedure was not one of that reading's sources, so it earned no own-source bonus.${windfallNote}`)
-        : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}, so the prediction scored nothing.${windfallNote}`;
+        : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}. ${missNote[credits[index].reason]}${windfallNote}`;
     return {
       turn: turn.number,
       procedure: procedureById(game, turn.procedure)!.title,
@@ -242,6 +282,7 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
       discriminating: turn.discriminating,
       matched: turn.hypothesisMatched,
       bonus: turn.planningBonus,
+      credit: credits[index].credit,
       verdict,
     };
   });

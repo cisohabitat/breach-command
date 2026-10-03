@@ -1,6 +1,6 @@
 import { ArrowRight, Dices, FastForward, Sparkles, Terminal } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { getAdversaryRead, procedureById } from "@/lib/advanced-game";
+import { getAdversaryRead, OWN_SOURCE_BONUS, procedureById } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { Glossed } from "@/components/game/glossed";
 
@@ -52,7 +52,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
           </div>
         )}
       </section>
-      <div className="rules-reminder"><Dices size={18} /><p>{config.threshold}+ succeeds. A correct hypothesis paired with relevant evidence can add +2.</p></div>
+      <div className="rules-reminder"><Dices size={18} /><p>A d20 roll plus its modifier must reach {config.threshold} to succeed. One of your reading&apos;s own sources adds +{OWN_SOURCE_BONUS}, right or wrong; an established source adds +2.</p></div>
     </aside>
   );
 }

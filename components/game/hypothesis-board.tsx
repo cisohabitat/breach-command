@@ -1,11 +1,13 @@
 import { BrainCircuit, Gauge } from "lucide-react";
 import {
+  attacks,
   getAttributionRead,
   getAdversaryState,
   getHypothesisStanding,
   getRuledOutRoutes,
   hypotheses,
   procedureById, hypothesisSources,
+  stages,
   type Game,
   type HypothesisId,
 } from "@/lib/advanced-game";
@@ -27,6 +29,8 @@ export function HypothesisBoard({
   // the incident does not use at this stage would be marked before any work was
   // done, and where it was the only one left that handed over the answer; the
   // standing still says so for a reading that is declared.
+  const stageIndex = [0, 1, 2, 3].find(index => !game.revealed.some(id => attacks.find(attack => attack.id === id)?.stage === index));
+  const underTest = stageIndex === undefined ? null : { index: stageIndex, name: stages[stageIndex].name };
   const outMark = (id: HypothesisId) => ruledOut?.reason[id] === "excluded" && <em className="route-ruled-out">Ruled out at the {ruledOut.stage} stage</em>;
   return (
     <section className={`hypothesis-board ${active ? "has-reading" : ""}`} aria-labelledby="hypothesis-heading">
@@ -47,7 +51,10 @@ export function HypothesisBoard({
       </div>
       {standing && standing.level !== "none" && (
         <div className={`hypothesis-standing level-${standing.level}`} role="status">
-          <span className="eyebrow">CURRENT READING</span>
+          {/* A reading is tested one stage at a time, and the label says which: a
+              playtest read the premise as covering the whole incident and could
+              not see why "Holding" became "Untested" after a find. */}
+          <span className="eyebrow">{underTest ? `READING FOR STAGE ${underTest.index + 1} · ${underTest.name.toUpperCase()}` : "CURRENT READING"}</span>
           {active && <b className="standing-reading">{active.title}</b>}
           <strong>{standing.label}</strong>
           <span className="standing-meter" aria-hidden="true">

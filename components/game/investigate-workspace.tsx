@@ -6,7 +6,7 @@ import { InfrastructureConsole } from "@/components/game/infrastructure-console"
 import { KnownFacts } from "@/components/game/known-facts";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
-import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate, type HypothesisId } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { Glossed } from "@/components/game/glossed";
 
@@ -32,6 +32,25 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   // that carries what it holds; wider layouts show it beside the actions.
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const [referenceOpen, setReferenceOpen] = useState(false);
+
+  // Declaring a reading collapses the four premises to a bar, and the browser
+  // kept the page where the tapped card had been: on a phone the procedures
+  // heading ended above the screen and the first cards under the tabs. The page
+  // moves so the heading sits just below the tabs, unless it is already in view.
+  const declare = (id: HypothesisId) => {
+    chooseHypothesis(id);
+    // From 901px the procedures sit beside the reading in a panel of their own.
+    if (window.matchMedia("(min-width: 901px)").matches) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const section = document.querySelector<HTMLElement>(".procedure-section");
+      if (!section) return;
+      const tabs = document.querySelector(".workspace-tabs")?.getBoundingClientRect().bottom ?? 0;
+      const top = section.getBoundingClientRect().top;
+      if (top >= tabs && top < window.innerHeight / 2) return;
+      const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: window.scrollY + top - tabs - 8, behavior: still ? "auto" : "smooth" });
+    }));
+  };
 
   if (!game) return null;
 
@@ -87,7 +106,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             is made from, so they sit above the four readings rather than below
             them; once one is declared they move back beside the procedures. */}
         {!game.hypothesis && !game.pendingCommand && !game.pendingSetPiece && trainingNote}
-        {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
+        {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={declare} />}
       </div>
       <details className="investigation-context reference-fold" open={!phone || referenceOpen} onToggle={event => phone && setReferenceOpen(event.currentTarget.open)}>
         <summary>Map, evidence and what is known<span>{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} · {game.evidence.length ? `${game.evidence.filter(item => item.supports).length} of ${game.evidence.length} findings confirmed a stage` : "no findings yet"} · {game.correlations.length} compared</span></summary>

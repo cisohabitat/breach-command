@@ -66,7 +66,7 @@ export function EndState({ session }: { session: GameSession }) {
           <div>
             <span className="eyebrow">AUTHORISED EXERCISE</span>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>Exercise concluded at the boundary.</h2>
-            <p>{game.revealed.length} of 4 stages were identified before the drill stopped. No live incident was declared and no service action was taken.</p>
+            <p>{game.revealed.length} of 4 stages were identified before the controller confirmed the activity as an authorised exercise. No response phase was run, so containment and recovery are not scored; the decisions you made along the way still are.</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>Review the drill <ArrowRight size={17} /></button>
         </div>

@@ -57,10 +57,12 @@ export function getSectorRead(game: Game): SectorRead {
   const service = scenarioDynamics[game.scenario].label;
   const margin = sectorSystems[game.scenario].title;
   const gap = game.continuity - game.sectorHealth;
-  if (Math.abs(gap) < 25) return {
+  // Within fifteen points the two read as one picture; at 69 against 46 a
+  // playtest was told they were "holding at a similar level".
+  if (Math.abs(gap) < 15) return {
     headline: `${service} and ${margin.toLowerCase()} are moving together`,
     diverged: false,
-    detail: `${service} is what the organisation is delivering right now. ${margin} is how much room is left before the sector's own limit. Both are holding at a similar level, so what the service shows is roughly what the sector has left.`,
+    detail: `${service} is what the organisation is delivering right now. ${margin} is how much room is left before the sector's own limit. They stand at ${game.continuity} and ${game.sectorHealth}, close enough that what the service shows is roughly what the sector has left.`,
   };
   return gap > 0 ? {
     headline: `${service} is holding while ${margin.toLowerCase()} is not`,
@@ -203,14 +205,14 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     title: "Name what the adversary is after",
     detail: "Two confirmed stages are enough to assess the objective. Record a case theory in the evidence workspace. It changes nothing on its own, but a comparison that fits it relieves more pressure than one that does not.",
     sources: [],
-    clue: null,
+    clue,
   };
   if (readyToCorrelate(game)) return {
     step: "correlate",
     title: "Two findings can be compared",
     detail: "Select two findings in the evidence workspace and decide whether one plausibly enabled the other, or whether they only overlap in time. Testing that judgement is part of the work.",
     sources: [],
-    clue: null,
+    clue,
   };
   return {
     step: "test",
@@ -219,7 +221,10 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
       ? "These are the sources this reading predicts. A completed check that finds nothing rules out every technique its source could have seen, so these are the ones most likely to settle the reading either way — and they earn the own-source bonus. A source the reading does not predict can still expose a stage or rule something out; it just answers your question less directly."
       : "Every source this reading predicts is cooling down. Another source can still expose a stage or rule something out, so collect where you can this turn, or record a different reading and test that.",
     sources: open,
-    clue: standing.level === "untested" ? clue : null,
+    // The observation stays on screen for the whole stage: a playtest lost it on
+    // the turn a reading first held, and on the turn the map or a comparison was
+    // offered, which were the turns it most needed it.
+    clue,
   };
 }
 
@@ -340,7 +345,7 @@ export function getHypothesisStanding(game: Game): HypothesisStanding {
   const common = { spent, sources: own.total, inconclusive, turnsSinceConfirmation: since.length };
   const unresolved = inconclusive ? ` ${inconclusive} attempt${inconclusive === 1 ? "" : "s"} since the last confirmation failed outright, which settles nothing either way.` : "";
   const stageName = odds.stage === null ? "next" : stages[odds.stage].name.toLowerCase();
-  const tally = `${spent} of the ${own.total} technique${own.total === 1 ? "" : "s"} this route could be using at the ${stageName} stage ${spent === 1 ? "has" : "have"} been ruled out by completed checks that found nothing`;
+  const tally = `${spent} of the ${own.total} technique${own.total === 1 ? "" : "s"} this route could be using at the ${stageName} stage ${spent === 1 ? "has" : "have"} been ruled out by completed checks that found nothing at this stage`;
   if (odds.stage === null) return { level: "untested", label: "Untested", detail: `Every stage is confirmed, so there is nothing left for ${hypothesis.title.toLowerCase()} to explain.${unresolved}`, ...common };
   // A route this incident's published techniques do not use at the stage under
   // test cannot be the explanation for it. It read as "untested" here, and a
@@ -348,7 +353,7 @@ export function getHypothesisStanding(game: Game): HypothesisStanding {
   // never come.
   if (!own.total) return { level: "unsupported", label: "Poorly supported", detail: `None of the techniques this incident can use at the ${stageName} stage travels by this route, so ${hypothesis.title.toLowerCase()} cannot explain it. Choose a route that can.${unresolved}`, ...common };
   if (!odds.ruledOutBy.length) return { level: "untested", label: "Untested", detail: `No completed check has ruled anything out at the ${stageName} stage yet, so ${hypothesis.title.toLowerCase()} is neither supported nor weakened.${unresolved}`, ...common };
-  if (!own.open) return { level: "unsupported", label: "Poorly supported", detail: `Every technique this route could be using at the ${stageName} stage has been ruled out by a completed check that found nothing. On the evidence you hold, it is not this route.${unresolved}`, ...common };
+  if (!own.open) return { level: "unsupported", label: "Poorly supported", detail: `Every technique this route could be using at the ${stageName} stage has been ruled out by a completed check that found nothing at this stage. On the evidence you hold, it is not this route.${unresolved}`, ...common };
   if (odds.share[hypothesis.id] < odds.prior[hypothesis.id] * STANDING_WEAKENS_BELOW) return { level: "weakening", label: "Weakening", detail: `${tally}. The empty results fit other routes better than this one; absence on sources that would have seen it is evidence, not bad luck.${unresolved}`, ...common };
   return { level: "holding", label: "Holding", detail: `${tally}. The record still fits this reading at least as well as the others.${unresolved}`, ...common };
 }
