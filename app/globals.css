@@ -4862,6 +4862,13 @@ html,body {
   bottom:0;
   box-shadow:0 -12px 24px #142018,0 24px 0 0 #142018;
 }
+/* The mission brief runs to six readouts, so on a phone its one button sat a
+   screen and a half below the first view. It stays in reach the same way. */
+.cinematic-briefing>.primary-button {
+  position:sticky;
+  bottom:0;
+  box-shadow:0 -12px 24px #152219,0 30px 0 0 #152219;
+}
 .relationship-assessment {
   display:grid;
   grid-template-columns:auto 1fr 1fr;
@@ -6278,9 +6285,11 @@ every value it carries is also present as static text. */
     transform:translateY(-18px) scale(1);
   }
 }
+/* The change sits on the status line, which leaves its right side free. Above
+   the number it covered the end of a long label such as "adversary progress". */
 .meter-delta {
   position:absolute;
-  top:-11px;
+  bottom:-3px;
   right:0;
   z-index:3;
   padding:1px 6px;

@@ -273,7 +273,12 @@ export function getHypothesisStanding(game: Game): HypothesisStanding {
   const unresolved = inconclusive ? ` ${inconclusive} attempt${inconclusive === 1 ? "" : "s"} since the last confirmation failed outright, which settles nothing either way.` : "";
   const stageName = odds.stage === null ? "next" : stages[odds.stage].name.toLowerCase();
   const tally = `${spent} of the ${own.total} technique${own.total === 1 ? "" : "s"} this route could be using at the ${stageName} stage ${spent === 1 ? "has" : "have"} been ruled out by completed checks that found nothing`;
-  if (odds.stage === null || !own.total) return { level: "untested", label: "Untested", detail: `${hypothesis.title} has no technique left to test at this point.${unresolved}`, ...common };
+  if (odds.stage === null) return { level: "untested", label: "Untested", detail: `Every stage is confirmed, so there is nothing left for ${hypothesis.title.toLowerCase()} to explain.${unresolved}`, ...common };
+  // A route this incident's published techniques do not use at the stage under
+  // test cannot be the explanation for it. It read as "untested" here, and a
+  // player kept it for a whole Crisis operation waiting for a test that could
+  // never come.
+  if (!own.total) return { level: "unsupported", label: "Poorly supported", detail: `None of the techniques this incident can use at the ${stageName} stage travels by this route, so ${hypothesis.title.toLowerCase()} cannot explain it. Choose a route that can.${unresolved}`, ...common };
   if (!odds.ruledOutBy.length) return { level: "untested", label: "Untested", detail: `No completed check has ruled anything out at the ${stageName} stage yet, so ${hypothesis.title.toLowerCase()} is neither supported nor weakened.${unresolved}`, ...common };
   if (!own.open) return { level: "unsupported", label: "Poorly supported", detail: `Every technique this route could be using at the ${stageName} stage has been ruled out by a completed check that found nothing. On the evidence you hold, it is not this route.${unresolved}`, ...common };
   if (odds.share[hypothesis.id] < odds.prior[hypothesis.id] * STANDING_WEAKENS_BELOW) return { level: "weakening", label: "Weakening", detail: `${tally}. The empty results fit other routes better than this one; absence on sources that would have seen it is evidence, not bad luck.${unresolved}`, ...common };

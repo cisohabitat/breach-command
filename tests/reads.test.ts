@@ -80,6 +80,27 @@ test("reports how the declared reading is holding up", () => {
   assert.ok(getReadingOdds(correct).candidates.endpoint.open>0,"its technique is still open");
 });
 
+test("calls a route the incident cannot use at this stage poorly supported", () => {
+  // A route none of the incident's techniques at the stage under test travels by
+  // cannot explain it. It used to read "untested", and a player held it for a
+  // whole Crisis operation waiting for a check that could never come.
+  let found=0;
+  for(let scenario=0;scenario<10;scenario++){
+    for(const difficulty of ["training","crisis"] as const){
+      const fresh=newGame(scenario,difficulty,()=>0);
+      const odds=getReadingOdds(fresh);
+      for(const route of ["identity","endpoint","application","cloud"] as const){
+        if(odds.candidates[route].total)continue;
+        const standing=getHypothesisStanding(setHypothesis(fresh,route));
+        assert.equal(standing.level,"unsupported",`${route} has nothing to test in scenario ${scenario}`);
+        assert.ok(!/untested/i.test(standing.label));
+        found++;
+      }
+    }
+  }
+  assert.ok(found>0,"some opening stage leaves a route with nothing to use");
+});
+
 test("shows the modifier it will resolve with", () => {
   // The modifier the player is shown before committing is the computation the roll
   // resolves with — all of it. Nothing hidden is added afterwards.

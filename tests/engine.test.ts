@@ -428,3 +428,22 @@ test("keeps the deck, the grace and the decisions honest", () => {
   const slow={...baseline(),turns:Array.from({length:6},(_,index)=>({...playTurn(baseline(),"email",2).turns[0],number:index+1}))} as Game;
   assert.equal(getObjectiveRead(slow).title,"Objective unconfirmed","turns alone do not disclose the objective");
 });
+
+test("draws a command event the operation has not met", () => {
+  // Events fire every third turn and there are three of them, so an index that
+  // stepped by three met the same one every time.
+  for(let scenario=0;scenario<scenarios.length;scenario++){
+    let run=newGame(scenario,"training",()=>0);run.injectDeck=[];run.established=[];
+    for(let guard=0;guard<40&&run.status==="playing"&&run.commandHistory.length<2;guard++){
+      if(run.pendingDecision){run=resolveDecision(run,"observe");continue;}
+      if(run.pendingSetPiece){run=resolveSetPiece(run,"b");continue;}
+      if(run.pendingCommand){run=resolveCommand(run,"b");continue;}
+      const procedure=procedures.find(item=>availableIn(run,item.id)===0)!;
+      // Every roll fails, so hold the meters away from their limits: what is
+      // under test is which event is drawn, not whether the run survives.
+      run=playTurn({...run,impact:20,continuity:90,objectiveProgress:10,sectorHealth:90},procedure.id,2);
+    }
+    assert.equal(run.commandHistory.length,2,`scenario ${scenario} reaches a second command event`);
+    assert.notEqual(run.commandHistory[0].event,run.commandHistory[1].event,`scenario ${scenario} does not repeat its first event`);
+  }
+});

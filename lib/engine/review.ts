@@ -20,17 +20,21 @@ export function getBeginnerReview(game: Game): BeginnerReview {
       ? `You kept business impact down to ${game.impact} while the picture was still forming, which buys the team room to work.`
       : `You confirmed ${game.revealed.length} of 4 stages under real pressure, and the record you built is where the next shift starts.`;
 
-  if (!game.correlations.length && game.evidence.length >= 2) return {
-    strength,
-    gap: `You collected ${game.evidence.length} findings but never tested how any two of them relate.`,
-    concept: "Two things happening close together is not the same as one causing the other. Saying which it is — and being willing to be wrong — is the core of the work.",
-    next: "Next operation, once you hold two findings, select them in the evidence workspace and decide whether one plausibly enabled the other before you run another procedure.",
-  };
+  // Reading the route is the skill the game is built on, so a reading that was
+  // wrong more often than right is named before an untested correlation. In the
+  // other order a player who held a dead route for a whole operation was told
+  // only about the correlation.
   if (tested.length && aligned * 2 < tested.length) return {
     strength,
     gap: `Your working hypothesis matched the route actually under test on ${aligned} of ${tested.length} turns${revisions === 0 ? ", and you never revised it" : ""}.`,
     concept: "A hypothesis is a prediction you are trying to break, not a label to keep. When the evidence sources it predicts come back empty, that is the evidence telling you to change it.",
     next: "Next operation, watch the reading's standing on the hypothesis board. When it says weakening, change the reading before you spend another turn.",
+  };
+  if (!game.correlations.length && game.evidence.length >= 2) return {
+    strength,
+    gap: `You collected ${game.evidence.length} findings but never tested how any two of them relate.`,
+    concept: "Two things happening close together is not the same as one causing the other. Saying which it is — and being willing to be wrong — is the core of the work.",
+    next: "Next operation, once you hold two findings, select them in the evidence workspace and decide whether one plausibly enabled the other before you run another procedure.",
   };
   if (emptySuccesses >= 3) return {
     strength,

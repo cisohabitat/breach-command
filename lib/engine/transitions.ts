@@ -368,8 +368,14 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");
   else if (!g.pendingDecision && number === 2 && g.revealed.length < 4) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {
+    // Events fire every third turn, and with three of them the index stepped by
+    // the deck's own length: most operations met the same event every time. An
+    // event the operation has not met comes first, in the same fixed order.
     const ids = Object.keys(commandEvents) as CommandEventId[];
-    g.pendingCommand = ids[(g.scenario + number + g.adversaryTempo) % ids.length];
+    const start = (g.scenario + number + g.adversaryTempo) % ids.length;
+    const order = ids.map((_, index) => ids[(start + index) % ids.length]);
+    const met = new Set(g.commandHistory.map(record => record.event));
+    g.pendingCommand = order.find(id => !met.has(id)) ?? order[0];
   }
   return g;
 }
