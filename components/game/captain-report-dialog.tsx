@@ -53,13 +53,13 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             <section className="report-summary" aria-label="Procedure result">
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
-                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
+                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus > 0 || report.specialistBonus > 0 ? ` (including ${[report.planningBonus > 0 ? `own source +${report.planningBonus}` : "", report.specialistBonus > 0 ? `specialist +${report.specialistBonus}` : ""].filter(Boolean).join(", ")})` : ""}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
                 {report.success ? <CheckCheck size={23} aria-hidden="true" /> : <CircleSlash size={23} aria-hidden="true" />}
               </div>
               {/* The plan and the turn's movement are told apart: a playtest read
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
                   game going back on its word. The reason says what moved them. */}
-              <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}</div>
+              <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span></div>
               <p className="turn-movement"><b>This turn:</b> {describeMeterChange(game, "impact", report.impactChange)} · {describeMeterChange(game, "continuity", report.continuityChange)} · {describeMeterChange(game, "sector", report.sectorChange)} · {describeMeterChange(game, "objective", report.objectiveChange)}. <span>{report.revealed
                 ? "Finding the stage slowed the adversary's gain, though the turn still gave it time."
                 : report.success
