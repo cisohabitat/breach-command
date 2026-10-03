@@ -1,7 +1,7 @@
 // Everything shown to the player during an operation. Nothing here may read the hidden chain beyond what has been revealed, with the Training clue as the single stated exception.
 import { attacks, scenarios, stages, hypotheses, scenarioDynamics, type HypothesisId } from "../game.ts";
 import { adversaryObjectives, sectorSystems } from "../command-systems.ts";
-import { decisionChoices, decisionLanguage, decisionText, decisionTitles } from "./content.ts";
+import { decisionChoices, decisionLanguage, decisionText, decisionTitles, inSentence } from "./content.ts";
 import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type Game, type GuidanceLevel, type HypothesisStanding, type KnownFacts, type LossCause, type ReadingOdds, type SectorRead, type TrainingPrompt } from "./types.ts";
 import { availableIn, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
 import { infrastructureTopologies } from "../phase8.ts";
@@ -191,7 +191,10 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     sources: [],
     clue: null,
   };
-  const open = hypothesisSources(game, hypothesis.id).filter(id => !availableIn(game, id)).map(id => ({ id, title: procedureById(game, id)!.title }));
+  // A source blind to every technique the reading could be using at this stage
+  // is not suggested: the card says it cannot see the stage, and the aid must not
+  // send the player there.
+  const open = hypothesisSources(game, hypothesis.id).filter(id => !availableIn(game, id) && sourceSeesReading(game, id) !== false).map(id => ({ id, title: procedureById(game, id)!.title }));
   const standing = getHypothesisStanding(game);
   if (standing.level === "weakening" || standing.level === "unsupported") return {
     step: "revise",
@@ -214,12 +217,24 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     sources: [],
     clue,
   };
+  // A reading declared for an earlier stage reads, under "Test …", like the
+  // aid's own recommendation for the new one. Once a stage has been confirmed
+  // since the reading was chosen, the prompt asks whether it still fits.
+  const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
+  const declaredAt = game.hypothesisHistory[game.hypothesisHistory.length - 1]?.turn ?? 0;
+  if (lastConfirmation && declaredAt <= lastConfirmation && standing.level === "untested") return {
+    step: "test",
+    title: `New stage: does ${hypothesis.title.toLowerCase()} still fit?`,
+    detail: "A stage was just confirmed, and the next one can travel a different route. Read what the team is seeing now and keep this reading only if it fits; otherwise choose the one that does before you run a procedure.",
+    sources: open,
+    clue,
+  };
   return {
     step: "test",
     title: `Test ${hypothesis.title.toLowerCase()}`,
     detail: open.length
       ? "These are the sources this reading predicts. A completed check that finds nothing rules out every technique its source could have seen, so these are the ones most likely to settle the reading either way — and they earn the own-source bonus. A source the reading does not predict can still expose a stage or rule something out; it just answers your question less directly."
-      : "Every source this reading predicts is cooling down. Another source can still expose a stage or rule something out, so collect where you can this turn, or record a different reading and test that.",
+      : "Every source this reading predicts that can see this stage is cooling down. Another source can still expose a stage or rule something out, so collect where you can this turn, or record a different reading and test that.",
     sources: open,
     // The observation stays on screen for the whole stage: a playtest lost it on
     // the turn a reading first held, and on the turn the map or a comparison was
@@ -292,7 +307,7 @@ export function getRuledOutRoutes(game: Game): { stage: string | null; routes: H
   const odds = getReadingOdds(game);
   if (odds.stage === null) return { stage: null, routes: [], reason: {} };
   const routes = hypotheses.map(item => item.id).filter(id => odds.candidates[id].open === 0);
-  return { stage: stages[odds.stage].name.toLowerCase(), routes, reason: Object.fromEntries(routes.map(id => [id, odds.candidates[id].total ? "excluded" : "unused"])) };
+  return { stage: inSentence(stages[odds.stage].name), routes, reason: Object.fromEntries(routes.map(id => [id, odds.candidates[id].total ? "excluded" : "unused"])) };
 }
 
 export function getReadingOdds(game: Game): ReadingOdds {
@@ -343,9 +358,9 @@ export function getHypothesisStanding(game: Game): HypothesisStanding {
   const own = odds.candidates[hypothesis.id];
   const spent = own.total - own.open;
   const common = { spent, sources: own.total, inconclusive, turnsSinceConfirmation: since.length };
-  const unresolved = inconclusive ? ` ${inconclusive} attempt${inconclusive === 1 ? "" : "s"} since the last confirmation failed outright, which settles nothing either way.` : "";
-  const stageName = odds.stage === null ? "next" : stages[odds.stage].name.toLowerCase();
-  const tally = `${spent} of the ${own.total} technique${own.total === 1 ? "" : "s"} this route could be using at the ${stageName} stage ${spent === 1 ? "has" : "have"} been ruled out by completed checks that found nothing at this stage`;
+  const unresolved = inconclusive ? ` ${inconclusive} attempt${inconclusive === 1 ? "" : "s"} since ${lastConfirmation ? "the last confirmation" : "the operation began"} failed outright, which settles nothing either way.` : "";
+  const stageName = odds.stage === null ? "next" : inSentence(stages[odds.stage].name);
+  const tally = `${spent} of the ${own.total} technique${own.total === 1 ? "" : "s"} this route could be using at the ${stageName} stage ${spent === 1 || own.total === 1 ? "has" : "have"} been ruled out by completed checks that found nothing at this stage`;
   if (odds.stage === null) return { level: "untested", label: "Untested", detail: `Every stage is confirmed, so there is nothing left for ${hypothesis.title.toLowerCase()} to explain.${unresolved}`, ...common };
   // A route this incident's published techniques do not use at the stage under
   // test cannot be the explanation for it. It read as "untested" here, and a
@@ -370,6 +385,23 @@ export const STANDING_WEAKENS_BELOW = 0.5;
 // hypothesis, that hypothesis's own evidence sources, and how often they have
 // already spent this source without it producing a stage. It never consults the
 // hidden chain, so it narrows the search without answering it.
+// Whether a source can see any technique the declared reading could be using at
+// the stage under test, from the scenario's published pool — the same pool the
+// standing reads, never the hidden chain. A playtest spent two of a reading's own
+// sources at a stage neither could see, was told the reading was "holding", and
+// learned why only in the review. Null when there is no reading or no stage, or
+// when the reading has no technique at this stage (the standing says so).
+export function sourceSeesReading(game: Game, procedure: string): boolean | null {
+  if (!game.hypothesis) return null;
+  const stage = getReadingOdds(game).stage;
+  if (stage === null) return null;
+  const candidates = scenarios[game.scenario].choices[stage]
+    .map(id => attacks.find(item => item.id === id))
+    .filter(attack => attack?.vector === game.hypothesis);
+  if (!candidates.length) return null;
+  return candidates.some(attack => attack!.detect.includes(procedure));
+}
+
 export function getDiscriminatingRead(game: Game, procedure: string): DiscriminatingRead {
   const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
   // A completed check that found nothing is a result. A failed roll is not: it
@@ -382,6 +414,7 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
     inconclusive ? ` ${inconclusive} earlier attempt${inconclusive === 1 ? "" : "s"} failed before producing a result, which settles nothing.` : "",
   ].join("");
   if (!hypothesis) return { level: "broad", label: "Broad collection", detail: `No working hypothesis is recorded, so this action collects without testing an explanation.${spentNote}`, spent, inconclusive };
+  if (hypothesisSources(game, hypothesis.id).includes(procedure) && sourceSeesReading(game, procedure) === false) return { level: "moderate", label: "Own source, but blind to this stage", detail: `${hypothesis.title} predicts this source, so it still earns the own-source bonus, but none of the techniques this reading could be using at the stage under test is visible to it. A check here cannot settle the reading at this stage; another of its own sources can.${spentNote}`, spent, inconclusive };
   if (hypothesisSources(game, hypothesis.id).includes(procedure)) return { level: "high", label: "One of this reading's own sources", detail: `${hypothesis.title} predicts this source. A completed check that finds nothing rules out every technique it could have seen, on this route and any other, and the reading's standing shows what is left. A discovery may still sit on another route — the sources overlap.${spentNote}`, spent, inconclusive };
   return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent, inconclusive };
 }
@@ -393,7 +426,7 @@ export function getLossReason(game: Game): { cause: LossCause; title: string; de
   if (game.objectiveProgress >= 100) return { cause: "objective", title: "The adversary completed its objective", detail: `${adversaryObjectives[game.objective].title} reached 100 before the response closed the route.` };
   if (game.impact >= 100) return { cause: "impact", title: "Business impact reached its limit", detail: "Exposure grew faster than the investigation could reduce it." };
   if (game.continuity <= 0) return { cause: "continuity", title: "The essential service stopped", detail: `${scenarioDynamics[game.scenario].label} fell to zero and the operation was taken out of the response team's hands.` };
-  if (game.sectorHealth <= 0) return { cause: "sector", title: "Sector confidence collapsed", detail: `${sectorSystems[game.scenario].title} fell to zero while the chain was still open.` };
+  if (game.sectorHealth <= 0) return { cause: "sector", title: `${sectorSystems[game.scenario].title} reached zero`, detail: "The sector's own margin ran out while the attack chain was still open." };
   return { cause: "window", title: "The investigation window closed", detail: `${game.revealed.length} of 4 stages were confirmed in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}.` };
 }
 

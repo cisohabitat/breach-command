@@ -31,10 +31,6 @@ export function ActionSheet({ session }: { session: GameSession }) {
         {proc && game && <p className="carried-plan" role="status">{game.turns.length ? "Carried from your last action: " : "Starting plan: "}<strong>{procedureScopes[actionScope].title} scope</strong> and <strong>{procedureIntensities[actionIntensity].title} analysis</strong>. {game.turns.length ? "These stay selected until you change them." : "Whatever you choose here stays selected for later turns until you change it."}</p>}
         {proc && game && <>
           <div className="action-note"><span className="eyebrow">HYPOTHESIS CHECK</span><p><Glossed text={proc.question} /></p></div>
-          <div className="procedure-planner">
-            <div role="group" aria-label="Scope"><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">SELECTED</b>}</strong><small>{procedureScopes[id].description}</small><small className="plan-effects">Roll {procedureScopes[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureScopes[id].modifier)} · {describeMeterChange(game, "impact", procedureScopes[id].impact)} · {describeMeterChange(game, "objective", procedureScopes[id].objective)}</small></button>)}</div></div>
-            <div role="group" aria-label="Intensity"><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">SELECTED</b>}</strong><small>{procedureIntensities[id].description}</small><small className="plan-effects">Roll {procedureIntensities[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureIntensities[id].modifier)} · {describeMeterChange(game, "impact", procedureIntensities[id].impact)}{procedureIntensities[id].cooldown ? ` · Cooldown +${procedureIntensities[id].cooldown} turn` : ""}</small></button>)}</div></div>
-          </div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
             <BrainLabel aligned={procedureAligned} />
             <span>
@@ -42,6 +38,8 @@ export function ActionSheet({ session }: { session: GameSession }) {
               {read ? read.detail : procedureAligned ? "This procedure tests your working hypothesis and earns the own-source bonus shown below." : "This procedure does not directly test your working hypothesis. It may still collect useful evidence, but earns no own-source bonus."}
             </span>
           </div>
+          {/* What the roll needs sits above the plan that changes it: below the
+              planner it was under the pinned run button on a tablet. */}
           <div className="roll-preview">
             <div><span>D20</span><small>Dice roll</small></div><span>+</span>
             <div><span>{breakdown && breakdown.total >= 0 ? "+" : ""}{breakdown?.total ?? 0}</span><small>Modifier</small></div><span>≥</span>
@@ -58,6 +56,10 @@ export function ActionSheet({ session }: { session: GameSession }) {
               </ul>
             </details>
           )}
+          <div className="procedure-planner">
+            <div role="group" aria-label="Scope"><span className="eyebrow">SCOPE</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">SELECTED</b>}</strong><small>{procedureScopes[id].description}</small><small className="plan-effects">Roll {procedureScopes[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureScopes[id].modifier)} · {describeMeterChange(game, "impact", procedureScopes[id].impact)} · {describeMeterChange(game, "objective", procedureScopes[id].objective)}</small></button>)}</div></div>
+            <div role="group" aria-label="Intensity"><span className="eyebrow">INTENSITY</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">SELECTED</b>}</strong><small>{procedureIntensities[id].description}</small><small className="plan-effects">Roll {procedureIntensities[id].modifier >= 0 ? "+" : "−"}{Math.abs(procedureIntensities[id].modifier)} · {describeMeterChange(game, "impact", procedureIntensities[id].impact)}{procedureIntensities[id].cooldown ? ` · Cooldown +${procedureIntensities[id].cooldown} turn` : ""}</small></button>)}</div></div>
+          </div>
           <p className="muted small">Success reveals a stage only when this evidence source matches an undiscovered technique. The plan&apos;s effects above add to what every turn costs: time passes, so business impact and adversary progress usually rise and the sector meter wears down. A failed check costs more; finding a stage pushes them back.</p>
           <button className="primary-button full" onClick={() => run(proc.id)}><Dices size={19} /> Run procedure</button>
         </>}

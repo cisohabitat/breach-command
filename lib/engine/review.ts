@@ -1,7 +1,8 @@
 // The after-action review: score, outcome, hypothesis ledger and counterfactuals.
 import { attacks, difficulties, scenarios, stages, hypotheses, scenarioDynamics } from "../game.ts";
-import { gameModes } from "../command-systems.ts";
+import { gameModes, sectorSystems } from "../command-systems.ts";
 import { encodeChallenge } from "../phase8.ts";
+import { inSentence } from "./content.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseOptionsFor } from "./rules.ts";
 import { getLossReason, getReadingOdds, readyToCorrelate } from "./reads.ts";
@@ -78,6 +79,20 @@ export function getBeginnerReview(game: Game): BeginnerReview {
       ? "Next operation, keep your own tally of which of the reading's sources have come back empty from a completed check, and change the reading once they have, before you spend another turn."
       : "Next operation, watch the reading's standing on the hypothesis board. When it says weakening, change the reading before you spend another turn.",
   };
+  // A loss to a meter, not the window, is the thing to look at: a playtest that
+  // read the route well and lost to the sector margin was told about empty
+  // checks. Its advice names the meter and what moves it.
+  if (game.status === "lost" && getLossReason(game).cause !== "window") {
+    const reason = getLossReason(game);
+    return {
+      strength,
+      gap: `The operation was lost: ${reason.title.charAt(0).toLowerCase()}${reason.title.slice(1)}.`,
+      concept: "Business impact, service integrity, adversary progress and the sector's own margin decide an operation as surely as the evidence does. A sound investigation still has to finish before one of them runs out.",
+      next: reason.cause === "sector"
+        ? `Next operation, watch the sector margin under the case title. ${sectorSystems[game.scenario].rule}`
+        : "Next operation, watch the three readouts on the top row, and when one is near its limit, choose the decision or response option that relieves it before you run another procedure.",
+    };
+  }
   // Two confirmed stages on the turn the operation ended left no turn to compare
   // them in, and a playtest was told it "never tested" what it never could.
   if (readyToCorrelate(game) && readyToCorrelate(recordBefore(game, game.turns.length - 1))) return {
@@ -115,7 +130,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   // different skills, and a run can do the first well while getting the second
   // wrong. Telling such a player that nothing stands out tells them they were
   // right when the score already said they were not.
-  if (tested.length && aligned < tested.length) return {
+  if (tested.length && aligned < tested.length && breakdown.hypothesis < 8) return {
     strength,
     gap: `Your evidence selection worked, but the reading you were testing matched the route the stage actually used on only ${aligned} of ${tested.length} turns.`,
     concept: "Finding a stage and classifying it are separate skills. A source can turn one up while the route you named for it is wrong, which is why the score counts them apart.",
@@ -131,15 +146,12 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     concept: "No response is right in every incident. What decides it is the pressure at that moment: how high business impact is, how fast the actor is moving, and how much margin the service and the sector have left.",
     next: "Next operation, before choosing a response, look at business impact and the actor badge on the hypothesis board. Above about half, or once the actor is accelerating, act or contain; while both are low, watching or attributing is affordable.",
   };
-  if (game.status === "lost") {
-    const reason = getLossReason(game);
-    return {
-      strength,
-      gap: `The operation was lost: ${reason.title.charAt(0).toLowerCase()}${reason.title.slice(1)}.`,
-      concept: "Business impact, service integrity and adversary progress decide an operation as surely as the evidence does. A sound investigation still has to finish before one of them runs out.",
-      next: "Next operation, watch the three readouts on the top row, and when one is near its limit, choose the decision or response option that relieves it before you run another procedure.",
-    };
-  }
+  if (game.status === "lost") return {
+    strength,
+    gap: "The operation was lost: the investigation window closed before the chain was complete.",
+    concept: "The window is where a misread stage runs out: each turn spent on a reading the record has already turned against is a turn the last stage does not get.",
+    next: "Next operation, revise as soon as the reading weakens, and spend each turn on a source that can still settle the stage under test.",
+  };
   return {
     strength,
     gap: "Nothing stands out as a misunderstanding in this operation.",
@@ -258,18 +270,18 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
     const missNote: Record<TurnCredit["reason"], string> = {
       none: "",
       matched: "",
-      tested: "You tested it with one of its own sources and the check completed, which ruled it out: half credit.",
+      tested: "You tested it with one of its own sources and the check completed, which is testing it properly: half credit.",
       failed: "The roll failed, so the check settled nothing and the wrong prediction scored nothing.",
       "other-source": "The procedure was not one of that reading's own sources, so it could not rule the reading out, and the prediction scored nothing.",
-      repeated: "This reading had already been tested with its own sources at this stage, so testing it again scored nothing.",
+      repeated: "The half credit for testing a reading properly is paid once at each stage, and this reading had already earned it here.",
       excluded: "Your earlier checks had already ruled that route out at this stage, so testing it scored nothing.",
     };
     const verdict = !target ? "No stage left to predict, so this turn could not score."
       : !turn.hypothesis ? "No working hypothesis was recorded, so this turn could not score."
       : turn.hypothesisMatched
         ? (turn.planningBonus > 0
-          ? `Correct: ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit, and the own-source bonus on the roll.${windfallNote}`
-          : `Correct about the route — ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route — but the procedure was not one of that reading's sources, so it earned no own-source bonus.${windfallNote}`)
+          ? `Correct: ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit, and the own-source bonus on the roll.${windfallNote}`
+          : `Correct about the route — ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route — but the procedure was not one of that reading's sources, so it earned no own-source bonus.${windfallNote}`)
         : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}. ${missNote[credits[index].reason]}${windfallNote}`;
     return {
       turn: turn.number,

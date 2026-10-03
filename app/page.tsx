@@ -16,7 +16,7 @@ import { useGameSession } from "@/hooks/use-game-session";
 
 export default function Home() {
   const session = useGameSession();
-  const { game, highContrast, announcement, criticalAnnouncement, storageNotice, rolling, setRules, setSettings, setNewConfirm, setStorageNotice } = session;
+  const { game, ended, highContrast, announcement, criticalAnnouncement, storageNotice, rolling, setRules, setSettings, setNewConfirm, setStorageNotice, resetToBriefing } = session;
 
   return (
     <div className={`app-shell ${highContrast ? "high-contrast" : ""}`}>
@@ -41,7 +41,7 @@ export default function Home() {
           <span className="solo-label"><Terminal size={14} /> SINGLE PLAYER</span>
           <button className="quiet-button" onClick={() => setRules(true)} aria-label="Field guide"><BookOpen size={17} /><span>Field guide</span></button>
           <button className="quiet-button" onClick={() => setSettings(true)} aria-label="Game settings"><Settings2 size={17} /><span>Settings</span></button>
-          {game && <button className="quiet-button" disabled={rolling} onClick={() => setNewConfirm(true)} aria-label="New incident"><RotateCcw size={16} /><span>New incident</span></button>}
+          {game && <button className="quiet-button" disabled={rolling} onClick={() => ended ? resetToBriefing() : setNewConfirm(true)} aria-label="New incident"><RotateCcw size={16} /><span>New incident</span></button>}
         </div>
       </header>
 

@@ -381,6 +381,12 @@ export const plainLanguage: Record<string, string> = {
   "continuity": "Whether the essential service is still running for the people who depend on it.",
 };
 
+// A name lowered for the middle of a sentence, keeping words written in
+// capitals or with digits as they are: "C2 & exfiltration", "DNS review".
+export function inSentence(name: string) {
+  return name.split(" ").map(word => /[A-Z].*[A-Z0-9]|\d/.test(word) ? word : word.toLowerCase()).join(" ");
+}
+
 // The terms in a passage of player-facing text, marked so the interface can
 // offer each one's meaning where it is read. Longer terms win over the shorter
 // ones inside them ("privileged tier" before a bare match), a term may be plural

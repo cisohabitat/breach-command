@@ -5,7 +5,9 @@ import { objectiveTheory } from "@/lib/phase9";
 
 export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void }) {
   const [selected, setSelected] = useState<string[]>([]);
-  const [assessment, setAssessment] = useState<"causal" | "coincidental">("causal");
+  // Nothing is chosen until the player chooses: preselected, "Causal sequence"
+  // was tested by players who had not yet decided anything.
+  const [assessment, setAssessment] = useState<"causal" | "coincidental" | null>(null);
   const toggle = (id: string) => setSelected(current => current.includes(id) ? current.filter(item => item !== id) : current.length < 2 ? [...current, id] : [current[1], id]);
   const confirmed = game.evidence.filter(item => item.supports).length;
   // The objective read the case-theory prompt refers to, shown where the theory
@@ -43,8 +45,8 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
           <button className={assessment === "causal" ? "active" : ""} aria-pressed={assessment === "causal"} onClick={() => setAssessment("causal")}>Causal sequence</button>
           <button className={assessment === "coincidental" ? "active" : ""} aria-pressed={assessment === "coincidental"} onClick={() => setAssessment("coincidental")}>Coincidental overlap</button>
         </div>
-        <p className="relationship-helper">{selected.length === 0 ? "Select two findings to compare." : selected.length === 1 ? "One finding selected. Choose one more." : "Two findings selected. Choose whether the relationship is causal or coincidental, then test it."}</p>
-        <button className="correlate-button" disabled={selected.length !== 2 || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { onCorrelate(selected as [string, string], assessment); setSelected([]); }}><Link2 size={17} /> Test assessment</button>
+        <p className="relationship-helper">{selected.length === 0 ? "Select two findings to compare." : selected.length === 1 ? "One finding selected. Choose one more." : assessment ? "Two findings selected. Test your assessment." : "Two findings selected. Choose whether the relationship is causal or coincidental, then test it."} One finding enabled the other only if they are consecutive stages or on the same route. A right call relieves pressure; a wrong one adds business impact and adversary progress.</p>
+        <button className="correlate-button" disabled={selected.length !== 2 || !assessment || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { if (!assessment) return; onCorrelate(selected as [string, string], assessment); setSelected([]); setAssessment(null); }}><Link2 size={17} /> Test assessment</button>
       </>}
       {!!game.correlations.length && <div className="correlation-results">{game.correlations.slice(-2).reverse().map((record, index) => <div key={`${record.evidence.join("-")}-${index}`} className={record.correct ? "valid" : "invalid"}>{record.correct ? <Check size={16} /> : <X size={16} />}<p><strong>{record.correct ? "Assessment supported" : "Assessment challenged"}</strong><span>{record.finding}</span></p></div>)}</div>}
     </section>

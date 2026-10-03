@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { ArrowRight, Printer, Star, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, procedureIntensities, procedureScopes, procedureById, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, inSentence, procedureIntensities, procedureScopes, procedureById, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { specialistReaction } from "@/lib/phase9";
 import { unlockedCapabilities } from "@/lib/campaign";
@@ -86,13 +86,13 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <span className="eyebrow">HYPOTHESIS ACCURACY · {outcome.breakdown.hypothesis}/10</span>
             <details className="debrief-fold">
               <summary>How it is scored, turn by turn<span>{ledger.filter(row => row.matched).length} of {ledger.length} turns named the right route{ledger.some(row => !row.matched && row.credit > 0) ? `, ${ledger.filter(row => !row.matched && row.credit > 0).length} ruled a wrong one out` : ""}</span></summary>
-            <p className="ledger-rule">A turn scores in full when the route you predicted is the route the next unconfirmed stage actually used. It scores half when the prediction was wrong but properly tested — you spent one of that reading&rsquo;s own evidence sources and the check completed, which rules the reading out. That half is paid once per reading at each stage, and only while the record had not already ruled that reading out: declaring one again after its own sources came back empty earns nothing. A right prediction scores whatever the roll; a failed roll cannot rule a wrong one out, so it earns nothing. Only the hypothesis standing when you act is tested, so revising before you act costs nothing, and choosing one of that reading&rsquo;s own sources adds +{OWN_SOURCE_BONUS} to the roll whichever reading turns out to be right.</p>
+            <p className="ledger-rule">A turn scores in full when the route you predicted is the route the next unconfirmed stage actually used. It scores half when the prediction was wrong but properly tested — you spent one of that reading&rsquo;s own evidence sources and the check completed. That half is paid once per reading at each stage, and only while the record had not already ruled that reading out: declaring one again after its own sources came back empty earns nothing. A right prediction scores whatever the roll; a failed roll cannot rule a wrong one out, so it earns nothing. Only the hypothesis standing when you act is tested, so revising before you act costs nothing, and choosing one of that reading&rsquo;s own sources adds +{OWN_SOURCE_BONUS} to the roll whichever reading turns out to be right.</p>
             {ledger.map(row => (
               <div key={row.turn} className={row.matched ? "matched" : row.credit > 0 ? "half" : "missed"}>
                 <span>{String(row.turn).padStart(2, "0")}</span>
                 <p>
                   <strong>{row.predicted ? `Predicted: ${row.predicted}` : "No hypothesis recorded"}</strong>
-                  <small>Tested against {row.testedAgainst.toLowerCase()} · {row.procedure} {row.discriminating ? "could have exposed it" : "could not have exposed it"}{row.bonus > 0 ? ` · own source, +${row.bonus} to the roll` : ""}</small>
+                  <small>Tested against {inSentence(row.testedAgainst)} · {row.procedure} {row.discriminating ? "could have exposed it" : "could not have exposed it"}{row.bonus > 0 ? ` · own source, +${row.bonus} to the roll` : ""}</small>
                   <em>{row.verdict}</em>
                 </p>
                 <b>{row.credit === 1 ? "FULL CREDIT" : row.credit > 0 ? "HALF CREDIT" : "NO CREDIT"}</b>

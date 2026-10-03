@@ -60,7 +60,13 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
                   game going back on its word. The reason says what moved them. */}
               <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}</div>
-              <p className="turn-movement"><b>This turn:</b> {describeMeterChange(game, "impact", report.impactChange)} · {describeMeterChange(game, "continuity", report.continuityChange)} · {describeMeterChange(game, "sector", report.sectorChange)} · {describeMeterChange(game, "objective", report.objectiveChange)}. <span>{report.revealed ? "Finding a stage pushed the adversary back, though the turn still gave it time." : report.success ? "The check completed but found no stage, so the adversary used the time." : "The check failed, which gives the adversary the most time."}{report.adversaryEvent ? " It also made a move, below." : ""}</span></p>
+              <p className="turn-movement"><b>This turn:</b> {describeMeterChange(game, "impact", report.impactChange)} · {describeMeterChange(game, "continuity", report.continuityChange)} · {describeMeterChange(game, "sector", report.sectorChange)} · {describeMeterChange(game, "objective", report.objectiveChange)}. <span>{report.revealed
+                ? "Finding the stage slowed the adversary's gain, though the turn still gave it time."
+                : report.success
+                  ? "The check completed and found no stage, which rules out what this source could see at this stage; the adversary used the time."
+                  : report.planningBonus > 0
+                    ? "The check failed, so it settled nothing. It was one of your reading's own sources, so the failure gave the adversary no extra ground, though any failed check raises business impact more."
+                    : "The check failed, so it settled nothing and gave the adversary the most time."}{report.adversaryEvent ? " It also made a move, below." : ""}</span></p>
               <p className="report-narrative"><Glossed text={report.narrative} /></p>
               {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small></div></div>}
               {/* A completed check that finds nothing rules out every technique its
@@ -81,7 +87,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 <div key={item.stage} className="decision-recorded" role="status">
                   <span className="eyebrow">RESPONSE RECORDED</span>
                   <strong>{item.title}</strong>
-                  <p>{item.effect} {describeMeterChange(game, "impact", item.impactChange)} · {describeMeterChange(game, "continuity", item.continuityChange)} · {describeMeterChange(game, "sector", item.sectorChange)}. How well it fitted the moment is judged in the review.</p>
+                  <p>{item.effect} {describeMeterChange(game, "impact", item.impactChange)} · {describeMeterChange(game, "continuity", item.continuityChange)} · {describeMeterChange(game, "sector", item.sectorChange)} · {describeMeterChange(game, "objective", item.objectiveChange)}. How well it fitted the moment is judged in the review.</p>
                 </div>
               ))}
               {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">ACTOR MOVEMENT</span><p>{report.adversaryEvent}</p></div></div>}

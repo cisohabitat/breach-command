@@ -3,7 +3,7 @@ import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scena
 import { objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { infrastructureTopologies, sectorSetPieces, seededRoll } from "../phase8.ts";
 import { objectiveTheory } from "../phase9.ts";
-import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguage, decisionTitles, injects, scenarioProfiles } from "./content.ts";
+import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguage, decisionTitles, injects, scenarioProfiles, inSentence } from "./content.ts";
 import { type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type Inject, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice } from "./types.ts";
 import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
 
@@ -200,7 +200,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // saying "Identity audit at the payment gateway" for a mailbox relay reads as
     // the game asserting a location it has not established. Lead with the finding,
     // then attribute the source and the focus for what they are.
-    narrative = `${attacks.find(attack => attack.id === match)!.evidence} Found by ${procedureById(g, procedure)!.title.toLowerCase()} with collection focused on ${focusNode.label}.`;
+    narrative = `${attacks.find(attack => attack.id === match)!.evidence} Found by ${inSentence(procedureById(g, procedure)!.title)} with collection focused on ${focusNode.label}.`;
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (success) {
     narrative = "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.";
@@ -581,7 +581,7 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const theoryAligned = correct && valid && game.caseTheory === game.objective;
   const basis = firstAttack && secondAttack
     ? Math.abs(firstAttack.stage - secondAttack.stage) <= 1
-      ? `they sit in consecutive stages of the chain — ${stages[firstAttack.stage].name.toLowerCase()} then ${stages[secondAttack.stage].name.toLowerCase()} — so one is what the next one needed`
+      ? `they sit in consecutive stages of the chain — ${inSentence(stages[firstAttack.stage].name)} then ${inSentence(stages[secondAttack.stage].name)} — so one is what the next one needed`
       : attackVector(firstAttack.id) === attackVector(secondAttack.id)
         ? `both sit on the ${hypotheses.find(item => item.id === attackVector(firstAttack.id))!.title.toLowerCase()} route, so they are steps in the same line of access`
         : ""
@@ -589,13 +589,13 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const finding = correct
     ? valid
       ? `${first.title} and ${second.title} form a credible causal sequence: ${basis}.`
-      : `${first.title} and ${second.title} overlap in time, but nothing links them: they are neither consecutive stages nor steps on the same route, and appearing on ${first.system} and ${second.system} is not a relationship.`
+      : `${first.title} and ${second.title} overlap in time, but nothing links them: they are neither consecutive stages nor steps on the same route, and ${first.system === second.system ? `appearing on the same system, ${first.system},` : `appearing on ${first.system} and ${second.system}`} is not a relationship.`
     : valid
       ? `These were assessed as coincidental, but ${basis}, which is what a causal sequence looks like.`
       : firstAttack && secondAttack
         // A player judges on the story ("the stolen account led to the data
         // theft"), and was told they had judged on timing. Say what rules it out.
-        ? `These were treated as causal, but ${stages[firstAttack.stage].name.toLowerCase()} and ${stages[secondAttack.stage].name.toLowerCase()} are not consecutive stages and sit on different routes, so neither could have led straight to the other. A story can connect almost any two findings; a sequence needs consecutive stages or a shared route.`
+        ? `These were treated as causal, but ${inSentence(stages[firstAttack.stage].name)} and ${inSentence(stages[secondAttack.stage].name)} are not consecutive stages and sit on different routes, so neither could have led straight to the other. A story can connect almost any two findings; a sequence needs consecutive stages or a shared route.`
         : `These were treated as causal, but a finding that confirmed no stage cannot be a step in the sequence. A sequence needs two confirmed stages, consecutive or on a shared route.`;
   const g: Game = {
     ...game,

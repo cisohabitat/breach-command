@@ -6,7 +6,7 @@ import { CommandWorkspace } from "@/components/game/command-workspace";
 import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
 import { BriefingWorkspace } from "@/components/game/briefing-workspace";
 import { BotControl } from "@/components/game/bot-control";
-import { gameModes, getLossReason, getOperationalLabel, getSectorAlert, getTurnLimit, type LossCause } from "@/lib/advanced-game";
+import { gameModes, getLossReason, getOperationalLabel, getSectorAlert, getTurnLimit, SECTOR_ALERT_AT, sectorSystems, type LossCause } from "@/lib/advanced-game";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
 
 // Whether a change helped or hurt is carried by shape as well as colour.
@@ -20,7 +20,7 @@ const lossStatus: Record<LossCause, string> = {
   objective: "Adversary objective reached",
   impact: "Impact limit reached",
   continuity: "Essential service stopped",
-  sector: "Sector confidence collapsed",
+  sector: "Sector margin exhausted",
   window: "Window closed",
 };
 
@@ -66,6 +66,11 @@ export function GameScreen({ session }: { session: GameSession }) {
             <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> of {getTurnLimit(game)} turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : lossStatus[getLossReason(game).cause]}</span>
             <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Investigation window remaining" />
           </div>
+          {/* The sector's own margin ends an operation at zero like the three
+              readouts, and a Crisis playtest lost to it having never seen it:
+              it lived on Command's board until the alert at 35. It stays in
+              view here, in the readout's own name. */}
+          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono">SECTOR MARGIN</span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
         </div>
         <div className="case-meters">
           <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>

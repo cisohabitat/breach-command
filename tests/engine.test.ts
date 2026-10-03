@@ -117,7 +117,7 @@ test("leaves nothing outstanding when an operation ends", () => {
   const continuityLoss={...baseline(),continuity:1,established:[],injectDeck:[]} as Game;
   assert.equal(getLossReason(playTurn(continuityLoss,"dns",2)).title,"The essential service stopped");
   const sectorLoss={...baseline(),sectorHealth:1,established:[],injectDeck:[]} as Game;
-  assert.equal(getLossReason(playTurn(sectorLoss,"dns",2)).title,"Sector confidence collapsed");
+  assert.match(getLossReason(playTurn(sectorLoss,"dns",2)).title,/reached zero$/);
 
   // A sound action the dice refused does not hand the actor tempo it did not earn.
   const soundBase=(()=>{const b=baseline();b.established=[];b.injectDeck=[];return setHypothesis(b,"endpoint");})();
@@ -366,7 +366,7 @@ test("ends the operation whichever step takes a meter to its limit", () => {
   // correct correlation could take a lost operation back.
   const isolated=resolveMapAction({...baseline(),sectorHealth:4},"service","isolate");
   assert.equal(isolated.status,"lost","isolating the critical node with no sector margin left loses");
-  assert.equal(getLossReason(isolated).title,"Sector confidence collapsed");
+  assert.match(getLossReason(isolated).title,/reached zero$/);
   assert.equal(getLossReason(isolated).cause,"sector","the cause is named without comparing titles");
   const midway={...baseline(),objectiveProgress:50};
   const effect=getMapActionEffect(midway,"service","isolate");

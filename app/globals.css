@@ -7347,6 +7347,26 @@ the readouts that decide the operation. */
   color:var(--text-soft);
   white-space:nowrap;
 }
+.sector-margin-line {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:2px 8px;
+  margin:6px 0 0;
+  font-size:var(--type-caption);
+  color:var(--text-soft);
+}
+.sector-margin-line .mono {
+  font-size:var(--type-micro);
+  letter-spacing:.06em;
+}
+.sector-margin-line strong {
+  color:var(--foreground);
+  font-weight:600;
+}
+.sector-margin-line.low strong,.sector-margin-line.low .mono {
+  color:#f0a48c;
+}
 .operation-status>span:not(.mono) {
   font-size:var(--type-caption);
   color:var(--text-soft);

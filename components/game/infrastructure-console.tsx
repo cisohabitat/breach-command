@@ -24,7 +24,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
   const criticalFocus = focused.id === topology.critical;
   return (
     <section className="infrastructure-console" aria-label="Interactive infrastructure map" tabIndex={-1}>
-      <div className="map-heading"><div><span className="eyebrow">LIVE INFRASTRUCTURE COMMAND</span><h2>{topology.title}</h2></div><span className="focus-instruction"><Activity size={14} /> {game.mapActionsRemaining} command actions</span></div>
+      <div className="map-heading"><div><span className="eyebrow">LIVE INFRASTRUCTURE COMMAND</span><h2>{topology.title}</h2></div><span className="focus-instruction"><Activity size={14} /> {game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} left</span></div>
       <div className="incident-flow" aria-hidden="true"><span style={{ width: `${Math.max(8, activeStage / 4 * 100)}%` }} /></div>
       <div className="topology-shell">
         <div className="topology-nodes">

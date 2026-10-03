@@ -19,6 +19,7 @@ import {
   getDiscriminatingRead,
   hypothesisSources,
   proceduresFor,
+  sourceSeesReading,
   type Game,
   OWN_SOURCE_BONUS,
 } from "@/lib/advanced-game";
@@ -44,6 +45,8 @@ export function ProcedureGrid({
         const established = game.established.includes(procedure.id);
         const aligned = routeSources.includes(procedure.id);
         const read = game.mode === "expert" ? null : getDiscriminatingRead(game, procedure.id);
+        // Withheld at Expert with the other per-card reads.
+        const blind = game.mode !== "expert" && sourceSeesReading(game, procedure.id) === false;
         return (
           <button
             key={procedure.id}
@@ -51,7 +54,7 @@ export function ProcedureGrid({
             className={`procedure-card ${established ? "established" : ""} ${cooldown ? "cooling" : ""} ${aligned ? "hypothesis-aligned" : ""}`}
             disabled={disabled || cooldown > 0 || !!game.pendingDecision}
             onClick={() => onChoose(procedure.id)}
-            aria-label={`${procedure.title}${established ? ", established, plus 2" : ""}${aligned ? ", supports current hypothesis" : ""}${read && read.spent ? `, checked ${read.spent} times with no stage found` : read && read.inconclusive ? `, ${read.inconclusive} attempts failed without a result` : ""}${cooldown ? `, available in ${cooldown} turns` : ""}`}
+            aria-label={`${procedure.title}${established ? ", established, plus 2" : ""}${aligned ? ", supports current hypothesis" : ""}${aligned && blind ? ", cannot see this stage for the current hypothesis" : ""}${read && read.spent ? `, checked ${read.spent} times with no stage found` : read && read.inconclusive ? `, ${read.inconclusive} attempts failed without a result` : ""}${cooldown ? `, available in ${cooldown} turns` : ""}`}
           >
             <div className="procedure-top">
               <span className="procedure-icon"><Icon size={20} /></span>
@@ -62,6 +65,7 @@ export function ProcedureGrid({
             <h3>{procedure.title}</h3>
             <p>{procedure.short}</p>
             {aligned && !cooldown && <small className="alignment-label">Own source <span className="nowrap">· +{OWN_SOURCE_BONUS}</span></small>}
+            {aligned && !cooldown && blind && <small className="spent-label inconclusive">CAN&apos;T SEE THIS STAGE</small>}
             {read && !cooldown && read.spent > 0 && <small className="spent-label">CHECKED {read.spent}× · NO STAGE FOUND</small>}
             {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} ATTEMPT{read.inconclusive === 1 ? "" : "S"} FAILED · INCONCLUSIVE</small>}
             <div className="procedure-bottom">

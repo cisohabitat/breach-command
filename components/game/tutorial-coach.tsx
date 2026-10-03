@@ -6,7 +6,7 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
     { done: !!game.hypothesis, title: "Form a working hypothesis", detail: "Choose the access path that best explains the current intelligence." },
     { done: game.turns.length > 0, title: "Plan an evidence action", detail: "Select a procedure, its scope and how intensively to run it." },
     { done: game.decisions.length > 0, title: "Balance evidence and intervention", detail: "When a stage is confirmed, choose one of five responses, each trading evidence, service or time." },
-    { done: game.revealed.length >= 2, title: "Infer the objective", detail: "Two confirmed stages improve the assessment of adversary intent." },
+    { done: !!game.caseTheory, title: "Infer the objective", detail: "Two confirmed stages improve the assessment of adversary intent; record it as a case theory." },
   ];
   const current = steps.findIndex(step => !step.done);
   const nextMove = current === 0
@@ -22,10 +22,12 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
   // On Investigate the next-step note above the procedures already says what to
   // do, and the full card said it again above the board, pushing the grid down
   // for exactly the player who most needs it in view. There it is a progress line.
-  if (workspace === "investigate" && current >= 0) return (
+  if (workspace === "investigate") return (
     <section className="tutorial-coach compact" aria-label="Command academy tutorial">
       <GraduationCap size={17} />
-      <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>ACADEMY {current + 1}/{steps.length}</span><strong>{steps[current].title}</strong></p>
+      <p>{current >= 0
+        ? <><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>ACADEMY {current + 1}/{steps.length}</span><strong>{steps[current].title}</strong></>
+        : <><span className="eyebrow">ACADEMY COMPLETE</span><strong>Field qualification complete</strong></>}</p>
       <button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button>
     </section>
   );

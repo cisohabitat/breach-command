@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,glossaryParts,getDiscriminatingRead,getHypothesisLedger,hypotheses,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,glossaryParts,sourceSeesReading,getDiscriminatingRead,getHypothesisLedger,hypotheses,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -505,4 +505,14 @@ test("names the weakest decision rather than giving the all-clear", () => {
   assert.ok(/weakest call/.test(getBeginnerReview(weak).gap),"a weak call is named");
   assert.ok(/actor badge/.test(getBeginnerReview(weak).next),"with what to look at next time");
   assert.ok(!/weakest call/.test(getBeginnerReview({...done,decisions:done.decisions.map(item=>({...item,quality:5}))}).gap),"and a sound one is not");
+});
+
+test("says when an own source cannot see the stage, from the published pool alone", () => {
+  // Two of a reading's own sources spent at a stage neither could see, with the
+  // board reading "holding", taught a playtest to distrust the board.
+  const game=setHypothesis({...baseline(),injectDeck:[]},"endpoint");
+  const verdicts=Object.fromEntries(hypothesisSources(game,"endpoint").map(id=>[id,sourceSeesReading(game,id)]));
+  assert.ok(Object.values(verdicts).some(value=>value===true),"some of the reading's own sources can see the stage");
+  assert.deepEqual(Object.fromEntries(hypothesisSources(game,"endpoint").map(id=>[id,sourceSeesReading({...game,chain:["token","role","vault","apikey"]},id)])),verdicts,"it never consults the hidden chain");
+  for(const [id,sees] of Object.entries(verdicts)) if(sees===false) assert.equal(getDiscriminatingRead(game,id).level,"moderate","a blind own source is not offered as a test of the reading");
 });
