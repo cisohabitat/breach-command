@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { decodeChallenge, encodeChallenge } from "@/lib/phase8";
+import { decodeChallenge, encodeChallenge, isOutdatedChallenge } from "@/lib/phase8";
 import type { GameMode } from "@/lib/advanced-game";
 
 export type ChallengeSetup = NonNullable<ReturnType<typeof decodeChallenge>>;
@@ -33,7 +33,9 @@ export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
   function loadChallengeCode() {
     const setup = decodeChallenge(challengeInput);
     if (!setup) {
-      setChallengeMessage("Code not recognised. Check every character and try again.");
+      setChallengeMessage(isOutdatedChallenge(challengeInput)
+        ? "This code is from an earlier version of the game, whose incidents have since changed, so it would not replay the same operation. Ask for a new code."
+        : "Code not recognised. Check every character and try again.");
       return;
     }
     applySetup(setup);

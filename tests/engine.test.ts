@@ -4,7 +4,7 @@ import { test } from "node:test";
 import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,type Difficulty,type Game,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
-import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
+import {CHALLENGE_VERSION,decodeChallenge,encodeChallenge,isOutdatedChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
 import {incidentVariant} from "../lib/phase9.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -155,7 +155,15 @@ test("holds the turn limit, modes, specialists and map actions", () => {
   g=correlateEvidence(g,["E1","E2"],"causal");assert.equal(g.correlations[0].correct,false);assert.equal(g.impact,26);
   assert.equal(getAttributionRead(baseline()).title,"Unknown operator");
   const attributed=baseline();attributed.revealed=[...attributed.chain];assert.equal(getAttributionRead(attributed).confidence,"ATTRIBUTED");
-  const challenge=encodeChallenge({scenario:4,difficulty:"crisis",mode:"expert",specialist:"identity",seed:74219});assert.deepEqual(decodeChallenge(challenge),{scenario:4,difficulty:"crisis",mode:"expert",specialist:"identity",seed:74219});assert.equal(decodeChallenge(challenge.replace(/\d{2}$/, "00")),null);assert.deepEqual([seededChallengeRandom(7)(10),seededChallengeRandom(7)(10)],[8,8]);
+  const challenge=encodeChallenge({scenario:4,difficulty:"crisis",mode:"expert",specialist:"identity",seed:74219});assert.deepEqual(decodeChallenge(challenge),{scenario:4,difficulty:"crisis",mode:"expert",specialist:"identity",seed:74219});assert.equal(decodeChallenge(challenge.replace(/\d{2}$/, "00")),null);
+  // A code carries its content version. An older one is refused and named as
+  // outdated, because it would decode to a different incident than it was shared for.
+  assert.ok(challenge.startsWith(`BC${CHALLENGE_VERSION}-`),"new codes carry the content version");
+  assert.equal(decodeChallenge(challenge.replace(/^BC\d+-/,`BC${CHALLENGE_VERSION+1}-`)),null,"a code from a later version is not played either");
+  assert.equal(decodeChallenge("BC-4-2-4-2-74219-17"),null,"a version 1 code does not decode");
+  assert.ok(isOutdatedChallenge("BC-4-2-4-2-74219-17"),"and is recognised as outdated rather than mistyped");
+  assert.ok(isOutdatedChallenge("bc1-4-2-4-2-74219-17"));
+  assert.ok(!isOutdatedChallenge(challenge)&&!isOutdatedChallenge("hello"),"a current code or a typo is not called outdated");assert.deepEqual([seededChallengeRandom(7)(10),seededChallengeRandom(7)(10)],[8,8]);
 });
 
 test("records case theory, variants and hypothesis history", () => {
@@ -446,4 +454,14 @@ test("draws a command event the operation has not met", () => {
     assert.equal(run.commandHistory.length,2,`scenario ${scenario} reaches a second command event`);
     assert.notEqual(run.commandHistory[0].event,run.commandHistory[1].event,`scenario ${scenario} does not repeat its first event`);
   }
+});
+
+test("erodes the sector margin more slowly at Training", () => {
+  // It ended more than a third of Training losses on a meter beginners do not
+  // watch. The same turn costs a point less there, and nothing else changes.
+  const training=setHypothesis({...newGame(0,"training",()=>0),injectDeck:[]},"identity");
+  const operational={...training,difficulty:"operational" as Difficulty};
+  const a=playTurn(training,"identity",20).turns[0].sectorChange;
+  const b=playTurn(operational,"identity",20).turns[0].sectorChange;
+  assert.equal(a-b,1,"one point a turn");
 });

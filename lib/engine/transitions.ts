@@ -354,7 +354,11 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.adversaryProfile === "sentinel" && !revealed) sectorSpecific -= 2;
   if (plan.intensity === "exhaustive") continuityChange -= sector.exhaustiveContinuity;
   const scopeSector = plan.scope === "enterprise" ? -sector.enterpriseBias : -sector.focusedBias;
-  const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)) + (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0) + protection + scopeSector + sectorSpecific + (g.specialist === "communications" ? sector.commsRecovery : 0)));
+  // Training erodes the sector margin a point a turn more slowly. With the
+  // longer window it ended more than a third of the Bot Commander's Training
+  // losses, on a meter a beginner is the least likely to be watching.
+  const trainingRelief = g.difficulty === "training" ? 1 : 0;
+  const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss - trainingRelief + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)) + (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0) + protection + scopeSector + sectorSpecific + (g.specialist === "communications" ? sector.commsRecovery : 0)));
   const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success || planningBonus > 0 ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
   g.sectorHealth = clamp(g.sectorHealth + sectorChange);
   g.sectorHistory.push(g.sectorHealth);

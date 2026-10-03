@@ -1,4 +1,4 @@
-import { attacks, availableIn, commandEvents, getHypothesisStanding, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
+import { SECTOR_ALERT_AT, attacks, availableIn, commandEvents, getHypothesisStanding, getMapActionEffect, getSectorAlert, sectorSystems, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
 
 export type BotAction =
   | { type: "decision"; choice: DecisionChoice; reason: string }
@@ -42,7 +42,10 @@ function chooseSetPiece(game: Game): BotAction {
   const utility = (choice: SetPieceChoice) => {
     const option = event[choice];
     const continuityWeight = game.continuity <= 55 ? 3 : 1;
-    return option.quality * 4 - option.impact - Math.max(0, -option.continuity) * continuityWeight + option.sector - option.objective;
+    // With the sector margin low enough to be named on screen, protecting it
+    // outweighs the rest, as it would for a player reading that alert.
+    const sectorWeight = game.sectorHealth <= SECTOR_ALERT_AT ? 3 : 1;
+    return option.quality * 4 - option.impact - Math.max(0, -option.continuity) * continuityWeight + option.sector * sectorWeight - option.objective;
   };
   // The graduated measure is often the best available trade, so it is weighed on
   // the same terms as the two extremes rather than treated as a tie-breaker.
@@ -138,7 +141,12 @@ function choosePlan(game: Game): ProcedurePlan {
     : game.impact <= 42 && game.specialistFatigue < 4
       ? "exhaustive"
       : "balanced";
-  const scope = game.turns.length >= 3 && (game.revealed.length <= 1 || game.objectiveProgress >= 58) ? "enterprise" : "focused";
+  let scope: ProcedurePlan["scope"] = game.turns.length >= 3 && (game.revealed.length <= 1 || game.objectiveProgress >= 58) ? "enterprise" : "focused";
+  // Once the sector margin is low, the scope that costs it less.
+  if (game.sectorHealth <= SECTOR_ALERT_AT) {
+    const sector = sectorSystems[game.scenario];
+    scope = sector.enterpriseBias < sector.focusedBias ? "enterprise" : sector.focusedBias < sector.enterpriseBias ? "focused" : scope;
+  }
   return { scope, intensity };
 }
 
@@ -161,6 +169,14 @@ export function chooseBotAction(game: Game): BotAction {
 
   const correlation = nextCorrelation(game);
   if (correlation) return correlation;
+
+  // With the margin named on screen, monitoring that restores it is worth a map
+  // action whatever the opening budget said.
+  if (getSectorAlert(game) && game.mapActionsRemaining > 0) {
+    const topology = infrastructureTopologies[game.scenario];
+    const node = topology.nodes.find(item => game.nodePosture[item.id] === "normal" && getMapActionEffect(game, item.id, "monitor").sector > 0);
+    if (node) return { type: "map", nodeId: node.id, action: "monitor", reason: `Monitoring ${node.label.toLowerCase()} to restore the sector margin before it runs out.` };
+  }
 
   const monitorBudget = Math.min(2, Math.floor(game.turns.length / 2));
   if (game.mapHistory.length < monitorBudget && game.mapActionsRemaining > 0) {

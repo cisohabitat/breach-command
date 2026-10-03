@@ -398,7 +398,7 @@ test("sums up a result without spoiling the operation", () => {
   }
   assert.equal(lines.length,2,"an ordinary operation has no code to share");
   const seeded=getResultSummary({...lost,seed:4242});
-  assert.ok(/BC-\d+-\d+-\d+-\d+-4242-\d{2}/.test(seeded[2]),"a reproducible one carries its challenge code");
+  assert.ok(/BC\d+-\d+-\d+-\d+-\d+-4242-\d{2}/.test(seeded[2]),"a reproducible one carries its challenge code");
 });
 
 test("explains each part of the score in the player's own numbers", () => {
