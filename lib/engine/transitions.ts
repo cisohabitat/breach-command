@@ -409,7 +409,7 @@ export function decisionRationale(choice: DecisionChoice, highPressure: boolean,
     case "observe": return highPressure ? "Additional observation improved evidence but accepted substantial operational risk." : "Observation was proportionate while impact and adversary tempo remained manageable.";
     case "act": return highPressure ? "Intervention matched the elevated impact and adversary tempo." : "Intervention reduced exposure, although evidence collection still had room to continue.";
     case "attribute": return highPressure ? "Deep attribution delayed containment while the actor remained free to act." : "Attribution deepened the analytical picture while the actor stayed covert.";
-    case "contain": return bindingSector ? "Bounded containment protected a sector margin that a full intervention would have eroded." : highPressure ? "Containment absorbed pressure without removing the actor's parallel access." : "Containment was proportionate, although a broader intervention was still available.";
+    case "contain": return bindingSector ? "Bounded containment protected a sector margin that a full intervention would have eroded." : highPressure ? "Containment absorbed pressure without removing the actor's parallel access." : "Containment cost service while impact and the actor's pace were still low enough to keep watching and gather evidence.";
     case "notify": return bindingContinuity ? "Early notification protected service continuity while the picture stayed uncertain." : highPressure ? "Notification kept owners aligned, but it cost tempo and disclosed your read." : "Notification was low-cost, but it did not reduce exposure or preserve evidence.";
   }
 }

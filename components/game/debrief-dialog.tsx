@@ -7,6 +7,7 @@ import { specialistReaction } from "@/lib/phase9";
 import { unlockedCapabilities } from "@/lib/campaign";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
+import { objectiveTheory } from "@/lib/phase9";
 
 export function DebriefDialog({ session }: { session: GameSession }) {
   const {
@@ -116,7 +117,10 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             </section>
             <section className="mission-consequences">
               <div><span className="eyebrow">SECTOR OUTCOME</span><strong>{game.sectorHealth}/100 · {sectorSystems[game.scenario].title}</strong><p>{sectorSystems[game.scenario].rule}</p></div>
-              <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p>{game.revealed.includes(game.chain[3]) && <p className="intent-link"><strong>{attacks.find(attack => attack.id === game.chain[3])?.title}:</strong> {adversaryObjectives[game.objective].outbound}</p>}</div>
+              <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p>
+                {/* A recorded theory was never judged anywhere, so a player could not
+                    learn whether the reading of intent had been right. */}
+                <p className="theory-verdict">{!game.caseTheory ? "No case theory was recorded." : game.caseTheory === game.objective ? `Your case theory, ${objectiveTheory[game.caseTheory].title.toLowerCase()}, was right.` : `Your case theory was ${objectiveTheory[game.caseTheory].title.toLowerCase()}; the actor was after ${objectiveTheory[game.objective].title.toLowerCase()}.`}</p>{game.revealed.includes(game.chain[3]) && <p className="intent-link"><strong>{attacks.find(attack => attack.id === game.chain[3])?.title}:</strong> {adversaryObjectives[game.objective].outbound}</p>}</div>
               <div><span className="eyebrow">COMMAND TEAM</span><strong>{namedSpecialists[game.specialist].name} · fatigue {game.specialistFatigue}/6</strong><p>{gameModes[game.mode].title} operation against {getAdversaryProfile(game).title}. Team fatigue and leadership confidence carry into the next campaign mission.</p></div>
             </section>
           </details>

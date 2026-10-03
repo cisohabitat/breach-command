@@ -6619,6 +6619,14 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
     display:none;
   }
 }
+/* On a tablet the panel is full width, so one row of case numbers fits there
+   too and lifts the difficulty out from under the start button. */
+@media(min-width:651px) and (max-width:900px) {
+  .mission-selector {
+    grid-template-columns:repeat(10,minmax(0,1fr));
+    gap:6px;
+  }
+}
 @media(max-height:900px) {
   .briefing-screen {
     padding-top:52px;
