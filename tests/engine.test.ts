@@ -1,7 +1,7 @@
 // Turn resolution, blocking states, end states and the decision layer.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,type Difficulty,type Game} from "../lib/advanced-game.ts";
+import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,type Difficulty,type Game} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -350,4 +350,75 @@ test("moves each decision verb by its own terms", () => {
   const recovered=resolveResponse(assured,"rebuild");
   assert.equal(recovered.status,"won");
   assert.equal(recovered.continuity,77);
+});
+
+test("ends the operation whichever step takes a meter to its limit", () => {
+  // Map actions, correlations and the response move meters too. Each used to
+  // leave a meter at its limit with the operation still running, and a later
+  // correct correlation could take a lost operation back.
+  const isolated=resolveMapAction({...baseline(),sectorHealth:4},"service","isolate");
+  assert.equal(isolated.status,"lost","isolating the critical node with no sector margin left loses");
+  assert.equal(getLossReason(isolated).title,"Sector confidence collapsed");
+  const midway={...baseline(),objectiveProgress:50};
+  const effect=getMapActionEffect(midway,"service","isolate");
+  const paid=resolveMapAction(midway,"service","isolate");
+  assert.deepEqual([paid.impact-midway.impact,paid.continuity-midway.continuity,paid.sectorHealth-midway.sectorHealth,paid.objectiveProgress-midway.objectiveProgress],[effect.impact,effect.continuity,effect.sector,effect.objective],"the cost shown is the cost paid");
+  const unrelated=(over:Partial<Game>)=>({...baseline(),evidence:[
+    {id:"E1-dns",turn:1,title:"DNS exception",source:"DNS review",system:"Edge",confidence:"MODERATE",supports:null,detail:""},
+    {id:"E2-email",turn:2,title:"Email exception",source:"Email investigation",system:"Edge",confidence:"MODERATE",supports:null,detail:""},
+  ],...over} as Game);
+  const wrong=correlateEvidence(unrelated({objectiveProgress:98}),["E1-dns","E2-email"],"causal");
+  assert.equal(wrong.status,"lost","a wrong causal call at 98 completes the objective");
+  assert.equal(wrong.objectiveProgress,100);
+  assert.throws(()=>correlateEvidence(wrong,["E1-dns","E2-email"],"coincidental"),/pending decision|correlated/,"and a lost operation cannot be correlated back");
+  const respondTo=(over:Partial<Game>)=>({...baseline(),revealed:[...baseline().chain],status:"response",...over} as Game);
+  const drained=resolveResponse(respondTo({continuity:5}),"isolate");
+  assert.equal(drained.status,"lost","a response option that spends the last of the service loses");
+  assert.equal(getLossReason(drained).title,"The essential service stopped");
+  assert.ok(!/response cost more/.test(getBeginnerReview(drained).gap),"an unfinished response is not judged on its cost");
+  const won=resolveResponse(resolveResponse(resolveResponse(respondTo({}),"credential"),"verify"),"rebuild");
+  assert.equal(won.status,"won");assert.equal(won.pendingDecision,null);
+  const lostEarly=playTurn({...baseline(),turnLimit:1,injectDeck:[]},"email",2);
+  assert.equal(lostEarly.status,"lost");
+  assert.ok(!/response cost more/.test(getBeginnerReview(lostEarly).gap),"a run that never reached the response is not told its response cost too much");
+  assert.ok(/lost/.test(getBeginnerReview(lostEarly).gap),"and is told what ended it rather than that nothing stands out");
+});
+
+test("keeps the deck, the grace and the decisions honest", () => {
+  // With no favourable or neutral card left, a natural 20 draws nothing rather
+  // than a penalty, and a natural 1 with no unfavourable card draws no gift.
+  const twenty=playTurn({...baseline(),injectDeck:[1,4,6]},"email",20);
+  assert.equal(twenty.turns[0].inject,null,"a natural 20 never hands over a penalty");
+  assert.equal(twenty.injectDeck.length,3,"and the deck keeps its cards");
+  const one=playTurn({...baseline(),injectDeck:[0,2,3]},"email",1);
+  assert.equal(one.turns[0].inject,null,"a natural 1 never hands over a gift");
+  // The exercise card on the turn the chain completes has nothing to stand down.
+  const complete=playTurn({...baseline(),revealed:["phish","spray","task"],injectDeck:[8]},"network",20);
+  assert.equal(complete.revealed.length,4);
+  assert.equal(complete.status,"playing","the operation goes on to its decision and response");
+  assert.ok(!/Exercise ends/.test(complete.turns[0].inject!.effectLabel),"and the card does not claim it ended");
+  assert.equal(resolveDecision(complete,"contain").status,"response");
+  // A sound failure is protected without the grace, so the grace is kept for the
+  // failure that needs it, and the sound one hands the actor no extra progress.
+  const sound=playTurn({...setHypothesis(baseline(),"endpoint"),graceRemaining:1,injectDeck:[]},"endpoint",2);
+  assert.equal(sound.turns[0].planningBonus,2);assert.equal(sound.turns[0].success,false);
+  assert.equal(sound.graceRemaining,1,"a protected failure does not spend the grace");
+  assert.equal(sound.adversaryTempo,0,"and hands over no tempo");
+  const absorbed=playTurn({...setHypothesis(baseline(),"cloud"),graceRemaining:1,injectDeck:[]},"endpoint",2);
+  assert.equal(absorbed.graceRemaining,0,"an unsound failure is what the grace absorbs");
+  assert.equal(absorbed.turns[0].objectiveChange-sound.turns[0].objectiveChange,4,"the sound failure adds nothing to the actor's objective beyond its ordinary advance");
+  // The partner can disclose a stage on the same turn a procedure finds one. Each
+  // gets its own decision, one after the other.
+  let both=playTurn({...baseline(),injectDeck:[3]},"endpoint",20);
+  assert.equal(both.revealed.length,2);
+  const [found,disclosed]=[both.turns[0].revealed,both.turns[0].injectReveal];
+  assert.equal(both.pendingDecision,found);
+  both=resolveDecision(both,"observe");
+  assert.equal(both.pendingDecision,disclosed,"the disclosed stage is decided next");
+  both=resolveDecision(both,"contain");
+  assert.equal(both.pendingDecision,null);
+  assert.deepEqual(both.decisions.map(item=>item.stage),[found,disclosed]);
+  // The assessed objective waits for two confirmed stages, however many turns pass.
+  const slow={...baseline(),turns:Array.from({length:6},(_,index)=>({...playTurn(baseline(),"email",2).turns[0],number:index+1}))} as Game;
+  assert.equal(getObjectiveRead(slow).title,"Objective unconfirmed","turns alone do not disclose the objective");
 });

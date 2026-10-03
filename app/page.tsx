@@ -25,8 +25,10 @@ export default function Home() {
       <div className="sr-only" aria-live="assertive" aria-atomic="true">{criticalAnnouncement}</div>
       {storageNotice && (
         <div className="storage-notice" role="status">
-          <strong>Saved data could not be read.</strong>
-          <span>{storageNotice} This device starts from a clean campaign, and existing progress is left untouched.</span>
+          {/* Each notice says what happened to which data in its own words; a fixed
+              heading claimed an unreadable save and a reset campaign for all of them. */}
+          <strong>Saved data</strong>
+          <span>{storageNotice}</span>
           <button onClick={() => setStorageNotice("")} aria-label="Dismiss storage notice"><X size={16} /></button>
         </div>
       )}

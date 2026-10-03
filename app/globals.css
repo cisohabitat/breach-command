@@ -2384,8 +2384,8 @@ a {
   color:#aebfac;
 }
 .inline-result button {
-  height:38px;
-  width:38px;
+  height:40px;
+  width:40px;
   display:grid;
   place-items:center;
   border:0;
@@ -3023,11 +3023,6 @@ html,body {
   font-size:var(--type-caption);
   color:#9db09a;
   line-height:var(--leading-compact);
-}
-.shortcut-note {
-  text-align:center;
-  font:500 var(--type-caption) ui-monospace,SFMono-Regular,Consolas,monospace;
-  color:#8fa28e;
 }
 .high-contrast {
   --text-soft:#c4d1c7;
@@ -6212,6 +6207,11 @@ every value it carries is also present as static text. */
   background:#152018f2;
   color:var(--lime);
 }
+.meter-delta svg {
+  display:inline-block;
+  margin-right:3px;
+  vertical-align:-1px;
+}
 /* Threshold crossing ring: a single decelerating shockwave when a meter enters critical. */
 @keyframes meter-cross {
   0% {
@@ -6804,7 +6804,7 @@ they want without scrolling past the other nine. */
   border-bottom:1px solid var(--line);
 }
 .debrief-index button {
-  min-height:34px;
+  min-height:40px;
   padding:5px 11px;
   border:1px solid var(--line);
   border-radius:999px;
@@ -6893,7 +6893,7 @@ they want without scrolling past the other nine. */
     gap:5px;
   }
   .debrief-index button {
-    min-height:36px;
+    min-height:44px;
     padding:5px 10px;
   }
 }

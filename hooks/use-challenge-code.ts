@@ -1,20 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { decodeChallenge, encodeChallenge } from "@/lib/phase8";
+import type { GameMode } from "@/lib/advanced-game";
 
 export type ChallengeSetup = NonNullable<ReturnType<typeof decodeChallenge>>;
 
+// Today's date as a seed, read on the client only. The page is prerendered, so
+// a seed taken from the build's clock would disagree with the visitor's on any
+// later day and fail hydration.
+function todaySeed() {
+  const now = new Date();
+  return Number(`${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`);
+}
+const noSubscription = () => () => {};
+
 // A challenge is a shareable configuration, not a game. It owns the seed, the
 // code field and whether the player has deliberately chosen a reproducible
-// operation — which is what decides if the seed reaches the procedure rolls.
+// operation — which is what decides if the seed reaches the hidden chain and the
+// procedure rolls.
+//
+// Daily Operation always plays today's seed unless a code says otherwise, so a
+// new seed cannot quietly turn it into a different case. A loaded or generated
+// challenge applies to the next operation begun and is then spent: left in place,
+// it made every later campaign operation replay the same chain.
 export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
-  const [challengeSeed, setChallengeSeed] = useState(() => {
-    const now = new Date();
-    return Number(`${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`);
-  });
+  const dailySeed = useSyncExternalStore(noSubscription, todaySeed, () => null);
+  const [challenge, setChallenge] = useState<{ seed: number; source: "code" | "generated" } | null>(null);
   const [challengeInput, setChallengeInput] = useState("");
-  const [challengeActive, setChallengeActive] = useState(false);
   const [challengeMessage, setChallengeMessage] = useState("");
 
   function loadChallengeCode() {
@@ -24,19 +37,34 @@ export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
       return;
     }
     applySetup(setup);
-    setChallengeSeed(setup.seed);
-    setChallengeActive(true);
-    setChallengeMessage("Challenge loaded. Review the assignment and begin when ready.");
+    setChallenge({ seed: setup.seed, source: "code" });
+    setChallengeMessage("Challenge loaded. It applies to the next operation you begin.");
   }
 
   function generateSeed() {
-    setChallengeSeed(100000 + Math.floor(Math.random() * 900000));
-    setChallengeActive(true);
-    setChallengeMessage("New challenge generated.");
+    setChallenge({ seed: 100000 + Math.floor(Math.random() * 900000), source: "generated" });
+    setChallengeMessage("New challenge generated. It applies to the next operation you begin.");
   }
 
-  const codeFor = (scenario: number, difficulty: ChallengeSetup["difficulty"], mode: ChallengeSetup["mode"], specialist: ChallengeSetup["specialist"]) =>
-    encodeChallenge({ scenario, difficulty, mode, specialist, seed: challengeSeed });
+  // The seed the next operation will use, and whether it is a promise to replay.
+  // An ordinary campaign operation has no seed of its own: it is shown today's
+  // configuration code, but its chain and rolls are drawn fresh.
+  function seedFor(mode: GameMode): { seed: number | null; reproducible: boolean } {
+    if (mode === "daily" && challenge?.source !== "code") return { seed: dailySeed, reproducible: true };
+    if (challenge) return { seed: challenge.seed, reproducible: true };
+    return { seed: dailySeed, reproducible: false };
+  }
 
-  return { challengeSeed, challengeActive, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor };
+  function spendChallenge() {
+    if (!challenge) return;
+    setChallenge(null);
+    setChallengeMessage("");
+  }
+
+  const codeFor = (scenario: number, difficulty: ChallengeSetup["difficulty"], mode: ChallengeSetup["mode"], specialist: ChallengeSetup["specialist"]) => {
+    const { seed } = seedFor(mode);
+    return seed === null ? null : encodeChallenge({ scenario, difficulty, mode, specialist, seed });
+  };
+
+  return { todaySeed, seedFor, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor };
 }

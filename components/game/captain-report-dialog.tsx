@@ -1,22 +1,35 @@
+import { useRef } from "react";
 import { ArrowRight, BrainCircuit, CheckCheck, Eye, MessagesSquare, Shield, ShieldCheck, Siren, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, getHypothesisStanding, hypothesisSources, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
+import { attacks, describeChange, getHypothesisStanding, hypothesisSources, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
   const { report, game, ended, config, dismissReport, decide } = session;
+  const content = useRef<HTMLDivElement>(null);
   // A decision belongs to a running operation. Once the operation has ended the
   // options are not offered, whatever the engine left behind.
   // Expert operations withhold every read, this one included.
   const standing = game && game.mode !== "expert" ? getHypothesisStanding(game) : null;
-  const settled = !!report && !!game && report.success && !report.revealed && !report.injectReveal
+  // The standing is computed from the operation as it is now, so it belongs only
+  // on the latest turn's report, not on an earlier one reopened from the log.
+  const settled = !!report && !!game && report.number === game.turns.length && report.success && !report.revealed && !report.injectReveal
     && !!game.hypothesis && hypothesisSources(game, game.hypothesis).includes(report.procedure);
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
 
   return (
     <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
-      <DialogContent className="game-dialog report-dialog" showCloseButton={!awaitingDecision} onEscapeKeyDown={event => { if (awaitingDecision) event.preventDefault(); }}>
+      <DialogContent
+        ref={content}
+        className="game-dialog report-dialog"
+        showCloseButton={!awaitingDecision}
+        onEscapeKeyDown={event => { if (awaitingDecision) event.preventDefault(); }}
+        // With a decision pending there is no close button, so the first tabbable
+        // control is a decision option. Focus the report itself so Space or Enter,
+        // pressed to read, cannot commit a command choice.
+        onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
+      >
         <DialogHeader>
           <div className="eyebrow">CAPTAIN’S REPORT <span className="separator">/</span> TURN {report?.number}</div>
           <DialogTitle>{report?.revealed ? "Evidence confirmed." : report?.success ? "No new attack identified." : "The action was unsuccessful."}</DialogTitle>
@@ -30,7 +43,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus ? " including hypothesis bonus" : ""}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
                 {report.success ? <CheckCheck size={23} /> : <X size={23} />}
               </div>
-              <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>Sector {report.sectorChange >= 0 ? "+" : ""}{report.sectorChange}</span><span>Actor objective +{report.objectiveChange}</span></div>
+              <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>{describeChange("sector", report.sectorChange)}</span><span>{describeChange("objective", report.objectiveChange)}</span></div>
               <p className="report-narrative">{report.narrative}</p>
               {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
               {/* A completed check against one of the reading's own sources is the only
@@ -66,7 +79,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               )}
             </section>}
           </div>
-          <p className="report-impact small muted">Business impact changed by {report.impactChange >= 0 ? "+" : ""}{report.impactChange}; {getOperationalLabel(game).toLowerCase()} changed by {report.continuityChange}. Decision quality is explained in the debrief.</p>
+          <p className="report-impact small muted">{describeChange("impact", report.impactChange)}; {getOperationalLabel(game)}: {describeChange("continuity", report.continuityChange)}. Decision quality is explained in the debrief.</p>
           {awaitingDecision ? <p className="report-gate" role="status">Resolve the operational decision above to continue. This report stays open until the choice is recorded.</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}<ArrowRight size={17} /></button>}
         </>}
       </DialogContent>

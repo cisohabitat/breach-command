@@ -626,7 +626,7 @@ export function getTurnLimit(game: Game) {
 }
 
 export function getObjectiveRead(game: Game) {
-  if (game.revealed.length < 2 && game.turns.length < 4) return { title: "Objective unconfirmed", detail: "Collect evidence across at least two stages to assess intent.", confidence: "LOW" };
+  if (game.revealed.length < 2) return { title: "Objective unconfirmed", detail: "Collect evidence across at least two stages to assess intent.", confidence: "LOW" };
   const objective = adversaryObjectives[game.objective];
   return { title: objective.title, detail: objective.tell, confidence: game.revealed.length >= 3 ? "HIGH" : "MODERATE" };
 }
@@ -649,6 +649,21 @@ export function setInfrastructureFocus(game: Game, nodeId: string): Game {
   return { ...game, focusedNode: nodeId };
 }
 
+// Everything a map action will do, stated before it is chosen. The resolution
+// applies exactly this, so the cost on the button and the cost paid are one
+// computation — including the sector margin, which can end an operation.
+export function getMapActionEffect(game: Game, nodeId: string, action: MapAction) {
+  const critical = nodeId === infrastructureTopologies[game.scenario].critical;
+  const sector = sectorSystems[game.scenario];
+  return {
+    modifier: action === "monitor" ? 2 : 0,
+    impact: action === "monitor" ? -2 : critical ? -8 : -5,
+    continuity: action === "monitor" ? 0 : critical ? -10 : -5,
+    sector: action === "monitor" ? sector.monitoringRecovery : -(critical ? 7 : 3) - sector.containmentCost,
+    objective: action === "monitor" ? -4 : critical ? -12 : -8,
+  };
+}
+
 export function resolveMapAction(game: Game, nodeId: string, action: MapAction): Game {
   if (game.status !== "playing") throw new Error("Infrastructure action is not available now.");
   if (game.pendingDecision || game.pendingCommand || game.pendingSetPiece) throw new Error("Resolve the current decision first.");
@@ -658,23 +673,23 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
   if (game.mapActionsRemaining <= 0) throw new Error("No infrastructure actions remain.");
   if (game.nodePosture[nodeId] === "isolated") throw new Error("This node is already isolated.");
   if (action === "monitor" && game.nodePosture[nodeId] === "monitored") throw new Error("This node is already monitored.");
-  const critical = nodeId === topology.critical;
-  const sector = sectorSystems[game.scenario];
+  const change = getMapActionEffect(game, nodeId, action);
   const effect = action === "monitor"
     ? `Telemetry priority established on ${node.label}. The next aligned procedure gains analytical support.`
     : `${node.label} isolated. ${topology.criticalRule}`;
-  return {
+  const g: Game = {
     ...game,
     focusedNode: nodeId,
     nodePosture: { ...game.nodePosture, [nodeId]: action === "monitor" ? "monitored" : "isolated" },
     mapActionsRemaining: game.mapActionsRemaining - 1,
     mapHistory: [...game.mapHistory, { node: nodeId, action, turn: game.turns.length, effect }],
-    nextModifier: action === "monitor" ? Math.max(game.nextModifier, 2) : game.nextModifier,
-    impact: clamp(game.impact + (action === "monitor" ? -2 : critical ? -8 : -5)),
-    continuity: clamp(game.continuity + (action === "monitor" ? 0 : critical ? -10 : -5)),
-    sectorHealth: clamp(game.sectorHealth + (action === "monitor" ? sector.monitoringRecovery : -(critical ? 7 : 3) - sector.containmentCost)),
-    objectiveProgress: clamp(game.objectiveProgress + (action === "monitor" ? -4 : critical ? -12 : -8)),
+    nextModifier: change.modifier ? Math.max(game.nextModifier, change.modifier) : game.nextModifier,
+    impact: clamp(game.impact + change.impact),
+    continuity: clamp(game.continuity + change.continuity),
+    sectorHealth: clamp(game.sectorHealth + change.sector),
+    objectiveProgress: clamp(game.objectiveProgress + change.objective),
   };
+  return breached(g) ? settle(g, "lost") : g;
 }
 
 export function setCaseTheory(game: Game, objective: AdversaryObjectiveId): Game {
@@ -864,7 +879,9 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     concept: "A check that succeeds but finds nothing has still cost a turn. Choosing where to look matters more than how hard you look.",
     next: "Next operation, prefer a source your current reading actually predicts — the card says so before you commit — over whichever tool is available.",
   };
-  if (breakdown.response < 12) return {
+  // Only a completed response has a cost to judge. A run that never reached it
+  // would otherwise be told its response was too expensive.
+  if (game.responseChoices.length === 3 && breakdown.response < 12) return {
     strength,
     gap: "The response cost more service than it needed to for the assurance it bought.",
     concept: "Containment, assurance and recovery each trade disruption against certainty. The most thorough option is not automatically the right one.",
@@ -880,6 +897,15 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     concept: "Finding a stage and classifying it are separate skills. A source can turn one up while the route you named for it is wrong, which is why the score counts them apart.",
     next: `Next operation, when a finding lands, check which route it belonged to before choosing the next procedure${revisions === 0 ? " — you kept one reading for the whole of this operation" : ""}.`,
   };
+  if (game.status === "lost") {
+    const reason = getLossReason(game);
+    return {
+      strength,
+      gap: `The operation was lost: ${reason.title.charAt(0).toLowerCase()}${reason.title.slice(1)}.`,
+      concept: "Business impact, service integrity and adversary progress decide an operation as surely as the evidence does. A sound investigation still has to finish before one of them runs out.",
+      next: "Next operation, watch the three readouts on the top row, and when one is near its limit, choose the decision or response option that relieves it before you run another procedure.",
+    };
+  }
   return {
     strength,
     gap: "Nothing stands out as a misunderstanding in this operation.",
@@ -1110,6 +1136,13 @@ const terminal = (status: GameStatus) => status === "won" || status === "lost" |
 // A terminated operation holds no blocking state. Every end-state check routes
 // through here, so the interface can never be left asking for a decision the
 // engine would refuse.
+// Whether any meter has reached the limit that ends an operation. Every transition
+// that moves a meter asks this, so none can leave one at its limit while play
+// continues.
+function breached(g: Game) {
+  return g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100;
+}
+
 function settle(g: Game, status: GameStatus): Game {
   g.status = status;
   if (terminal(status)) {
@@ -1201,17 +1234,19 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   } else if (success) {
     narrative = "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.";
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
+  } else if (planningBonus > 0) {
+    // A sound action that the dice refused. The route under test was the one
+    // predicted and the source was one that hypothesis relies on, so the team
+    // keeps its footing: the actor takes no tempo it did not earn, and its
+    // objective moves no further than on a success. Reasoning is protected;
+    // certainty is not. It is checked before the grace so a failure that was
+    // already protected does not spend it.
+    narrative = "The action did not produce evidence this time, but the reasoning held: the route under test was the right one to ask about, and the team keeps its footing.";
   } else if (g.graceRemaining > 0) {
     // Rapid coordination absorbs the first unlucky action of the operation. The
     // team reorients on its own time rather than the adversary's.
     g.graceRemaining -= 1;
     narrative = "The action did not produce evidence, but the team reorients on its own time: coordination absorbed the setback before the actor could use it.";
-  } else if (planningBonus > 0) {
-    // A sound action that the dice refused. The route under test was the one
-    // predicted and the source was one that hypothesis relies on, so the team
-    // keeps its footing: the actor takes no tempo it did not earn, and its
-    // objective barely moves. Reasoning is protected; certainty is not.
-    narrative = "The action did not produce evidence this time, but the reasoning held: the route under test was the right one to ask about, and the team keeps its footing.";
   } else {
     narrative = "The action did not produce reliable evidence. The actor gains freedom while the team reorients.";
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
@@ -1238,16 +1273,17 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   let injectReveal: string | null = null;
   let exerciseEnd = false;
   const reason = raw === 1 ? "Natural 1" : raw === 20 ? "Natural 20" : g.failures >= 3 ? "Three failed rolls" : null;
-  if (reason && g.injectDeck.length) {
-    // A natural 20 may also land the authorised stand-down, which is neutral: it
-    // is a conclusion the investigation has earned, not a punishment. Excluding it
-    // here is what dropped the exercise ending from six per cent of operations to
-    // one when the valence rule first went in.
-    const wanted = raw === 20 ? ["good", "neutral"] : raw === 1 ? ["bad"] : null;
-    // The deck stays shuffled and each card is still drawn once; a critical roll
-    // reaches past cards of the wrong valence rather than reshuffling. If none of
-    // the wanted kind is left, the next card is taken as before.
-    const position = wanted ? Math.max(0, g.injectDeck.findIndex(item => wanted.includes(injects[item].valence))) : 0;
+  // A natural 20 may also land the authorised stand-down, which is neutral: it
+  // is a conclusion the investigation has earned, not a punishment. Excluding it
+  // here is what dropped the exercise ending from six per cent of operations to
+  // one when the valence rule first went in.
+  const wanted = raw === 20 ? ["good", "neutral"] : raw === 1 ? ["bad"] : null;
+  // The deck stays shuffled and each card is still drawn once; a critical roll
+  // reaches past cards of the wrong valence rather than reshuffling. If none of
+  // the wanted kind is left, a critical roll draws nothing rather than take the
+  // next card, which would be a penalty on a 20 or a gift on a 1.
+  const position = !reason || !g.injectDeck.length ? -1 : wanted ? g.injectDeck.findIndex(item => wanted.includes(injects[item].valence)) : 0;
+  if (reason && position >= 0) {
     const index = g.injectDeck.splice(position, 1)[0];
     inject = { ...injects[index], reason };
     if (g.failures >= 3) g.failures = 0;
@@ -1291,7 +1327,12 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       // investigation reaches, not one it is handed. Below two confirmed stages
       // there is not enough attributed behaviour to support that call, so the
       // controller clears only part of the activity and the operation continues.
-      if (g.revealed.length >= 2) exerciseEnd = true;
+      if (g.revealed.length >= 4) {
+        // The chain was completed on this same turn, so there is nothing left to
+        // stand down: the response goes ahead and the card only eases pressure.
+        impactChange -= 8;
+        inject.effectLabel = "Part of the activity is confirmed as authorised, but the full chain is already confirmed. Business pressure falls and the response goes ahead.";
+      } else if (g.revealed.length >= 2) exerciseEnd = true;
       else {
         impactChange -= 8;
         inject.effectLabel = "Part of the activity is confirmed as authorised. Business pressure falls and the investigation continues.";
@@ -1333,7 +1374,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (plan.intensity === "exhaustive") continuityChange -= sector.exhaustiveContinuity;
   const scopeSector = plan.scope === "enterprise" ? -sector.enterpriseBias : -sector.focusedBias;
   const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)) + (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0) + protection + scopeSector + sectorSpecific + (g.specialist === "communications" ? sector.commsRecovery : 0)));
-  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success ? 0 : planningBonus > 0 ? 1 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
+  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success || planningBonus > 0 ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
   g.sectorHealth = clamp(g.sectorHealth + sectorChange);
   g.sectorHistory.push(g.sectorHealth);
   g.objectiveProgress = clamp(g.objectiveProgress + objectiveChange);
@@ -1341,8 +1382,8 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   g.impact = clamp(g.impact + impactChange);
   g.continuity = clamp(g.continuity + continuityChange);
   g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange, hypothesisTarget, hypothesisMatched, discriminating, windfall: !!revealed && revealed !== hypothesisTarget });
-  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
-  else if (exerciseEnd && g.revealed.length >= 2 && g.revealed.length < 4) settle(g, "exercise");
+  if (breached(g)) settle(g, "lost");
+  else if (exerciseEnd) settle(g, "exercise");
   else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");
   else if (!g.pendingDecision && number === 2 && g.revealed.length < 4) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {
@@ -1494,8 +1535,12 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
     sectorChange: g.sectorHealth - before.sector,
     objectiveChange: g.objectiveProgress - before.objective,
   });
-  g.pendingDecision = null;
-  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
+  // The partner card can disclose a stage on the same turn a procedure found
+  // one. Each confirmed stage still gets its own decision, one after another.
+  const last = g.turns.at(-1);
+  g.pendingDecision = [last?.revealed, last?.injectReveal].find(id => !!id && !g.decisions.some(item => item.stage === id)) ?? null;
+  if (breached(g)) settle(g, "lost");
+  else if (g.pendingDecision) return g;
   else if (g.revealed.length === 4) g.status = "response";
   else if (g.turns.length === 2 && !g.setPieceHistory.length) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
   return g;
@@ -1524,7 +1569,7 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   const communicationsBonus = g.specialist === "communications" && eventId === "leadership" ? 1 : 0;
   g.commandHistory.push({ event: eventId, choice, title: option.title, quality: Math.min(5, option.quality + communicationsBonus), effect: option.signal });
   g.pendingCommand = null;
-  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
+  if (breached(g)) settle(g, "lost");
   return g;
 }
 
@@ -1539,7 +1584,7 @@ export function resolveSetPiece(game: Game, choice: SetPieceChoice): Game {
   g.objectiveProgress = clamp(g.objectiveProgress + option.objective);
   g.setPieceHistory.push({ event: event.id, choice, title: option.title, quality: option.quality, effect: option.detail });
   g.pendingSetPiece = null;
-  if (g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100) settle(g, "lost");
+  if (breached(g)) settle(g, "lost");
   return g;
 }
 
@@ -1569,13 +1614,14 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
     : valid
       ? `These were assessed as coincidental, but ${basis}, which is what a causal sequence looks like.`
       : `These were treated as causal on timing alone. Two findings close together, or on the same system, are not thereby related — a sequence needs consecutive stages or a shared route.`;
-  return {
+  const g: Game = {
     ...game,
     nextModifier: correct ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
     impact: clamp(game.impact + (correct ? (theoryAligned ? -5 : -3) : 4)),
     objectiveProgress: clamp(game.objectiveProgress + (correct ? (theoryAligned ? -10 : -6) : 3)),
     correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding }],
   };
+  return breached(g) ? settle(g, "lost") : g;
 }
 
 export function getAdversaryRead(game: Game) {
@@ -1604,8 +1650,11 @@ export function resolveResponse(game: Game, choice: string): Game {
   g.continuity = clamp(g.continuity + option.continuity);
   g.responseScore += option.score + (preferred ? 4 : 0) + (objectiveAligned ? 4 : 0);
   if (objectiveAligned) g.objectiveProgress = clamp(g.objectiveProgress - 10);
-  if (g.responseChoices.length === 3) {
-    g.status = "won";
+  // A response option that spends the last of the service or the impact margin
+  // loses the operation like any other step; the response is not exempt.
+  if (breached(g)) settle(g, "lost");
+  else if (g.responseChoices.length === 3) {
+    settle(g, "won");
     g.nodePosture = Object.fromEntries(Object.keys(g.nodePosture).map(node => [node, g.nodePosture[node] === "isolated" ? "restored" : g.nodePosture[node]]));
   }
   return g;

@@ -21,6 +21,18 @@ export type CampaignState = {
 
 export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {}, specialistBonds: {}, routeHistory: [] };
 
+// Whether stored text is a campaign record at all. parseCampaign defaults every
+// missing field and falls back to a new campaign on anything unreadable, so this
+// is how a damaged record is told apart from one that never existed.
+export function campaignReadable(raw: string): boolean {
+  try {
+    const value = JSON.parse(raw) as unknown;
+    return !!value && typeof value === "object" && !Array.isArray(value);
+  } catch {
+    return false;
+  }
+}
+
 export function parseCampaign(raw: string | null): CampaignState {
   if (!raw) return defaultCampaign;
   try {

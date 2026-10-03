@@ -74,16 +74,27 @@ const SFX_BUS_LEVEL = 1;
 const SILENCE = 0.0001;
 
 let graph: AudioGraph | null = null;
+// Set once construction has failed, so a device that cannot make audio is not
+// asked again on every cue.
+let audioUnavailable = false;
 
 function ensureGraph(): AudioGraph | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || audioUnavailable) return null;
   if (graph) {
     if (graph.context.state === "suspended") void graph.context.resume();
     return graph;
   }
   const AudioContextClass = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContextClass) return null;
-  const context = new AudioContextClass();
+  // The constructor throws on some devices — a hardware context limit, a
+  // sandboxed embed — and feedback must never be the reason a turn fails.
+  let context: AudioContext;
+  try {
+    context = new AudioContextClass();
+  } catch {
+    audioUnavailable = true;
+    return null;
+  }
   const master = context.createGain();
   master.gain.value = MASTER_LEVEL;
   // A fast, high-ratio compressor acts as a brick-wall-ish limiter. It is the
@@ -456,7 +467,16 @@ let streak = 0;
  *                outcome margin, incident pressure and reveal drive the design
  *                (see {@link FeedbackContext} for the field mapping).
  */
+// Sound and vibration are decoration on top of the game. Any failure inside them
+// is swallowed here so that it can never interrupt the transition that asked for
+// the cue.
 export function playFeedback(cue: FeedbackCue, sound = true, haptics = true, context?: FeedbackContext | null) {
+  try {
+    playFeedbackCue(cue, sound, haptics, context);
+  } catch {}
+}
+
+function playFeedbackCue(cue: FeedbackCue, sound: boolean, haptics: boolean, context?: FeedbackContext | null) {
   // Pure derivation: no audio graph is touched here, so it can run before the
   // haptics branch and the lazily-created AudioContext is still untouched.
   const mod = context ? contextModulation(context, cue) : null;
@@ -731,6 +751,12 @@ function applyBand(bus: AudioGraph, state: PadState, band: number, tension: numb
 }
 
 export function setAdaptiveScore(enabled: boolean, tension = 0, sector = 0) {
+  try {
+    applyAdaptiveScore(enabled, tension, sector);
+  } catch {}
+}
+
+function applyAdaptiveScore(enabled: boolean, tension: number, sector: number) {
   if (typeof window === "undefined") return;
   if (!enabled) {
     if (padTeardown !== null) return;

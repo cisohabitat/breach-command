@@ -1,5 +1,20 @@
 import { Activity, CircleDot, Crosshair, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
-import { attacks, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
+import { attacks, describeChange, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
+
+// The full cost of a map action, in the same words and directions every other
+// meter change uses. Sector margin and actor progress were missing, and the
+// sector margin is one of the meters that can end an operation.
+function costLine(game: Game, nodeId: string, action: MapAction) {
+  const change = getMapActionEffect(game, nodeId, action);
+  return [
+    "Spend 1 action",
+    change.modifier ? `next procedure +${change.modifier}` : null,
+    describeChange("impact", change.impact),
+    change.continuity ? describeChange("continuity", change.continuity) : null,
+    describeChange("sector", change.sector),
+    describeChange("objective", change.objective),
+  ].filter(Boolean).join(" · ");
+}
 
 export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
   const topology = infrastructureTopologies[game.scenario];
@@ -40,8 +55,8 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
       </div>
       <div className="map-command-bar">
         <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{criticalFocus ? "CRITICAL DEPENDENCY · " : ""}{posture === "normal" ? "No active control" : posture}</em></span></div>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>Spend 1 action · next procedure +2 · impact −2</small></span></button>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>Spend 1 · impact −{criticalFocus ? 8 : 5} · continuity −{criticalFocus ? 10 : 5}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>{costLine(game, focused.id, "monitor")}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>{costLine(game, focused.id, "isolate")}</small></span></button>
       </div>
       <details className="map-intel-detail">
         <summary>Dependency and control notes<span>{game.revealed.length ? `${game.revealed.length} technique${game.revealed.length === 1 ? "" : "s"} confirmed` : "no techniques confirmed"}</span></summary>

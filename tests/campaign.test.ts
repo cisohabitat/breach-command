@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {newGame,playTurn,type Game} from "../lib/advanced-game.ts";
-import {campaignAct,campaignEnding,defaultCampaign,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
+import {campaignAct,campaignEnding,campaignReadable,defaultCampaign,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
 import {campaignRoutes,incidentVariant,routeForCampaign} from "../lib/phase9.ts";
 
 
@@ -56,4 +56,13 @@ test("tracks acts, routes and campaign endings", () => {
   assert.equal(routeForCampaign({...defaultCampaign,completed:[0,1],commandPosture:{observe:4,act:0}}),"watchtower");
   assert.equal(campaignRoutes.breakwater.scenarios.length,3);assert.equal(incidentVariant(0,"common-ground",17).id,"0-2");
   assert.deepEqual(parseCampaign("{}").specialistBonds,{});assert.deepEqual(parseCampaign("{}").routeHistory,[]);
+});
+
+test("tells a damaged campaign record from a missing one", () => {
+  // parseCampaign falls back to a new campaign either way, so the player is only
+  // told their progress was unreadable when there was a record to read.
+  assert.equal(campaignReadable(JSON.stringify(defaultCampaign)),true);
+  assert.equal(campaignReadable("{}"),true,"an old record missing fields is still a record");
+  for(const damaged of ["{broken","null","[]","42"])assert.equal(campaignReadable(damaged),false,`${damaged} is not a campaign`);
+  assert.deepEqual(parseCampaign("null"),defaultCampaign);
 });

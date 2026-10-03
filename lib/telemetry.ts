@@ -1,4 +1,4 @@
-import { readStored, removeStored, writeStored } from "./storage";
+import { readStored, removeStored, writeStored } from "./storage.ts";
 
 export const TELEMETRY_KEY = "breach-command.balance";
 
@@ -7,22 +7,29 @@ export type BalanceTelemetry = {
   operationsFinished: number;
   wins: number;
   losses: number;
+  exercises: number;
   turns: number;
   procedures: Record<string, number>;
   scenarios: Record<string, number>;
 };
 
-export const emptyTelemetry: BalanceTelemetry = { operationsStarted: 0, operationsFinished: 0, wins: 0, losses: 0, turns: 0, procedures: {}, scenarios: {} };
+// A fresh record every time. Handing out one shared default let the counters
+// accumulate on it, so a cleared record still showed the old totals.
+export function emptyTelemetry(): BalanceTelemetry {
+  return { operationsStarted: 0, operationsFinished: 0, wins: 0, losses: 0, exercises: 0, turns: 0, procedures: {}, scenarios: {} };
+}
 
 export function readTelemetry(): BalanceTelemetry {
   try {
     const saved = JSON.parse(readStored(TELEMETRY_KEY) ?? "null") as Partial<BalanceTelemetry> | null;
-    if (!saved) return emptyTelemetry;
-    return { ...emptyTelemetry, ...saved, procedures: saved.procedures ?? {}, scenarios: saved.scenarios ?? {} };
-  } catch { return emptyTelemetry; }
+    if (!saved || typeof saved !== "object") return emptyTelemetry();
+    return { ...emptyTelemetry(), ...saved, procedures: { ...saved.procedures }, scenarios: { ...saved.scenarios } };
+  } catch { return emptyTelemetry(); }
 }
 
-export function recordTelemetry(event: "start" | "turn" | "win" | "loss", detail: { scenario?: number; procedure?: string } = {}) {
+// An authorised exercise is its own conclusion, not a defeat, so it is counted
+// apart from wins and losses.
+export function recordTelemetry(event: "start" | "turn" | "win" | "loss" | "exercise", detail: { scenario?: number; procedure?: string } = {}) {
   const data = readTelemetry();
   if (event === "start") {
     data.operationsStarted += 1;
@@ -32,9 +39,9 @@ export function recordTelemetry(event: "start" | "turn" | "win" | "loss", detail
     data.turns += 1;
     if (detail.procedure) data.procedures[detail.procedure] = (data.procedures[detail.procedure] ?? 0) + 1;
   }
-  if (event === "win" || event === "loss") {
+  if (event === "win" || event === "loss" || event === "exercise") {
     data.operationsFinished += 1;
-    data[event === "win" ? "wins" : "losses"] += 1;
+    data[event === "win" ? "wins" : event === "loss" ? "losses" : "exercises"] += 1;
   }
   writeStored(TELEMETRY_KEY, JSON.stringify(data));
 }

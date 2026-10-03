@@ -1,6 +1,6 @@
 import { Activity, Crosshair, Radio, Users } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { getAttributionRead, getObjectiveRead, getSectorRead, sectorSystems, specialists, adversaryObjectives, type Game } from "@/lib/advanced-game";
+import { getAttributionRead, getObjectiveRead, getSectorRead, sectorSystems, specialists, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 
 export function SectorBoard({ game }: { game: Game }) {
@@ -21,7 +21,7 @@ export function SectorBoard({ game }: { game: Game }) {
       </div>
       <div className="objective-card">
         <div className="sector-title"><Crosshair size={18} /><span><small>ASSESSED ADVERSARY OBJECTIVE · {objective.confidence}</small><strong>{objective.title}</strong></span><b>{game.objectiveProgress}</b></div>
-        <Progress value={game.objectiveProgress} aria-label={adversaryObjectives[game.objective].pressure} />
+        <Progress value={game.objectiveProgress} aria-label={`Adversary progress: ${objective.title}`} />
         <p>{objective.detail}</p>
       </div>
       <div className="command-feed">

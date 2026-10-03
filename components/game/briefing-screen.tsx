@@ -45,7 +45,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <div className="mission-symbol"><ScenarioIcon size={33} strokeWidth={1.4} /><span>{activeScenario.sector}</span></div>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
-        <div className="variant-brief"><span className="eyebrow">AUTHORED VARIANT</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>
+        {previewVariant && <div className="variant-brief"><span className="eyebrow">AUTHORED VARIANT</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
         <div className="mission-selector" aria-label="Select incident">
           {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery stars` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1).padStart(2, "0")}</span>{campaign.completed.includes(index) && <small>{Array.from({ length: campaign.mastery[String(index)] ?? 0 }).map((_, star) => <Star key={star} size={8} fill="currentColor" />)}</small>}</button>)}
         </div>
@@ -69,8 +69,8 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           </div>
           <div className="challenge-console">
             <div><span className="eyebrow">SCENARIO CODE</span><button onClick={generateSeed}><RefreshCw size={14} /> New seed</button></div>
-            <code>{challengeCode}</code>
-            <p className="muted small">A code reproduces the incident, its variant and its dice. Campaign standing is not part of it, so two commands at different seniority will see different modifiers from the same code.</p>
+            <code>{challengeCode ?? "Preparing code"}</code>
+            <p className="muted small">A code reproduces the incident, its variant and its dice. Daily operation plays today’s code; an ordinary campaign operation draws a fresh incident unless you load a code or generate a seed, which applies to the next operation you begin. Campaign standing is not part of a code, so two commands at different seniority will see different modifiers from the same code.</p>
             <div className="challenge-load"><input aria-label="Challenge code" value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder="Enter a BC challenge code" /><button onClick={loadChallengeCode}>Load</button></div>
             {challengeMessage && <p aria-live="polite">{challengeMessage}</p>}
           </div>

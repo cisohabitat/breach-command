@@ -1,4 +1,4 @@
-import { CircleHelp, LayoutDashboard, MessagesSquare, Search } from "lucide-react";
+import { Check, CircleHelp, LayoutDashboard, MessagesSquare, Search, TriangleAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { TutorialCoach } from "@/components/game/tutorial-coach";
 import { CommandWorkspace } from "@/components/game/command-workspace";
@@ -7,6 +7,11 @@ import { BriefingWorkspace } from "@/components/game/briefing-workspace";
 import { BotControl } from "@/components/game/bot-control";
 import { gameModes, getOperationalLabel, getTurnLimit } from "@/lib/advanced-game";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
+
+// Whether a change helped or hurt is carried by shape as well as colour.
+function DeltaMark({ adverse }: { adverse: boolean }) {
+  return adverse ? <TriangleAlert size={10} strokeWidth={2.4} /> : <Check size={10} strokeWidth={2.6} />;
+}
 
 export function GameScreen({ session }: { session: GameSession }) {
   const {
@@ -39,7 +44,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             {meterPulse?.impactCritical && <span key={`impact-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.impact !== 0 && (
               <span key={`impact-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.impact > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
-                {meterPulse.impact > 0 ? "+" : "−"}{Math.abs(meterPulse.impact)}
+                <DeltaMark adverse={meterPulse.impact > 0} />{meterPulse.impact > 0 ? "+" : "−"}{Math.abs(meterPulse.impact)}
               </span>
             )}
           </div>
@@ -50,7 +55,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             {meterPulse?.continuityAtRisk && <span key={`continuity-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.continuity !== 0 && (
               <span key={`continuity-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.continuity < 0 ? "adverse" : "favourable"}`} aria-hidden="true">
-                {meterPulse.continuity > 0 ? "+" : "−"}{Math.abs(meterPulse.continuity)}
+                <DeltaMark adverse={meterPulse.continuity < 0} />{meterPulse.continuity > 0 ? "+" : "−"}{Math.abs(meterPulse.continuity)}
               </span>
             )}
           </div>
@@ -61,7 +66,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
-                {meterPulse.objective > 0 ? "+" : "−"}{Math.abs(meterPulse.objective)}
+                <DeltaMark adverse={meterPulse.objective > 0} />{meterPulse.objective > 0 ? "+" : "−"}{Math.abs(meterPulse.objective)}
               </span>
             )}
           </div>

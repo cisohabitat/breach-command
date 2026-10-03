@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { newGame, type Game } from "../../lib/advanced-game";
+import { SESSION_KEY, SESSION_VERSION, serialiseSession } from "../../lib/session";
 
 const PREFERENCES = "breach-command.preferences";
 
@@ -23,10 +25,12 @@ test.describe("local persistence", () => {
 
     const stored = await page.evaluate(key => localStorage.getItem(key), PREFERENCES);
     expect(JSON.parse(stored ?? "{}"), "the page must not overwrite settings it has not read yet").toEqual({
-      sound: false, music: false, haptics: false, highContrast: true,
+      sound: false, music: false, haptics: false, highContrast: true, shortcuts: true,
     });
-    // High contrast is applied, not merely remembered.
+    // High contrast is applied, not merely remembered — on the document root as
+    // well, where the dialogs and sheets rendered outside the shell inherit it.
     await expect(page.locator(".app-shell.high-contrast")).toBeVisible();
+    await expect(page.locator("html")).toHaveClass(/high-contrast/);
   });
 
   test("a changed setting is still set after a reload", async ({ page }) => {
@@ -50,5 +54,39 @@ test.describe("local persistence", () => {
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: "Game settings" }).click();
     await expect(page.getByRole("switch").first()).toHaveAttribute("aria-checked", after ?? "false");
+  });
+
+  test("a finished operation is not offered for resume", async ({ page }) => {
+    const finished = { ...newGame(0, "operational", () => 0), status: "lost", turns: [] } as Game;
+    await page.addInitScript(([key, value]) => {
+      try {
+        if (localStorage.getItem("breach-command.seeded")) return;
+        localStorage.clear();
+        localStorage.setItem("breach-command.tutorial-complete", "true");
+        localStorage.setItem(key, value);
+        localStorage.setItem("breach-command.seeded", "1");
+      } catch {}
+    }, [SESSION_KEY, serialiseSession(finished, true, false)] as const);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".briefing-screen")).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(0);
+    expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY), "an ended operation's save is cleared").toBeNull();
+  });
+
+  test("a save from a newer build is left in place", async ({ page }) => {
+    const newer = JSON.stringify({ version: SESSION_VERSION + 1, savedAt: new Date().toISOString(), game: newGame(0, "operational", () => 0), guided: true, fastResolve: false });
+    await page.addInitScript(([key, value]) => {
+      try {
+        if (localStorage.getItem("breach-command.seeded")) return;
+        localStorage.clear();
+        localStorage.setItem("breach-command.tutorial-complete", "true");
+        localStorage.setItem(key, value);
+        localStorage.setItem("breach-command.seeded", "1");
+      } catch {}
+    }, [SESSION_KEY, newer] as const);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByText(/written by a newer version/)).toBeVisible();
+    expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY), "a newer build's save is not deleted").toEqual(newer);
   });
 });

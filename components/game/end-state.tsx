@@ -1,6 +1,8 @@
+import { useRef } from "react";
 import { ArrowRight, Check, CircleSlash, ClipboardCheck, ShieldCheck } from "lucide-react";
 import { getLossReason, getOperationalLabel } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
+import { useRecoverFocus } from "@/hooks/use-recover-focus";
 
 // Three end states, three different beats. A win is a stand-down that the
 // incident visibly settles out of; a loss is a quiet closure with nothing
@@ -8,6 +10,9 @@ import type { GameSession } from "@/hooks/use-game-session";
 // debrief opens on request in every case so the resolution lands first.
 export function EndState({ session }: { session: GameSession }) {
   const { game, outcome, setDebrief } = session;
+  // A choice that ends the operation removes the control that made it.
+  const heading = useRef<HTMLHeadingElement>(null);
+  useRecoverFocus(heading, game?.status);
   if (!game) return null;
   const openDebrief = () => setDebrief(true);
 
@@ -19,7 +24,7 @@ export function EndState({ session }: { session: GameSession }) {
           <div className="end-icon"><ShieldCheck /></div>
           <div>
             <span className="eyebrow">RESOLUTION · STAND DOWN</span>
-            <h2>{outcome?.title}</h2>
+            <h2 ref={heading} tabIndex={-1}>{outcome?.title}</h2>
             <p>{outcome?.detail} Impact is {game.impact} and {getOperationalLabel(game).toLowerCase()} is {game.continuity}. The captain has closed the active response.</p>
           </div>
           <button className="primary-button" onClick={openDebrief}>Open after-action review <ArrowRight size={17} /></button>
@@ -40,7 +45,7 @@ export function EndState({ session }: { session: GameSession }) {
           <div className="end-icon"><CircleSlash /></div>
           <div>
             <span className="eyebrow">OPERATION CLOSED</span>
-            <h2>{getLossReason(game).title}.</h2>
+            <h2 ref={heading} tabIndex={-1}>{getLossReason(game).title}.</h2>
             <p>{getLossReason(game).detail} {game.revealed.length} of 4 stages were confirmed, leaving impact at {game.impact}. No stand-down was issued.</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>Review the record <ArrowRight size={17} /></button>
@@ -57,7 +62,7 @@ export function EndState({ session }: { session: GameSession }) {
           <div className="end-icon"><ClipboardCheck /></div>
           <div>
             <span className="eyebrow">AUTHORISED EXERCISE</span>
-            <h2>Exercise concluded at the boundary.</h2>
+            <h2 ref={heading} tabIndex={-1}>Exercise concluded at the boundary.</h2>
             <p>{game.revealed.length} of 4 stages were identified before the drill stopped. No live incident was declared and no service action was taken.</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>Review the drill <ArrowRight size={17} /></button>

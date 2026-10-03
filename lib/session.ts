@@ -1,4 +1,4 @@
-import { scenarios, difficulties, infrastructureTopologies, adversaryProfiles, type Game, type GameStatus } from "./advanced-game.ts";
+import { attacks, scenarios, difficulties, infrastructureTopologies, adversaryProfiles, adversaryObjectives, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
 import type { NodePosture } from "./advanced-game";
 
 export const SESSION_KEY = "breach-command.session";
@@ -32,21 +32,52 @@ const statuses: GameStatus[] = ["playing", "response", "won", "lost", "exercise"
 const bounded = (value: unknown, fallback: number, min = 0, max = 100) =>
   Number.isFinite(value) ? Math.max(min, Math.min(max, Number(value))) : fallback;
 
+// A save written by a newer build may carry fields this version cannot migrate.
+// It is not this build's to read, and not this build's to delete either: an
+// older bundle served offline would otherwise destroy the newer save.
+export function sessionFromNewerBuild(raw: string): boolean {
+  try {
+    const parsed = JSON.parse(raw) as Partial<SavedSession> | null;
+    return !!parsed && typeof parsed === "object" && typeof parsed.version === "number" && parsed.version > SESSION_VERSION;
+  } catch {
+    return false;
+  }
+}
+
+const isKnown = (table: object, key: unknown) => typeof key === "string" && Object.hasOwn(table, key);
+
 export function parseSession(raw: string): SavedSession | null {
   try {
     const parsed = JSON.parse(raw) as Partial<SavedSession>;
     if (!parsed || typeof parsed !== "object" || !parsed.game) return null;
-    // A save from a future build may carry fields this version cannot migrate.
-    if (Number.isFinite(parsed.version) && Number(parsed.version) > SESSION_VERSION) return null;
+    if (parsed.version !== undefined && (!Number.isInteger(parsed.version) || Number(parsed.version) < 1)) return null;
+    if (Number(parsed.version) > SESSION_VERSION) return null;
     const game = parsed.game as Game;
     if (!Number.isInteger(game.scenario) || !scenarios[game.scenario]) return null;
     if (!difficulties[game.difficulty]) return null;
     if (!Array.isArray(game.chain) || game.chain.length !== 4 || !Array.isArray(game.turns)) return null;
+    if (!game.chain.every(id => attacks.some(attack => attack.id === id))) return null;
     if (!Array.isArray(game.revealed) || game.revealed.length > 4) return null;
+    if (!game.revealed.every(id => game.chain.includes(id)) || new Set(game.revealed).size !== game.revealed.length) return null;
     if (!statuses.includes(game.status)) return null;
+    // Missing fields are defaulted below, but a value that names something the
+    // game does not have would crash the first screen that looks it up.
+    if (game.objective !== undefined && !isKnown(adversaryObjectives, game.objective)) return null;
+    if (game.mode !== undefined && !isKnown(gameModes, game.mode)) return null;
+    if (game.specialist !== undefined && !isKnown(specialists, game.specialist)) return null;
+    if (game.pendingDecision && !game.revealed.includes(game.pendingDecision)) return null;
     // The response phase only exists once every stage has been revealed, so a
     // save claiming otherwise did not come from a real playthrough.
     if (game.status === "response" && game.revealed.length < 4) return null;
+    const responseChoices = Array.isArray(game.responseChoices) ? game.responseChoices : [];
+    if (responseChoices.length > 3) return null;
+    if (game.status === "playing" && responseChoices.length) return null;
+    if (game.status === "response" && responseChoices.length >= 3) return null;
+    // A win is a completed response to a fully confirmed chain.
+    if (game.status === "won" && (game.revealed.length < 4 || responseChoices.length !== 3)) return null;
+    // A finished operation holds no blocking state, so a save that claims both is
+    // settled here rather than resumed into a choice nothing will accept.
+    const finished = game.status === "won" || game.status === "lost" || game.status === "exercise";
     const profile = game.adversaryProfile && adversaryProfiles[game.adversaryProfile] ? game.adversaryProfile : "ghost";
     // Topologies vary per scenario, so a restored session is re-keyed to the
     // nodes that exist on this incident's map. Legacy or stale node ids become
@@ -68,11 +99,12 @@ export function parseSession(raw: string): SavedSession | null {
       established: Array.isArray(game.established) ? game.established : [],
       lastUsed: game.lastUsed && typeof game.lastUsed === "object" ? game.lastUsed : {},
       injectDeck: Array.isArray(game.injectDeck) ? game.injectDeck : [],
-      responseChoices: Array.isArray(game.responseChoices) ? game.responseChoices : [],
+      responseChoices,
       seed: typeof game.seed === "number" && Number.isFinite(game.seed) ? game.seed : null,
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],
       adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
-      pendingCommand: game.pendingCommand ?? null,
+      pendingDecision: finished ? null : game.pendingDecision ?? null,
+      pendingCommand: finished ? null : game.pendingCommand ?? null,
       commandHistory: Array.isArray(game.commandHistory) ? game.commandHistory : [],
       mode: game.mode ?? "campaign",
       turnLimit: Number.isFinite(game.turnLimit) ? game.turnLimit : difficulties[game.difficulty].maxTurns,
@@ -90,7 +122,7 @@ export function parseSession(raw: string): SavedSession | null {
         assessment: record.assessment ?? (record.valid ? "causal" : "coincidental"),
         correct: record.correct ?? true,
       })) : [],
-      pendingSetPiece: game.pendingSetPiece ?? null,
+      pendingSetPiece: finished ? null : game.pendingSetPiece ?? null,
       setPieceHistory: Array.isArray(game.setPieceHistory) ? game.setPieceHistory : [],
       campaignDoctrine: game.campaignDoctrine ?? "balanced",
       campaignRoute: game.campaignRoute ?? "common-ground",

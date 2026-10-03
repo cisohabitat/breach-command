@@ -28,6 +28,7 @@ import {
   getAdversaryRead,
   getOperationalLabel,
   getObjectiveRead,
+  getLossReason,
   getTurnLimit,
   adversaryObjectives,
   type Difficulty,
@@ -46,8 +47,8 @@ import {
   proceduresFor,
   procedureById,
 } from "@/lib/advanced-game";
-import { parseSession, serialiseSession, SESSION_KEY, type SavedSession } from "@/lib/session";
-import { campaignAct, campaignEnding, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { parseSession, serialiseSession, sessionFromNewerBuild, SESSION_KEY, type SavedSession } from "@/lib/session";
+import { campaignAct, campaignEnding, campaignReadable, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
 import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
@@ -115,8 +116,8 @@ export function useGameSession() {
   const [backupMessage, setBackupMessage] = useState("");
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
   const [storageNotice, setStorageNotice] = useState("");
-  const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast } = usePreferences(setStorageNotice);
-  const { challengeSeed, challengeActive, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
+  const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled } = usePreferences(setStorageNotice);
+  const { todaySeed, seedFor, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
     setScenarioChoice(setup.scenario);
     setDifficulty(setup.difficulty);
     setMode(setup.mode);
@@ -135,7 +136,14 @@ export function useGameSession() {
   const busyRef = useRef(false);
   const botRunRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const recordedRuns = useRef(new Set<string>());
+  // Whether the operation in hand has had its result recorded. It belongs to the
+  // operation, not to its shape: two losses on the same turn of the same
+  // scenario are two results.
+  const recordedRef = useRef(false);
+  // A saved operation restored from a backup while another is in play. The one
+  // in play stops overwriting the save, and returning to assignments offers the
+  // restored one instead of deleting it.
+  const importedRef = useRef<SavedSession | null>(null);
   const pulseKey = useRef(0);
   const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -154,7 +162,8 @@ export function useGameSession() {
   const currentAct = campaignAct(campaign.completed.length);
   const currentRouteId = routeForCampaign(campaign);
   const currentRoute = campaignRoutes[currentRouteId];
-  const previewVariant = incidentVariant(scenarioChoice, currentRouteId, challengeSeed);
+  const previewSeed = seedFor(mode).seed;
+  const previewVariant = previewSeed === null ? null : incidentVariant(scenarioChoice, currentRouteId, previewSeed);
   const finalEnding = campaignEnding(campaign);
   const challengeCode = codeFor(scenarioChoice, difficulty, mode, specialist);
 
@@ -189,15 +198,20 @@ export function useGameSession() {
   function start(index = scenarioChoice) {
     if (busyRef.current) return;
     clearStoredSession();
-    const random = seededChallengeRandom(challengeSeed);
+    importedRef.current = null;
+    recordedRef.current = false;
+    // Daily Operation and any challenge configuration promise that the same
+    // code replays the same operation, so those runs draw their hidden chain from
+    // the seed and carry it into the procedure rolls. Ordinary campaign play draws
+    // both fresh, or a restart would replay a chain the player has already seen.
+    const { seed: nextSeed, reproducible } = seedFor(mode);
+    const seed = nextSeed ?? todaySeed();
+    const random = reproducible ? seededChallengeRandom(seed) : undefined;
     const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
     const route = routeForCampaign(campaign);
     const automated = botEnabled;
-    // Daily Operation and any challenge configuration promise that the same
-    // code replays the same operation, so those runs carry their seed into the
-    // procedure rolls. Ordinary campaign play stays unpredictable.
-    const reproducible = mode === "daily" || challengeActive;
-    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, challengeSeed), seed: reproducible ? challengeSeed : null });
+    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, seed), seed: reproducible ? seed : null });
+    spendChallenge();
     setGame(next);
     botRunRef.current = automated;
     setBotRun(automated);
@@ -228,6 +242,8 @@ export function useGameSession() {
   }
 
   function resume(session: SavedSession) {
+    importedRef.current = null;
+    recordedRef.current = false;
     botRunRef.current = false;
     setBotRun(false);
     setBotActive(false);
@@ -266,6 +282,16 @@ export function useGameSession() {
     }
     const timeout = setTimeout(() => {
       if (interval) clearInterval(interval);
+      // Whatever happens while the turn resolves, the game must not be left
+      // refusing every later action.
+      try { resolveRun(); } finally {
+        busyRef.current = false;
+        setRolling(false);
+      }
+    }, quick ? 0 : 850);
+    timers.current.push(timeout);
+
+    const resolveRun = () => {
       const next = playTurn(current, id, undefined, plan);
       const result = next.turns.at(-1)!;
       // Fast resolution is the switch that means "skip the ceremony". Without it
@@ -279,8 +305,10 @@ export function useGameSession() {
       if (next.pendingDecision || next.pendingCommand || next.pendingSetPiece || next.status !== "playing") setActiveWorkspace("command");
       setReport(requiresDialog ? result : null);
       setInlineReport(requiresDialog ? null : result);
-      const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
-      setPendingUndo(quick && next.status === "playing" && !blockedNow ? { label: procedureById(current, id)?.title ?? "Procedure", game: current } : null);
+      // A procedure cannot be undone. Its result is information — a stage found,
+      // a source that came back empty, a failed roll — and taking the turn back
+      // after seeing it would hand the player the answer or a free re-roll.
+      setPendingUndo(null);
       setRolling(false);
       setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}. Adversary progress is ${next.objectiveProgress}.`);
       playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
@@ -299,9 +327,7 @@ export function useGameSession() {
         setTelemetry(readTelemetry());
       }
       if (["lost", "exercise"].includes(next.status)) recordProgress(next);
-      busyRef.current = false;
-    }, quick ? 0 : 850);
-    timers.current.push(timeout);
+    };
   }
 
   function decide(choice: DecisionChoice) {
@@ -311,9 +337,19 @@ export function useGameSession() {
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
-    setActiveWorkspace(next.status === "playing" ? "investigate" : "command");
+    afterStep(next, "investigate");
     playFeedback("decision", soundEnabled, hapticsEnabled);
     setAnnouncement(`Decision recorded. Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
+  }
+
+  // Where the player goes after a step, and the record of an operation that step
+  // ended. Any transition that moves a meter can end an operation, not only a
+  // procedure or the response, and an ended one is only ever shown on Command.
+  function afterStep(next: Game, returnTo?: WorkspaceView) {
+    const blocked = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece || next.status !== "playing";
+    if (blocked) setActiveWorkspace("command");
+    else if (returnTo) setActiveWorkspace(returnTo);
+    if (next.status === "won" || next.status === "lost" || next.status === "exercise") recordProgress(next);
   }
 
   function chooseHypothesis(id: HypothesisId) {
@@ -321,6 +357,7 @@ export function useGameSession() {
     if (!current || current.pendingDecision || current.pendingCommand || current.pendingSetPiece) return;
     const next = setHypothesis(current, id);
     setGame(next);
+    setPendingUndo(null);
     setAnnouncement(`Working hypothesis set to ${hypotheses.find(item => item.id === id)?.title}.`);
   }
 
@@ -331,14 +368,13 @@ export function useGameSession() {
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
-    playFeedback(next.status === "won" ? "complete" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "won" ? "Response complete. The incident is standing down. The after-action review is ready when you are." : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
-    if (next.status === "won") {
-      // The stand-down panel is the player's arrival point. The review opens on
-      // request so the resolution is seen before the analysis.
-      setActiveWorkspace("command");
-      recordProgress(next);
-    }
+    playFeedback(next.status === "won" ? "complete" : next.status === "lost" ? "warning" : "decision", soundEnabled, hapticsEnabled);
+    setAnnouncement(next.status === "won" ? "Response complete. The incident is standing down. The after-action review is ready when you are."
+      : next.status === "lost" ? `The operation is lost. ${getLossReason(next).title}. The after-action review is ready when you are.`
+      : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
+    // The stand-down panel is the player's arrival point. The review opens on
+    // request so the resolution is seen before the analysis.
+    afterStep(next);
   }
 
   function command(choice: "a" | "b") {
@@ -348,7 +384,7 @@ export function useGameSession() {
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
-    setActiveWorkspace("investigate");
+    afterStep(next, "investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
     setAnnouncement(`Command decision recorded. Business impact is ${next.impact}.`);
   }
@@ -360,7 +396,7 @@ export function useGameSession() {
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
-    setActiveWorkspace("investigate");
+    afterStep(next, "investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
     setAnnouncement(`Sector decision recorded. ${getOperationalLabel(next)} is ${next.continuity}.`);
   }
@@ -369,6 +405,7 @@ export function useGameSession() {
     const current = stateRef.current;
     if (!current) return;
     setGame(setInfrastructureFocus(current, nodeId));
+    setPendingUndo(null);
   }
 
   function mapAction(nodeId: string, action: MapAction) {
@@ -380,7 +417,8 @@ export function useGameSession() {
     const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
     setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? "Isolation" : "Monitoring", game: current } : null);
     playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.mapHistory.at(-1)?.effect ?? "Infrastructure action recorded.");
+    setAnnouncement(next.status === "lost" ? `The operation is lost. ${getLossReason(next).title}.` : next.mapHistory.at(-1)?.effect ?? "Infrastructure action recorded.");
+    afterStep(next);
   }
 
   function undo() {
@@ -401,13 +439,15 @@ export function useGameSession() {
     setPendingUndo(null);
     const correct = next.correlations.at(-1)?.correct;
     playFeedback(correct ? "success" : "failure", soundEnabled, hapticsEnabled);
-    setAnnouncement(correct ? "Evidence assessment supported." : "Evidence assessment challenged.");
+    setAnnouncement(next.status === "lost" ? `Evidence assessment challenged. The operation is lost. ${getLossReason(next).title}.` : correct ? "Evidence assessment supported." : "Evidence assessment challenged.");
+    afterStep(next);
   }
 
   function chooseCaseTheory(objective: AdversaryObjectiveId) {
     const current = stateRef.current;
     if (!current) return;
     setGame(setCaseTheory(current, objective));
+    setPendingUndo(null);
     setAnnouncement(`Case theory set to ${adversaryObjectives[objective].title}.`);
   }
 
@@ -421,26 +461,36 @@ export function useGameSession() {
     try {
       const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null };
       if (payload.format !== "breach-command-backup") throw new Error("format");
+      // A backup without a readable campaign would otherwise restore the empty
+      // default over the player's progress and call that a restore.
+      if (!payload.campaign || typeof payload.campaign !== "object" || Array.isArray(payload.campaign)) throw new Error("campaign");
       const nextCampaign = parseCampaign(JSON.stringify(payload.campaign));
       // The operation travels as text too, so it is validated by the same
       // migration the local save goes through before it is allowed to replace
       // anything. An unreadable operation never blocks the campaign restore.
       const restoredSession = typeof payload.session === "string" ? parseSession(payload.session) : null;
       setCampaign(nextCampaign);
+      campaignRef.current = nextCampaign;
       const storedCampaign = writeStored(CAMPAIGN_KEY, JSON.stringify(nextCampaign));
-      if (restoredSession) writeStored(SESSION_KEY, serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
+      if (restoredSession) {
+        writeStored(SESSION_KEY, serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
+        setSavedSession(restoredSession);
+        // While an operation is in play its own saves would overwrite the restored
+        // one, and returning to assignments would delete it. Hold it until then.
+        importedRef.current = game ? restoredSession : null;
+      }
       if (!storedCampaign) setBackupMessage("Progress restored for this visit, but this browser is not allowing saved data.");
       else if (typeof payload.session === "string" && !restoredSession) setBackupMessage("Campaign progress restored. The saved operation in this backup could not be read and was left out.");
-      else setBackupMessage("Progress restored. Return to assignments to load any saved operation.");
+      else if (restoredSession && game) setBackupMessage("Progress restored. Return to assignments to resume the restored operation; the operation in progress will not be kept.");
+      else if (restoredSession) setBackupMessage("Progress restored. The restored operation is ready to resume from the assignment screen.");
+      else setBackupMessage("Progress restored.");
     } catch { setBackupMessage("Backup not recognised. Paste a complete Breach Command backup."); }
   }
 
   function recordProgress(result: Game) {
-    if (botRunRef.current) return;
-    const marker = `${result.scenario}:${result.status}:${result.turns.length}:${result.responseChoices.join("-")}`;
-    if (recordedRuns.current.has(marker)) return;
-    recordedRuns.current.add(marker);
-    recordTelemetry(result.status === "won" ? "win" : "loss", { scenario: result.scenario });
+    if (botRunRef.current || recordedRef.current) return;
+    recordedRef.current = true;
+    recordTelemetry(result.status === "won" ? "win" : result.status === "exercise" ? "exercise" : "loss", { scenario: result.scenario });
     setTelemetry(readTelemetry());
     const score = getOutcome(result).breakdown.total;
     // The updater stays pure; the campaign is persisted from the value it
@@ -458,7 +508,12 @@ export function useGameSession() {
   }
 
   function resetToBriefing() {
-    clearStoredSession();
+    const imported = importedRef.current;
+    importedRef.current = null;
+    if (imported) {
+      writeStored(SESSION_KEY, serialiseSession(imported.game, imported.guided, imported.fastResolve));
+      setSavedSession(imported);
+    } else clearStoredSession();
     setGame(null);
     setNewConfirm(false);
     setQuestion(null);
@@ -533,10 +588,14 @@ export function useGameSession() {
     if (!stored) return;
     const session = parseSession(stored);
     const loadTimer = setTimeout(() => {
-      if (session && session.game.status !== "won") setSavedSession(session);
-      else if (!session) {
+      // Only an operation still in progress is offered. A finished one has nothing
+      // left to resume, and opening it landed on a disabled workspace.
+      if (session && (session.game.status === "playing" || session.game.status === "response")) setSavedSession(session);
+      else if (session) removeStored(SESSION_KEY);
+      else if (sessionFromNewerBuild(stored)) setStorageNotice("The saved operation on this device was written by a newer version of Breach Command and cannot be opened here. It has been left in place; starting a new operation will replace it.");
+      else {
         removeStored(SESSION_KEY);
-        setStorageNotice("The saved operation on this device could not be restored and has been set aside.");
+        setStorageNotice("The saved operation on this device could not be read and has been removed. Campaign progress is not affected.");
       }
     }, 0);
     return () => clearTimeout(loadTimer);
@@ -544,24 +603,39 @@ export function useGameSession() {
 
   useEffect(() => {
     const loadTimer = setTimeout(() => {
-      setCampaign(parseCampaign(readStored(CAMPAIGN_KEY)));
+      const stored = readStored(CAMPAIGN_KEY);
+      setCampaign(parseCampaign(stored));
       if (!storageWritable()) setStorageNotice("This browser is not allowing saved data, so progress from this visit will not be kept.");
+      else if (stored !== null && !campaignReadable(stored)) setStorageNotice("Campaign progress on this device could not be read, so a new campaign has started.");
     }, 0);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
     return () => clearTimeout(loadTimer);
   }, []);
 
 
+  // M is "mute": it silences cues and the score together, and brings the cues
+  // back. Toggling only the cues left the music playing under a muted game.
+  const toggleMute = useEffectEvent(() => {
+    if (soundEnabled || musicEnabled) {
+      setSoundEnabled(false);
+      setMusic(false);
+    } else setSoundEnabled(true);
+  });
+
   useEffect(() => {
+    if (!shortcutsEnabled) return;
     const handleKeyboard = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey || event.altKey || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      const target = event.target;
+      if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+      // Typing to jump through a select or into any editable field is not a shortcut.
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || (target instanceof HTMLElement && target.isContentEditable)) return;
       if (event.key.toLowerCase() === "f") setRules(value => !value);
-      if (event.key.toLowerCase() === "m") setSoundEnabled(value => !value);
+      if (event.key.toLowerCase() === "m") toggleMute();
       if (event.key.toLowerCase() === "g") setGuided(value => !value);
     };
     window.addEventListener("keydown", handleKeyboard);
     return () => window.removeEventListener("keydown", handleKeyboard);
-  }, [setSoundEnabled]);
+  }, [shortcutsEnabled]);
 
   useEffect(() => {
     campaignRef.current = campaign;
@@ -573,7 +647,13 @@ export function useGameSession() {
   }, [game, musicEnabled]);
 
   useEffect(() => {
-    if (!game || game.mode === "ironman" || botRunRef.current) return;
+    if (!game || game.mode === "ironman" || botRunRef.current || importedRef.current) return;
+    // A finished operation has nothing to resume, so its save is cleared rather
+    // than offered on the next visit.
+    if (game.status === "won" || game.status === "lost" || game.status === "exercise") {
+      removeStored(SESSION_KEY);
+      return;
+    }
     if (writeStored(SESSION_KEY, serialiseSession(game, guided, fastResolve))) return;
     const notice = setTimeout(() => setStorageNotice("This browser is not allowing saved data, so this operation is being played from memory only."), 0);
     return () => clearTimeout(notice);
@@ -672,7 +752,6 @@ export function useGameSession() {
     fastResolve, setFastResolve,
     actionScope, setActionScope,
     actionIntensity, setActionIntensity,
-    challengeSeed,
     challengeInput, setChallengeInput,
     challengeMessage,
     telemetry,
@@ -680,6 +759,7 @@ export function useGameSession() {
     musicEnabled,
     hapticsEnabled, setHapticsEnabled,
     highContrast, setHighContrast,
+    shortcutsEnabled, setShortcutsEnabled,
     botEnabled, setBotEnabled,
     botRun,
     botActive,
