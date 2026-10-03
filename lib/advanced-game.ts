@@ -1106,6 +1106,13 @@ export type ReadingOdds = {
 
 const stageOf = (id: string) => attacks.find(attack => attack.id === id)?.stage ?? -1;
 
+// The stage a Crisis re-route changes: the first unconfirmed stage after the one
+// under test, or none when only one is left. It follows from which stages are
+// confirmed, so a read can tell which stage changed without the chain.
+function crisisRerouteTarget(confirmedStages: Set<number>) {
+  return [0, 1, 2, 3].filter(index => !confirmedStages.has(index))[1] ?? null;
+}
+
 // What the record says about the stage under test. A completed check that found
 // nothing rules out every technique that source would have exposed, so among the
 // techniques this scenario can use at that stage — its published pool, not the
@@ -1113,9 +1120,10 @@ const stageOf = (id: string) => attacks.find(attack => attack.id === id)?.stage 
 // A check that exposed a later stage rules out the stage under test as well,
 // because the earliest open stage a source can see is the one it reveals.
 //
-// The window runs from the last visible change to the chain: an adversary
-// re-route, or an adaptation after an evidence decision. A confirmation alone
-// does not reset it; what a source could not see then, it still cannot.
+// The window runs from the last visible change to that stage: a Crisis re-route
+// that targeted it, or an adaptation after the evidence decision on the stage
+// before it. A confirmation alone does not reset it; what a source could not see
+// then, it still cannot.
 //
 // Counting empty checks against a route's whole source list read a correct
 // reading as weakening nearly as often as a wrong one — holding readings were
@@ -1125,12 +1133,17 @@ export function getReadingOdds(game: Game): ReadingOdds {
   const revealedStages = new Set(game.revealed.map(stageOf));
   const stage = [0, 1, 2, 3].find(index => !revealedStages.has(index)) ?? null;
   const reaction = scenarioDynamics[game.scenario].reaction;
-  const adapted = new Set(game.decisions.filter(item => item.adaptedFrom).map(item => item.stage));
-  const changedAt = game.turns.reduce((last, turn) => {
-    const rerouted = !!turn.adversaryEvent?.includes(reaction);
-    const adaptedHere = [turn.revealed, turn.injectReveal].some(id => !!id && adapted.has(id));
-    return rerouted || adaptedHere ? turn.number : last;
-  }, 0);
+  // Adaptation after a decision changes the stage after the decided one.
+  const adaptedNext = new Set(game.decisions.filter(item => item.adaptedFrom).map(item => item.stage).filter(id => stageOf(id) + 1 === stage));
+  let changedAt = 0;
+  const confirmedSoFar = new Set<number>();
+  for (const turn of game.turns) {
+    // A turn's own finds land before its escalation beat, so they count first.
+    for (const id of [turn.revealed, turn.injectReveal]) if (id) confirmedSoFar.add(stageOf(id));
+    const rerouted = !!turn.adversaryEvent?.includes(reaction) && crisisRerouteTarget(confirmedSoFar) === stage;
+    const adaptedHere = [turn.revealed, turn.injectReveal].some(id => !!id && adaptedNext.has(id));
+    if (rerouted || adaptedHere) changedAt = turn.number;
+  }
   const ruledOutBy = stage === null ? [] : [...new Set(game.turns
     .filter(turn => turn.number > changedAt && turn.success && (!turn.revealed || stageOf(turn.revealed) > stage))
     .map(turn => turn.procedure))];
@@ -1438,10 +1451,15 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     continuityChange -= 2 + g.adversaryTempo;
     g.adversaryEvent = adversaryEvent;
     if (g.difficulty === "crisis" && g.revealed.length < 4) {
-      const openStage = g.chain.findIndex(id => !g.revealed.includes(id));
-      const adaptation = openStage >= 0 ? selectAdaptation(g, openStage, g.chain[openStage]) : null;
-      if (adaptation) {
-        g.chain[openStage] = adaptation.id;
+      // Crisis re-routes ahead of the investigation: the first unconfirmed stage
+      // after the one under test. Re-routing the stage under test threw away
+      // everything the player had ruled out about it every two or three turns,
+      // which left sound reasoning worth two points at Crisis against eight
+      // without the re-route; a player who never revised lost nothing either way.
+      const target = crisisRerouteTarget(new Set(g.revealed.map(stageOf)));
+      const adaptation = target !== null ? selectAdaptation(g, target, g.chain[target]) : null;
+      if (adaptation && target !== null) {
+        g.chain[target] = adaptation.id;
         adversaryEvent = `${adversaryEvent} ${scenarioDynamics[g.scenario].reaction}`;
         g.adversaryEvent = adversaryEvent;
       }

@@ -56,12 +56,19 @@ test("reports how the declared reading is holding up", () => {
   assert.equal(spentStanding.level,"unsupported","a route with nothing left open is poorly supported");
   assert.ok(spentStanding.detail.length>40,"and the reason is stated");
   assert.deepEqual(getHypothesisStanding({...standingRun,chain:["token","role","vault","apikey"]}),spentStanding,"the standing never consults the hidden chain");
-  // A visible re-route changes the chain, so what was ruled out before it no
-  // longer stands. A confirmation alone does not reset it.
+  // Crisis re-routes the stage after the one under test, so evidence about the
+  // stage under test survives it...
   const reaction=scenarioDynamics[standingRun.scenario].reaction;
-  const rerouted={...standingRun,turns:standingRun.turns.map((turn,index)=>index===standingRun.turns.length-1?{...turn,success:false,adversaryEvent:`Escalation. ${reaction}`}:turn)};
-  assert.equal(getReadingOdds(rerouted).ruledOutBy.length,0,"nothing ruled out before a re-route carries over");
-  assert.equal(getHypothesisStanding(rerouted).level,"untested");
+  const last=standingRun.turns.length-1;
+  const rerouted={...standingRun,turns:standingRun.turns.map((turn,index)=>index===last?{...turn,success:false,adversaryEvent:`Escalation. ${reaction}`}:turn)};
+  assert.equal(getReadingOdds(rerouted).stage,0);
+  assert.deepEqual(getReadingOdds(rerouted).ruledOutBy,getReadingOdds({...standingRun,turns:standingRun.turns.map((turn,index)=>index===last?{...turn,success:false}:turn)}).ruledOutBy,"a re-route ahead does not erase what was ruled out here");
+  // ...and when that later stage becomes the one under test, what was ruled out
+  // about it before the re-route no longer stands. A confirmation alone resets nothing.
+  const thenConfirmed=(withReroute:boolean)=>({...standingRun,revealed:[standingRun.chain[0]],turns:standingRun.turns.map((turn,index)=>index===last-1?{...turn,success:false,adversaryEvent:withReroute?`Escalation. ${reaction}`:null}:index===last?{...turn,revealed:standingRun.chain[0]}:turn)});
+  assert.equal(getReadingOdds(thenConfirmed(true)).stage,1);
+  assert.ok(getReadingOdds(thenConfirmed(false)).ruledOutBy.length>0,"without a re-route, earlier empty checks still rule out techniques at the next stage");
+  assert.equal(getReadingOdds(thenConfirmed(true)).ruledOutBy.length,0,"after a re-route that targeted it, they do not");
 
   // The property the old count lacked: a correct reading survives empty checks
   // from sources that could not have seen its technique. Phishing sits on the
