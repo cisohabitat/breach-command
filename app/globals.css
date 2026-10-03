@@ -413,10 +413,43 @@ a {
 }
 .game-heading {
   display:flex;
+  flex-wrap:wrap;
   justify-content:space-between;
   align-items:center;
   gap:30px;
   margin-bottom:32px;
+}
+/* The sector margin once it is low enough to end the operation within a few
+   turns: a full-width line under the readouts, in words and an icon as well as
+   colour. */
+.sector-alert {
+  flex-basis:100%;
+  width:100%;
+  box-sizing:border-box;
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  margin:-14px 0 0;
+  padding:9px 12px;
+  border:1px solid #8a5a3c;
+  border-left:3px solid #f0a48c;
+  border-radius:6px;
+  background:#2a1a14;
+  color:#f3d6c8;
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+}
+.sector-alert svg {
+  flex-shrink:0;
+  margin-top:2px;
+  color:#f0a48c;
+}
+.sector-alert strong {
+  color:#ffe6da;
+  font-weight:600;
+}
+.sector-alert .sector-rule-fold {
+  display:none;
 }
 .game-heading h1 {
   font-size:clamp(var(--type-h3),3vw,var(--type-h2));
@@ -7816,6 +7849,21 @@ in colour, and the carried plan is stated before the options. */
   /* The index wraps to two rows on a phone, so a section it jumps to stops below both. */
   #debrief-score,#debrief-hypothesis,#debrief-timeline,#debrief-decisions,#debrief-chain,#debrief-campaign {
     scroll-margin-top:136px;
+  }
+  .sector-alert .sector-rule {
+    display:none;
+  }
+  .sector-alert .sector-rule-fold {
+    display:block;
+    margin-top:2px;
+  }
+  .sector-alert .sector-rule-fold summary {
+    display:inline-flex;
+    align-items:center;
+    min-height:32px;
+    cursor:pointer;
+    color:#f0a48c;
+    font-weight:500;
   }
   /* Folded, the reference column is one line that says what it holds. */
   .reference-fold>summary {

@@ -6,7 +6,7 @@ import { CommandWorkspace } from "@/components/game/command-workspace";
 import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
 import { BriefingWorkspace } from "@/components/game/briefing-workspace";
 import { BotControl } from "@/components/game/bot-control";
-import { gameModes, getLossReason, getOperationalLabel, getTurnLimit, type LossCause } from "@/lib/advanced-game";
+import { gameModes, getLossReason, getOperationalLabel, getSectorAlert, getTurnLimit, type LossCause } from "@/lib/advanced-game";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
 
 // Whether a change helped or hurt is carried by shape as well as colour.
@@ -48,6 +48,7 @@ export function GameScreen({ session }: { session: GameSession }) {
   }, [activeWorkspace]);
 
   if (!game) return null;
+  const sectorAlert = getSectorAlert(game);
 
   return (
     <main className={`game-screen sector-theme-${game.scenario}`} id="main-content">
@@ -99,6 +100,9 @@ export function GameScreen({ session }: { session: GameSession }) {
             )}
           </div>
         </div>
+        {/* On a phone the sector's rule folds behind "What moves it"; written out,
+            the alert was a hundred and seventy pixels above the procedures. */}
+        {sectorAlert && <div className="sector-alert" role="status"><TriangleAlert size={16} aria-hidden="true" /><span><strong>{sectorAlert.title}.</strong> {sectorAlert.detail} <span className="sector-rule">{sectorAlert.rule}</span><details className="sector-rule-fold"><summary>What moves it</summary>{sectorAlert.rule}</details></span></div>}
       </section>
 
       <BotControl session={session} />

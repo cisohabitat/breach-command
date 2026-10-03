@@ -82,6 +82,18 @@ export function guidanceLevel(game: Game, guided: boolean): GuidanceLevel {
   return game.difficulty === "training" ? "training" : "reflection";
 }
 
+// The sector's own margin ends an operation at zero as surely as the three
+// readouts in the top row, and at Training it ended two in five of the Bot
+// Commander's losses. It is shown on Command's sector board and nowhere a
+// player looks every turn, so once it is low it is said where every workspace
+// can see it, with the rule for what erodes and restores it.
+export const SECTOR_ALERT_AT = 35;
+export function getSectorAlert(game: Game) {
+  if ((game.status !== "playing" && game.status !== "response") || game.sectorHealth > SECTOR_ALERT_AT) return null;
+  const sector = sectorSystems[game.scenario];
+  return { title: `${sector.title} is at ${game.sectorHealth}`, detail: "The operation ends if it reaches zero.", rule: sector.rule };
+}
+
 // Two confirmed stages make the objective assessable, and a case theory that
 // fits it makes a correct comparison worth more. Like correlation, it lives in
 // the evidence workspace below the map, where no playtest found it unprompted.

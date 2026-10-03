@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getScoreRows,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -433,4 +433,13 @@ test("tells a run that confirmed nothing what it did earn, and revises only on t
   const afterEmpty={...holding,turns:[{...empty,hypothesis:"identity"}]} as Game;
   assert.ok(["untested","holding"].includes(getHypothesisStanding(afterEmpty).level));
   assert.ok(!/Revise/.test(getCoachPrompt(afterEmpty,true)),"a reading that is holding is not told to revise");
+});
+
+test("warns while the sector margin can still be saved", () => {
+  // It ended two in five Training losses from a board most turns never show.
+  const g=baseline();
+  assert.equal(getSectorAlert({...g,sectorHealth:SECTOR_ALERT_AT+1}),null,"quiet while there is room");
+  const alert=getSectorAlert({...g,sectorHealth:SECTOR_ALERT_AT});
+  assert.ok(alert&&alert.title.includes(String(SECTOR_ALERT_AT))&&/ends if it reaches zero/.test(alert.detail)&&alert.rule.length>40,"it says how low and what happens at zero");
+  assert.equal(getSectorAlert({...g,sectorHealth:10,status:"lost"}),null,"and says nothing once the operation is over");
 });
