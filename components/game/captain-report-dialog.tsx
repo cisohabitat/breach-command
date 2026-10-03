@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { ArrowRight, BrainCircuit, CheckCheck, CircleSlash, Eye, MessagesSquare, Shield, ShieldCheck, Siren } from "lucide-react";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { ArrowDown, ArrowRight, BrainCircuit, CheckCheck, CircleSlash, Eye, MessagesSquare, Shield, ShieldCheck, Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { attacks, describeChange, getHypothesisStanding, getLossReason, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -8,6 +8,7 @@ import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 export function CaptainReportDialog({ session }: { session: GameSession }) {
   const { report, game, ended, config, dismissReport, decide } = session;
   const content = useRef<HTMLDivElement>(null);
+  const optionList = useRef<HTMLDivElement>(null);
   // A decision belongs to a running operation. Once the operation has ended the
   // options are not offered, whatever the engine left behind.
   // Expert operations withhold every read, this one included.
@@ -83,7 +84,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {/* The count says how many there are: the last of five sat below the fold
                       of a laptop screen with nothing saying it was there. */}
                   <h3>{decision.attack.title}: choose one of {["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length} command responses.</h3>
-                  <div>
+                  <div ref={optionList}>
                     {decision.options.map(option => (
                       <button key={option.id} onClick={() => decide(option.id)}>
                         {option.id === "observe" ? <Eye size={20} /> : option.id === "act" ? <Siren size={20} /> : option.id === "attribute" ? <BrainCircuit size={20} /> : option.id === "contain" ? <Shield size={20} /> : <MessagesSquare size={20} />}
@@ -92,6 +93,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                       </button>
                     ))}
                   </div>
+                  <OptionsBelow list={optionList} />
                 </div>
               )}
             </section>}
@@ -102,4 +104,39 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
       </DialogContent>
     </Dialog>
   );
+}
+
+// Five responses do not fit beside the result on a laptop screen, and the
+// report scrolls with nothing saying more are below. While the last one is out
+// of view, a cue pinned to the foot of the report says so and brings it in.
+function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
+  const [hidden, setHidden] = useState(0);
+  useEffect(() => {
+    const scroller = list.current?.closest<HTMLElement>("[role=dialog]");
+    if (!scroller) return;
+    // Counted against the report's own edge: an option scrolled away above is
+    // not one waiting below.
+    const count = () => {
+      const edge = scroller.getBoundingClientRect().bottom;
+      setHidden([...(list.current?.children ?? [])].filter(option => option.getBoundingClientRect().bottom > edge + 1).length);
+    };
+    // Once now, and again after the dialog's opening animation has settled.
+    const frame = requestAnimationFrame(count);
+    const settled = window.setTimeout(count, 320);
+    scroller.addEventListener("scroll", count, { passive: true });
+    window.addEventListener("resize", count);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(settled);
+      scroller.removeEventListener("scroll", count);
+      window.removeEventListener("resize", count);
+    };
+  }, [list]);
+  if (!hidden) return null;
+  const reveal = () => {
+    const last = list.current?.lastElementChild;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    last?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "nearest" });
+  };
+  return <button type="button" className="options-below" onClick={reveal}>{hidden === 1 ? "One more response below" : `${hidden} more responses below`} <ArrowDown size={15} /></button>;
 }
