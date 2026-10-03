@@ -466,6 +466,8 @@ test("does not tell a player who revised to revise", () => {
   assert.ok(/revised it 2 times/.test(carried.gap)&&/earlier stage/.test(carried.gap)&&/stage is confirmed/.test(carried.next),"a reading carried into a new stage is named");
   const untested=review([...opening,turn(3,"application","endpoint"),turn(4,"application","server",{success:false})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"}]);
   assert.ok(/could not rule the reading out/.test(untested.gap)&&/Own source/.test(untested.next),"checks that could not test the reading are named");
+  const dice=review([turn(1,"cloud","cloud",{success:false}),turn(2,"identity","identity",{success:false}),turn(3,"application","server",{success:false})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"}]);
+  assert.ok(/failed on the roll/.test(dice.gap)&&!/Own source/.test(dice.next),"misses that were own sources failing on the roll are put down to the dice");
   const sound=review([...opening,turn(3,"application","server"),turn(4,"endpoint","endpoint",{hypothesisMatched:true,revealed:"phish"})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"},{turn:4,id:"endpoint"}]);
   assert.ok(/which is the habit/.test(sound.gap)&&/ruled out/.test(sound.next),"sound revision is credited, and the advice is what is left to gain");
   assert.ok(/When it says weakening/.test(review([turn(1,"cloud","cloud"),turn(2,"cloud","cloud")],[{turn:1,id:"cloud"}]).next),"a reading never revised still gets the standing advice");

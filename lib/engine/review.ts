@@ -48,12 +48,22 @@ export function getBeginnerReview(game: Game): BeginnerReview {
       return stage > 0 && !!opened && declared <= opened.number;
     }).length;
     const untested = misses.filter(turn => !turn.success || !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure)).length;
+    // Misses that were own sources failing on the roll are the dice, not the
+    // choice of source; telling that player to "run an Own source" told them
+    // to do what they had done on every turn.
+    const failedOwn = misses.filter(turn => !turn.success && hypothesisSources(game, turn.hypothesis!).includes(turn.procedure)).length;
     const gap = `Your working hypothesis matched the route actually under test on ${aligned} of ${tested.length} turns, though you revised it ${revisions} times.`;
     if (carried * 2 >= misses.length) return {
       strength,
       gap: `${gap} On ${carried} of the misses you were still testing a reading chosen for an earlier stage.`,
       concept: "Each stage of an intrusion can travel a different route: a stolen account can open the way in and a compromised server can carry the data out. Confirming one stage answers that stage and opens the next question.",
       next: "Next operation, as soon as a stage is confirmed, compare the four readings again and choose the one that fits the next stage before you run another procedure.",
+    };
+    if (untested * 2 >= misses.length && failedOwn === untested) return {
+      strength,
+      gap: `${gap} On ${failedOwn} of the misses one of the reading's own sources failed on the roll, so the check settled nothing either way.`,
+      concept: "A failed roll is not evidence. The reading was never tested on those turns, so it was neither confirmed nor ruled out, and the same test is still worth running.",
+      next: "Next operation, give a check you need to settle a better chance: an established source, the bonus a monitored node or a correct comparison sets up, or a Focused, Exhaustive plan when the turn can afford it.",
     };
     if (untested * 2 >= misses.length) return {
       strength,
