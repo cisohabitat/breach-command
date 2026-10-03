@@ -1,8 +1,23 @@
-const CACHE = "breach-command-v50";
+const CACHE = "breach-command-v51";
 const CORE = ["/", "/manifest.webmanifest", "/favicon.svg"];
 
+// The page's own scripts and styles are cached on install, read from the page
+// itself. Before, only the shell was: the first visit's assets loaded before the
+// worker controlled the page, so offline play rested on the browser's HTTP cache
+// keeping them, and an evicted cache left an unstyled page that could not start.
+// They are content-hashed and the cache is renamed each release, so a stale copy
+// is never served.
+async function precache(cache) {
+  await cache.addAll(CORE);
+  const shell = await cache.match("/");
+  if (!shell) return;
+  const html = await shell.text();
+  const assets = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) || [])];
+  await Promise.all(assets.map(url => cache.add(url).catch(() => {})));
+}
+
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then(precache).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", event => {

@@ -37,7 +37,10 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     strength,
     gap: `Your working hypothesis matched the route actually under test on ${aligned} of ${tested.length} turns${revisions === 0 ? ", and you never revised it" : ""}.`,
     concept: "A hypothesis is a prediction you are trying to break, not a label to keep. When the evidence sources it predicts come back empty, that is the evidence telling you to change it.",
-    next: "Next operation, watch the reading's standing on the hypothesis board. When it says weakening, change the reading before you spend another turn.",
+    // Expert withholds the standing, so the advice is the same habit without it.
+    next: game.mode === "expert"
+      ? "Next operation, keep your own tally of which of the reading's sources have come back empty from a completed check, and change the reading once they have, before you spend another turn."
+      : "Next operation, watch the reading's standing on the hypothesis board. When it says weakening, change the reading before you spend another turn.",
   };
   if (readyToCorrelate(game)) return {
     strength,

@@ -166,4 +166,31 @@ test.describe("accessibility audit", () => {
       await expectNoViolations(page, `review folds ${width}`);
     });
   }
+
+  // High contrast lives on the document root, so dialogs and sheets inherit it;
+  // the newer surfaces are audited with it on as well as off.
+  test("the newer surfaces in high contrast", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 900 });
+    await openWithSave(page, { ...twoStagesGame(), sectorHealth: 28 }, true, { highContrast: true });
+    await expect(page.locator("html")).toHaveClass(/high-contrast/);
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /Investigate/ }).first().click();
+    await page.locator(".sector-rule-fold > summary").click();
+    await page.getByRole("button", { name: /Record a case theory/ }).click();
+    await expect(page.locator(".evidence-workspace")).toBeVisible();
+    await expectNoViolations(page, "investigation in high contrast");
+  });
+
+  test("the response and the review in high contrast", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openWithSave(page, responsePhaseGame(), false, { highContrast: true });
+    await expect(page.locator("html")).toHaveClass(/high-contrast/);
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await expectNoViolations(page, "response in high contrast");
+    for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
+    await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
+    const review = page.getByRole("dialog");
+    for (const fold of [".debrief-detail-fold", ".debrief-campaign-fold"]) await review.locator(`${fold} > summary`).click();
+    await expectNoViolations(page, "review in high contrast");
+  });
 });

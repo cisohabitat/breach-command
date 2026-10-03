@@ -170,7 +170,7 @@ const specialistIds: SpecialistId[] = ["hunter", "forensics", "identity", "ot", 
 // techniques themselves or the seeded draws change: an older code would
 // otherwise decode cleanly and quietly play a different incident. Version 1
 // codes were written as "BC-…" before the version was part of the code.
-export const CHALLENGE_VERSION = 2;
+export const CHALLENGE_VERSION = 3;
 const checksumOf = (text: string) => [...text].reduce((sum, char) => (sum + char.charCodeAt(0)) % 97, 0);
 
 export function encodeChallenge(setup: ChallengeSetup) {

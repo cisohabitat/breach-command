@@ -77,3 +77,14 @@ test("rests the team between operations", () => {
   assert.ok(after.specialistFatigue.hunter<SPECIALIST_EXHAUSTED_AT,"and is fit to earn the bonus again");
   assert.equal(after.specialistFatigue.forensics,2,"a benched specialist recovers two");
 });
+
+test("lets wins earn back trust that losses take away", () => {
+  // At the old rate a typical win returned three points against a loss's eight,
+  // and a quarter of completed campaigns ended on fractured trust.
+  const won={...newGame(0,"operational",()=>0),status:"won" as const};
+  const lost={...newGame(0,"operational",()=>0),status:"lost" as const};
+  const start={...defaultCampaign,leadershipTrust:40};
+  assert.equal(recordCampaignResult(start,won,73).leadershipTrust,44,"a typical win earns four");
+  assert.equal(recordCampaignResult(start,won,52).leadershipTrust,41,"even a scrappy win earns one");
+  assert.equal(recordCampaignResult(start,lost,30).leadershipTrust,32,"a loss still costs eight");
+});

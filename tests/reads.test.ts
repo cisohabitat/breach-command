@@ -443,3 +443,12 @@ test("warns while the sector margin can still be saved", () => {
   assert.ok(alert&&alert.title.includes(String(SECTOR_ALERT_AT))&&/ends if it reaches zero/.test(alert.detail)&&alert.rule.length>40,"it says how low and what happens at zero");
   assert.equal(getSectorAlert({...g,sectorHealth:10,status:"lost"}),null,"and says nothing once the operation is over");
 });
+
+test("gives an Expert player advice that does not lean on a withheld read", () => {
+  // Expert hides the reading's standing, so "watch the standing" pointed at
+  // nothing on screen.
+  const oneTurn=playTurn(baseline(),"endpoint",20).turns[0];
+  const misread=(mode:Game["mode"])=>getBeginnerReview({...baseline(),mode,correlations:[{id:"C1",turn:1,evidence:["E1","E2"],assessment:"causal",correct:true,verdict:"x"}] as never,turns:[1,2,3].map(number=>({...oneTurn,number,hypothesis:"cloud",hypothesisTarget:"phish",hypothesisMatched:false}))});
+  assert.ok(/standing/.test(misread("campaign").next),"a guided player is pointed at the standing");
+  assert.ok(!/standing/.test(misread("expert").next)&&/tally/.test(misread("expert").next),"an Expert player is given the habit without it");
+});
