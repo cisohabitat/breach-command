@@ -55,11 +55,9 @@ export function ProcedureGrid({
           >
             <div className="procedure-top">
               <span className="procedure-icon"><Icon size={20} /></span>
-              {/* Only a badge that carries something: the cooldown, or the established
-                  bonus. A "+0" on every other card buried the one that mattered. */}
-              {(cooldown > 0 || established) && <span className={`procedure-badge ${established && !cooldown ? "bonus" : ""}`}>
-                {cooldown ? <><Clock3 size={12} /> {cooldown} turn{cooldown === 1 ? "" : "s"}</> : "+2"}
-              </span>}
+              {/* The badge carries the cooldown only. The established bonus is stated
+                  once, in the footer; a "+2" badge said it a second time. */}
+              {cooldown > 0 && <span className="procedure-badge"><Clock3 size={12} /> {cooldown} turn{cooldown === 1 ? "" : "s"}</span>}
             </div>
             <h3>{procedure.title}</h3>
             <p>{procedure.short}</p>
@@ -67,7 +65,7 @@ export function ProcedureGrid({
             {read && !cooldown && read.spent > 0 && <small className="spent-label">CHECKED {read.spent}× · NO STAGE FOUND</small>}
             {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} ATTEMPT{read.inconclusive === 1 ? "" : "S"} FAILED · INCONCLUSIVE</small>}
             <div className="procedure-bottom">
-              <span>{cooldown ? "ON COOLDOWN" : established ? "ESTABLISHED" : "STANDARD"}</span>
+              <span>{cooldown ? "ON COOLDOWN" : established ? "ESTABLISHED · +2" : "STANDARD"}</span>
               {!cooldown && <ChevronRight size={15} />}
             </div>
           </button>

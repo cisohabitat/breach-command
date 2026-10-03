@@ -443,8 +443,10 @@ a {
   gap:15px;
   margin-bottom:17px;
 }
+/* A section's title outranks the sentence under it; at the same size the
+   sentence read as the heading. */
 .section-heading h2 {
-  font-size:var(--type-body);
+  font-size:var(--type-lead);
   font-weight:500;
 }
 .section-heading .mono {
@@ -550,7 +552,7 @@ a {
   align-items:flex-start;
 }
 .section-heading p {
-  font-size:var(--type-body);
+  font-size:var(--type-caption);
   color:var(--text-soft);
   margin-top:7px;
   line-height:var(--leading-base);
@@ -639,10 +641,6 @@ a {
   background:#111c15;
   padding:3px 6px;
   border-radius:4px;
-}
-.procedure-badge.bonus {
-  color:#d4f3a3;
-  background:#34482c;
 }
 .procedure-card h3 {
   font-size:var(--type-body);
@@ -1390,51 +1388,6 @@ a {
   }
   .hypothesis-detail span,.hypothesis-detail small {
     color:var(--text-soft);
-  }
-  .hypothesis-compare {
-    display:block;
-    margin-top:9px;
-  }
-  .hypothesis-compare>summary {
-    cursor:pointer;
-    list-style:none;
-    display:flex;
-    flex-wrap:wrap;
-    align-items:baseline;
-    justify-content:space-between;
-    gap:4px 12px;
-    min-height:44px;
-    padding:11px 12px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    font-size:var(--type-caption);
-  }
-  .hypothesis-compare>summary::-webkit-details-marker {
-    display:none;
-  }
-  .hypothesis-compare>summary:focus-visible {
-    outline:2px solid var(--lime);
-    outline-offset:2px;
-  }
-  .hypothesis-compare>summary span {
-    color:var(--text-soft);
-    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
-    font-size:var(--type-micro);
-  }
-  .hypothesis-compare dl {
-    margin:9px 0 0;
-    display:grid;
-    gap:9px;
-  }
-  .hypothesis-compare dt {
-    color:var(--text);
-    font-size:var(--type-caption);
-  }
-  .hypothesis-compare dd {
-    margin:2px 0 0;
-    color:var(--text-soft);
-    font-size:var(--type-caption);
-    line-height:var(--leading-base);
   }
   .topbar {
     min-height:74px;
@@ -4303,6 +4256,16 @@ html,body {
     grid-column:1/-1;
   }
 }
+/* A stage not yet found has only its name to show; at full height four of them
+   pushed the situation picture a screen down on a tablet. */
+@media(max-width:900px) {
+  .attack-section .attack-card.concealed {
+    min-height:0;
+  }
+  .attack-section .attack-card.concealed .attack-emblem {
+    display:none;
+  }
+}
 /* Phase 9: campaign director, evidence reasoning and resilient saves */
 .campaign-route-card {
   max-width:480px;
@@ -4692,7 +4655,8 @@ html,body {
   gap:8px;
   margin:0 0 22px;
   padding:10px;
-  background:#101817f2;
+  /* Opaque: text scrolling under a translucent bar read through it. */
+  background:#101817;
   border:1px solid #34483a;
   border-radius:10px;
   box-shadow:0 12px 26px #0004;
@@ -4987,8 +4951,15 @@ html,body {
   }
   .case-meters {
     width:100%;
+    max-width:none;
     display:grid;
     grid-template-columns:1.2fr 1fr 1fr;
+  }
+  /* Each meter fills its column; at a fixed 155 px the row stopped two-thirds
+     of the way across a tablet. The child selector outranks the objective
+     meter's own width, which is declared later. */
+  .case-meters>div {
+    width:auto;
   }
   .investigation-dashboard {
     grid-template-columns:1fr;
@@ -5020,8 +4991,56 @@ html,body {
   .hypothesis-detail>strong,.hypothesis-detail>span {
     display:none;
   }
+  /* The comparison shows wherever the board stacks, so its summary is styled
+     here and not only on a phone, where it once ran "readingsnone" together. */
   .hypothesis-compare {
     display:block;
+    margin-top:9px;
+  }
+  .hypothesis-compare>summary {
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:4px 12px;
+    min-height:44px;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:var(--type-caption);
+  }
+  .hypothesis-compare>summary::-webkit-details-marker {
+    display:none;
+  }
+  .hypothesis-compare>summary:focus-visible {
+    outline:2px solid var(--lime);
+    outline-offset:2px;
+  }
+  .hypothesis-compare>summary span {
+    color:var(--text-soft);
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+    font-size:var(--type-micro);
+  }
+  .hypothesis-compare dl {
+    margin:9px 0 0;
+    display:grid;
+    gap:9px;
+  }
+  .hypothesis-compare dt {
+    color:var(--text);
+    font-size:var(--type-caption);
+  }
+  .hypothesis-compare dd {
+    margin:2px 0 0;
+    color:var(--text-soft);
+    font-size:var(--type-caption);
+    line-height:var(--leading-base);
+  }
+  /* Before a reading is recorded the four cards already are the comparison. */
+  .hypothesis-board:not(.has-reading) .hypothesis-compare {
+    display:none;
   }
   .hypothesis-compare-options {
     display:grid;
@@ -7390,24 +7409,39 @@ in colour, and the carried plan is stated before the options. */
   .objective-meter {
     grid-column:auto;
   }
+  /* The label takes the meter's full width and the number sits beside its bar.
+     Beside the number, a label such as "connectivity continuity" had about
+     55 px at 390 and broke mid-word. */
   .case-meters>div {
     display:grid;
-    gap:2px;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"label label" "bar value" "status status";
+    align-items:center;
+    gap:2px 6px;
     padding:8px;
   }
   .case-meters>div>.mono {
+    grid-area:label;
+    align-self:end;
     font-size:9px;
     line-height:1.15;
+    overflow-wrap:normal;
+    hyphens:manual;
   }
   .case-meters>div>strong {
+    grid-area:value;
+    margin:0;
     font-size:20px;
     line-height:1.1;
   }
   .case-meters>div>small {
+    grid-area:status;
+    margin:0;
     font-size:10px;
     line-height:1.15;
   }
   .case-meters [data-slot=progress] {
+    grid-area:bar;
     height:3px;
   }
   .game-identity .eyebrow {
@@ -7446,6 +7480,16 @@ in colour, and the carried plan is stated before the options. */
   .investigation-dashboard .procedure-bottom {
     display:none;
   }
+  /* The footer is the only place the established bonus is stated, so on an
+     established card it stays, compact and without the chevron. */
+  .investigation-dashboard .procedure-card.established:not(.cooling) .procedure-bottom {
+    display:flex;
+    padding-top:6px;
+    font-size:var(--type-micro);
+  }
+  .investigation-dashboard .procedure-card.established .procedure-bottom svg {
+    display:none;
+  }
   .investigation-dashboard .procedure-card h3 {
     font-size:var(--type-caption);
     line-height:1.2;
@@ -7477,10 +7521,10 @@ in colour, and the carried plan is stated before the options. */
     margin-top:7px;
   }
   .standing-reading {
-  color:var(--text);
-  font-weight:500;
-}
-.hypothesis-compare-sources {
+    color:var(--text);
+    font-weight:500;
+  }
+  .hypothesis-compare-sources {
     display:block;
     margin-top:9px;
     color:var(--text-soft);
@@ -7566,5 +7610,35 @@ in colour, and the carried plan is stated before the options. */
      here put the first card under the fold. */
   .procedure-section .training-prompt .prompt-sources {
     display:none;
+  }
+  /* The tabs, the stage and the board each kept their desktop spacing, which
+     left about fifty pixels of nothing between the tabs and the reading. */
+  .workspace-tabs {
+    margin-bottom:10px;
+  }
+  .game-layout {
+    padding-top:0;
+  }
+  .investigation-lead>.hypothesis-board:first-child {
+    margin-top:0;
+  }
+}
+/* Narrower than the phone block: what still has to give way. These follow it
+   because they refine it. */
+@media(max-width:420px) {
+  /* With its icon, "Investigate" ran into its own edge at 390. */
+  .workspace-tabs button>svg {
+    display:none;
+  }
+}
+@media(max-width:360px) {
+  /* One line for the window, as on wider phones: it wrapped to two at 320. */
+  .operation-status>.mono {
+    font-size:9px;
+    letter-spacing:0;
+  }
+  .topbar {
+    min-height:60px;
+    padding-block:8px;
   }
 }
