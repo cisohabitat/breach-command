@@ -2947,6 +2947,10 @@ html,body {
   color:#e4b58f;
   grid-column:1/-1;
 }
+.command-options small.command-effect {
+  margin-top:3px;
+  color:#e8d7b9;
+}
 .command-options svg {
   grid-column:2;
   grid-row:1;

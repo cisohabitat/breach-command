@@ -67,7 +67,10 @@ export function getSectorRead(game: Game): SectorRead {
   return gap > 0 ? {
     headline: `${service} is holding while ${margin.toLowerCase()} is not`,
     diverged: true,
-    detail: `The organisation is still delivering, but the margin behind it is thin: ${margin.toLowerCase()} is at ${game.sectorHealth} against ${service.toLowerCase()} at ${game.continuity}. Service looks normal from outside and there is little room left for the next thing to go wrong.`,
+    // "Thin" at 84 read as alarm over a margin with plenty of room left.
+    detail: game.sectorHealth <= 50
+      ? `The organisation is still delivering, but the margin behind it is thin: ${margin.toLowerCase()} is at ${game.sectorHealth} against ${service.toLowerCase()} at ${game.continuity}. Service looks normal from outside and there is little room left for the next thing to go wrong.`
+      : `The margin is falling faster than the service: ${margin.toLowerCase()} is at ${game.sectorHealth} against ${service.toLowerCase()} at ${game.continuity}. There is still room, but service looking normal from outside is not the whole picture.`,
   } : {
     headline: `${margin} is holding while ${service.toLowerCase()} is not`,
     diverged: true,
@@ -231,7 +234,9 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
   };
   return {
     step: "test",
-    title: `Test ${hypothesis.title.toLowerCase()}`,
+    // With every own source cooling or blind to the stage, "Test …" asked for
+    // something no card on screen could do.
+    title: open.length ? `Test ${hypothesis.title.toLowerCase()}` : "No own source can test this reading this turn",
     detail: open.length
       ? "These are the sources this reading predicts. A completed check that finds nothing rules out every technique its source could have seen, so these are the ones most likely to settle the reading either way — and they earn the own-source bonus. A source the reading does not predict can still expose a stage or rule something out; it just answers your question less directly."
       : "Every source this reading predicts that can see this stage is cooling down. Another source can still expose a stage or rule something out, so collect where you can this turn, or record a different reading and test that.",
@@ -435,7 +440,7 @@ export function getAdversaryRead(game: Game) {
   const favourite = Object.entries(memory.procedureCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
   const source = favourite ? procedureById(game, favourite)?.title : null;
   const posture = memory.actChoices > memory.observeChoices ? "expects rapid intervention" : memory.observeChoices > memory.actChoices ? "expects evidence preservation" : "is still learning your command posture";
-  const hypothesis = memory.hypothesisChanges >= 3 ? "Your frequent hypothesis changes are creating exploitable uncertainty." : memory.hypothesisChanges ? "The actor has observed changes in your investigative theory." : "Your investigative theory remains difficult to infer.";
+  const hypothesis = memory.hypothesisChanges >= 3 ? "The actor has seen your investigative theory change several times." : memory.hypothesisChanges ? "The actor has observed changes in your investigative theory." : "Your investigative theory remains difficult to infer.";
   const campaignRead = game.campaignDoctrine === "balanced" ? "No dominant campaign doctrine is yet visible." : `Across operations, the group expects a predominantly ${game.campaignDoctrine === "act" ? "intervention-led" : "observation-led"} response.`;
   const attribution = getAttributionRead(game);
   return `${attribution.title} ${posture}${source ? ` and has seen repeated use of ${source}.` : "."} ${hypothesis} ${campaignRead}`;

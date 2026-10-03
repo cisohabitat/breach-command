@@ -516,3 +516,15 @@ test("says when an own source cannot see the stage, from the published pool alon
   assert.deepEqual(Object.fromEntries(hypothesisSources(game,"endpoint").map(id=>[id,sourceSeesReading({...game,chain:["token","role","vault","apikey"]},id)])),verdicts,"it never consults the hidden chain");
   for(const [id,sees] of Object.entries(verdicts)) if(sees===false) assert.equal(getDiscriminatingRead(game,id).level,"moderate","a blind own source is not offered as a test of the reading");
 });
+
+test("names what set the bonus waiting for the next roll", () => {
+  // "Since your last roll +2" covered a monitored node, an inject and a decision alike.
+  const game={...baseline(),injectDeck:[]} as Game;
+  const monitored=resolveMapAction(game,game.focusedNode,"monitor");
+  assert.ok(monitored.nextModifier>0,"the fixture monitors a node that sets up the next roll");
+  assert.ok(getModifierBreakdown(monitored,"endpoint").parts.some(item=>/^Monitored /.test(item.label)&&item.value===monitored.nextModifier),"a monitored node names itself");
+  const rolled=playTurn(monitored,"endpoint",10);
+  assert.equal(rolled.nextModifier===0?rolled.nextModifierSource:null,null,"and the name clears with the bonus");
+  const restored=parseSession(serialiseSession({...monitored,nextModifierSource:undefined} as unknown as Game,false,false))!;
+  assert.equal(restored.game.nextModifierSource,null,"an older save carries no name");
+});

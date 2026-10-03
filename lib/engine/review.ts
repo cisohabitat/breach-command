@@ -120,7 +120,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   };
   // Only a completed response has a cost to judge. A run that never reached it
   // would otherwise be told its response was too expensive.
-  if (game.responseChoices.length === 3 && breakdown.response < 12) return {
+  if (game.responseChoices.length === 3 && breakdown.response < 16) return {
     strength,
     gap: "The response cost more service than it needed to for the assurance it bought.",
     concept: "Containment, assurance and recovery each trade disruption against certainty. The most thorough option is not automatically the right one.",
@@ -313,8 +313,15 @@ export function getCounterfactuals(game: Game) {
     items.push(`Assurance: ${assurance?.title} established ${assurance?.confidence.toLowerCase()} confidence before restoration.`);
   }
   if (game.mapHistory.some(record => record.action === "isolate")) items.push("Infrastructure isolation reduced actor opportunity, but every isolated dependency had to be justified and restored deliberately.");
-  const actualChanges = game.hypothesisHistory.reduce((count, entry, index, history) => count + (index > 0 && history[index - 1].id !== entry.id ? 1 : 0), 0);
-  if (actualChanges > 2) items.push("The working hypothesis changed several times across turns. Earlier disconfirming evidence could have reduced investigative delay.");
+  // Revising when a completed check has turned against the reading is the
+  // habit the review teaches; only a change with no completed result since the
+  // last one is worth a counterfactual. Counting every change told a player who
+  // revised on the standing that revising was the mistake.
+  const unprompted = game.hypothesisHistory.filter((entry, index, history) => {
+    if (index === 0 || history[index - 1].id === entry.id) return false;
+    return !game.turns.some(turn => turn.number >= history[index - 1].turn && turn.number < entry.turn && turn.success);
+  }).length;
+  if (unprompted >= 2) items.push(`The working hypothesis changed ${unprompted} times with no completed check in between. A reading is worth changing once a result has turned against it, not before.`);
   else if (!game.hypothesisHistory.length) items.push("No working hypothesis was recorded, so the team could not compare its assumptions with the final chain.");
   const weakCorrelations = game.correlations.filter(record => !record.valid).length;
   if (weakCorrelations) items.push(`${weakCorrelations} tested evidence relationship${weakCorrelations === 1 ? " was" : "s were"} temporal rather than causal. A stronger system-to-identity link would have reduced analytical noise.`);

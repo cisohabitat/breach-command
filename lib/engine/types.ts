@@ -110,6 +110,8 @@ export type Game = {
   turns: Turn[];
   failures: number;
   nextModifier: number;
+  // What set nextModifier, named for the roll's breakdown; null when nothing waits.
+  nextModifierSource: string | null;
   injectDeck: number[];
   status: GameStatus;
   impact: number;

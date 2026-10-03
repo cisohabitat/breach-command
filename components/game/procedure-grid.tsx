@@ -65,7 +65,7 @@ export function ProcedureGrid({
             <h3>{procedure.title}</h3>
             <p>{procedure.short}</p>
             {aligned && !cooldown && <small className="alignment-label">Own source <span className="nowrap">· +{OWN_SOURCE_BONUS}</span></small>}
-            {aligned && !cooldown && blind && <small className="spent-label inconclusive">CAN&apos;T SEE THIS STAGE</small>}
+            {aligned && !cooldown && blind && <small className="spent-label inconclusive">CAN&apos;T SEE THIS READING HERE</small>}
             {read && !cooldown && read.spent > 0 && <small className="spent-label">CHECKED {read.spent}× · NO STAGE FOUND</small>}
             {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} ATTEMPT{read.inconclusive === 1 ? "" : "S"} FAILED · INCONCLUSIVE</small>}
             <div className="procedure-bottom">

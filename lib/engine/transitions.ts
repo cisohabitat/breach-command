@@ -7,6 +7,15 @@ import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects,
 import { type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type Inject, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice } from "./types.ts";
 import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
 
+// Where the bonus or penalty waiting for the next roll came from, so the roll
+// can name it: "Since your last roll +2" covered a monitored node, an inject and
+// a decision alike. Two different sources read as several.
+function carriedSource(before: number, beforeSource: string | null, after: number, source: string): string | null {
+  if (after === before) return beforeSource;
+  if (after === 0) return null;
+  return before === 0 || beforeSource === source ? source : "Several events since your last roll";
+}
+
 export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max), setup: GameSetup = {}): Game {
   if (!Number.isInteger(scenario) || !scenarios[scenario]) throw new Error("Unknown incident");
   if (!difficulties[difficulty]) throw new Error("Unknown difficulty");
@@ -38,6 +47,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     turns: [],
     failures: 0,
     nextModifier: 0,
+    nextModifierSource: null,
     injectDeck: shuffle(injects.map((_, i) => i), random),
     status: "playing",
     impact: clamp(startingImpact),
@@ -119,6 +129,7 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
     mapActionsRemaining: game.mapActionsRemaining - 1,
     mapHistory: [...game.mapHistory, { node: nodeId, action, turn: game.turns.length, effect }],
     nextModifier: change.modifier ? Math.max(game.nextModifier, change.modifier) : game.nextModifier,
+    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, change.modifier ? Math.max(game.nextModifier, change.modifier) : game.nextModifier, `Monitored ${node.label}`),
     impact: clamp(game.impact + change.impact),
     continuity: clamp(game.continuity + change.continuity),
     sectorHealth: clamp(game.sectorHealth + change.sector),
@@ -185,6 +196,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   const total = raw + modifier;
   const success = total >= config.threshold;
   g.nextModifier = 0;
+  g.nextModifierSource = null;
 
   const match = success ? g.chain.find(id => !g.revealed.includes(id) && attacks.find(attack => attack.id === id)!.detect.includes(procedure)) : undefined;
   let revealed: string | null = null;
@@ -263,8 +275,8 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     const index = g.injectDeck.splice(position, 1)[0];
     inject = { ...injects[index], reason };
     if (g.failures >= 3) g.failures = 0;
-    if (inject.effect === "bonus") g.nextModifier = 2;
-    if (inject.effect === "penalty") { g.nextModifier = -2; impactChange += 6; }
+    if (inject.effect === "bonus") { g.nextModifier = 2; g.nextModifierSource = `Inject: ${inject.title}`; }
+    if (inject.effect === "penalty") { g.nextModifier = -2; g.nextModifierSource = `Inject: ${inject.title}`; impactChange += 6; }
     if (inject.effect === "pressure") impactChange += 8;
     if (inject.effect === "relief") impactChange -= 8;
     if (inject.effect === "restore") {
@@ -481,6 +493,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
       break;
   }
+  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Evidence decision: ${decisionLanguage[attacks.find(item => item.id === game.pendingDecision)!.stage][decisionTitles[choice]]}`);
 
   if (choice === "act") {
     const nextStage = Math.min(3, attack.stage + 1);
@@ -542,6 +555,7 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   const option = event[choice];
   const g: Game = { ...game, commandHistory: [...game.commandHistory] };
   g.nextModifier = Math.max(-2, Math.min(3, g.nextModifier + option.modifier));
+  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Command event: ${option.title}`);
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
   g.adversaryTempo = clamp(g.adversaryTempo + option.tempo, 0, 3);
@@ -581,7 +595,7 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const theoryAligned = correct && valid && game.caseTheory === game.objective;
   const basis = firstAttack && secondAttack
     ? Math.abs(firstAttack.stage - secondAttack.stage) <= 1
-      ? `they sit in consecutive stages of the chain — ${inSentence(stages[firstAttack.stage].name)} then ${inSentence(stages[secondAttack.stage].name)} — so one is what the next one needed`
+      ? `they sit in consecutive stages of the chain — ${inSentence(stages[Math.min(firstAttack.stage, secondAttack.stage)].name)} then ${inSentence(stages[Math.max(firstAttack.stage, secondAttack.stage)].name)} — so one is what the next one needed`
       : attackVector(firstAttack.id) === attackVector(secondAttack.id)
         ? `both sit on the ${hypotheses.find(item => item.id === attackVector(firstAttack.id))!.title.toLowerCase()} route, so they are steps in the same line of access`
         : ""
@@ -600,6 +614,7 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const g: Game = {
     ...game,
     nextModifier: correct ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
+    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, correct ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, "Correct comparison of findings"),
     impact: clamp(game.impact + (correct ? (theoryAligned ? -5 : -3) : 4)),
     objectiveProgress: clamp(game.objectiveProgress + (correct ? (theoryAligned ? -10 : -6) : 3)),
     correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding }],

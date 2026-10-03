@@ -6,7 +6,7 @@ export const SESSION_KEY = "breach-command.session";
 // newer build's operation outlives an older bundle served offline. A build that
 // can read it moves it back and offers it for resume.
 export const PARKED_SESSION_KEY = "breach-command.session.parked";
-export const SESSION_VERSION = 14;
+export const SESSION_VERSION = 15;
 
 export type SavedSession = {
   version: number;
@@ -98,6 +98,8 @@ export function parseSession(raw: string): SavedSession | null {
       continuity: bounded(game.continuity, 100),
       failures: bounded(game.failures, 0, 0, 3),
       nextModifier: bounded(game.nextModifier, 0, -5, 5),
+      // Version 15 names what set the modifier; older saves carry none.
+      nextModifierSource: typeof game.nextModifierSource === "string" && game.nextModifierSource.length <= 120 ? game.nextModifierSource : null,
       adversaryTempo: bounded(game.adversaryTempo, 0, 0, 3),
       responseScore: bounded(game.responseScore, 0, 0, 100),
       established: Array.isArray(game.established) ? game.established : [],

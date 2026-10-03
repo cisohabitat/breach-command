@@ -48,7 +48,8 @@ function OptionEffect({ game, impact, continuity }: { game: Game; impact: number
   const atRisk = !ends && game.continuity > CONTINUITY_AT_RISK && after.continuity <= CONTINUITY_AT_RISK;
   return (
     <small className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
-      {describeMeterChange(game, "impact", impact)} · {describeMeterChange(game, "continuity", continuity)}, to {after.continuity}
+      {/* The change the meter will actually show: "−22 better" at an impact of 0 promised nothing. */}
+      {describeMeterChange(game, "impact", after.impact - game.impact)} · {describeMeterChange(game, "continuity", after.continuity - game.continuity)}, to {after.continuity}
       {ends && <b> · Ends the operation</b>}
       {atRisk && <b> · At risk</b>}
     </small>

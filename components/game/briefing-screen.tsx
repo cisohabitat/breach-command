@@ -64,7 +64,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </div>
         <div className="difficulty-picker">
           <span className="eyebrow">DIFFICULTY</span>
-          <div>{(Object.keys(difficulties) as Difficulty[]).map(id => <button key={id} className={difficulty === id ? "active" : ""} aria-pressed={difficulty === id} onClick={() => setDifficulty(id)}><strong>{difficulties[id].title}</strong><small>{difficulties[id].maxTurns} turns · {difficulties[id].threshold}+</small></button>)}</div>
+          <div>{(Object.keys(difficulties) as Difficulty[]).map(id => <button key={id} className={difficulty === id ? "active" : ""} aria-pressed={difficulty === id} onClick={() => setDifficulty(id)}><strong>{difficulties[id].title}</strong><small>{difficulties[id].maxTurns} turns · rolls need {difficulties[id].threshold}+</small></button>)}</div>
           <p>{difficulties[difficulty].description}</p>
         </div>
         <div className="specialist-picker">

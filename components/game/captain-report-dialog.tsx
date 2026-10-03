@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { ArrowDown, ArrowRight, BrainCircuit, CheckCheck, CircleSlash, Eye, MessagesSquare, Shield, ShieldCheck, Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, describeMeterChange, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
+import { attacks, describeMeterChange, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, stages, type DecisionChoice } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { Glossed } from "@/components/game/glossed";
@@ -16,7 +16,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   const standing = game && game.mode !== "expert" ? getHypothesisStanding(game) : null;
   // The standing is computed from the operation as it is now, so it belongs only
   // on the latest turn's report, not on an earlier one reopened from the log.
-  const settled = !!report && !!game && report.number === game.turns.length && report.success && !report.revealed && !report.injectReveal && !!game.hypothesis;
+  const settled = !!report && !!game && report.number === game.turns.length && report.success && (!report.revealed || report.windfall) && !report.injectReveal && !!game.hypothesis;
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
   const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">INJECT <span className="separator">/</span> {report.inject.reason}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>;
@@ -65,10 +65,10 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 : report.success
                   ? "The check completed and found no stage, which rules out what this source could see at this stage; the adversary used the time."
                   : report.planningBonus > 0
-                    ? "The check failed, so it settled nothing. It was one of your reading's own sources, so the failure gave the adversary no extra progress, though any failed check raises business impact more and wears the sector margin."
+                    ? "The check failed, so it settled nothing. It was one of your reading's own sources, so the failure added nothing to the adversary's usual gain for the turn, though any failed check raises business impact more and wears the sector margin."
                     : "The check failed, so it settled nothing and gave the adversary the most time."}{report.adversaryEvent ? " It also made a move, below." : ""}</span></p>
               <p className="report-narrative"><Glossed text={report.narrative} /></p>
-              {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small></div></div>}
+              {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small>{report.windfall && report.hypothesisTarget && <small className="windfall-note">This is stage {attacks.find(attack => attack.id === report.revealed)!.stage + 1}, further along the chain. The stage you were testing, stage {attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1}, is still open, and a find here says nothing about the route it used.</small>}</div></div>}
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
                   is where the player is looking when it lands. A failed roll settles
@@ -110,14 +110,15 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {game.difficulty === "training" && game.mode !== "expert" && game.decisions.length === 0 && (
                     <details className="decision-primer">
                       <summary>How these responses differ</summary>
+                      {/* In the options' own words: "Watch" and "Act" here beside
+                          buttons titled "Trace" and "Revoke" read as two lists. */}
                       <ul>
-                        <li><Eye size={15} aria-hidden="true" /><span><b>Watch</b> builds evidence; the intruder keeps its opportunity.</span></li>
-                        <li><Siren size={15} aria-hidden="true" /><span><b>Act</b> cuts exposure now; it costs some evidence and service, and the intruder adapts.</span></li>
-                        <li><BrainCircuit size={15} aria-hidden="true" /><span><b>Attribute</b> learns who is behind it before touching anything; the intruder keeps moving.</span></li>
-                        <li><Shield size={15} aria-hidden="true" /><span><b>Contain</b> restricts the path while protecting the sector&apos;s margin.</span></li>
-                        <li><MessagesSquare size={15} aria-hidden="true" /><span><b>Notify</b> aligns leaders and protects service; the intruder gains time.</span></li>
+                        {decision.options.map(option => {
+                          const Icon = option.id === "observe" ? Eye : option.id === "act" ? Siren : option.id === "attribute" ? BrainCircuit : option.id === "contain" ? Shield : MessagesSquare;
+                          return <li key={option.id}><Icon size={15} aria-hidden="true" /><span><b>{option.title}</b> {primerTrade[option.id]}</span></li>;
+                        })}
                       </ul>
-                      <p>No single answer is right: choose for the pressure you most need to relieve.</p>
+                      <p>No single answer is right. The review judges each against the pressure at the time: with business impact at 55 or more, or the actor badge on the hypothesis board reading Accelerating or Executing objective, acting or containing fits; below that, watching or attributing is affordable.</p>
                     </details>
                   )}
                   <div ref={optionList}>
@@ -140,6 +141,15 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
     </Dialog>
   );
 }
+
+// What each response verb buys and what it costs, in one clause each.
+const primerTrade: Record<DecisionChoice, string> = {
+  observe: "builds evidence; the intruder keeps its opportunity.",
+  act: "cuts exposure now; it costs some evidence and service, and the intruder adapts.",
+  attribute: "learns who is behind it before touching anything; the intruder keeps moving.",
+  contain: "restricts the path while protecting the sector's margin.",
+  notify: "aligns leaders and protects service; the intruder gains time.",
+};
 
 // Five responses do not fit beside the result on a laptop screen, and the
 // report scrolls with nothing saying more are below. While the last one is out

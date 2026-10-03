@@ -85,7 +85,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
     <div className={`guide-nudge training-prompt step-${trainingPrompt.step}`}>
       <GraduationCap size={15} />
       <span>
-        <strong>{trainingPrompt.title}.</strong>{foldWhy
+        <strong>{trainingPrompt.title}{/[?.!]$/.test(trainingPrompt.title) ? "" : "."}</strong>{foldWhy
           ? <> <details className="prompt-why"><summary>Why</summary>{trainingPrompt.detail}</details></>
           : <> {trainingPrompt.detail}</>}
         {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: <Glossed text={trainingPrompt.clue} /></b>}
