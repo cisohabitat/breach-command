@@ -1,7 +1,7 @@
 // Turn resolution, blocking states, end states and the decision layer.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,type Difficulty,type Game} from "../lib/advanced-game.ts";
+import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,type Difficulty,type Game,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {decodeChallenge,encodeChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -25,7 +25,7 @@ test("resolves a turn, its decision and its cooldown", () => {
   assert.equal(getDecisionOptions(n)?.observe.title,"Trace the access path");
   n=resolveDecision(n,"observe");assert.equal(n.nextModifier,2);assert.equal(n.impact,30);assert.equal(n.pendingDecision,null);
   n=playTurn(n,"dns",9);assert.equal(n.turns[1].total,12);assert.equal(n.nextModifier,0);n=resolveSetPiece(n,"a");assert.throws(()=>playTurn(n,"endpoint",15),/cooling/);
-  g=baseline();g=setHypothesis(g,"endpoint");g=playTurn(g,"endpoint",7);assert.equal(g.turns[0].planningBonus,2);assert.equal(g.turns[0].total,11);
+  g=baseline();g=setHypothesis(g,"endpoint");g=playTurn(g,"endpoint",7);assert.equal(g.turns[0].planningBonus,OWN_SOURCE_BONUS);assert.equal(g.turns[0].total,7+2+OWN_SOURCE_BONUS,"established and own source");
     // This deck opens with an unfavourable card. A natural 20 used to take it and
   // raise business pressure, which is the game contradicting its own loudest
   // signal; it now reaches past it to the relief card behind.
@@ -402,7 +402,7 @@ test("keeps the deck, the grace and the decisions honest", () => {
   // A sound failure is protected without the grace, so the grace is kept for the
   // failure that needs it, and the sound one hands the actor no extra progress.
   const sound=playTurn({...setHypothesis(baseline(),"endpoint"),graceRemaining:1,injectDeck:[]},"endpoint",2);
-  assert.equal(sound.turns[0].planningBonus,2);assert.equal(sound.turns[0].success,false);
+  assert.equal(sound.turns[0].planningBonus,OWN_SOURCE_BONUS);assert.equal(sound.turns[0].success,false);
   assert.equal(sound.graceRemaining,1,"a protected failure does not spend the grace");
   assert.equal(sound.adversaryTempo,0,"and hands over no tempo");
   const absorbed=playTurn({...setHypothesis(baseline(),"cloud"),graceRemaining:1,injectDeck:[]},"endpoint",2);

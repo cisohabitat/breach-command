@@ -1,7 +1,7 @@
 // Complete playthroughs: every mode, specialist and difficulty terminates.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,scenarios,nextEvidenceSource,decisionChoices,difficulties,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId} from "../lib/advanced-game.ts";
+import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,scenarios,nextEvidenceSource,decisionChoices,difficulties,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId,getReadingOdds} from "../lib/advanced-game.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
 import {chooseBotAction,type BotAction} from "../lib/game-bot.ts";
 
@@ -82,4 +82,28 @@ test("terminates every simulated operation", () => {
   }
   for(const action of ["procedure","hypothesis","decision","set-piece","response"] as const)assert.ok(botActionTypes.has(action),`bot simulations exercise ${action}`);
   console.log(`PASS: adaptive routes, hypotheses, command events, sector systems, specialists, advanced modes, five decision verbs, per-sector response sets, counterfactuals, a visible-evidence bot and ${simulationCount+modeSimulations+botSimulations} complete simulations.`,totals,verbTally);
+});
+
+test("the bot commander revises a reading the record has ruled out", () => {
+  // It used to hold the route of its latest find for every remaining turn, which
+  // is how it lost to the window with three stages confirmed. Here every
+  // technique the identity route could be using at the first stage is ruled out
+  // by completed empty checks; the bot's next move is to revise to a route that
+  // is still open, read from the visible record alone.
+  // Both identity techniques the first stage can use are visible to an identity
+  // audit; phishing, on the compromised-host route, is not.
+  let game=newGame(0,"operational",()=>0);
+  game={...game,injectDeck:[],established:[],chain:["phish","printqueue","task","backup-out"]};
+  game=setHypothesis(game,"identity");
+  game=playTurn(game,"identity",20);
+  assert.equal(game.revealed.length,0,"the audit completed and found nothing");
+  const odds=getReadingOdds(game);
+  assert.equal(odds.stage,0);
+  assert.equal(odds.candidates.identity.open,0,"nothing the identity route could be using is left open");
+  const action=chooseBotAction(game);
+  assert.equal(action.type,"hypothesis","the bot changes its reading before running another procedure");
+  if(action.type==="hypothesis"){
+    assert.notEqual(action.hypothesis,"identity");
+    assert.ok(odds.candidates[action.hypothesis].open>0,"to a route that is still open");
+  }
 });

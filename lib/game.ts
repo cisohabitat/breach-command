@@ -157,9 +157,10 @@ export const hypotheses: {id:HypothesisId;title:string;premise:string;procedures
 // One investigative action per sector that exists nowhere else. The eleven shared
 // procedures are right — responders do use the same evidence sources everywhere —
 // but every sector also has a reconciliation only its own people would think to
-// run. It is offered alongside the shared set in its own scenario, and it earns
-// the planning bonus when the declared reading matches its vector, so it sits
-// inside the reasoning system rather than beside it.
+// run. It is offered alongside the shared set in its own scenario, and it joins
+// the source list of the reading that matches its vector — earning the
+// own-source bonus when that reading is declared — so it sits inside the
+// reasoning system rather than beside it.
 export const sectorProcedures: {id:string;title:string;short:string;description:string;question:string;vector:HypothesisId}[] = [
   {id:"change-review",title:"Change and approval review",short:"Privileged change records against what changed",description:"Reconcile the privileged change record with the changes systems actually received.",question:"Was every change that landed also requested and approved?",vector:"identity"},
   {id:"downtime-check",title:"Downtime dependency check",short:"Clinical fallback and access dependencies",description:"Validate that clinical downtime procedures still work and which access paths they depend on.",question:"If this path is cut, can care continue on the fallback?",vector:"identity"},

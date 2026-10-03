@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game} from "../lib/advanced-game.ts";
+import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -51,29 +51,49 @@ test("reports how the declared reading is holding up", () => {
     if(standingRun.pendingSetPiece)standingRun=resolveSetPiece(standingRun,"a");
   }
   const spentStanding=getHypothesisStanding(standingRun);
-  assert.equal(spentStanding.spent,identitySources.length,"every source of the reading was checked and came back empty");
-  assert.equal(spentStanding.level,"unsupported","a reading whose every source came back empty is poorly supported");
+  assert.ok(spentStanding.sources>0,"the reading has techniques it could be using at this stage");
+  assert.equal(spentStanding.spent,spentStanding.sources,"completed empty checks ruled out every one of them");
+  assert.equal(spentStanding.level,"unsupported","a route with nothing left open is poorly supported");
   assert.ok(spentStanding.detail.length>40,"and the reason is stated");
   assert.deepEqual(getHypothesisStanding({...standingRun,chain:["token","role","vault","apikey"]}),spentStanding,"the standing never consults the hidden chain");
-  // A confirmation resets the reckoning: the sources spent before it no longer count.
-  assert.equal(getHypothesisStanding({...standingRun,turns:standingRun.turns.map((turn,index)=>index===0?{...turn,revealed:"phish"}:turn)}).spent,identitySources.length-1,"only sources spent since the last confirmation count");
+  // A visible re-route changes the chain, so what was ruled out before it no
+  // longer stands. A confirmation alone does not reset it.
+  const reaction=scenarioDynamics[standingRun.scenario].reaction;
+  const rerouted={...standingRun,turns:standingRun.turns.map((turn,index)=>index===standingRun.turns.length-1?{...turn,success:false,adversaryEvent:`Escalation. ${reaction}`}:turn)};
+  assert.equal(getReadingOdds(rerouted).ruledOutBy.length,0,"nothing ruled out before a re-route carries over");
+  assert.equal(getHypothesisStanding(rerouted).level,"untested");
+
+  // The property the old count lacked: a correct reading survives empty checks
+  // from sources that could not have seen its technique. Phishing sits on the
+  // compromised-host route and a cloud audit cannot see it, nor any stage here.
+  let correct=setHypothesis({...baseline(),injectDeck:[]},"endpoint");
+  correct=playTurn(correct,"cloud",20);
+  assert.equal(correct.revealed.length,0,"the cloud audit completed and found nothing");
+  assert.notEqual(getHypothesisStanding(correct).level,"unsupported","a source that could not see the technique does not count against the right reading");
+  assert.ok(getReadingOdds(correct).candidates.endpoint.open>0,"its technique is still open");
 });
 
 test("shows the modifier it will resolve with", () => {
-  // The modifier the player is shown before committing is the same computation the
-  // roll resolves with, minus the one term that must stay hidden.
+  // The modifier the player is shown before committing is the computation the roll
+  // resolves with — all of it. Nothing hidden is added afterwards.
   const previewBase=(()=>{const b=baseline();b.established=["endpoint"];b.nextModifier=1;return b;})();
   for(const plan of [{scope:"focused",intensity:"balanced"},{scope:"enterprise",intensity:"exhaustive"},{scope:"focused",intensity:"rapid"}] as const){
     for(const procedure of ["endpoint","identity","dns"]){
       const preview=getModifierBreakdown(previewBase,procedure,plan);
       const resolved=playTurn(previewBase,procedure,10,plan).turns[0];
-      assert.equal(preview.total,resolved.modifier-resolved.planningBonus,`${procedure}/${plan.scope}/${plan.intensity} preview matches resolution`);
-      assert.ok(!preview.parts.some(part=>/hypothesis/i.test(part.label)),"the planning bonus is never shown before the roll");
+      assert.equal(preview.total,resolved.modifier,`${procedure}/${plan.scope}/${plan.intensity} preview matches resolution`);
+      assert.equal(preview.parts.find(part=>part.label==="Own source")?.value,resolved.planningBonus,"the planning bonus is the previewed own-source part");
     }
   }
   // Every term the resolution can apply is named in the preview.
   assert.deepEqual(getModifierBreakdown(previewBase,"endpoint").parts.map(part=>part.label),
-    ["Established","Carried","Persistence","Specialist","Focus","Focused","Balanced","Expert mode"]);
+    ["Established","Own source","Carried","Persistence","Specialist","Focus","Focused","Balanced","Expert mode"]);
+  // The own-source bonus follows the declared reading, not the hidden route, so
+  // it reads the same whatever the chain is.
+  const declared=setHypothesis(previewBase,"identity");
+  assert.equal(getModifierBreakdown(declared,"identity").parts.find(part=>part.label==="Own source")?.value,OWN_SOURCE_BONUS,"a declared reading's own source earns the bonus");
+  assert.equal(getModifierBreakdown(declared,"endpoint").parts.find(part=>part.label==="Own source")?.value,0,"a source it does not predict does not");
+  assert.deepEqual(getModifierBreakdown({...declared,chain:["token","role","vault","apikey"]},"identity"),getModifierBreakdown(declared,"identity"),"and the preview never consults the hidden chain");
   assert.equal(getModifierBreakdown({...previewBase,mode:"expert"},"identity").parts.find(part=>part.label==="Expert mode")?.value,-1);
 
   // Two failed rolls in a row is variance. The bonus that answers it is read from

@@ -38,12 +38,12 @@ export function ActionSheet({ session }: { session: GameSession }) {
             <BrainLabel aligned={procedureAligned} />
             <span>
               {read && <strong>{read.label}. </strong>}
-              {read ? read.detail : procedureAligned ? "This procedure tests your working hypothesis. Sound alignment can add +2 when the theory matches the next unresolved stage." : "This procedure does not directly test your working hypothesis. It may still collect useful evidence, but receives no reasoning bonus."}
+              {read ? read.detail : procedureAligned ? "This procedure tests your working hypothesis and earns the own-source bonus shown below." : "This procedure does not directly test your working hypothesis. It may still collect useful evidence, but earns no own-source bonus."}
             </span>
           </div>
           <div className="roll-preview">
             <div><span>D20</span><small>Dice roll</small></div><span>+</span>
-            <div><span>{breakdown && breakdown.total >= 0 ? "+" : ""}{breakdown?.total ?? 0}</span><small>Known modifier</small></div><span>≥</span>
+            <div><span>{breakdown && breakdown.total >= 0 ? "+" : ""}{breakdown?.total ?? 0}</span><small>Modifier</small></div><span>≥</span>
             <div><span>{config.threshold}</span><small>To succeed</small></div>
           </div>
           {breakdown && (
@@ -54,7 +54,6 @@ export function ActionSheet({ session }: { session: GameSession }) {
                   <li key={part.label} className={part.suppressed ? "suppressed" : ""}><span>{part.label}</span><strong>{part.suppressed ? "—" : `${part.value > 0 ? "+" : ""}${part.value}`}</strong><small>{part.detail}</small></li>
                 ))}
                 {breakdown.parts.every(part => part.value === 0 && !part.suppressed) && <li><span>No modifiers apply</span><strong>0</strong><small>This is a plain d20 against the difficulty threshold.</small></li>}
-                <li className="pending"><span>Hypothesis</span><strong>+2?</strong><small>Added on resolution only if your working hypothesis matches the next unresolved stage. It is not shown in advance, because that would answer the question you are investigating.</small></li>
               </ul>
             </details>
           )}

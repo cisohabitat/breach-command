@@ -929,7 +929,7 @@ export type TrainingPrompt = {
  * complete attack chain and a hypothesis score of three out of ten.
  *
  * It now prompts the next step in the reasoning instead: declare a reading, test
- * it with one of its own sources, revise it when its own sources come back empty,
+ * it with one of its own sources, revise it when the record rules its route out,
  * and correlate the findings once there are two to compare. Every branch reads
  * only what the player has declared or observed, so the aid can no longer
  * contradict the discriminating read, and no player-facing helper returns the
@@ -979,8 +979,8 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     step: "test",
     title: `Test ${hypothesis.title.toLowerCase()}`,
     detail: open.length
-      ? "These are the sources this reading predicts, and the only ones that can settle it: an empty result in one of them counts against the reading. They are not the only way to expose a stage — a source this reading does not predict can still turn one up, it just will not answer your question."
-      : "Every source this reading predicts is cooling down. Another source can still expose a stage without settling the reading, so collect where you can this turn, or record a different reading and test that.",
+      ? "These are the sources this reading predicts. A completed check that finds nothing rules out every technique its source could have seen, so these are the ones most likely to settle the reading either way — and they earn the own-source bonus. A source the reading does not predict can still expose a stage or rule something out; it just answers your question less directly."
+      : "Every source this reading predicts is cooling down. Another source can still expose a stage or rule something out, so collect where you can this turn, or record a different reading and test that.",
     sources: open,
     clue: standing.level === "untested" ? clue : null,
   };
@@ -1046,11 +1046,20 @@ export function describeChange(meter: keyof typeof meterDirection | string, valu
   return `${direction.label} ${amount} ${good ? "better" : "worse"}`;
 }
 
-// Every part of the roll the player is entitled to know before committing. The
-// planning bonus is deliberately absent: it depends on whether the hypothesis
-// matches the next hidden stage, so showing it here would let a player read the
-// answer off the interface by cycling hypotheses. playTurn adds it on resolution
-// and the after-action ledger explains it afterwards.
+// Every part of the roll, before committing. Nothing here depends on the hidden
+// chain, and playTurn resolves with exactly this total.
+// The planning bonus rewards testing the reading the player has declared, with
+// one of its own sources. It used to apply only when that reading matched the
+// hidden route, which kept it out of the preview — and the report's total, less
+// the preview's, still gave the answer away. Keyed to what the player declared,
+// it is shown before the roll like any other part, and correctness is rewarded
+// where it belongs: the right source on the right route reveals the stage, and
+// hypothesis accuracy is scored after the operation.
+export const OWN_SOURCE_BONUS = 1;
+function ownSourceBonus(game: Game, procedure: string) {
+  return game.hypothesis && hypothesisSources(game, game.hypothesis).includes(procedure) ? OWN_SOURCE_BONUS : 0;
+}
+
 export function getModifierBreakdown(game: Game, procedure: string, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }) {
   const specialist = specialists[game.specialist];
   const focusNode = infrastructureTopologies[game.scenario].nodes.find(node => node.id === game.focusedNode);
@@ -1061,6 +1070,7 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
   for (let index = game.turns.length - 1; index >= 0 && !game.turns[index].success; index--) consecutiveFailures++;
   const parts: ModifierPart[] = [
     { label: "Established", value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
+    { label: "Own source", value: ownSourceBonus(game, procedure), detail: "One of the declared reading's own evidence sources. Testing the explanation you have committed to earns this; it says nothing about whether the explanation is right." },
     { label: "Carried", value: game.nextModifier, detail: "Carried from the previous turn's event or decision." },
     { label: "Persistence", value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
     specialist.procedures.includes(procedure as never) && game.specialistFatigue >= 5
@@ -1078,36 +1088,99 @@ export type HypothesisStanding = {
   level: "none" | "untested" | "holding" | "weakening" | "unsupported";
   label: string;
   detail: string;
+  // Of the techniques the declared route could be using at the stage under
+  // test, how many completed checks have ruled out, and how many there are.
   spent: number;
   sources: number;
   inconclusive: number;
   turnsSinceConfirmation: number;
 };
 
-// Repeated negative results against the same explanation are themselves
-// evidence. This reads only the player's own record — which of the declared
-// hypothesis's evidence sources have been spent since the last confirmation,
-// and what came back — so it never consults the hidden chain. It says the
-// current reading is weakening; it never says which reading is right.
+export type ReadingOdds = {
+  stage: number | null;
+  ruledOutBy: string[];
+  candidates: Record<HypothesisId, { total: number; open: number }>;
+  share: Record<HypothesisId, number>;
+  prior: Record<HypothesisId, number>;
+};
+
+const stageOf = (id: string) => attacks.find(attack => attack.id === id)?.stage ?? -1;
+
+// What the record says about the stage under test. A completed check that found
+// nothing rules out every technique that source would have exposed, so among the
+// techniques this scenario can use at that stage — its published pool, not the
+// chain — the ones still open decide how well each route explains the record.
+// A check that exposed a later stage rules out the stage under test as well,
+// because the earliest open stage a source can see is the one it reveals.
+//
+// The window runs from the last visible change to the chain: an adversary
+// re-route, or an adaptation after an evidence decision. A confirmation alone
+// does not reset it; what a source could not see then, it still cannot.
+//
+// Counting empty checks against a route's whole source list read a correct
+// reading as weakening nearly as often as a wrong one — holding readings were
+// right 29% of the time and weakening ones 22% — because any one technique is
+// visible to only about three sources. This is the same evidence, weighed.
+export function getReadingOdds(game: Game): ReadingOdds {
+  const revealedStages = new Set(game.revealed.map(stageOf));
+  const stage = [0, 1, 2, 3].find(index => !revealedStages.has(index)) ?? null;
+  const reaction = scenarioDynamics[game.scenario].reaction;
+  const adapted = new Set(game.decisions.filter(item => item.adaptedFrom).map(item => item.stage));
+  const changedAt = game.turns.reduce((last, turn) => {
+    const rerouted = !!turn.adversaryEvent?.includes(reaction);
+    const adaptedHere = [turn.revealed, turn.injectReveal].some(id => !!id && adapted.has(id));
+    return rerouted || adaptedHere ? turn.number : last;
+  }, 0);
+  const ruledOutBy = stage === null ? [] : [...new Set(game.turns
+    .filter(turn => turn.number > changedAt && turn.success && (!turn.revealed || stageOf(turn.revealed) > stage))
+    .map(turn => turn.procedure))];
+  const ids = hypotheses.map(item => item.id);
+  const candidates = Object.fromEntries(ids.map(id => [id, { total: 0, open: 0 }])) as ReadingOdds["candidates"];
+  for (const id of stage === null ? [] : scenarios[game.scenario].choices[stage]) {
+    const attack = attacks.find(item => item.id === id);
+    if (!attack) continue;
+    candidates[attack.vector].total += 1;
+    if (!ruledOutBy.some(source => attack.detect.includes(source))) candidates[attack.vector].open += 1;
+  }
+  const totalAll = ids.reduce((sum, id) => sum + candidates[id].total, 0) || 1;
+  const openAll = ids.reduce((sum, id) => sum + candidates[id].open, 0);
+  const prior = Object.fromEntries(ids.map(id => [id, candidates[id].total / totalAll])) as Record<HypothesisId, number>;
+  const share = openAll
+    ? Object.fromEntries(ids.map(id => [id, candidates[id].open / openAll])) as Record<HypothesisId, number>
+    : prior;
+  return { stage, ruledOutBy, candidates, share, prior };
+}
+
+// How the declared reading is holding up, from the player's own record weighed
+// against what the route could be using at this stage. It names the reading
+// that is weakening; it never names the one that is right.
 export function getHypothesisStanding(game: Game): HypothesisStanding {
   const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
   if (!hypothesis) return { level: "none", label: "No working hypothesis", detail: "Record the explanation you are testing. Until you do, a procedure collects but settles nothing.", spent: 0, sources: 0, inconclusive: 0, turnsSinceConfirmation: 0 };
   const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
   const since = game.turns.filter(turn => turn.number > lastConfirmation);
-  const routeSources = hypothesisSources(game, hypothesis.id);
-  const own = since.filter(turn => turn.hypothesis === hypothesis.id && routeSources.includes(turn.procedure));
-  const checked = new Set(own.filter(turn => turn.success && !turn.revealed).map(turn => turn.procedure));
-  const inconclusive = new Set(own.filter(turn => !turn.success).map(turn => turn.procedure).filter(id => !checked.has(id))).size;
-  const spent = checked.size;
-  const sources = routeSources.length;
-  const common = { spent, sources, inconclusive, turnsSinceConfirmation: since.length };
-  const unresolved = inconclusive ? ` ${inconclusive} further attempt${inconclusive === 1 ? "" : "s"} failed outright, which settles nothing either way.` : "";
-  const ledger = `${spent} of this reading's ${sources} evidence source${sources === 1 ? "" : "s"} ${spent === 1 ? "has" : "have"} been checked since the last confirmation and came back empty`;
-  if (spent === 0) return { level: "untested", label: "Untested", detail: `${hypothesis.title} has not yet been confirmed or ruled out by one of its own evidence sources since the last confirmation.${unresolved}`, ...common };
-  if (spent * 2 < sources) return { level: "holding", label: "Holding", detail: `${ledger}. Too early to abandon the reading.${unresolved}`, ...common };
-  if (spent < sources) return { level: "weakening", label: "Weakening", detail: `${ledger}. Absence across its own sources is evidence against this reading, not just bad luck.${unresolved}`, ...common };
-  return { level: "unsupported", label: "Poorly supported", detail: `Every one of this reading's evidence sources has now been checked since the last confirmation and none produced a stage. On the evidence you hold, another explanation fits better.${unresolved}`, ...common };
+  const inconclusive = new Set(since.filter(turn => !turn.success).map(turn => turn.procedure)).size;
+  const odds = getReadingOdds(game);
+  const own = odds.candidates[hypothesis.id];
+  const spent = own.total - own.open;
+  const common = { spent, sources: own.total, inconclusive, turnsSinceConfirmation: since.length };
+  const unresolved = inconclusive ? ` ${inconclusive} attempt${inconclusive === 1 ? "" : "s"} since the last confirmation failed outright, which settles nothing either way.` : "";
+  const stageName = odds.stage === null ? "next" : stages[odds.stage].name.toLowerCase();
+  const tally = `${spent} of the ${own.total} technique${own.total === 1 ? "" : "s"} this route could be using at the ${stageName} stage ${spent === 1 ? "has" : "have"} been ruled out by completed checks that found nothing`;
+  if (odds.stage === null || !own.total) return { level: "untested", label: "Untested", detail: `${hypothesis.title} has no technique left to test at this point.${unresolved}`, ...common };
+  if (!odds.ruledOutBy.length) return { level: "untested", label: "Untested", detail: `No completed check has ruled anything out at the ${stageName} stage yet, so ${hypothesis.title.toLowerCase()} is neither supported nor weakened.${unresolved}`, ...common };
+  if (!own.open) return { level: "unsupported", label: "Poorly supported", detail: `Every technique this route could be using at the ${stageName} stage has been ruled out by a completed check that found nothing. On the evidence you hold, it is not this route.${unresolved}`, ...common };
+  if (odds.share[hypothesis.id] < odds.prior[hypothesis.id] * STANDING_WEAKENS_BELOW) return { level: "weakening", label: "Weakening", detail: `${tally}. The empty results fit other routes better than this one; absence on sources that would have seen it is evidence, not bad luck.${unresolved}`, ...common };
+  return { level: "holding", label: "Holding", detail: `${tally}. The record still fits this reading at least as well as the others.${unresolved}`, ...common };
 }
+
+// A reading weakens once the share of the open techniques it holds falls below
+// this fraction of the share it started with. Measured over 1,500 operations, a
+// reading between half and four-fifths of its starting share was still right
+// about half the time, so calling that "weakening" would mislead. A route with
+// nothing left open was right in none of 1,772 cases, which is what "poorly
+// supported" says.
+const STANDING_WEAKENS_BELOW = 0.5;
 
 export type DiscriminatingRead = { level: "high" | "moderate" | "broad"; label: string; detail: string; spent: number; inconclusive: number };
 
@@ -1127,7 +1200,7 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
     inconclusive ? ` ${inconclusive} earlier attempt${inconclusive === 1 ? "" : "s"} failed before producing a result, which settles nothing.` : "",
   ].join("");
   if (!hypothesis) return { level: "broad", label: "Broad collection", detail: `No working hypothesis is recorded, so this action collects without testing an explanation.${spentNote}`, spent, inconclusive };
-  if (hypothesisSources(game, hypothesis.id).includes(procedure)) return { level: "high", label: "One of this reading's own sources", detail: `${hypothesis.title} relies on this source, so an empty result here counts against that reading. A discovery may still turn out to sit on another route — the sources overlap.${spentNote}`, spent, inconclusive };
+  if (hypothesisSources(game, hypothesis.id).includes(procedure)) return { level: "high", label: "One of this reading's own sources", detail: `${hypothesis.title} predicts this source. A completed check that finds nothing rules out every technique it could have seen, on this route and any other, and the reading's standing shows what is left. A discovery may still sit on another route — the sources overlap.${spentNote}`, spent, inconclusive };
   return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent, inconclusive };
 }
 
@@ -1207,19 +1280,19 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   const number = g.turns.length + 1;
   g.adversaryMemory.procedureCounts[procedure] = (g.adversaryMemory.procedureCounts[procedure] ?? 0) + 1;
   const nextHidden = g.chain.find(id => !g.revealed.includes(id));
-  const hypothesis = hypotheses.find(item => item.id === g.hypothesis);
   const hypothesisTarget = nextHidden ?? null;
   const hypothesisMatched = !!nextHidden && !!g.hypothesis && g.hypothesis === attackVector(nextHidden);
   // Whether this procedure was one of the sources that could have exposed the
   // stage under test, regardless of how the roll landed.
   const discriminating = !!nextHidden && attacks.find(item => item.id === nextHidden)!.detect.includes(procedure);
-  const planningBonus = hypothesisMatched && hypothesis && hypothesisSources(game, hypothesis.id).includes(procedure) ? 2 : 0;
+  const planningBonus = ownSourceBonus(game, procedure);
   const specialist = specialists[g.specialist];
   const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < 5 ? 1 : 0;
   const scope = procedureScopes[plan.scope];
   const intensity = procedureIntensities[plan.intensity];
   const focusNode = infrastructureTopologies[g.scenario].nodes.find(node => node.id === g.focusedNode)!;
-  const modifier = getModifierBreakdown(g, procedure, plan).total + planningBonus;
+  // One computation: the modifier the roll resolves with is the one previewed.
+  const modifier = getModifierBreakdown(g, procedure, plan).total;
   const total = raw + modifier;
   const success = total >= config.threshold;
   g.nextModifier = 0;
@@ -1755,8 +1828,8 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
       : !turn.hypothesis ? "No working hypothesis was recorded, so this turn could not score."
       : turn.hypothesisMatched
         ? (turn.planningBonus > 0
-          ? `Correct: ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit and the planning bonus.${windfallNote}`
-          : `Correct about the route — ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route — but the procedure was not one of that reading's sources, so no planning bonus.${windfallNote}`)
+          ? `Correct: ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit, and the own-source bonus on the roll.${windfallNote}`
+          : `Correct about the route — ${stage.toLowerCase()} was on the ${actualRoute!.toLowerCase()} route — but the procedure was not one of that reading's sources, so it earned no own-source bonus.${windfallNote}`)
         : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}, so the prediction scored nothing.${windfallNote}`;
     return {
       turn: turn.number,

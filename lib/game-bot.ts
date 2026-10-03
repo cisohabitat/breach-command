@@ -1,4 +1,4 @@
-import { attacks, availableIn, commandEvents, getObjectiveRead, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
+import { attacks, availableIn, commandEvents, getHypothesisStanding, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
 
 export type BotAction =
   | { type: "decision"; choice: DecisionChoice; reason: string }
@@ -65,10 +65,28 @@ function chooseResponse(game: Game): BotAction {
   return { type: "response", choice: ranked[0].option.id, reason: `Advancing the ${phase} plan with ${ranked[0].option.title.toLowerCase()}.` };
 }
 
+// The operator starts from an assumption — the chain continues on the route its
+// latest find was on, or a rotation before any find — and revises on the record,
+// as the game asks a player to. It used to snap back to that assumption every
+// turn and never revise, so in four of five operations it lost to the window it
+// stalled on the last stage testing a route the evidence had already ruled out.
+// Everything it reads here is visible to the player.
 function visibleHypothesis(game: Game): HypothesisId {
   const latest = game.revealed.at(-1);
-  if (latest) return attacks.find(attack => attack.id === latest)?.vector ?? "endpoint";
-  return hypotheses[(game.scenario + game.turns.length) % hypotheses.length].id;
+  const assumed: HypothesisId = latest
+    ? attacks.find(attack => attack.id === latest)?.vector ?? "endpoint"
+    : hypotheses[(game.scenario + game.turns.length) % hypotheses.length].id;
+  const odds = getReadingOdds(game);
+  const viable = (id: HypothesisId) => odds.candidates[id].open > 0 && odds.share[id] >= odds.prior[id] * 0.5;
+  const best = hypotheses
+    .map(item => item.id)
+    .filter(id => odds.candidates[id].open > 0)
+    .sort((a, b) => odds.share[b] - odds.share[a] || Number(b === assumed) - Number(a === assumed))[0] ?? assumed;
+  const current = game.hypothesis;
+  const standing = current ? getHypothesisStanding(game).level : "none";
+  // Keep a reading it already moved to while the record still supports it.
+  if (current && current !== assumed && standing !== "unsupported" && standing !== "weakening" && viable(current)) return current;
+  return viable(assumed) ? assumed : best;
 }
 
 function nextCorrelation(game: Game): BotAction | null {

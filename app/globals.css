@@ -7015,9 +7015,6 @@ the player already holds, so neither narrows the answer for them. */
   color:var(--text-soft);
   line-height:var(--leading-compact);
 }
-.modifier-breakdown li.pending>strong {
-  color:var(--text-soft);
-}
 .procedure-card .spent-label {
   display:block;
   margin-top:5px;

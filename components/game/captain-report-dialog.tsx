@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { ArrowRight, BrainCircuit, CheckCheck, Eye, MessagesSquare, Shield, ShieldCheck, Siren, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, describeChange, getHypothesisStanding, getLossReason, hypothesisSources, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
+import { attacks, describeChange, getHypothesisStanding, getLossReason, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 
@@ -14,8 +14,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   const standing = game && game.mode !== "expert" ? getHypothesisStanding(game) : null;
   // The standing is computed from the operation as it is now, so it belongs only
   // on the latest turn's report, not on an earlier one reopened from the log.
-  const settled = !!report && !!game && report.number === game.turns.length && report.success && !report.revealed && !report.injectReveal
-    && !!game.hypothesis && hypothesisSources(game, game.hypothesis).includes(report.procedure);
+  const settled = !!report && !!game && report.number === game.turns.length && report.success && !report.revealed && !report.injectReveal && !!game.hypothesis;
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
 
@@ -57,11 +56,11 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>{describeChange("sector", report.sectorChange)}</span><span>{describeChange("objective", report.objectiveChange)}</span></div>
               <p className="report-narrative">{report.narrative}</p>
               {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
-              {/* A completed check against one of the reading's own sources is the only
-                  turn that settles anything by finding nothing, and this is where the
-                  player is looking when it lands. A failed roll settles nothing, and
-                  neither does a source the reading never predicted, so neither gets
-                  this block — saying otherwise would teach the wrong inference. */}
+              {/* A completed check that finds nothing rules out every technique its
+                  source could have seen, whichever reading it was run under, and this
+                  is where the player is looking when it lands. A failed roll settles
+                  nothing, so it does not get this block — saying otherwise would
+                  teach the wrong inference. */}
               {settled && standing && (
                 <div className={`report-standing level-${standing.level}`}>
                   <span className="eyebrow">WHERE THE READING STANDS NOW</span>
