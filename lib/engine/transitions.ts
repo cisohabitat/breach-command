@@ -13,7 +13,9 @@ import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerou
 function carriedSource(before: number, beforeSource: string | null, after: number, source: string): string | null {
   if (after === before) return beforeSource;
   if (after === 0) return null;
-  return before === 0 || beforeSource === source ? source : "Several events since your last roll";
+  if (before === 0 || beforeSource === source || !beforeSource) return source;
+  // Both named, so a breakdown never shows a total it does not explain.
+  return beforeSource.includes(source) ? beforeSource : `${beforeSource}; ${source}`;
 }
 
 export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max), setup: GameSetup = {}): Game {

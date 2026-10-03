@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { ArrowRight, Printer, Star, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, inSentence, procedureIntensities, procedureScopes, procedureById, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { specialistReaction } from "@/lib/phase9";
 import { unlockedCapabilities } from "@/lib/campaign";
@@ -144,11 +144,20 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.rationale}</em><em>Impact {record.impactChange >= 0 ? "+" : ""}{record.impactChange} · {getOperationalLabel(game).toLowerCase()} {record.continuityChange >= 0 ? "+" : ""}{record.continuityChange} · Tempo {record.tempoChange >= 0 ? "+" : ""}{record.tempoChange} · Sector {record.sectorChange >= 0 ? "+" : ""}{record.sectorChange} · Objective {record.objectiveChange >= 0 ? "+" : ""}{record.objectiveChange}</em>{record.adaptedTo && <em>Actor adaptation: {record.adaptationReason ?? `the hidden route changed to ${attacks.find(attack => attack.id === record.adaptedTo)?.title}.`}</em>}</p>)}
               {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Command event:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
               {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Sector decision:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
+              {/* Each response phase graded against the best its sector offered, so
+                  a containment-and-recovery score below full says which call cost it. */}
+              {(["containment", "assurance", "recovery"] as const).map((phase, index) => {
+                const options = responseOptionsFor(game)[phase];
+                const chosen = options.find(option => option.id === game.responseChoices[index]);
+                if (!chosen) return null;
+                const best = Math.max(...options.map(option => option.score));
+                return <p key={phase}><strong>{phase.charAt(0).toUpperCase() + phase.slice(1)}:</strong> {chosen.title}<span>{chosen.score} of a best {best}</span><em>{chosen.score === best ? "The strongest option this sector offered." : `${options.find(option => option.score === best)!.title} would have scored more here.`}</em></p>;
+              })}
               {game.responseChoices.map(id => {
                 const option = responseProfile ? [...responseProfile.containment, ...responseProfile.assurance, ...responseProfile.recovery].find(item => item.id === id) : undefined;
                 return <p key={id}><strong>Response:</strong> {option?.title}<span>{option?.confidence} confidence · {option?.residual} residual risk</span></p>;
               })}
-              {game.mapHistory.map((record, index) => <p key={`${record.node}-${index}`}><strong>Infrastructure:</strong> {record.action === "isolate" ? "Isolated" : "Monitored"} {record.node}<span>Map action</span><em>{record.effect}</em></p>)}
+              {game.mapHistory.map((record, index) => <p key={`${record.node}-${index}`}><strong>Infrastructure:</strong> {record.action === "isolate" ? "Isolated" : "Monitored"} {infrastructureTopologies[game.scenario].nodes.find(node => node.id === record.node)?.label ?? record.node}<span>Map action</span><em>{record.effect}</em></p>)}
               </details>
             </div>
           )}

@@ -135,7 +135,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     strength,
     gap: `Your evidence selection worked, but the reading you were testing matched the route the stage actually used on only ${aligned} of ${tested.length} turns${turnCredits(game).filter(item => item.reason === "tested").length ? `, though ${turnCredits(game).filter(item => item.reason === "tested").length} of the others were wrong readings you tested properly` : ""}.`,
     concept: "Finding a stage and classifying it are separate skills. A source can turn one up while the route you named for it is wrong, which is why the score counts them apart.",
-    next: `Next operation, when a stage is confirmed, read what the team is seeing at the next one and choose its reading afresh: routes change from stage to stage${revisions === 0 ? ", and you kept one reading for the whole of this operation" : ""}.`,
+    next: `Next operation, when a stage is confirmed, ${game.difficulty === "training" ? "read what the team is seeing at the next one" : "read the current intelligence again"} and choose its reading afresh: routes change from stage to stage${revisions === 0 ? ", and you kept one reading for the whole of this operation" : ""}.`,
   };
   // The decisions are fifteen points of the score and a playtest was told
   // nothing stood out beside calls graded one and two out of five. The weakest

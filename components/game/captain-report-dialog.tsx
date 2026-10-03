@@ -53,7 +53,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             <section className="report-summary" aria-label="Procedure result">
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
-                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus > 0 || report.specialistBonus > 0 ? ` (${[report.planningBonus > 0 ? `own source +${report.planningBonus}` : "", report.specialistBonus > 0 ? `specialist +${report.specialistBonus}` : "", report.modifier - report.planningBonus - report.specialistBonus ? `everything else ${report.modifier - report.planningBonus - report.specialistBonus > 0 ? "+" : "−"}${Math.abs(report.modifier - report.planningBonus - report.specialistBonus)}` : ""].filter(Boolean).join(", ")})` : ""}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
+                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus > 0 || report.specialistBonus > 0 ? ` (${[report.planningBonus > 0 ? `own source +${report.planningBonus}` : "", report.specialistBonus > 0 ? `specialist +${report.specialistBonus}` : "", report.modifier - report.planningBonus - report.specialistBonus ? `other bonuses ${report.modifier - report.planningBonus - report.specialistBonus > 0 ? "+" : "−"}${Math.abs(report.modifier - report.planningBonus - report.specialistBonus)}` : ""].filter(Boolean).join(", ")})` : ""}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
                 {report.success ? <CheckCheck size={23} aria-hidden="true" /> : <CircleSlash size={23} aria-hidden="true" />}
               </div>
               {/* The plan and the turn's movement are told apart: a playtest read
@@ -121,8 +121,10 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                       <p>No single answer is right. The review judges each against the pressure at the time: with business impact at 55 or more, or the actor&apos;s pace at Accelerating or Pressing hard, acting or containing fits; below that, watching or attributing is affordable.</p>
                     </details>
                   )}
-                  {game.difficulty === "training" && game.mode !== "expert" && (
-                    <p className="decision-pressure">Pressure now: business impact {game.impact}, actor pace {getAdversaryState(game).toLowerCase()}. {game.impact >= 55 || game.adversaryTempo >= 2 ? "That is high: acting or containing fits best." : "That is low: watching or attributing is affordable."}</p>
+                  {/* At every difficulty but Expert: the review grades every decision by this,
+                      and an Operational playtest was graded on a rule it was never shown. */}
+                  {game.mode !== "expert" && (
+                    <p className="decision-pressure">Pressure now: business impact {game.impact}, actor pace {getAdversaryState(game).toLowerCase()} (how fast its progress grows each turn, not how far it has got). {game.impact >= 55 || game.adversaryTempo >= 2 ? "That is high: acting or containing fits best." : "That is low: watching or attributing is affordable."}</p>
                   )}
                   <div ref={optionList}>
                     {decision.options.map(option => (

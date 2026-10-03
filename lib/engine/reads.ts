@@ -145,7 +145,7 @@ export function getCoachPrompt(game: Game, guided = false) {
   // With every source the reading predicts cooling or blind to this stage, the
   // generic line left a player at a dead end.
   if (hypothesisSources(game, game.hypothesis!).every(id => availableIn(game, id) > 0 || sourceSeesReading(game, id) === false)) return "No source your reading predicts can test it this turn: they are cooling down or cannot see this stage. Revise the reading, or collect where you can and test it next turn.";
-  return game.revealed.length ? "Use the stages you have confirmed to predict what the attacker needs next, not merely the next available tool." : "Read what the team is seeing, pick the route that best explains it, and test it with one of that reading's own sources.";
+  return game.revealed.length ? "Use the stages you have confirmed to predict what the attacker needs next, not merely the next available tool." : game.difficulty === "training" ? "Read what the team is seeing, pick the route that best explains it, and test it with one of that reading's own sources." : "Read the current intelligence on Command, pick the route that best explains it, and test it with one of that reading's own sources.";
 }
 
 /**
