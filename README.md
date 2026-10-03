@@ -101,6 +101,8 @@ pnpm exec tsc --noEmit
 pnpm build
 ```
 
+Measure balance before and after a rule change. `pnpm balance` has the Bot Commander play 3,000 seeded operations per difficulty from visible evidence alone and reports win, loss and exercise rates, average score and hypothesis accuracy, and what ended each lost operation. The seeds are fixed, so two runs play the same incidents; `pnpm balance 300 2` measures a command at campaign tier 2.
+
 `pnpm test` runs the engine suites under `node --test` — one file per concern, so a failure reports rather than stopping the run — with deterministic rule checks and 1,230 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover. `pnpm test:a11y` runs an axe audit over the assignment screen at every supported width and over the field guide, settings and command surfaces at a phone width; the narrow widths matter because the topbar hides its button labels below 431 px.
 
 ## Architecture
