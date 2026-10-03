@@ -105,7 +105,8 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   // and telling that player to "prefer a source the reading predicts" told them
   // to do what they had done twelve times.
   const emptyOffReading = game.turns.filter(turn => turn.success && !turn.revealed && turn.hypothesis && !hypothesisSources(game, turn.hypothesis).includes(turn.procedure)).length;
-  if (emptySuccesses >= 3) return emptyOffReading * 2 >= emptySuccesses ? {
+  // A player who revised on those empty checks did what this would tell them.
+  if (emptySuccesses >= 3 && (emptyOffReading * 2 >= emptySuccesses || revisions < 2)) return emptyOffReading * 2 >= emptySuccesses ? {
     strength,
     gap: `${emptySuccesses} of your successful checks produced no new stage, and ${emptyOffReading} of them used a source your reading did not predict.`,
     concept: "A check that succeeds but finds nothing has still cost a turn. Choosing where to look matters more than how hard you look.",
@@ -132,9 +133,9 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   // right when the score already said they were not.
   if (tested.length && aligned < tested.length && breakdown.hypothesis < 8) return {
     strength,
-    gap: `Your evidence selection worked, but the reading you were testing matched the route the stage actually used on only ${aligned} of ${tested.length} turns.`,
+    gap: `Your evidence selection worked, but the reading you were testing matched the route the stage actually used on only ${aligned} of ${tested.length} turns${turnCredits(game).filter(item => item.reason === "tested").length ? `, though ${turnCredits(game).filter(item => item.reason === "tested").length} of the others were wrong readings you tested properly` : ""}.`,
     concept: "Finding a stage and classifying it are separate skills. A source can turn one up while the route you named for it is wrong, which is why the score counts them apart.",
-    next: `Next operation, when a finding lands, check which route it belonged to before choosing the next procedure${revisions === 0 ? " — you kept one reading for the whole of this operation" : ""}.`,
+    next: `Next operation, when a stage is confirmed, read what the team is seeing at the next one and choose its reading afresh: routes change from stage to stage${revisions === 0 ? ", and you kept one reading for the whole of this operation" : ""}.`,
   };
   // The decisions are fifteen points of the score and a playtest was told
   // nothing stood out beside calls graded one and two out of five. The weakest
@@ -144,7 +145,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     strength,
     gap: `Your weakest call was “${weakest.title}” on ${attacks.find(item => item.id === weakest.stage)?.title.toLowerCase() ?? "a confirmed stage"}: ${weakest.rationale.charAt(0).toLowerCase()}${weakest.rationale.slice(1)}`,
     concept: "No response is right in every incident. What decides it is the pressure at that moment: how high business impact is, how fast the actor is moving, and how much margin the service and the sector have left.",
-    next: "Next operation, before choosing a response, look at business impact and the actor badge on the hypothesis board. Above about half, or once the actor is accelerating, act or contain; while both are low, watching or attributing is affordable.",
+    next: "Next operation, before choosing a response, look at business impact and the actor's pace, which the Training decision states and the hypothesis board shows. Above about half, or once the actor is accelerating, act or contain; while both are low, watching or attributing is affordable.",
   };
   if (game.status === "lost") return {
     strength,
@@ -239,7 +240,7 @@ export function getResultSummary(game: Game): string[] {
 // What each turn earned toward hypothesis accuracy, and why. The score and the
 // ledger both read this, so a row can never say "no credit" for a turn the
 // score paid half for.
-type TurnCredit = { credit: number; reason: "none" | "matched" | "tested" | "failed" | "other-source" | "repeated" | "excluded" };
+type TurnCredit = { credit: number; reason: "none" | "matched" | "tested" | "failed" | "other-source" | "repeated" | "excluded" | "absent" };
 function turnCredits(game: Game): TurnCredit[] {
   const ruledOut = new Set<string>();
   return game.turns.map((turn, index): TurnCredit => {
@@ -250,7 +251,9 @@ function turnCredits(game: Game): TurnCredit[] {
     if (!hypothesisSources(game, turn.hypothesis).includes(turn.procedure)) return { credit: 0, reason: "other-source" };
     if (ruledOut.has(turn.hypothesis)) return { credit: 0, reason: "repeated" };
     ruledOut.add(turn.hypothesis);
-    if (!getReadingOdds(recordBefore(game, index)).candidates[turn.hypothesis].open) return { credit: 0, reason: "excluded" };
+    const before = getReadingOdds(recordBefore(game, index)).candidates[turn.hypothesis];
+    if (!before.total) return { credit: 0, reason: "absent" };
+    if (!before.open) return { credit: 0, reason: "excluded" };
     return { credit: 0.5, reason: "tested" };
   });
 }
@@ -273,8 +276,9 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
       tested: "You tested it with one of its own sources and the check completed, which is testing it properly: half credit.",
       failed: "The roll failed, so the check settled nothing and the wrong prediction scored nothing.",
       "other-source": "The procedure was not one of that reading's own sources, so it could not rule the reading out, and the prediction scored nothing.",
-      repeated: "The half credit for testing a reading properly is paid once at each stage, and this reading had already earned it here.",
+      repeated: "The half credit for testing a wrong reading properly is paid once at each stage, and this reading had already earned it here; the check still narrowed the search.",
       excluded: "Your earlier checks had already ruled that route out at this stage, so testing it scored nothing.",
+      absent: "None of the techniques this incident could use at this stage travels that route, which the board showed as \"cannot explain this stage\", so testing it scored nothing.",
     };
     const verdict = !target ? "No stage left to predict, so this turn could not score."
       : !turn.hypothesis ? "No working hypothesis was recorded, so this turn could not score."

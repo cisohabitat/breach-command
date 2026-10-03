@@ -2021,6 +2021,10 @@ a {
   }
   .difficulty-picker small {
     margin-top:0;
+    text-align:right;
+  }
+  .difficulty-picker button {
+    gap:12px;
   }
   .response-panel {
     padding:19px 16px;
@@ -5207,7 +5211,9 @@ html,body {
   .investigation-actions::before {
     content:"";
     position:sticky;
-    top:0;
+    /* Sticky edges sit inside the panel's padding, so at top:0 the strip rested
+       over the heading's first line; it belongs in the padding above it. */
+    top:-17px;
     z-index:3;
     display:block;
     height:18px;
@@ -5254,7 +5260,9 @@ html,body {
 .cinematic-briefing>.primary-button {
   position:sticky;
   bottom:0;
-  box-shadow:0 -12px 24px #152219,0 30px 0 0 #152219;
+  /* The solid shadow below reaches past the button's edges, so the borders of
+     the cards scrolling under it no longer show either side of it. */
+  box-shadow:0 -14px 22px 4px #1a2820,0 30px 0 10px #1a2820;
 }
 .relationship-assessment {
   display:grid;
@@ -6046,6 +6054,24 @@ html,body {
 .response-recorded strong {
   color:#dce8d5;
   font-weight:600;
+}
+.evidence-decision button small.decision-effect {
+  display:block;
+  margin-top:4px;
+  color:#e3d2b0;
+  font-size:var(--type-caption);
+}
+.decision-pressure {
+  margin:0 0 10px;
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+  color:#e8c968;
+}
+.correlation-results small.correlation-effect {
+  display:block;
+  margin-top:4px;
+  font-size:var(--type-caption);
+  color:var(--text-soft);
 }
 /* The response just chosen and what it did. */
 .decision-recorded {
@@ -7851,6 +7877,9 @@ awareness. */
 .alignment-label .nowrap {
   white-space:nowrap;
 }
+.alignment-label.blind {
+  color:#c9b98a;
+}
 /* The way to the evidence workspace, from the note that asks for a comparison. */
 .compare-findings {
   display:inline-flex;
@@ -8130,6 +8159,11 @@ in colour, and the carried plan is stated before the options. */
     overflow:hidden;
     text-overflow:ellipsis;
     margin-top:4px;
+  }
+  /* The clue is what a beginner reads the reading from; at the note's micro
+     size and in italics it was the hardest line on the screen to read. */
+  .training-prompt .prompt-clue {
+    font-size:var(--type-caption);
   }
   /* The report's padding is 24px here, so the cue strip reaches that far. */
   .report-dialog .evidence-decision .options-below {

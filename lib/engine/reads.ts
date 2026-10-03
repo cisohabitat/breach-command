@@ -137,9 +137,15 @@ export function getCoachPrompt(game: Game, guided = false) {
   // The advice to revise follows the reading's standing. Keyed to any empty
   // check ever made, it told a player to revise for the rest of the operation,
   // including while the board said the reading was holding.
-  const standing = getHypothesisStanding(game).level;
-  if (standing === "unsupported" || standing === "weakening") return "The record no longer favours this reading. Revise it, or choose a source that can tell the remaining routes apart.";
-  return "Use confirmed facts to predict the attacker’s next requirement, not merely the next available tool.";
+  const standing = getHypothesisStanding(game);
+  // A route with no technique at this stage was told "the record no longer
+  // favours" it before any check had run; nothing in the record had changed.
+  if (standing.level === "unsupported" && !standing.sources) return "This reading cannot explain the stage under test: none of its techniques travels this route here. Choose a route that can before you run a procedure.";
+  if (standing.level === "unsupported" || standing.level === "weakening") return "The record no longer favours this reading. Revise it, or choose a source that can tell the remaining routes apart.";
+  // With every source the reading predicts cooling or blind to this stage, the
+  // generic line left a player at a dead end.
+  if (hypothesisSources(game, game.hypothesis!).every(id => availableIn(game, id) > 0 || sourceSeesReading(game, id) === false)) return "No source your reading predicts can test it this turn: they are cooling down or cannot see this stage. Revise the reading, or collect where you can and test it next turn.";
+  return game.revealed.length ? "Use the stages you have confirmed to predict what the attacker needs next, not merely the next available tool." : "Read what the team is seeing, pick the route that best explains it, and test it with one of that reading's own sources.";
 }
 
 /**
@@ -201,7 +207,7 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
   const standing = getHypothesisStanding(game);
   if (standing.level === "weakening" || standing.level === "unsupported") return {
     step: "revise",
-    title: "Your reading is running out of support",
+    title: standing.level === "unsupported" && !standing.sources ? "This reading cannot explain this stage" : "Your reading is running out of support",
     detail: `${standing.detail} Read the current observation again and pick the explanation that accounts for it, then test that one.`,
     sources: [],
     clue,
@@ -371,7 +377,7 @@ export function getHypothesisStanding(game: Game): HypothesisStanding {
   // test cannot be the explanation for it. It read as "untested" here, and a
   // player kept it for a whole Crisis operation waiting for a test that could
   // never come.
-  if (!own.total) return { level: "unsupported", label: "Poorly supported", detail: `None of the techniques this incident can use at the ${stageName} stage travels by this route, so ${hypothesis.title.toLowerCase()} cannot explain it. Choose a route that can.${unresolved}`, ...common };
+  if (!own.total) return { level: "unsupported", label: "Cannot explain this stage", detail: `None of the techniques this incident can use at the ${stageName} stage travels by this route, so ${hypothesis.title.toLowerCase()} cannot explain it. Choose a route that can.${unresolved}`, ...common };
   if (!odds.ruledOutBy.length) return { level: "untested", label: "Untested", detail: `No completed check has ruled anything out at the ${stageName} stage yet, so ${hypothesis.title.toLowerCase()} is neither supported nor weakened.${unresolved}`, ...common };
   if (!own.open) return { level: "unsupported", label: "Poorly supported", detail: `Every technique this route could be using at the ${stageName} stage has been ruled out by a completed check that found nothing at this stage. On the evidence you hold, it is not this route.${unresolved}`, ...common };
   if (odds.share[hypothesis.id] < odds.prior[hypothesis.id] * STANDING_WEAKENS_BELOW) return { level: "weakening", label: "Weakening", detail: `${tally}. The empty results fit other routes better than this one; absence on sources that would have seen it is evidence, not bad luck.${unresolved}`, ...common };

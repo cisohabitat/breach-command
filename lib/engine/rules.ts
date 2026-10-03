@@ -24,7 +24,9 @@ export function shuffle<T>(array: T[], random = (max: number) => randomInt(max))
 
 export const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 
-export const state = (tempo: number) => tempo <= 0 ? "Covert" : tempo === 1 ? "Maneuvering" : tempo === 2 ? "Accelerating" : "Executing objective";
+// The actor's pace, not its progress: "Executing objective" beside an
+// adversary progress of 19 read as a contradiction.
+export const state = (tempo: number) => tempo <= 0 ? "Covert" : tempo === 1 ? "Maneuvering" : tempo === 2 ? "Accelerating" : "Pressing hard";
 
 export function getAdversaryState(game: Game) {
   return state(game.adversaryTempo);

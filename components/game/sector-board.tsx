@@ -26,7 +26,7 @@ export function SectorBoard({ game }: { game: Game }) {
       </div>
       <div className="command-feed">
         <div><Radio size={16} /><span><small>LIVE TRANSMISSION</small><strong>{transmission}</strong></span></div>
-        <div><Users size={16} /><span><small>{person.callsign} · {attribution.confidence} ATTRIBUTION · FATIGUE {game.specialistFatigue}/6</small><strong>{person.name}, {specialist.title}: “{person.voice}”</strong></span></div>
+        <div><Users size={16} /><span><small>{person.callsign} · {attribution.confidence === "ATTRIBUTED" ? "ATTRIBUTED" : `${attribution.confidence} ATTRIBUTION`} · FATIGUE {game.specialistFatigue}/6</small><strong>{person.name}, {specialist.title}: “{person.voice}”</strong></span></div>
       </div>
     </section>
   );

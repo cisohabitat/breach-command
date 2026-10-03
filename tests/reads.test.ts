@@ -503,7 +503,7 @@ test("names the weakest decision rather than giving the all-clear", () => {
   const done={...run,correlations:[{id:"C1",turn:1,evidence:["E1","E2"],assessment:"causal",correct:true,verdict:"x"}],responseScore:50,turns:run.turns.map(turn=>({...turn,hypothesis:turn.hypothesisTarget?"endpoint" as const:null,hypothesisMatched:true}))} as unknown as Game;
   const weak={...done,decisions:done.decisions.map(item=>({...item,quality:1}))};
   assert.ok(/weakest call/.test(getBeginnerReview(weak).gap),"a weak call is named");
-  assert.ok(/actor badge/.test(getBeginnerReview(weak).next),"with what to look at next time");
+  assert.ok(/actor's pace/.test(getBeginnerReview(weak).next),"with what to look at next time");
   assert.ok(!/weakest call/.test(getBeginnerReview({...done,decisions:done.decisions.map(item=>({...item,quality:5}))}).gap),"and a sound one is not");
 });
 

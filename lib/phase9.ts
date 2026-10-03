@@ -65,7 +65,7 @@ const specialistReactions: Record<SpecialistId, Record<ReactionTone, string[]>> 
   hunter: {
     loss: ["We lost the window, not the lessons. Preserve the sequence and rebuild the plan.", "The behaviour was visible; our timing was not. Keep the evidence boundary intact next run."],
     excellent: ["The team anticipated the decision points. That is repeatable command practice.", "Behaviour testing stayed ahead of the actor. Document that decision order."],
-    strong: ["Our hypotheses held against the evidence. Tighten the correlation step and it repeats.", "We tested behaviour before assuming intent. That is the correct order."],
+    strong: ["The evidence carried us to the chain. Tighten the correlation step and it repeats.", "We tested behaviour before assuming intent. That is the correct order."],
     cohesive: ["We held the line together. Next time we can reduce the uncertainty earlier.", "The team stayed aligned under pressure. Carry that coordination into the next incident."],
     steady: ["The service is stable. The review should focus on where our shared picture arrived late.", "We reached the answer. Look first at which signal we discounted."],
   },

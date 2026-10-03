@@ -120,7 +120,7 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
   if (action === "monitor" && game.nodePosture[nodeId] === "monitored") throw new Error("This node is already monitored.");
   const change = getMapActionEffect(game, nodeId, action);
   const effect = action === "monitor"
-    ? `Telemetry priority established on ${node.label}. The next aligned procedure gains analytical support.`
+    ? `Telemetry priority established on ${node.label}. The next procedure, whichever it is, gains analytical support.`
     : `${node.label} isolated. ${topology.criticalRule}`;
   const g: Game = {
     ...game,

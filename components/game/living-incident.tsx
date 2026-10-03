@@ -107,6 +107,6 @@ export function SpecialistTransmission({ game }: { game: Game }) {
           ? `The evidence picture can support a causal test. Confirm whether ${node.label} belongs in the attack path.`
           : `Focus collection on ${node.label}. ${specialist.voice}`;
   return <section className="specialist-transmission" aria-live="polite">
-    <span><Radio size={18} /></span><div><small>{specialist.callsign} · {attribution.confidence} ATTRIBUTION</small><strong>{specialist.name}</strong><p>{advice}</p></div>
+    <span><Radio size={18} /></span><div><small>{specialist.callsign} · {attribution.confidence === "ATTRIBUTED" ? "ATTRIBUTED" : `${attribution.confidence} ATTRIBUTION`}</small><strong>{specialist.name}</strong><p>{advice}</p></div>
   </section>;
 }
