@@ -28,6 +28,9 @@ async function openGame(page: Page) {
   });
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator(".briefing-screen")).toBeVisible();
+  // The page is prerendered and visible before it hydrates; a click that lands
+  // first opens nothing. The dev server hydrates slowly enough to show it.
+  await page.waitForLoadState("networkidle");
 }
 
 async function expectNoViolations(page: Page, surface: string) {

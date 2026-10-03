@@ -92,7 +92,7 @@ Run the verification suite:
 
 ```bash
 pnpm test
-pnpm test:responsive:install # first run only
+pnpm test:responsive:install # first run only; or set PLAYWRIGHT_CHROMIUM_EXECUTABLE to an installed Chromium
 pnpm test:responsive
 pnpm test:a11y
 pnpm test:persistence
@@ -131,6 +131,7 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
 | `tests/e2e/persistence.spec.ts` | Stored settings survive a load and a reload |
+| `tests/e2e/keyboard.spec.ts` | Initial focus in overlays, focus recovery and switchable shortcuts |
 | `playwright.config.ts` | Deterministic Chromium test runner and local preview lifecycle |
 
 The interface is built with Next.js 16, React 19 and TypeScript and deployed as a native Next.js application on Vercel.

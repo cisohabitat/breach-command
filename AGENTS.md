@@ -47,6 +47,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `tests/*.test.ts`: the engine suite, run by `node --test`. One file per concern — engine, campaign, reads, session, content, simulation — so a failure in one reports without stopping the rest.
 - `tests/e2e/accessibility.spec.ts`: axe audit across the supported widths and overlays.
 - `tests/e2e/persistence.spec.ts`: local storage survives a page load and a reload.
+- `tests/e2e/keyboard.spec.ts`: where focus lands when an overlay opens or a control is replaced, and that the single-key shortcuts can be turned off.
+- `.claude/hooks/session-start.sh`: prepares a Claude Code cloud session — installs from the frozen lockfile and, when the container's Chromium is not the build the pinned Playwright expects, sets `PLAYWRIGHT_CHROMIUM_EXECUTABLE`, which `playwright.config.ts` honours.
 - `public/sw.js`: offline cache. Increment the cache name when deployed assets or application behaviour change.
 
 ## Game-engine invariants
@@ -160,7 +162,7 @@ git diff --check
 
 `tests/e2e/responsive-game.spec.ts` builds the response phase from the engine and resumes it from a saved session. Do not make a browser fixture depend on a bot run winning under a stubbed random source: that run is decided by one constant, and a balance change silently takes the whole suite with it.
 
-Run `pnpm test:a11y` for any change to markup, labels or the responsive rules that hide them; it must report zero violations, and `pnpm test:persistence` for any change to stored state. `pnpm test:e2e` runs every browser suite. For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194 and 1280 px widths. Treat 768–834 px portrait and 1024–1194 px landscape as explicit iPad targets. A successful build does not replace interaction and responsive checks.
+Run `pnpm test:a11y` for any change to markup, labels or the responsive rules that hide them; it must report zero violations, and `pnpm test:persistence` for any change to stored state. `pnpm test:e2e` runs every browser suite; run it for any change to focus handling or keyboard behaviour, which `tests/e2e/keyboard.spec.ts` covers. A browser test that acts on the page waits for it to hydrate (`networkidle`) first: the page is prerendered, so it is visible before its handlers exist, and the dev server makes the gap wide enough to fail on. For engine changes, add a deterministic assertion and ensure all simulated playthroughs terminate. For UI changes, exercise the affected flow in the managed preview and check 320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194 and 1280 px widths. Treat 768–834 px portrait and 1024–1194 px landscape as explicit iPad targets. A successful build does not replace interaction and responsive checks.
 
 ## Publication
 

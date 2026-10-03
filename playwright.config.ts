@@ -1,6 +1,10 @@
 import { defineConfig } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+// A machine whose preinstalled Chromium is not the build this Playwright release
+// expects can name it here rather than download another. The cloud session hook
+// in .claude/hooks/session-start.sh sets it only when the expected build is absent.
+const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -19,6 +23,7 @@ export default defineConfig({
     serviceWorkers: "block",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
+    ...(executablePath ? { launchOptions: { executablePath } } : {}),
   },
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
