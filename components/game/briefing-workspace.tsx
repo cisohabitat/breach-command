@@ -2,6 +2,7 @@ import { ArrowRight, Dices, FastForward, Sparkles, Terminal } from "lucide-react
 import { Switch } from "@/components/ui/switch";
 import { getAdversaryRead, procedureById } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
+import { Glossed } from "@/components/game/glossed";
 
 export function BriefingWorkspace({ session }: { session: GameSession }) {
   const {
@@ -16,7 +17,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
       <section className="captain-panel">
         <div className="captain-label"><span className="captain-avatar"><Terminal size={23} /></span><div><h2>Incident Captain</h2><span>ADAPTIVE COMPUTER FACILITATOR</span></div></div>
         <div className="brief-label">SITUATION</div>
-        <p className="captain-brief">{activeScenario.brief}</p>
+        <p className="captain-brief"><Glossed text={activeScenario.brief} /></p>
         <div className="captain-divider" />
         <div className="brief-label">ASK YOUR CAPTAIN <span>Free action</span></div>
         <div className="question-list">

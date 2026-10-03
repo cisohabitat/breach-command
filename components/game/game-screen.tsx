@@ -54,7 +54,9 @@ export function GameScreen({ session }: { session: GameSession }) {
     <main className={`game-screen sector-theme-${game.scenario}`} id="main-content">
       <section className="game-heading">
         <div className="game-identity">
-          <div className="eyebrow">CASE {String(game.scenario + 1).padStart(2, "0")} <span className="separator">/</span> {activeScenario.sector} <span className="separator">/</span> {config.title.toUpperCase()} <span className="separator">/</span> {gameModes[game.mode].title.toUpperCase()}</div>
+          {/* Each separator travels with the segment after it, so a breadcrumb that
+              wraps on a narrow phone never ends a line on a bare "/". */}
+          <div className="eyebrow">CASE {String(game.scenario + 1).padStart(2, "0")}{[activeScenario.sector, config.title.toUpperCase(), gameModes[game.mode].title.toUpperCase()].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
           <h1>{activeScenario.title}</h1>
           {/* The investigation window rarely decides an operation, so it reads as
               context under the title rather than competing with the three

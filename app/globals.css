@@ -3497,6 +3497,23 @@ html,body {
   line-height:var(--leading-base);
   letter-spacing:.01em;
 }
+/* The sector's mechanics sit one tap under its plain description. */
+.brief-rule-fold {
+  margin-top:4px;
+}
+.brief-rule-fold>summary {
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  cursor:pointer;
+  color:var(--lime);
+  font-size:var(--type-caption);
+  font-weight:500;
+}
+.brief-rule-fold>summary:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
+}
 .director-order {
   display:flex;
   gap:12px;
@@ -5972,26 +5989,116 @@ html,body {
   min-height:0;
   padding:11px 12px;
 }
-/* Pinned to the foot of the report while a response is out of view. */
+/* A glossary term inside prose: the sentence's own type, a dotted underline,
+   and its meaning opened in place after it. */
+.gloss-term {
+  display:inline;
+  padding:0;
+  border:0;
+  background:none;
+  color:inherit;
+  font:inherit;
+  letter-spacing:inherit;
+  text-decoration:underline dotted;
+  text-decoration-color:color-mix(in srgb,currentColor 55%,transparent);
+  text-underline-offset:3px;
+  cursor:help;
+}
+.gloss-term:hover,.gloss-term[aria-expanded=true] {
+  text-decoration-color:var(--lime);
+}
+.gloss-term:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
+  border-radius:2px;
+}
+.gloss-meaning {
+  color:#c9d8c2;
+  font-style:normal;
+  font-weight:400;
+}
+/* What each verb trades away, one tap down on a Training operation's first decision. */
+.decision-primer {
+  margin:-4px 0 10px;
+  font-size:var(--type-caption);
+  color:#b9c9b4;
+}
+.decision-primer>summary {
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  cursor:pointer;
+  color:var(--lime);
+  font-weight:500;
+}
+.decision-primer>summary:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
+}
+.decision-primer ul {
+  display:grid;
+  gap:6px;
+  margin:4px 0 8px;
+  padding:0;
+  list-style:none;
+}
+.decision-primer li {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:8px;
+  align-items:start;
+  line-height:var(--leading-base);
+}
+.decision-primer li svg {
+  margin-top:2px;
+  color:var(--lime);
+}
+.decision-primer b {
+  color:#dce8d5;
+  font-weight:600;
+}
+.decision-primer p {
+  margin:0;
+  line-height:var(--leading-base);
+}
+/* Pinned to the foot of the report while a response is out of view. A pill
+   floating over the list sat on the first option's text on a phone; as a strip
+   across the panel's foot, what passes under it fades instead. */
 .report-dialog .evidence-decision .options-below {
   position:sticky;
-  bottom:0;
+  /* The sticky edge sits inside the report's bottom padding; the strip reaches
+     past it to the report's own edge, so nothing shows beneath it. */
+  bottom:-30px;
   z-index:2;
   display:flex;
-  align-items:center;
+  align-items:flex-end;
   justify-content:center;
-  gap:6px;
-  width:max-content;
-  min-height:40px;
-  margin:8px auto 0;
-  padding:8px 16px;
-  border:1px solid var(--lime);
-  border-radius:999px;
-  background:#1f2f22;
-  box-shadow:0 -10px 18px #1a2820;
+  width:calc(100% + 30px);
+  min-height:0;
+  margin:0 -15px -15px;
+  padding:34px 15px 12px;
+  border:0;
+  border-radius:0 0 7px 7px;
+  background:linear-gradient(#14201800,#142018 46%);
   color:var(--lime);
   font-size:var(--type-caption);
   font-weight:500;
+}
+.report-dialog .evidence-decision .options-below>span {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:36px;
+  padding:6px 14px;
+  border:1px solid var(--lime);
+  margin:0;
+  border-radius:999px;
+  background:#1f2f22;
+  color:inherit;
+  font-size:inherit;
+}
+.report-dialog .evidence-decision .options-below:hover>span {
+  background:#29402c;
 }
 .report-dialog .evidence-decision .options-below:focus-visible {
   outline:2px solid var(--lime);
@@ -7147,6 +7254,12 @@ the readouts that decide the operation. */
 .game-identity {
   min-width:0;
 }
+.game-identity .eyebrow .crumb {
+  display:inline-flex;
+  align-items:center;
+  column-gap:inherit;
+  white-space:nowrap;
+}
 .operation-status {
   display:grid;
   grid-template-columns:auto 1fr;
@@ -7897,6 +8010,10 @@ in colour, and the carried plan is stated before the options. */
     letter-spacing:0;
     text-transform:none;
   }
+  /* The report's padding is 24px here, so the cue strip reaches that far. */
+  .report-dialog .evidence-decision .options-below {
+    bottom:-24px;
+  }
   /* With a reading recorded, the board becomes a bar: what is declared, how it is
      holding up, and the way to change it. The premises and the sources live one
      tap down in the comparison, so the grid is on screen when the player acts. */
@@ -8110,6 +8227,12 @@ in colour, and the carried plan is stated before the options. */
   }
 }
 @media(max-width:360px) {
+  /* "ENTERPRISE IT / TRAINING / CAMPAIGN" fits one line at 320 this tight; the
+     longest sector names still wrap, at a separator. */
+  .game-identity .eyebrow {
+    column-gap:5px;
+    letter-spacing:.04em;
+  }
   /* One line for the window, as on wider phones: it wrapped to two at 320. */
   .operation-status>.mono {
     font-size:9px;

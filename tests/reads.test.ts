@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,glossaryParts,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -469,4 +469,14 @@ test("does not tell a player who revised to revise", () => {
   const sound=review([...opening,turn(3,"application","server"),turn(4,"endpoint","endpoint",{hypothesisMatched:true,revealed:"phish"})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"},{turn:4,id:"endpoint"}]);
   assert.ok(/which is the habit/.test(sound.gap)&&/ruled out/.test(sound.next),"sound revision is credited, and the advice is what is left to gain");
   assert.ok(/When it says weakening/.test(review([turn(1,"cloud","cloud"),turn(2,"cloud","cloud")],[{turn:1,id:"cloud"}]).next),"a reading never revised still gets the standing advice");
+});
+
+test("marks glossary terms where they are read, once each", () => {
+  // The glossary sat in the field guide while a newcomer read "control-plane"
+  // in a report. Terms are marked in the passage itself, longest first.
+  const parts=glossaryParts("Control-plane tokens reached the privileged tier; the endpoint and another endpoint sent C2 beaconing.");
+  assert.equal(parts.map(part=>part.text).join(""),"Control-plane tokens reached the privileged tier; the endpoint and another endpoint sent C2 beaconing.","the passage is unchanged");
+  assert.deepEqual(parts.filter(part=>part.term).map(part=>part.term),["control plane","token","privileged tier","endpoint","C2","beaconing"],"hyphenated, plural and longer terms are found, and each only once");
+  assert.ok(!glossaryParts("Capitalise the endpoints' tokenisation").some(part=>part.term==="token"),"a term inside a longer word is not marked");
+  for(const part of glossaryParts("An endpoint")) if(part.term) assert.ok(plainLanguage[part.term],"every marked term has a meaning");
 });

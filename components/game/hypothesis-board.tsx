@@ -9,6 +9,7 @@ import {
   type Game,
   type HypothesisId,
 } from "@/lib/advanced-game";
+import { Glossed } from "@/components/game/glossed";
 
 export function HypothesisBoard({
   game,
@@ -84,7 +85,7 @@ export function HypothesisBoard({
       {active && (
         <div className="hypothesis-detail">
           <strong>{active.title}</strong>
-          <span>{active.premise}</span>
+          <span><Glossed text={active.premise} /></span>
           <small>Evidence: {hypothesisSources(game, active.id).map(id => procedureById(game, id)?.title).filter(Boolean).join(" · ")}</small>
         </div>
       )}

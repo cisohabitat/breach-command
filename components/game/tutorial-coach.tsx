@@ -5,7 +5,7 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
   const steps = [
     { done: !!game.hypothesis, title: "Form a working hypothesis", detail: "Choose the access path that best explains the current intelligence." },
     { done: game.turns.length > 0, title: "Plan an evidence action", detail: "Select a procedure, its scope and how intensively to run it." },
-    { done: game.decisions.length > 0, title: "Balance evidence and intervention", detail: "When evidence appears, decide whether to observe or act." },
+    { done: game.decisions.length > 0, title: "Balance evidence and intervention", detail: "When a stage is confirmed, choose one of five responses, each trading evidence, service or time." },
     { done: game.revealed.length >= 2, title: "Infer the objective", detail: "Two confirmed stages improve the assessment of adversary intent." },
   ];
   const current = steps.findIndex(step => !step.done);
@@ -14,7 +14,7 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
     : current === 1
       ? workspace === "investigate" ? "Choose a procedure, review its roll modifier and operational cost, then run it." : "Open Investigate and run an evidence procedure that supports your hypothesis."
       : current === 2
-        ? "Continue testing evidence. When a technique is confirmed, compare the value of observing it with the service risk of acting now."
+        ? "Continue testing evidence. When a stage is confirmed, the report offers five responses; “How these responses differ” says what each one trades away."
         : current === 3
           ? game.revealed.length < 2 ? "Confirm a second attack stage. Then use the Evidence Workspace to declare what you think the actor wants." : "Use the Evidence Workspace to declare the actor's likely objective. You can revise it as evidence changes."
           : "You have completed the guided opening. The same Command, Investigate and Briefing workspaces remain available for the rest of the incident.";

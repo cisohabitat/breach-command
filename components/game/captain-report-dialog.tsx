@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { attacks, describeChange, getHypothesisStanding, getLossReason, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
+import { Glossed } from "@/components/game/glossed";
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
   const { report, game, ended, config, dismissReport, decide } = session;
@@ -56,7 +57,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 {report.success ? <CheckCheck size={23} aria-hidden="true" /> : <CircleSlash size={23} aria-hidden="true" />}
               </div>
               <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>{describeChange("sector", report.sectorChange)}</span><span>{describeChange("objective", report.objectiveChange)}</span></div>
-              <p className="report-narrative">{report.narrative}</p>
+              <p className="report-narrative"><Glossed text={report.narrative} /></p>
               {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
@@ -84,6 +85,22 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {/* The count says how many there are: the last of five sat below the fold
                       of a laptop screen with nothing saying it was there. */}
                   <h3>{decision.attack.title}: choose one of {["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length} command responses.</h3>
+                  {/* A newcomer meets five verbs described in costs they cannot yet
+                      weigh. On a Training operation's first decision, one tap says
+                      what each trades away, keyed to the icons on the options. */}
+                  {game.difficulty === "training" && game.mode !== "expert" && game.decisions.length === 0 && (
+                    <details className="decision-primer">
+                      <summary>How these responses differ</summary>
+                      <ul>
+                        <li><Eye size={15} aria-hidden="true" /><span><b>Watch</b> builds evidence; the intruder keeps its opportunity.</span></li>
+                        <li><Siren size={15} aria-hidden="true" /><span><b>Act</b> cuts exposure now; it costs some evidence and service, and the intruder adapts.</span></li>
+                        <li><BrainCircuit size={15} aria-hidden="true" /><span><b>Attribute</b> learns who is behind it before touching anything; the intruder keeps moving.</span></li>
+                        <li><Shield size={15} aria-hidden="true" /><span><b>Contain</b> restricts the path while protecting the sector&apos;s margin.</span></li>
+                        <li><MessagesSquare size={15} aria-hidden="true" /><span><b>Notify</b> aligns leaders and protects service; the intruder gains time.</span></li>
+                      </ul>
+                      <p>No single answer is right: choose for the pressure you most need to relieve.</p>
+                    </details>
+                  )}
                   <div ref={optionList}>
                     {decision.options.map(option => (
                       <button key={option.id} onClick={() => decide(option.id)}>
@@ -138,5 +155,5 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
     const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     last?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "nearest" });
   };
-  return <button type="button" className="options-below" onClick={reveal}>{hidden === 1 ? "One more response below" : `${hidden} more responses below`} <ArrowDown size={15} /></button>;
+  return <button type="button" className="options-below" onClick={reveal}><span>{hidden === 1 ? "One more response below" : `${hidden} more responses below`} <ArrowDown size={15} /></span></button>;
 }

@@ -8,6 +8,7 @@ import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
 import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
+import { Glossed } from "@/components/game/glossed";
 
 // Whether the layout is a phone's. The server renders the wide layout, with the
 // reference column open, and a phone folds it once it has hydrated.
@@ -68,7 +69,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         <strong>{trainingPrompt.title}.</strong>{foldWhy
           ? <> <details className="prompt-why"><summary>Why</summary>{trainingPrompt.detail}</details></>
           : <> {trainingPrompt.detail}</>}
-        {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: {trainingPrompt.clue}</b>}
+        {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: <Glossed text={trainingPrompt.clue} /></b>}
         {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(" · ")}</b>}
         {(trainingPrompt.step === "theory" || trainingPrompt.step === "correlate") && evidenceButton}
         {trainingPrompt.step === "test" && mapAside}
