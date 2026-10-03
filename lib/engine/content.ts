@@ -94,7 +94,7 @@ export const commandEvents = {
 // alignment stay internally consistent across every sector.
 export const responseProfiles: ResponseProfile[] = [
   {
-    constraint: "Business service confidence: isolating the shared application tier interrupts payroll and dependent workflows first.",
+    constraint: "Business confidence margin: isolating the shared application tier interrupts payroll and dependent workflows first.",
     containment: [
       { id: "isolate", title: "Isolate the business application tier", description: "Severs the trust path to shared applications and stops dependent workflows.", disruption: "High", confidence: "Strong", residual: "Low", impact: -24, continuity: -16, score: 12 },
       { id: "credential", title: "Revoke business identities and sessions", description: "Constrains identity-led movement across payroll and shared services.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -17, continuity: -6, score: 11 },
@@ -148,7 +148,7 @@ export const responseProfiles: ResponseProfile[] = [
     ],
   },
   {
-    constraint: "Terminal operating window: capacity falls fastest late in the incident, and isolation severs partner transactions first.",
+    constraint: "Terminal schedule margin: capacity falls fastest late in the incident, and isolation severs partner transactions first.",
     containment: [
       { id: "isolate", title: "Isolate the booking portal", description: "Cuts external partner access and shifts bookings to manual handling.", disruption: "High", confidence: "Strong", residual: "Low", impact: -25, continuity: -18, score: 13 },
       { id: "credential", title: "Revoke partner and planning identities", description: "Constrains the portal trust path with limited terminal disruption.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -16, continuity: -6, score: 11 },

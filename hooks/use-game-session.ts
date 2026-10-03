@@ -505,6 +505,14 @@ export function useGameSession() {
     setAdaptiveScore(false);
   }
 
+  // A player who completes all four academy steps has qualified, whether or not
+  // they press "Finish tutorial"; the next operation restarted at 1/4 after the
+  // card had said "Field qualification complete".
+  const academyDone = !!game?.hypothesis && !!game?.turns.length && !!game?.decisions.length && !!game?.caseTheory;
+  useEffect(() => {
+    if (tutorial && academyDone) writeStored("breach-command.tutorial-complete", "true");
+  }, [tutorial, academyDone]);
+
   function dismissTutorial() {
     setTutorial(false);
     writeStored("breach-command.tutorial-complete", "true");
