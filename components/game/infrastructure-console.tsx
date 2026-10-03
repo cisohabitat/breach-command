@@ -38,7 +38,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
               <small>{node.type}{critical ? " · CRITICAL" : ""}</small><strong>{node.label}</strong>
               {/* Selecting a node no longer hides its state: "SELECTED" in place of
                   "AFFECTED" took the warning away from the node it was about. */}
-              <em>{game.focusedNode === node.id ? "SELECTED · " : ""}{nodePosture === "isolated" ? "ISOLATED" : nodePosture === "monitored" ? "MONITORED" : nodePosture === "restored" ? "RESTORED" : findings ? `${findings} FINDING${findings === 1 ? "" : "S"}` : state.toUpperCase()}</em>
+              <em>{game.focusedNode === node.id ? "SELECTED · " : ""}{nodePosture === "isolated" ? "ISOLATED" : nodePosture === "monitored" ? "MONITORED" : nodePosture === "restored" ? "RESTORED" : findings ? `${findings} COLLECTED HERE` : state.toUpperCase()}</em>
             </button>;
           })}
         </div>
