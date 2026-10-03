@@ -93,7 +93,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                       </button>
                     ))}
                   </div>
-                  <OptionsBelow list={optionList} />
+                  <OptionsBelow key={decision.attack.id} list={optionList} />
                 </div>
               )}
             </section>}
