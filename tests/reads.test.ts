@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {getScoreRows,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -399,4 +399,20 @@ test("sums up a result without spoiling the operation", () => {
   assert.equal(lines.length,2,"an ordinary operation has no code to share");
   const seeded=getResultSummary({...lost,seed:4242});
   assert.ok(/BC-\d+-\d+-\d+-\d+-4242-\d{2}/.test(seeded[2]),"a reproducible one carries its challenge code");
+});
+
+test("explains each part of the score in the player's own numbers", () => {
+  // A bare "7/25" read as a verdict with no way to do better.
+  let run=setHypothesis({...baseline(),injectDeck:[]},"identity");
+  for(const id of ["identity","firewall","cloud","hunt","email","network"]){
+    run=playTurn({...run,impact:20,objectiveProgress:10},id,2);
+    if(run.pendingSetPiece)run=resolveSetPiece(run,"b");
+    if(run.pendingCommand)run=resolveCommand(run,"b");
+  }
+  const rows=getScoreRows(run);
+  const breakdown=getScoreBreakdown(run);
+  assert.equal(rows.reduce((sum,row)=>sum+row.value,0),breakdown.total,"the rows add up to the score");
+  assert.equal(rows.reduce((sum,row)=>sum+row.maximum,0),100);
+  assert.ok(rows.find(row=>row.label==="Investigation")!.rule.includes("You took 6 turns"),"the turn rule uses the player's count");
+  assert.ok(/not reached/.test(rows.find(row=>row.label==="Containment & recovery")!.rule),"an unreached response says why it scored nothing");
 });

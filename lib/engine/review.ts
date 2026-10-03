@@ -133,6 +133,24 @@ export function getOutcome(game: Game) {
   return { grade: "D", title: "Fragile recovery", detail: "The immediate crisis passed, but the response left significant residual risk.", breakdown };
 }
 
+// Each part of the score, with the rule that produced it in the player's own
+// numbers. A bare "7/25" next to "Investigation" read as a verdict with no way
+// to do better; the rule beside it says what would have moved it.
+export function getScoreRows(game: Game) {
+  const breakdown = getScoreBreakdown(game);
+  const turns = game.turns.length;
+  const decided = game.decisions.length + game.commandHistory.length + game.setPieceHistory.length;
+  const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+  return [
+    { label: "Investigation", value: breakdown.investigation, maximum: 25, rule: `Full marks for four turns or fewer, then 3 fewer for each turn after the fourth. You took ${plural(turns, "turn")}.` },
+    { label: "Impact control", value: breakdown.impact, maximum: 15, rule: `Rises as final business impact falls towards zero. It finished at ${game.impact}.` },
+    { label: "Continuity", value: breakdown.continuity, maximum: 15, rule: `${scenarioDynamics[game.scenario].label} and the sector's margin at the end, averaged: ${game.continuity} and ${game.sectorHealth}.` },
+    { label: "Operational decisions", value: breakdown.decisions, maximum: 15, rule: decided ? `The average quality of your ${plural(decided, "evidence, command and sector decision")}; the review's decision record grades each one.` : "No decisions were taken, so there was nothing to score." },
+    { label: "Containment & recovery", value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? "Choices that fit the sector's constraint and the adversary's objective score highest; the cheapest option is not always the right one." : "The response phase was not reached, so nothing was scored. It opens once all four stages are confirmed." },
+    { label: "Hypothesis accuracy", value: breakdown.hypothesis, maximum: 10, rule: "Full credit for each turn whose reading named the route under test, half for a wrong reading tested properly once. The ledger below goes turn by turn." },
+  ];
+}
+
 // A result a player can paste anywhere. It carries counts, never the techniques,
 // so it spoils nothing for someone about to play the same code.
 export function getResultSummary(game: Game): string[] {

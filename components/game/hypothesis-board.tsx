@@ -22,7 +22,11 @@ export function HypothesisBoard({
   const standing = game.mode === "expert" ? null : getHypothesisStanding(game);
   const active = hypotheses.find(item => item.id === game.hypothesis);
   const ruledOut = game.mode === "expert" ? null : getRuledOutRoutes(game);
-  const outMark = (id: HypothesisId) => ruledOut?.routes.includes(id) && <em className="route-ruled-out">{ruledOut.reason[id] === "unused" ? "Not in play" : "Ruled out"} at the {ruledOut.stage} stage</em>;
+  // Only routes the player's own completed checks have closed are marked. A route
+  // the incident does not use at this stage would be marked before any work was
+  // done, and where it was the only one left that handed over the answer; the
+  // standing still says so for a reading that is declared.
+  const outMark = (id: HypothesisId) => ruledOut?.reason[id] === "excluded" && <em className="route-ruled-out">Ruled out at the {ruledOut.stage} stage</em>;
   return (
     <section className={`hypothesis-board ${active ? "has-reading" : ""}`} aria-labelledby="hypothesis-heading">
       <div className="hypothesis-heading">

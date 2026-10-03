@@ -1,3 +1,4 @@
+import { useState, useSyncExternalStore } from "react";
 import { ArrowDown, BrainCircuit, GraduationCap, Sparkles, X } from "lucide-react";
 import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
@@ -8,12 +9,28 @@ import { SpecialistTransmission } from "@/components/game/living-incident";
 import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
+// Whether the layout is a phone's. The server renders the wide layout, with the
+// reference column open, and a phone folds it once it has hydrated.
+const PHONE = "(max-width: 650px)";
+const subscribePhone = (onChange: () => void) => {
+  const query = window.matchMedia(PHONE);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
   const {
     game, guided, guidance, trainingPrompt, rolling, fastResolve, actionScope, actionIntensity,
     inlineReport, setInlineReport, pendingUndo, undo,
     focusInfrastructure, mapAction, chooseHypothesis, correlate, chooseCaseTheory, run, setSelected,
   } = session;
+
+  // On a phone the reference column — what is known, the map, the specialist and
+  // the evidence workspace — is most of the page's height, and it sat between a
+  // player and nothing they needed every turn. It folds there behind a summary
+  // that carries what it holds; wider layouts show it beside the actions.
+  const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
+  const [referenceOpen, setReferenceOpen] = useState(false);
 
   if (!game) return null;
 
@@ -25,9 +42,13 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
     if (!target) return;
     const findings = target.querySelector<HTMLDetailsElement>("details.evidence-detail");
     if (findings) findings.open = true;
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
-    target.focus({ preventScroll: true });
+    setReferenceOpen(true);
+    // The fold opens on the next render, so the scroll waits a frame for it.
+    requestAnimationFrame(() => {
+      const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+      target.focus({ preventScroll: true });
+    });
   };
   const evidenceReady = readyForTheory(game) || readyToCorrelate(game);
   const evidenceButton = evidenceReady && <button className="compare-findings" onClick={() => jumpTo(".evidence-workspace")}>{readyForTheory(game) ? "Record a case theory" : "Compare findings"} <ArrowDown size={14} /></button>;
@@ -67,12 +88,13 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {!game.hypothesis && !game.pendingCommand && !game.pendingSetPiece && trainingNote}
         {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
       </div>
-      <div className="investigation-context">
+      <details className="investigation-context reference-fold" open={!phone || referenceOpen} onToggle={event => phone && setReferenceOpen(event.currentTarget.open)}>
+        <summary>Map, evidence and what is known<span>{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} · {game.evidence.length ? `${game.evidence.filter(item => item.supports).length} of ${game.evidence.length} findings confirmed a stage` : "no findings yet"} · {game.correlations.length} compared</span></summary>
         {!game.pendingCommand && !game.pendingSetPiece && <KnownFacts game={game} />}
         <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
         <SpecialistTransmission game={game} />
         <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />
-      </div>
+      </details>
       <div className="investigation-actions" role="region" aria-label="Investigation actions" tabIndex={0}>
         {inlineReport && (
           <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">

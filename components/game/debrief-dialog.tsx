@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { ArrowRight, Printer, Star, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, gameModes, hypotheses, procedureIntensities, procedureScopes, procedureById, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, procedureIntensities, procedureScopes, procedureById, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { specialistReaction } from "@/lib/phase9";
 import { unlockedCapabilities } from "@/lib/campaign";
@@ -69,14 +69,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           <section className="score-card" id="debrief-score">
             <div className="score-total"><span>FINAL SCORE</span><strong>{outcome.breakdown.total}<small>/100</small></strong></div>
             <div className="score-breakdown">
-              {[
-                ["Investigation", outcome.breakdown.investigation, 25],
-                ["Impact control", outcome.breakdown.impact, 15],
-                ["Continuity", outcome.breakdown.continuity, 15],
-                ["Operational decisions", outcome.breakdown.decisions, 15],
-                ["Containment & recovery", outcome.breakdown.response, 20],
-                ["Hypothesis accuracy", outcome.breakdown.hypothesis, 10],
-              ].map(([label, value, maximum]) => <div key={String(label)}><span>{label}</span><strong>{value}/{maximum}</strong></div>)}
+              {getScoreRows(game).map(row => <div key={row.label}><span>{row.label}</span><strong>{row.value}/{row.maximum}</strong><small>{row.rule}</small></div>)}
             </div>
           </section>
           <section className="hypothesis-ledger" id="debrief-hypothesis">
@@ -97,21 +90,26 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             ))}
             </details>
           </section>
-          <section className="advanced-review">
-            <div><strong>{game.revealed.length}/4</strong><span>Attack stages confirmed</span></div>
-            <div><strong>{game.evidence.filter(item => item.supports).length}</strong><span>Findings that confirmed a stage</span></div>
-            <div><strong>{game.evidence.filter(item => !item.supports).length}</strong><span>Findings that settled nothing</span></div>
-            <div><strong>{game.correlations.filter(item => item.correct).length}/{game.correlations.length}</strong><span>Correlation assessments supported</span></div>
-            <div><strong>{game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0)}</strong><span>Hypothesis revisions</span></div>
-            <div><strong>{game.turns.filter(turn => turn.planningBonus > 0).length}</strong><span>Evidence-aligned actions</span></div>
-            <div><strong>{game.commandHistory.length}</strong><span>Command events resolved</span></div>
-            <div><strong>{game.setPieceHistory.length}</strong><span>Sector decisions resolved</span></div>
-          </section>
-          <section className="mission-consequences">
-            <div><span className="eyebrow">SECTOR OUTCOME</span><strong>{game.sectorHealth}/100 · {sectorSystems[game.scenario].title}</strong><p>{sectorSystems[game.scenario].rule}</p></div>
-            <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p>{game.revealed.includes(game.chain[3]) && <p className="intent-link"><strong>{attacks.find(attack => attack.id === game.chain[3])?.title}:</strong> {adversaryObjectives[game.objective].outbound}</p>}</div>
-            <div><span className="eyebrow">COMMAND TEAM</span><strong>{namedSpecialists[game.specialist].name} · fatigue {game.specialistFatigue}/6</strong><p>{gameModes[game.mode].title} operation against {getAdversaryProfile(game).title}. Team fatigue and leadership confidence carry into the next campaign mission.</p></div>
-          </section>
+          {/* The counts and the three outcomes are detail for a player who wants it.
+              Open, they were a thousand pixels between the score and the ledger. */}
+          <details className="debrief-fold debrief-detail-fold">
+            <summary>Operation detail<span>{game.revealed.length}/4 stages · {game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0)} revisions · sector {game.sectorHealth}/100</span></summary>
+            <section className="advanced-review">
+              <div><strong>{game.revealed.length}/4</strong><span>Attack stages confirmed</span></div>
+              <div><strong>{game.evidence.filter(item => item.supports).length}</strong><span>Findings that confirmed a stage</span></div>
+              <div><strong>{game.evidence.filter(item => !item.supports).length}</strong><span>Findings that settled nothing</span></div>
+              <div><strong>{game.correlations.filter(item => item.correct).length}/{game.correlations.length}</strong><span>Correlation assessments supported</span></div>
+              <div><strong>{game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0)}</strong><span>Hypothesis revisions</span></div>
+              <div><strong>{game.turns.filter(turn => turn.planningBonus > 0).length}</strong><span>Evidence-aligned actions</span></div>
+              <div><strong>{game.commandHistory.length}</strong><span>Command events resolved</span></div>
+              <div><strong>{game.setPieceHistory.length}</strong><span>Sector decisions resolved</span></div>
+            </section>
+            <section className="mission-consequences">
+              <div><span className="eyebrow">SECTOR OUTCOME</span><strong>{game.sectorHealth}/100 · {sectorSystems[game.scenario].title}</strong><p>{sectorSystems[game.scenario].rule}</p></div>
+              <div><span className="eyebrow">ADVERSARY INTENT</span><strong>{adversaryObjectives[game.objective].title} · {game.objectiveProgress}/100</strong><p>{adversaryObjectives[game.objective].tell}</p>{game.revealed.includes(game.chain[3]) && <p className="intent-link"><strong>{attacks.find(attack => attack.id === game.chain[3])?.title}:</strong> {adversaryObjectives[game.objective].outbound}</p>}</div>
+              <div><span className="eyebrow">COMMAND TEAM</span><strong>{namedSpecialists[game.specialist].name} · fatigue {game.specialistFatigue}/6</strong><p>{gameModes[game.mode].title} operation against {getAdversaryProfile(game).title}. Team fatigue and leadership confidence carry into the next campaign mission.</p></div>
+            </section>
+          </details>
           <section className="timeline" id="debrief-timeline">
             <span className="eyebrow">EVIDENCE &amp; DECISION TIMELINE</span>
             <details className="debrief-fold">
@@ -153,10 +151,13 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           </div>
           </details>
           <section className="debrief-learning"><h3>Take this back to your team</h3><p>{game.turns.some(turn => turn.success && !turn.revealed) ? "Some actions passed without finding new evidence. Did each action separate plausible explanations, or simply use an available tool?" : "Which evidence sources or decision authorities would be weakest in a real response?"}</p><p>{activeScenario.lesson}</p></section>
-          <section className="capability-review" id="debrief-campaign"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
-          <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
-          <section className="specialist-reaction"><span className="eyebrow">TEAM AFTER-ACTION NOTE · COHESION {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status === "won", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
-          <section className="mastery-panel"><div><span className="eyebrow">SCENARIO MASTERY</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
+          <details className="debrief-fold debrief-campaign-fold" id="debrief-campaign">
+            <summary>Campaign and team<span>trust {campaign.leadershipTrust} · readiness {campaign.readiness} · {campaign.mastery[String(game.scenario)] ?? 0} mastery stars</span></summary>
+            <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
+            <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
+            <section className="specialist-reaction"><span className="eyebrow">TEAM AFTER-ACTION NOTE · COHESION {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status === "won", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
+            <section className="mastery-panel"><div><span className="eyebrow">SCENARIO MASTERY</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
+          </details>
           {finalEnding && <section className="campaign-finale"><Trophy size={23} /><div><span className="eyebrow">FINAL COMMAND BRIEFING</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}
           <div className="debrief-actions">
             <button className="secondary-button" onClick={() => window.print()}><Printer size={17} /> Print review</button>

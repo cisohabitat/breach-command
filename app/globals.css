@@ -2420,8 +2420,9 @@ a {
 }
 .score-breakdown>div {
   display:flex;
+  flex-wrap:wrap;
   justify-content:space-between;
-  gap:10px;
+  gap:2px 10px;
   border-bottom:1px solid #2d3d31;
   padding:6px 0;
   font-size:var(--type-caption);
@@ -2433,6 +2434,13 @@ a {
   color:#e0eadc;
   font-family:monospace;
   font-weight:500;
+}
+/* The rule behind each part of the score, in the player's own numbers. */
+.score-breakdown small {
+  flex-basis:100%;
+  color:var(--text-soft);
+  font-size:var(--type-micro);
+  line-height:1.4;
 }
 .timeline {
   border:1px solid #3f5141;
@@ -4879,6 +4887,11 @@ html,body {
 }
 .investigation-context {
   grid-area:context;
+}
+/* The reference column is a fold only on a phone; beside the actions it is
+   always open and its summary is not shown. */
+.reference-fold>summary {
+  display:none;
 }
 .investigation-actions {
   grid-area:actions;
@@ -7765,6 +7778,44 @@ in colour, and the carried plan is stated before the options. */
   }
   .investigation-lead>.hypothesis-board:first-child {
     margin-top:0;
+  }
+}
+@media(max-width:650px) {
+  /* The index wraps to two rows on a phone, so a section it jumps to stops below both. */
+  #debrief-score,#debrief-hypothesis,#debrief-timeline,#debrief-decisions,#debrief-chain,#debrief-campaign {
+    scroll-margin-top:136px;
+  }
+  /* Folded, the reference column is one line that says what it holds. */
+  .reference-fold>summary {
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:4px 12px;
+    min-height:44px;
+    padding:11px 13px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#16211b;
+    font-size:var(--type-caption);
+    color:var(--text);
+  }
+  .reference-fold>summary::-webkit-details-marker {
+    display:none;
+  }
+  .reference-fold>summary span {
+    color:var(--text-soft);
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+    font-size:var(--type-micro);
+  }
+  .reference-fold>summary:focus-visible {
+    outline:2px solid var(--lime);
+    outline-offset:2px;
+  }
+  .reference-fold[open]>summary {
+    margin-bottom:12px;
   }
 }
 /* Narrower than the phone block: what still has to give way. These follow it

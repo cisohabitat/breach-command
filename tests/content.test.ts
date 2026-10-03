@@ -29,7 +29,7 @@ test("keeps the technique pool and topologies distinct", () => {
   assert.ok(detectSignatures.size>=40,`expected many distinct detect signatures, found ${detectSignatures.size}`);
   const procedureShare=procedures.map(p=>attacks.filter(a=>a.detect.includes(p.id)).length);
   assert.ok(Math.max(...procedureShare)<=attacks.length*0.4,`no procedure dominates the pool, max ${Math.max(...procedureShare)} of ${attacks.length}`);
-  for(const s of scenarios){assert.equal(s.choices.length,4);s.choices.forEach((choices,stage)=>{assert.equal(choices.length,3,`${s.id} stage ${stage} must offer three techniques`);choices.forEach(id=>assert.equal(attacks.find(a=>a.id===id)?.stage,stage,`${s.id}/${id} must belong to stage ${stage}`));});}
+  for(const s of scenarios){assert.equal(s.choices.length,4);s.choices.forEach((choices,stage)=>{assert.equal(choices.length,4,`${s.id} stage ${stage} must offer four techniques`);choices.forEach(id=>assert.equal(attacks.find(a=>a.id===id)?.stage,stage,`${s.id}/${id} must belong to stage ${stage}`));});}
   for(let stage=0;stage<4;stage++)for(let i=0;i<scenarios.length;i++)for(let j=i+1;j<scenarios.length;j++)assert.ok(scenarios[i].choices[stage].filter(id=>scenarios[j].choices[stage].includes(id)).length<=1,`scenarios ${i}/${j} stage ${stage} must not share more than one technique`);
 
   // Each scenario owns a distinct infrastructure topology: node count, edge set and
@@ -120,6 +120,25 @@ test("gives each sector a chain it could not lend to another", () => {
     const exclusive = scenario.choices.flat().filter(id => uses[id] === 1);
     assert.ok(exclusive.length >= 3, `${scenario.sector} keeps techniques of its own (${exclusive.length}: ${exclusive.join(", ") || "none"})`);
   }
+});
+
+test("puts three routes in play at every stage", () => {
+  // The readings mark routes no technique at the stage travels by. With two
+  // routes in play at most stages and one at six, those marks handed over most
+  // of the answer before a single check; every stage now offers at least three.
+  for (const scenario of scenarios) scenario.choices.forEach((ids, stage) => {
+    const routes = new Set(ids.map(id => attacks.find(attack => attack.id === id)!.vector));
+    assert.ok(routes.size >= 3, `${scenario.id} stage ${stage} puts ${routes.size} routes in play`);
+  });
+  // A technique a sector borrows is seen through shared sources or that sector's
+  // own action, never through another sector's, which it does not have.
+  const shared = new Set(procedures.map(procedure => procedure.id));
+  scenarios.forEach((scenario, index) => {
+    for (const id of scenario.choices.flat()) {
+      const foreign = attacks.find(attack => attack.id === id)!.detect.filter(source => !shared.has(source) && source !== sectorProcedures[index].id);
+      assert.deepEqual(foreign, [], `${scenario.id} draws ${id}, which only another sector's action can see`);
+    }
+  });
 });
 
 test("offers a graduated measure in every sector decision", () => {
