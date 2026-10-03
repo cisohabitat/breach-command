@@ -435,6 +435,10 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
   if (!hypothesis) return { level: "broad", label: "Broad collection", detail: `No working hypothesis is recorded, so this action collects without testing an explanation.${spentNote}`, spent, inconclusive };
   if (hypothesisSources(game, hypothesis.id).includes(procedure) && sourceSeesReading(game, procedure) === false) return { level: "moderate", label: "Own source, but blind to this stage", detail: `${hypothesis.title} predicts this source, so it still earns the own-source bonus, but none of the techniques this reading could be using at the stage under test is visible to it. A check here cannot settle the reading at this stage; another of its own sources can.${spentNote}`, spent, inconclusive };
   if (hypothesisSources(game, hypothesis.id).includes(procedure)) return { level: "high", label: "One of this reading's own sources", detail: `${hypothesis.title} predicts this source. A completed check that finds nothing rules out every technique it could have seen, on this route and any other, and the reading's standing shows what is left. A discovery may still sit on another route — the sources overlap.${spentNote}`, spent, inconclusive };
+  // A source outside the reading's list can still see one of its techniques at
+  // this stage; "will not settle the current question" was said of a source that
+  // then revealed the stage, on the declared route.
+  if (sourceSeesReading(game, procedure)) return { level: "moderate", label: "Not an own source, but it can see this reading here", detail: `${hypothesis.title} does not list this source, so it earns no own-source bonus, but it can see at least one technique this reading could be using at the stage under test.${spentNote}`, spent, inconclusive };
   return { level: "moderate", label: "Collects, does not test", detail: `${hypothesis.title} does not predict evidence in this source. It may still find something, but it will not settle the current question.${spentNote}`, spent, inconclusive };
 }
 

@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from "react";
-import { ArrowDown, BrainCircuit, GraduationCap, Sparkles, X } from "lucide-react";
+import { ArrowDown, ArrowRight, BrainCircuit, GraduationCap, Sparkles, X } from "lucide-react";
 import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { InfrastructureConsole } from "@/components/game/infrastructure-console";
@@ -23,7 +23,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   const {
     game, guided, guidance, trainingPrompt, rolling, fastResolve, actionScope, actionIntensity,
     inlineReport, setInlineReport, pendingUndo, undo,
-    focusInfrastructure, mapAction, chooseHypothesis, correlate, chooseCaseTheory, run, setSelected,
+    focusInfrastructure, mapAction, chooseHypothesis, correlate, chooseCaseTheory, run, setSelected, setActiveWorkspace,
   } = session;
 
   // On a phone the reference column — what is known, the map, the specialist and
@@ -107,6 +107,11 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             them; once one is declared they move back beside the procedures. */}
         {!game.hypothesis && !game.pendingCommand && !game.pendingSetPiece && trainingNote}
         {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={declare} />}
+        {/* The board and the procedures step aside while a decision waits, and the
+            column was left empty with only a tab badge saying why. */}
+        {(game.pendingCommand || game.pendingSetPiece) && (
+          <div className="guide-nudge decision-waiting" role="status"><Sparkles size={15} /><span><strong>A {game.pendingSetPiece ? "sector decision" : "command event"} is waiting on Command.</strong> Resolve it there, then come back to investigate.<button className="compare-findings" onClick={() => setActiveWorkspace("command")}>Go to Command <ArrowRight size={14} /></button></span></div>
+        )}
       </div>
       <details className="investigation-context reference-fold" open={!phone || referenceOpen} onToggle={event => phone && setReferenceOpen(event.currentTarget.open)}>
         <summary>Map, evidence and what is known<span>{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} · {game.evidence.length ? `${game.evidence.filter(item => item.supports).length} of ${game.evidence.length} findings confirmed a stage` : "no findings yet"} · {game.correlations.length} compared</span></summary>

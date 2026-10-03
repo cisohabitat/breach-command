@@ -1,4 +1,4 @@
-const CACHE = "breach-command-v62";
+const CACHE = "breach-command-v63";
 const CORE = ["/", "/manifest.webmanifest", "/favicon.svg"];
 
 // The page's own scripts and styles are cached on install, read from the page

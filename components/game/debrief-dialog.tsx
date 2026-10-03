@@ -11,7 +11,7 @@ import { objectiveTheory } from "@/lib/phase9";
 
 export function DebriefDialog({ session }: { session: GameSession }) {
   const {
-    debrief, setDebrief, game, outcome, activeScenario, campaign, finalEnding, responseProfile,
+    debrief, setDebrief, game, outcome, activeScenario, campaign, finalEnding,
     resetToBriefing, setScenarioChoice,
   } = session;
   const ledger = game ? getHypothesisLedger(game) : [];
@@ -151,11 +151,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
                 const chosen = options.find(option => option.id === game.responseChoices[index]);
                 if (!chosen) return null;
                 const best = Math.max(...options.map(option => option.score));
-                return <p key={phase}><strong>{phase.charAt(0).toUpperCase() + phase.slice(1)}:</strong> {chosen.title}<span>{chosen.score} of a best {best}</span><em>{chosen.score === best ? "The strongest option this sector offered." : `${options.find(option => option.score === best)!.title} would have scored more here.`}</em></p>;
-              })}
-              {game.responseChoices.map(id => {
-                const option = responseProfile ? [...responseProfile.containment, ...responseProfile.assurance, ...responseProfile.recovery].find(item => item.id === id) : undefined;
-                return <p key={id}><strong>Response:</strong> {option?.title}<span>{option?.confidence} confidence · {option?.residual} residual risk</span></p>;
+                return <p key={phase}><strong>{phase.charAt(0).toUpperCase() + phase.slice(1)}:</strong> {chosen.title}<span>{chosen.score} of a best {best} · {chosen.confidence.toLowerCase()} confidence · {chosen.residual.toLowerCase()} residual risk</span><em>{chosen.score === best ? "The strongest option this sector offered." : `${options.find(option => option.score === best)!.title} would have scored more here.`}</em></p>;
               })}
               {game.mapHistory.map((record, index) => <p key={`${record.node}-${index}`}><strong>Infrastructure:</strong> {record.action === "isolate" ? "Isolated" : "Monitored"} {infrastructureTopologies[game.scenario].nodes.find(node => node.id === record.node)?.label ?? record.node}<span>Map action</span><em>{record.effect}</em></p>)}
               </details>

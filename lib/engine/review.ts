@@ -126,9 +126,11 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   // would otherwise be told its response was too expensive.
   if (game.responseChoices.length === 3 && breakdown.response < 16) return {
     strength,
-    gap: "The response cost more service than it needed to for the assurance it bought.",
-    concept: "Containment, assurance and recovery each trade disruption against certainty. The most thorough option is not automatically the right one.",
-    next: "Next operation, read what each response option leaves as residual risk, and pick the cheapest one that closes the risk you actually confirmed.",
+    // It told a player to "pick the cheapest" beside a decision record naming the
+    // costlier option as the stronger one in every phase.
+    gap: `The response scored ${breakdown.response} of 20: in at least one phase another option closed more of the confirmed risk.`,
+    concept: "Containment, assurance and recovery each trade disruption against certainty. The option that closes the risk you confirmed scores highest, even when it costs more service, unless that cost would end the operation.",
+    next: "Next operation, read each response option's confidence and residual risk before its cost; the decision record below names the stronger option in each phase.",
   };
   // Picking sources that find things and reading the route correctly are two
   // different skills, and a run can do the first well while getting the second
