@@ -1,5 +1,7 @@
 // The after-action review: score, outcome, hypothesis ledger and counterfactuals.
-import { attacks, stages, hypotheses, scenarioDynamics } from "../game.ts";
+import { attacks, difficulties, scenarios, stages, hypotheses, scenarioDynamics } from "../game.ts";
+import { gameModes } from "../command-systems.ts";
+import { encodeChallenge } from "../phase8.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseOptionsFor } from "./rules.ts";
 import { getLossReason, getReadingOdds, readyToCorrelate } from "./reads.ts";
@@ -129,6 +131,22 @@ export function getOutcome(game: Game) {
   if (breakdown.total >= 68) return { grade: "B", title: "Stable, with residual risk", detail: "The incident is contained, but the review identifies avoidable exposure or disruption.", breakdown };
   if (breakdown.total >= 52) return { grade: "C", title: "Costly stabilisation", detail: "Services are recovering, but uncertainty and operational cost remain high.", breakdown };
   return { grade: "D", title: "Fragile recovery", detail: "The immediate crisis passed, but the response left significant residual risk.", breakdown };
+}
+
+// A result a player can paste anywhere. It carries counts, never the techniques,
+// so it spoils nothing for someone about to play the same code.
+export function getResultSummary(game: Game): string[] {
+  const scenario = scenarios[game.scenario];
+  const heading = `Breach Command · ${scenario.title} · ${difficulties[game.difficulty].title} · ${gameModes[game.mode].title}`;
+  const record = `${game.revealed.length} of 4 stages confirmed in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}`;
+  const outcome = getOutcome(game);
+  const result = game.status === "won"
+    ? `Stood down: grade ${outcome.grade}, ${outcome.breakdown.total}/100`
+    : game.status === "exercise"
+      ? `Authorised exercise concluded, ${outcome.breakdown.total}/100`
+      : `Operation lost: ${getLossReason(game).title.toLowerCase()}, ${outcome.breakdown.total}/100`;
+  const code = game.seed === null ? null : encodeChallenge({ scenario: game.scenario, difficulty: game.difficulty, mode: game.mode, specialist: game.specialist, seed: game.seed });
+  return [heading, `${result} · ${record}`, ...(code ? [`Play the same operation: ${code}`] : [])];
 }
 
 export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {

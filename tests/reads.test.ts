@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,readyToCorrelate,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {getResultSummary,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -113,6 +113,28 @@ test("asks for a comparison once two findings have confirmed stages", () => {
   assert.equal(readyToCorrelate(two),true);
   assert.ok(/compare them/.test(getCoachPrompt(two,true)),"the captain asks for the comparison at any guided difficulty");
   assert.equal(readyToCorrelate(correlateEvidence(two,["E1","E2"],"causal")),false,"and stops once one has been tested");
+});
+
+test("offers the case theory and the map when they can help, and not before", () => {
+  // Both sit in the reference column and no playtest used either unprompted.
+  const declared=setHypothesis(baseline(),"identity");
+  assert.equal(readyForTheory(declared),false,"with nothing confirmed the objective cannot be assessed");
+  const twoStages={...declared,revealed:declared.chain.slice(0,2)};
+  assert.equal(readyForTheory(twoStages),true,"two confirmed stages make it assessable");
+  assert.ok(/case theory/.test(getCoachPrompt(twoStages,true)));
+  assert.equal(getTrainingPrompt({...twoStages,difficulty:"training"},true)?.step,"theory","Training names the step");
+  assert.equal(readyForTheory(setCaseTheory(twoStages,"exfiltration")),false,"and stops once a theory is recorded");
+  assert.ok(!/exfiltration|data theft/i.test(getCoachPrompt(twoStages,true)),"the prompt never names the objective");
+
+  // The map is offered early, once, and only while actions remain.
+  assert.equal(getMapHint(declared),null,"not on the first turn, before anything has happened");
+  const early={...declared,turns:[0,1].map(index=>({...playTurn(declared,"endpoint",2).turns[0],number:index+1}))} as Game;
+  assert.ok(/takes no turn/.test(getMapHint(early) ?? ""),"by the second turn the player is told the map costs no turn");
+  const node=Object.keys(early.nodePosture)[0];
+  assert.equal(getMapHint(resolveMapAction(early,node,"monitor")),null,"a player who has used it is not asked again");
+  assert.equal(getMapHint({...early,mapActionsRemaining:0}),null,"nor one with nothing left to spend");
+  const late={...early,turns:Array.from({length:5},(_,index)=>({...early.turns[0],number:index+1}))} as Game;
+  assert.equal(getMapHint(late),null,"and the offer lapses after the opening turns");
 });
 
 test("shows the modifier it will resolve with", () => {
@@ -356,4 +378,22 @@ test("pays no credit for testing a reading the record had already excluded", () 
   assert.ok(getReadingOdds({...open,turns:open.turns.slice(0,1),hypothesis:"identity"}).candidates.identity.open>0,"after the DNS review it still is");
   assert.equal(getScoreBreakdown(excluded).hypothesis,0,"testing an already excluded reading earns nothing");
   assert.ok(getScoreBreakdown(open).hypothesis>0,"testing one still open earns the half credit");
+});
+
+test("sums up a result without spoiling the operation", () => {
+  // The shareable result carries counts and the challenge code, never a
+  // technique, so a friend can play the same code without being told the answer.
+  let run=setHypothesis({...baseline(),injectDeck:[]},"identity");
+  run=playTurn(run,"identity",20);
+  const lost={...run,status:"lost" as const,objectiveProgress:100};
+  const lines=getResultSummary(lost);
+  assert.ok(/The quiet intrusion/.test(lines[0]),"it names the operation");
+  assert.ok(/Operation lost/.test(lines[1])&&/1 of 4 stages confirmed in 1 turn\b/.test(lines[1]),"and what happened, in counts");
+  for(const id of lost.chain){
+    const title=attacks.find(attack=>attack.id===id)!.title;
+    assert.ok(!lines.join(" ").includes(title),`it never names ${title}`);
+  }
+  assert.equal(lines.length,2,"an ordinary operation has no code to share");
+  const seeded=getResultSummary({...lost,seed:4242});
+  assert.ok(/BC-\d+-\d+-\d+-\d+-4242-\d{2}/.test(seeded[2]),"a reproducible one carries its challenge code");
 });

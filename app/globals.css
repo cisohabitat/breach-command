@@ -3445,6 +3445,67 @@ html,body {
   color:var(--lime);
   margin-bottom:5px;
 }
+/* Copy result, under the resolution. */
+.share-result {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 12px;
+  margin:14px 0 24px;
+}
+/* An odd readout out in a two-column brief takes the full row, rather than
+   leaving half of it empty beside the attribution. */
+.briefing-readouts>div:last-child:nth-child(odd) {
+  grid-column:1/-1;
+}
+.share-result>span {
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+}
+.share-result textarea {
+  flex-basis:100%;
+  min-height:96px;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:#111c15;
+  color:var(--text);
+  font:var(--type-caption)/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+/* The brief's secondary readouts, one tap down. The summary names what it holds. */
+.briefing-more>summary {
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:4px 12px;
+  min-height:44px;
+  padding:11px 13px;
+  border:1px solid #405342;
+  border-radius:6px;
+  font-size:var(--type-caption);
+  color:var(--text);
+}
+.briefing-more>summary::-webkit-details-marker {
+  display:none;
+}
+.briefing-more>summary span {
+  color:var(--text-soft);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:var(--type-micro);
+}
+.briefing-more>summary:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
+}
+.briefing-more[open]>summary {
+  margin-bottom:10px;
+}
+.briefing-more .director-order {
+  margin-top:10px;
+}
 .mission-consequences {
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -7355,15 +7416,24 @@ awareness. */
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
-.evidence-workspace {
+.evidence-workspace,.infrastructure-console {
   scroll-margin-top:96px;
 }
-.evidence-workspace:focus {
+.evidence-workspace:focus,.infrastructure-console:focus {
   outline:none;
 }
-.evidence-workspace:focus-visible {
+.evidence-workspace:focus-visible,.infrastructure-console:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:4px;
+}
+/* An optional second line in a note: the map, offered beside the next step. */
+.guide-nudge .prompt-aside {
+  display:block;
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px solid var(--line);
+  color:var(--text-soft);
+  font-size:.9em;
 }
 /* The longer reason folds behind "Why" where the reading's standing already says it. */
 /* Closed, the toggle rides the title's line; open, the reason takes its own. */
@@ -7396,7 +7466,7 @@ awareness. */
 .training-prompt.step-revise {
   border-left:3px solid #e8c968;
 }
-.training-prompt.step-correlate {
+.training-prompt.step-correlate,.training-prompt.step-theory {
   border-left:3px solid #b49cf4;
 }
 .modifier-breakdown li.suppressed > strong {

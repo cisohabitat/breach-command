@@ -186,7 +186,7 @@ export type GuidanceLevel = "off" | "reflection" | "training";
 export type BeginnerReview = { strength: string; gap: string; concept: string; next: string };
 
 export type TrainingPrompt = {
-  step: "declare" | "revise" | "correlate" | "test" | "decide";
+  step: "declare" | "revise" | "theory" | "correlate" | "test" | "decide";
   title: string;
   detail: string;
   sources: { id: string; title: string }[];

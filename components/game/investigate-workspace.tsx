@@ -5,7 +5,7 @@ import { InfrastructureConsole } from "@/components/game/infrastructure-console"
 import { KnownFacts } from "@/components/game/known-facts";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
-import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, procedureIntensities, procedureScopes, readyToCorrelate } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
@@ -17,19 +17,24 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
 
   if (!game) return null;
 
-  // The evidence workspace sits below the map in the reference column, where no
-  // playtest found it unprompted. The note that asks for a comparison takes the
-  // player there: it opens the findings and moves focus to the workspace.
-  const showEvidence = () => {
-    const workspace = document.querySelector<HTMLElement>(".evidence-workspace");
-    if (!workspace) return;
-    const findings = workspace.querySelector<HTMLDetailsElement>("details.evidence-detail");
+  // The evidence workspace and the infrastructure map sit in the reference
+  // column, where no playtest found them unprompted. A note that asks for one of
+  // them takes the player there: it opens what is folded and moves focus to it.
+  const jumpTo = (selector: string) => {
+    const target = document.querySelector<HTMLElement>(selector);
+    if (!target) return;
+    const findings = target.querySelector<HTMLDetailsElement>("details.evidence-detail");
     if (findings) findings.open = true;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    workspace.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
-    workspace.focus({ preventScroll: true });
+    target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+    target.focus({ preventScroll: true });
   };
-  const compareButton = readyToCorrelate(game) && <button className="compare-findings" onClick={showEvidence}>Compare findings <ArrowDown size={14} /></button>;
+  const evidenceReady = readyForTheory(game) || readyToCorrelate(game);
+  const evidenceButton = evidenceReady && <button className="compare-findings" onClick={() => jumpTo(".evidence-workspace")}>{readyForTheory(game) ? "Record a case theory" : "Compare findings"} <ArrowDown size={14} /></button>;
+  // The map is offered as an aside to the ordinary next step, never in place of
+  // it, and not alongside a note that is already sending the player elsewhere.
+  const mapHint = !evidenceReady ? getMapHint(game) : null;
+  const mapAside = mapHint && <small className="prompt-aside">{mapHint}<button className="compare-findings" onClick={() => jumpTo(".infrastructure-console")}>Open the map <ArrowDown size={14} /></button></small>;
 
   // The prompt's longer explanation folds away where the board already carries
   // it — the reading's standing says why to test or revise — and stays inline
@@ -44,7 +49,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
           : <> {trainingPrompt.detail}</>}
         {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: {trainingPrompt.clue}</b>}
         {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(" · ")}</b>}
-        {trainingPrompt.step === "correlate" && compareButton}
+        {(trainingPrompt.step === "theory" || trainingPrompt.step === "correlate") && evidenceButton}
+        {trainingPrompt.step === "test" && mapAside}
       </span>
     </div>
   );
@@ -98,7 +104,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
               ? <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits what the team is seeing. Its own sources then earn the +{OWN_SOURCE_BONUS} own-source bonus.</span></div>
               : trainingNote
                 ? trainingNote
-                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{compareButton}</span></div>}
+                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{evidenceButton}{mapAside}</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}

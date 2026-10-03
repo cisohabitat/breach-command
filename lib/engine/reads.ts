@@ -3,7 +3,8 @@ import { attacks, scenarios, stages, hypotheses, scenarioDynamics, type Hypothes
 import { adversaryObjectives, sectorSystems } from "../command-systems.ts";
 import { decisionChoices, decisionLanguage, decisionText, decisionTitles } from "./content.ts";
 import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type Game, type GuidanceLevel, type HypothesisStanding, type KnownFacts, type LossCause, type ReadingOdds, type SectorRead, type TrainingPrompt } from "./types.ts";
-import { availableIn, crisisRerouteTarget, getAdversaryProfile, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
+import { availableIn, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
+import { infrastructureTopologies } from "../phase8.ts";
 export function getAttributionRead(game: Game) {
   const profile = getAdversaryProfile(game);
   const evidence = game.revealed.length;
@@ -81,6 +82,25 @@ export function guidanceLevel(game: Game, guided: boolean): GuidanceLevel {
   return game.difficulty === "training" ? "training" : "reflection";
 }
 
+// Two confirmed stages make the objective assessable, and a case theory that
+// fits it makes a correct comparison worth more. Like correlation, it lives in
+// the evidence workspace below the map, where no playtest found it unprompted.
+export function readyForTheory(game: Game) {
+  return game.status === "playing" && !game.caseTheory && getObjectiveRead(game).confidence !== "LOW";
+}
+
+// The infrastructure actions take no turn, and neither playtest used one. They
+// are offered once, early, while there is still an operation for them to help;
+// a player who passes on them is not asked again.
+export function getMapHint(game: Game) {
+  if (game.status !== "playing" || game.mapHistory.length || game.mapActionsRemaining <= 0) return null;
+  if (game.turns.length < 2 || game.turns.length > 4) return null;
+  const topology = infrastructureTopologies[game.scenario];
+  const monitor = getMapActionEffect(game, topology.nodes[0].id, "monitor");
+  const count = game.mapActionsRemaining;
+  return `You hold ${count} infrastructure action${count === 1 ? "" : "s"}, and using one takes no turn. Monitoring a system adds +${monitor.modifier} to your next procedure; isolating one slows the adversary at a cost to the service.`;
+}
+
 // Two findings that each confirmed a stage, and no relationship tested yet.
 // Comparing two checks that settled nothing teaches nothing about causation.
 export function readyToCorrelate(game: Game) {
@@ -94,6 +114,7 @@ export function getCoachPrompt(game: Game, guided = false) {
   // Correlation lives in the reference column, below the map. Playtests never
   // found it without being told, at any difficulty, so the prompt says so once
   // there is something worth comparing.
+  if (readyForTheory(game)) return "Two stages are confirmed, so the adversary's objective can now be assessed. Record a case theory: a comparison that fits it relieves more pressure than one that does not.";
   if (readyToCorrelate(game)) return "Two findings have confirmed stages. Before the next procedure, compare them: did one enable the other, or do they only overlap in time?";
   if (game.impact >= 70) return "Pressure is critical. Test the hypothesis whose failure would create the greatest consequence.";
   if (game.turns.some(turn => turn.success && !turn.revealed)) return "A successful check did not support the chain. Revise the hypothesis or select a source that can distinguish alternatives.";
@@ -160,6 +181,13 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     detail: `${standing.detail} Read the current observation again and pick the explanation that accounts for it, then test that one.`,
     sources: [],
     clue,
+  };
+  if (readyForTheory(game)) return {
+    step: "theory",
+    title: "Name what the adversary is after",
+    detail: "Two confirmed stages are enough to assess the objective. Record a case theory in the evidence workspace. It changes nothing on its own, but a comparison that fits it relieves more pressure than one that does not.",
+    sources: [],
+    clue: null,
   };
   if (readyToCorrelate(game)) return {
     step: "correlate",

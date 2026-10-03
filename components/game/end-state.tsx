@@ -1,6 +1,6 @@
-import { useRef } from "react";
-import { ArrowRight, Check, CircleSlash, ClipboardCheck, ShieldCheck } from "lucide-react";
-import { getLossReason, getOperationalLabel } from "@/lib/advanced-game";
+import { useRef, useState } from "react";
+import { ArrowRight, Check, CircleSlash, ClipboardCheck, Copy, ShieldCheck } from "lucide-react";
+import { getLossReason, getOperationalLabel, getResultSummary, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 
@@ -35,6 +35,7 @@ export function EndState({ session }: { session: GameSession }) {
           <li><Check size={15} /> Response recorded · containment, assurance and recovery</li>
           <li><Check size={15} /> Outcome scored · grade {outcome?.grade}, {outcome?.breakdown.total}/100</li>
         </ol>
+        <ShareResult game={game} />
       </section>
     );
   }
@@ -52,6 +53,7 @@ export function EndState({ session }: { session: GameSession }) {
           <button className="secondary-button" onClick={openDebrief}>Review the record <ArrowRight size={17} /></button>
         </div>
         <p className="resolution-note">Unresolved stages remain open questions, not conclusions. The record is preserved for the next shift.</p>
+        <ShareResult game={game} />
       </section>
     );
   }
@@ -69,9 +71,31 @@ export function EndState({ session }: { session: GameSession }) {
           <button className="secondary-button" onClick={openDebrief}>Review the drill <ArrowRight size={17} /></button>
         </div>
         <div className="resolution-stamp" aria-hidden="true"><span>EXERCISE</span></div>
+        <ShareResult game={game} />
       </section>
     );
   }
 
   return null;
+}
+
+// The result as a few lines of text, with the challenge code when the operation
+// was reproducible, so a friend can play the same one. Counts only: it names no
+// technique, so it spoils nothing. Where the clipboard is refused, the text is
+// shown to copy by hand.
+function ShareResult({ game }: { game: Game }) {
+  const [state, setState] = useState<{ status: "idle" | "copied" | "manual"; text: string }>({ status: "idle", text: "" });
+  const copy = () => {
+    const text = [...getResultSummary(game), window.location.origin].join("\n");
+    const manual = () => setState({ status: "manual", text });
+    if (!navigator.clipboard?.writeText) return manual();
+    navigator.clipboard.writeText(text).then(() => setState({ status: "copied", text }), manual);
+  };
+  return (
+    <div className="share-result">
+      <button className="secondary-button" onClick={copy}><Copy size={16} /> Copy result</button>
+      <span aria-live="polite">{state.status === "copied" ? (game.seed === null ? "Result copied." : "Result and challenge code copied.") : ""}</span>
+      {state.status === "manual" && <textarea readOnly aria-label="Result to copy" value={state.text} onFocus={event => event.currentTarget.select()} />}
+    </div>
+  );
 }
