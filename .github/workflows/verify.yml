@@ -1,0 +1,90 @@
+# The checks AGENTS.md requires before a commit, run on every push to main and
+# every pull request. Vercel deploys main, so this is the gate in front of players.
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Engine suite, lint, types and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # pnpm-workspace.yaml keeps the store inside the checkout.
+      - uses: actions/cache@v4
+        with:
+          path: .sites-runtime/pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm lint
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm build
+      - name: Whitespace
+        run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD
+
+  browser:
+    name: Browser suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/cache@v4
+        with:
+          path: .sites-runtime/pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Chromium system dependencies
+        if: steps.browsers.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      - run: pnpm build
+      # The suites run against the production build, which is what Vercel serves.
+      - name: Accessibility, persistence, keyboard and responsive suites
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: |
+          pnpm start -p 3000 > next-start.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf http://localhost:3000 > /dev/null && break
+            sleep 1
+          done
+          pnpm test:e2e
+      - name: Keep the failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            test-results/
+            next-start.log
+          retention-days: 14

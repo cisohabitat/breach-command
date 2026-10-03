@@ -150,7 +150,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Required verification
 
-Run these checks before committing code changes:
+Run these checks before committing code changes. `.github/workflows/verify.yml` runs the same checks and every browser suite, against a production build, on each push to `main` and each pull request. Vercel deploys `main`, so a red run there is a broken production build: fix it before anything else.
 
 ```bash
 pnpm test
