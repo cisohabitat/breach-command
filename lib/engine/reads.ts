@@ -81,10 +81,20 @@ export function guidanceLevel(game: Game, guided: boolean): GuidanceLevel {
   return game.difficulty === "training" ? "training" : "reflection";
 }
 
+// Two findings that each confirmed a stage, and no relationship tested yet.
+// Comparing two checks that settled nothing teaches nothing about causation.
+export function readyToCorrelate(game: Game) {
+  return game.evidence.filter(item => item.supports).length >= 2 && !game.correlations.length;
+}
+
 export function getCoachPrompt(game: Game, guided = false) {
   if (guidanceLevel(game, guided) === "off") return "Compare evidence value, attacker opportunity and service consequence before deciding.";
   if (!game.hypothesis) return "Record a working hypothesis before acting. It can be changed when the evidence no longer fits.";
   if (game.pendingDecision) return "Compare evidence value, attacker opportunity and service consequence before intervening.";
+  // Correlation lives in the reference column, below the map. Playtests never
+  // found it without being told, at any difficulty, so the prompt says so once
+  // there is something worth comparing.
+  if (readyToCorrelate(game)) return "Two findings have confirmed stages. Before the next procedure, compare them: did one enable the other, or do they only overlap in time?";
   if (game.impact >= 70) return "Pressure is critical. Test the hypothesis whose failure would create the greatest consequence.";
   if (game.turns.some(turn => turn.success && !turn.revealed)) return "A successful check did not support the chain. Revise the hypothesis or select a source that can distinguish alternatives.";
   return "Use confirmed facts to predict the attacker’s next requirement, not merely the next available tool.";
@@ -151,7 +161,7 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     sources: [],
     clue,
   };
-  if (game.evidence.length >= 2 && !game.correlations.length) return {
+  if (readyToCorrelate(game)) return {
     step: "correlate",
     title: "Two findings can be compared",
     detail: "Select two findings in the evidence workspace and decide whether one plausibly enabled the other, or whether they only overlap in time. Testing that judgement is part of the work.",

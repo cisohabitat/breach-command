@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {correlateEvidence,describeChange,getBeginnerReview,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,readyToCorrelate,plainLanguage,getDiscriminatingRead,getHypothesisLedger,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -99,6 +99,20 @@ test("calls a route the incident cannot use at this stage poorly supported", () 
     }
   }
   assert.ok(found>0,"some opening stage leaves a route with nothing to use");
+});
+
+test("asks for a comparison once two findings have confirmed stages", () => {
+  // Correlation sits below the map, and no playtest found it unprompted. The
+  // prompt appears once there is something worth comparing: two checks that
+  // settled nothing say nothing about causation.
+  const finding=(id:string,supports:string|null)=>({id,turn:1,title:id,source:"Identity",system:"Admin plane",confidence:"HIGH" as const,supports,detail:"x"});
+  const empty={...setHypothesis(baseline(),"identity"),evidence:[finding("E1",null),finding("E2",null)]};
+  assert.equal(readyToCorrelate(empty),false,"two empty results are not worth comparing");
+  assert.ok(!/compare them/.test(getCoachPrompt(empty,true)));
+  const two={...empty,evidence:[finding("E1","phish"),finding("E2","spray")]};
+  assert.equal(readyToCorrelate(two),true);
+  assert.ok(/compare them/.test(getCoachPrompt(two,true)),"the captain asks for the comparison at any guided difficulty");
+  assert.equal(readyToCorrelate(correlateEvidence(two,["E1","E2"],"causal")),false,"and stops once one has been tested");
 });
 
 test("shows the modifier it will resolve with", () => {

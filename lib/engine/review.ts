@@ -2,7 +2,7 @@
 import { attacks, stages, hypotheses, scenarioDynamics } from "../game.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseOptionsFor } from "./rules.ts";
-import { getLossReason, getReadingOdds } from "./reads.ts";
+import { getLossReason, getReadingOdds, readyToCorrelate } from "./reads.ts";
 
 // The full review is written for someone who already knows the trade. A first
 // operation needs four sentences before any of it: one thing that went well, one
@@ -30,11 +30,11 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     concept: "A hypothesis is a prediction you are trying to break, not a label to keep. When the evidence sources it predicts come back empty, that is the evidence telling you to change it.",
     next: "Next operation, watch the reading's standing on the hypothesis board. When it says weakening, change the reading before you spend another turn.",
   };
-  if (!game.correlations.length && game.evidence.length >= 2) return {
+  if (readyToCorrelate(game)) return {
     strength,
-    gap: `You collected ${game.evidence.length} findings but never tested how any two of them relate.`,
+    gap: `You confirmed ${game.evidence.filter(item => item.supports).length} stages but never tested how any two of them relate.`,
     concept: "Two things happening close together is not the same as one causing the other. Saying which it is — and being willing to be wrong — is the core of the work.",
-    next: "Next operation, once you hold two findings, select them in the evidence workspace and decide whether one plausibly enabled the other before you run another procedure.",
+    next: "Next operation, once two findings have confirmed stages, select them in the evidence workspace and decide whether one plausibly enabled the other before you run another procedure.",
   };
   if (emptySuccesses >= 3) return {
     strength,
@@ -183,7 +183,7 @@ export function getCounterfactuals(game: Game) {
   else if (!game.hypothesisHistory.length) items.push("No working hypothesis was recorded, so the team could not compare its assumptions with the final chain.");
   const weakCorrelations = game.correlations.filter(record => !record.valid).length;
   if (weakCorrelations) items.push(`${weakCorrelations} tested evidence relationship${weakCorrelations === 1 ? " was" : "s were"} temporal rather than causal. A stronger system-to-identity link would have reduced analytical noise.`);
-  if (!game.correlations.length && game.evidence.length >= 2) items.push("Multiple findings were preserved but never correlated. The team left potential causal relationships untested.");
+  if (readyToCorrelate(game)) items.push("Multiple findings were preserved but never correlated. The team left potential causal relationships untested.");
   if (game.setPieceHistory.some(record => record.quality <= 2)) items.push("The sector crisis decision protected short-term convenience but increased strategic exposure.");
   return items;
 }

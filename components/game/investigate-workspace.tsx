@@ -1,11 +1,11 @@
-import { BrainCircuit, GraduationCap, Sparkles, X } from "lucide-react";
+import { ArrowDown, BrainCircuit, GraduationCap, Sparkles, X } from "lucide-react";
 import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { InfrastructureConsole } from "@/components/game/infrastructure-console";
 import { KnownFacts } from "@/components/game/known-facts";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
-import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, procedureIntensities, procedureScopes } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, procedureIntensities, procedureScopes, readyToCorrelate } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
@@ -16,6 +16,20 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   } = session;
 
   if (!game) return null;
+
+  // The evidence workspace sits below the map in the reference column, where no
+  // playtest found it unprompted. The note that asks for a comparison takes the
+  // player there: it opens the findings and moves focus to the workspace.
+  const showEvidence = () => {
+    const workspace = document.querySelector<HTMLElement>(".evidence-workspace");
+    if (!workspace) return;
+    const findings = workspace.querySelector<HTMLDetailsElement>("details.evidence-detail");
+    if (findings) findings.open = true;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    workspace.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+    workspace.focus({ preventScroll: true });
+  };
+  const compareButton = readyToCorrelate(game) && <button className="compare-findings" onClick={showEvidence}>Compare findings <ArrowDown size={14} /></button>;
 
   // The prompt's longer explanation folds away where the board already carries
   // it — the reading's standing says why to test or revise — and stays inline
@@ -30,6 +44,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
           : <> {trainingPrompt.detail}</>}
         {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: {trainingPrompt.clue}</b>}
         {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(" · ")}</b>}
+        {trainingPrompt.step === "correlate" && compareButton}
       </span>
     </div>
   );
@@ -83,7 +98,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
               ? <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits what the team is seeing. Its own sources then earn the +{OWN_SOURCE_BONUS} own-source bonus.</span></div>
               : trainingNote
                 ? trainingNote
-                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}</span></div>}
+                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{compareButton}</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}

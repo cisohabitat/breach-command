@@ -1,5 +1,5 @@
 import { Activity, Database, Gauge, HeartPulse, Network, Radio, ShieldCheck, TriangleAlert, Wifi, Zap } from "lucide-react";
-import { getAttributionRead, getOperationalLabel, infrastructureTopologies, type Game } from "@/lib/advanced-game";
+import { getAttributionRead, getOperationalLabel, infrastructureTopologies, readyToCorrelate, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 
 const sectorMoments = [
@@ -103,7 +103,7 @@ export function SpecialistTransmission({ game }: { game: Game }) {
       ? `Pressure is critical. Use the next action to reduce actor opportunity around ${node.label}.`
       : isolated
         ? `${isolated} node${isolated === 1 ? " is" : "s are"} isolated. Preserve enough evidence to justify the recovery sequence.`
-        : game.evidence.length >= 2
+        : readyToCorrelate(game)
           ? `The evidence picture can support a causal test. Confirm whether ${node.label} belongs in the attack path.`
           : `Focus collection on ${node.label}. ${specialist.voice}`;
   return <section className="specialist-transmission" aria-live="polite">

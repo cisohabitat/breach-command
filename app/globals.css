@@ -1900,6 +1900,18 @@ a {
   font-size:var(--type-micro);
   color:#c1d69f;
 }
+/* The meter effect sits under the qualitative line, in the body face so the
+   numbers read as numbers. An option that would end the operation says so in
+   words as well as colour. */
+.response-options small.response-effect {
+  margin-top:6px;
+  font-family:inherit;
+  font-size:var(--type-caption);
+  color:var(--text);
+}
+.response-options small.response-effect.ends {
+  color:#f0a48c;
+}
 .response-options svg {
   position:absolute;
   right:12px;
@@ -7316,6 +7328,42 @@ awareness. */
 }
 .alignment-label .nowrap {
   white-space:nowrap;
+}
+/* The way to the evidence workspace, from the note that asks for a comparison. */
+.compare-findings {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:40px;
+  margin-top:8px;
+  padding:0 12px;
+  border:1px solid var(--lime);
+  border-radius:6px;
+  background:transparent;
+  color:var(--lime);
+  font-size:var(--type-caption);
+  cursor:pointer;
+}
+.guide-nudge .compare-findings {
+  display:flex;
+  width:fit-content;
+}
+.compare-findings:hover {
+  background:#c3ee8d14;
+}
+.compare-findings:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
+}
+.evidence-workspace {
+  scroll-margin-top:96px;
+}
+.evidence-workspace:focus {
+  outline:none;
+}
+.evidence-workspace:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:4px;
 }
 /* The longer reason folds behind "Why" where the reading's standing already says it. */
 /* Closed, the toggle rides the title's line; open, the reason takes its own. */

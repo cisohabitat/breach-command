@@ -9,7 +9,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
   const toggle = (id: string) => setSelected(current => current.includes(id) ? current.filter(item => item !== id) : current.length < 2 ? [...current, id] : [current[1], id]);
   const confirmed = game.evidence.filter(item => item.supports).length;
   return (
-    <section className="evidence-workspace" aria-label="Evidence correlation workspace">
+    <section className="evidence-workspace" aria-label="Evidence correlation workspace" tabIndex={-1}>
       <div className="map-heading"><div><span className="eyebrow">EVIDENCE WORKSPACE</span><h2>Build the causal picture</h2></div><span className="focus-instruction"><Braces size={14} /> {game.correlations.length} correlations tested</span></div>
       <div className="case-theory">
         <div><GitBranch size={17} /><span><strong>Case theory</strong><small>Declare intent, then test it against causal evidence.</small></span></div>

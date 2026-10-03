@@ -1,7 +1,7 @@
 import { useRef, type CSSProperties } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { ArrowRight, Zap, ShieldCheck, HeartPulse } from "lucide-react";
-import { responseOptionsFor, type Game } from "@/lib/advanced-game";
+import { describeChange, responseOptionsFor, type Game } from "@/lib/advanced-game";
 
 export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choice: string) => void }) {
   const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
@@ -23,9 +23,23 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
           <div><span className="eyebrow">{containment ? "CONTAINMENT DECISION" : assurance ? "ASSURANCE GATE" : "RECOVERY DECISION"}</span><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p><p className="muted small"><strong>Sector constraint:</strong> {profile.constraint}</p></div>
         </div>
         <div className="response-options">
-          {options.map((option, index) => <button key={option.id} style={{ "--option-index": index } as CSSProperties} onClick={() => onChoose(option.id)}><strong>{option.title}</strong><span>{option.description}</span><small>DISRUPTION {option.disruption} · CONFIDENCE {option.confidence} · RESIDUAL RISK {option.residual}</small><ArrowRight size={17} /></button>)}
+          {options.map((option, index) => <button key={option.id} style={{ "--option-index": index } as CSSProperties} onClick={() => onChoose(option.id)}><strong>{option.title}</strong><span>{option.description}</span><small>DISRUPTION {option.disruption} · CONFIDENCE {option.confidence} · RESIDUAL RISK {option.residual}</small><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /><ArrowRight size={17} /></button>)}
         </div>
       </div>
     </section>
+  );
+}
+
+// What the option does to the two meters, and where it leaves them. The words
+// above — disruption, confidence — did not say that taking the decisive option
+// in all three phases spends a third of the service.
+function OptionEffect({ game, impact, continuity }: { game: Game; impact: number; continuity: number }) {
+  const after = { impact: Math.min(100, Math.max(0, game.impact + impact)), continuity: Math.min(100, Math.max(0, game.continuity + continuity)) };
+  const ends = after.impact >= 100 || after.continuity <= 0;
+  return (
+    <small className={`response-effect ${ends ? "ends" : ""}`}>
+      {describeChange("impact", impact)} · {describeChange("continuity", continuity)}, to {after.continuity}
+      {ends && <b> · Ends the operation</b>}
+    </small>
   );
 }
