@@ -18,6 +18,8 @@ test("records a drill as something other than a defeat", () => {
   assert.ok(afterDrill.readiness>60,"exercising the process builds readiness");
   const afterLoss=recordCampaignResult(commandRecord,{...drillOperation,status:"lost"},40);
   assert.ok(afterLoss.leadershipTrust<60&&afterLoss.streak===0&&afterLoss.unresolvedThreads===1,"a defeat still costs trust, the streak and an open thread");
+  assert.ok(afterDrill.completed.includes(drillOperation.scenario),"a drill the investigation earned clears the case");
+  assert.ok(!afterLoss.completed.includes(drillOperation.scenario),"a defeat leaves the case open");
 });
 
 test("lets campaign standing change the operation", () => {

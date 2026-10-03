@@ -72,9 +72,9 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             ? `${namedSpecialists[specialist].name} is at fatigue ${campaign.specialistFatigue[specialist]} of 6, where the specialist bonus no longer applies. Deploying someone else lets them rest.`
             : "Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty."}</small></label>
           <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
-            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name} · fatigue {campaign.specialistFatigue[id] ?? 0}/6 · {specialists[id].title}</option>)}
+            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{specialists[id].title} · {namedSpecialists[id].name} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
           </select>
-          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].role}. {specialists[specialist].ability} Cohesion {campaign.specialistBonds[specialist] ?? 35}/100.</p>
+          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].title}, {specialists[specialist].role}, fatigue {campaign.specialistFatigue[specialist] ?? 0} of 6. {specialists[specialist].ability} Team cohesion {campaign.specialistBonds[specialist] ?? 35}/100: it grows with each operation together and shapes how the campaign ends.</p>
         </div>
         <details className="advanced-setup">
           <summary><Settings2 size={16} /> Advanced operation settings <span>{gameModes[mode].title}</span></summary>

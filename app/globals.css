@@ -3198,6 +3198,7 @@ html,body {
 }
 .specialist-picker select {
   width:100%;
+  text-overflow:ellipsis;
   min-height:46px;
   border:1px solid #4d624d;
   background:#152119;

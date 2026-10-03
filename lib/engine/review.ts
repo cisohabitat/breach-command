@@ -184,8 +184,17 @@ function recordBefore(game: Game, index: number): Game {
   return { ...game, turns, revealed, decisions: game.decisions.filter(item => revealed.includes(item.stage)) };
 }
 
+// Turns that cost nothing on the investigation score: four at a ten-turn window,
+// one more for each turn the difficulty's window adds. Training's twelve turns
+// promised room to learn and then took three points for every turn past the
+// fourth. Read from the difficulty, not the operation's window, so campaign
+// readiness does not move the score.
+function freeTurns(game: Game) {
+  return 4 + Math.max(0, difficulties[game.difficulty].maxTurns - 10);
+}
+
 export function getScoreBreakdown(game: Game): ScoreBreakdown {
-  const investigation = clamp(25 - Math.max(0, game.turns.length - 4) * 3, 0, 25);
+  const investigation = clamp(25 - Math.max(0, game.turns.length - freeTurns(game)) * 3, 0, 25);
   const impact = Math.round((100 - game.impact) * 0.15);
   const continuity = Math.round(((game.continuity + game.sectorHealth) / 2) * 0.15);
   const decisionItems = [...game.decisions.map(item => item.quality), ...game.commandHistory.map(item => item.quality), ...game.setPieceHistory.map(item => item.quality)];
@@ -227,7 +236,7 @@ export function getScoreRows(game: Game) {
   const decided = game.decisions.length + game.commandHistory.length + game.setPieceHistory.length;
   const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
   return [
-    { label: "Investigation", value: breakdown.investigation, maximum: 25, rule: `Full marks for four turns or fewer, then 3 fewer for each turn after the fourth. You took ${plural(turns, "turn")}.` },
+    { label: "Investigation", value: breakdown.investigation, maximum: 25, rule: `Full marks for ${freeTurns(game)} turns or fewer at ${difficulties[game.difficulty].title}, then 3 fewer for each turn after that. You took ${plural(turns, "turn")}.` },
     { label: "Impact control", value: breakdown.impact, maximum: 15, rule: `Rises as final business impact falls towards zero. It finished at ${game.impact}.` },
     { label: "Continuity", value: breakdown.continuity, maximum: 15, rule: `${scenarioDynamics[game.scenario].label} and the sector's margin at the end, averaged: ${game.continuity} and ${game.sectorHealth}.` },
     { label: "Operational decisions", value: breakdown.decisions, maximum: 15, rule: decided ? `The average quality of your ${plural(decided, "evidence, command and sector decision")}; the review's decision record grades each one.` : "No decisions were taken, so there was nothing to score." },

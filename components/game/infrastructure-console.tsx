@@ -8,7 +8,7 @@ function costLine(game: Game, nodeId: string, action: MapAction) {
   const change = getMapActionEffect(game, nodeId, action);
   return [
     "Spend 1 action",
-    change.modifier ? (game.nextModifier >= change.modifier ? `next roll already +${game.nextModifier}, so no further bonus` : `next procedure +${change.modifier}`) : null,
+    change.modifier ? (game.nextModifier + change.modifier > 3 ? `next procedure +${Math.max(0, 3 - game.nextModifier)} (bonuses cap at +3)` : `next procedure +${change.modifier}`) : null,
     describeMeterChange(game, "impact", change.impact),
     change.continuity ? describeMeterChange(game, "continuity", change.continuity) : null,
     describeMeterChange(game, "sector", change.sector),

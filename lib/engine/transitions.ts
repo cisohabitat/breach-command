@@ -10,6 +10,14 @@ import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerou
 // Where the bonus or penalty waiting for the next roll came from, so the roll
 // can name it: "Since your last roll +2" covered a monitored node, an inject and
 // a decision alike. Two different sources read as several.
+// Everything waiting for the next roll adds up under one cap, -2 to +3. A
+// monitored node's +2 once vanished whenever a comparison or a decision had
+// already set +2, because the larger simply won; the map promised a bonus the
+// roll never showed.
+function carryModifier(before: number, change: number) {
+  return Math.max(-2, Math.min(3, before + change));
+}
+
 function carriedSource(before: number, beforeSource: string | null, after: number, source: string): string | null {
   if (after === before) return beforeSource;
   if (after === 0) return null;
@@ -130,8 +138,8 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
     nodePosture: { ...game.nodePosture, [nodeId]: action === "monitor" ? "monitored" : "isolated" },
     mapActionsRemaining: game.mapActionsRemaining - 1,
     mapHistory: [...game.mapHistory, { node: nodeId, action, turn: game.turns.length, effect }],
-    nextModifier: change.modifier ? Math.max(game.nextModifier, change.modifier) : game.nextModifier,
-    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, change.modifier ? Math.max(game.nextModifier, change.modifier) : game.nextModifier, `Monitored ${node.label}`),
+    nextModifier: carryModifier(game.nextModifier, change.modifier),
+    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, carryModifier(game.nextModifier, change.modifier), `Monitored ${node.label}`),
     impact: clamp(game.impact + change.impact),
     continuity: clamp(game.continuity + change.continuity),
     sectorHealth: clamp(game.sectorHealth + change.sector),
@@ -277,8 +285,8 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     const index = g.injectDeck.splice(position, 1)[0];
     inject = { ...injects[index], reason };
     if (g.failures >= 3) g.failures = 0;
-    if (inject.effect === "bonus") { g.nextModifier = 2; g.nextModifierSource = `Inject: ${inject.title}`; }
-    if (inject.effect === "penalty") { g.nextModifier = -2; g.nextModifierSource = `Inject: ${inject.title}`; impactChange += 6; }
+    if (inject.effect === "bonus") { g.nextModifier = carryModifier(g.nextModifier, 2); g.nextModifierSource = `Inject: ${inject.title}`; }
+    if (inject.effect === "penalty") { g.nextModifier = carryModifier(g.nextModifier, -2); g.nextModifierSource = `Inject: ${inject.title}`; impactChange += 6; }
     if (inject.effect === "pressure") impactChange += 8;
     if (inject.effect === "relief") impactChange -= 8;
     if (inject.effect === "restore") {
@@ -461,13 +469,13 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
 
   switch (choice) {
     case "observe":
-      g.nextModifier = Math.max(g.nextModifier, 2);
+      g.nextModifier = carryModifier(g.nextModifier, 2);
       g.impact = clamp(g.impact + language.observeCost);
       g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
       g.objectiveProgress = clamp(g.objectiveProgress + 6);
       break;
     case "act":
-      g.nextModifier = Math.min(g.nextModifier, -1);
+      g.nextModifier = carryModifier(g.nextModifier, -1);
       g.impact = clamp(g.impact + language.actRelief);
       g.continuity = clamp(g.continuity + language.continuityCost);
       g.adversaryTempo = Math.max(0, g.adversaryTempo - 1);
@@ -475,7 +483,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.sectorHealth = clamp(g.sectorHealth - 2);
       break;
     case "attribute":
-      g.nextModifier = Math.max(g.nextModifier, 3);
+      g.nextModifier = carryModifier(g.nextModifier, 3);
       g.impact = clamp(g.impact + 3);
       g.sectorHealth = clamp(g.sectorHealth - 1);
       g.objectiveProgress = clamp(g.objectiveProgress - 4);
@@ -487,7 +495,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.objectiveProgress = clamp(g.objectiveProgress - 6);
       break;
     case "notify":
-      g.nextModifier = Math.max(g.nextModifier, 1);
+      g.nextModifier = carryModifier(g.nextModifier, 1);
       g.impact = clamp(g.impact + 2);
       g.continuity = clamp(g.continuity + 3);
       g.sectorHealth = clamp(g.sectorHealth - 3);
@@ -556,7 +564,7 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   const event = commandEvents[eventId];
   const option = event[choice];
   const g: Game = { ...game, commandHistory: [...game.commandHistory] };
-  g.nextModifier = Math.max(-2, Math.min(3, g.nextModifier + option.modifier));
+  g.nextModifier = carryModifier(g.nextModifier, option.modifier);
   g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Command event: ${option.title}`);
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
@@ -615,8 +623,8 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
         : `These were treated as causal, but a finding that confirmed no stage cannot be a step in the sequence. A sequence needs two confirmed stages, consecutive or on a shared route.`;
   const g: Game = {
     ...game,
-    nextModifier: correct ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
-    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, correct ? Math.max(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, "Correct comparison of findings"),
+    nextModifier: correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
+    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, "Correct comparison of findings"),
     impact: clamp(game.impact + (correct ? (theoryAligned ? -5 : -3) : 4)),
     objectiveProgress: clamp(game.objectiveProgress + (correct ? (theoryAligned ? -10 : -6) : 3)),
     correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding }],

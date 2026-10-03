@@ -98,7 +98,10 @@ export function campaignEnding(state: CampaignState) {
 
 export function recordCampaignResult(current: CampaignState, game: Game, score: number): CampaignState {
   const prior = current.bestScores[String(game.scenario)] ?? 0;
-  const completed = game.status === "won" && !current.completed.includes(game.scenario)
+  // An authorised exercise is a conclusion the investigation earned, so it clears
+  // the case as a win does; left open, a player who earned it saw "0/10 incidents"
+  // and the same assignment offered again.
+  const completed = (game.status === "won" || game.status === "exercise") && !current.completed.includes(game.scenario)
     ? [...current.completed, game.scenario]
     : current.completed;
   const modeReward = game.mode === "expert" ? 1.5 : game.mode === "escalation" ? 1.4 : game.mode === "ironman" ? 1.35 : game.mode === "daily" ? 1.15 : 1;

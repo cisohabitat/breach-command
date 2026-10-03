@@ -465,3 +465,27 @@ test("erodes the sector margin more slowly at Training", () => {
   const b=playTurn(operational,"identity",20).turns[0].sectorChange;
   assert.equal(a-b,1,"one point a turn");
 });
+
+test("stacks every bonus waiting for the next roll under one cap", () => {
+  // A monitored node's +2 once vanished when a comparison or a decision had
+  // already set +2: the larger simply won. They now add, from -2 to +3.
+  const base={...newGame(0,"operational",()=>0),nextModifier:2,nextModifierSource:"Correct comparison of findings"};
+  const node="boundary";
+  assert.equal(getMapActionEffect(base,node,"monitor").modifier,2,"monitoring the boundary offers +2");
+  const monitored=resolveMapAction(base,node,"monitor");
+  assert.equal(monitored.nextModifier,3,"a monitored node adds to a carried bonus, capped at +3");
+  assert.match(monitored.nextModifierSource??"",/Correct comparison of findings; Monitored /,"both sources are named");
+  const low=resolveMapAction({...base,nextModifier:-2,nextModifierSource:"Inject: x"},node,"monitor");
+  assert.equal(low.nextModifier,0,"a bonus offsets a penalty rather than replacing it");
+});
+
+test("gives each difficulty its own allowance of free turns", () => {
+  // The score's investigation part allows two more turns at Training and one more
+  // at Operational than at Crisis, in step with their longer windows.
+  for (const [difficulty,free] of [["training",6],["operational",5],["crisis",4]] as [Difficulty,number][]) {
+    const game=newGame(0,difficulty,()=>0);
+    const turns=Array.from({length:free+1},()=>game.turns[0]??({} as Game["turns"][number]));
+    assert.equal(getScoreBreakdown({...game,turns:turns.slice(0,free)}).investigation,25,`${difficulty} allows ${free} turns`);
+    assert.equal(getScoreBreakdown({...game,turns}).investigation,22,`${difficulty} charges the turn after`);
+  }
+});

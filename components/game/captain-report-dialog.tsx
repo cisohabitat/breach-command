@@ -36,7 +36,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
       >
         <DialogHeader>
           <div className="eyebrow">CAPTAIN’S REPORT <span className="separator">/</span> TURN {report?.number}</div>
-          <DialogTitle>{report?.revealed ? (report.windfall ? "A later stage was found." : "Evidence confirmed.") : report?.injectReveal ? "A partner disclosed a stage." : report?.success ? "No new attack identified." : "The action was unsuccessful."}</DialogTitle>
+          <DialogTitle>{report?.revealed ? (report.windfall ? "A later stage was found." : "Evidence confirmed.") : report?.injectReveal ? "A partner disclosed a stage." : report?.success ? "The check came back empty." : "The action was unsuccessful."}</DialogTitle>
           <DialogDescription>{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
         </DialogHeader>
         {report && game && <>
