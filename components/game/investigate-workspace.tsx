@@ -17,12 +17,27 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
 
   if (!game) return null;
 
+  const trainingNote = trainingPrompt && (
+    <div className={`guide-nudge training-prompt step-${trainingPrompt.step}`}>
+      <GraduationCap size={15} />
+      <span>
+        <strong>{trainingPrompt.title}.</strong> {trainingPrompt.detail}
+        {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: {trainingPrompt.clue}</b>}
+        {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(" · ")}</b>}
+      </span>
+    </div>
+  );
+
   return (
     <div className="investigation-dashboard">
       {/* The reading leads, because every procedure is gated on it. The actions come
           next and the reference material after, so the grid a player touches every
           turn is not six screens below the fold on a phone. */}
       <div className="investigation-lead">
+        {/* Until a reading is declared, the prompt and its clue are what the choice
+            is made from, so they sit above the four readings rather than below
+            them; once one is declared they move back beside the procedures. */}
+        {!game.hypothesis && !game.pendingCommand && !game.pendingSetPiece && trainingNote}
         {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={chooseHypothesis} />}
       </div>
       <div className="investigation-context">
@@ -55,16 +70,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
               <span className="established-key">{procedureScopes[actionScope].title} · {procedureIntensities[actionIntensity].title}</span>
             </div>
             {guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}</span></div>}
-            {trainingPrompt && (
-              <div className={`guide-nudge training-prompt step-${trainingPrompt.step}`}>
-                <GraduationCap size={15} />
-                <span>
-                  <strong>{trainingPrompt.title}.</strong> {trainingPrompt.detail}
-                  {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: {trainingPrompt.clue}</b>}
-                  {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(" · ")}</b>}
-                </span>
-              </div>
-            )}
+            {game.hypothesis && trainingNote}
             {!game.hypothesis && <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong>Choose the explanation that best fits the current intelligence. Matching evidence then earns the reasoning bonus.</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>

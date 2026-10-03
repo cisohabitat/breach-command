@@ -370,7 +370,6 @@ a {
 .primary-button:hover {
   background:#d5ffa8;
   border-color:#d5ffa8;
-  transform:translateY(-1px);
 }
 .start-button,.full {
   width:100%;
@@ -605,6 +604,18 @@ a {
   transform:translateY(-3px);
   background:#273b2d;
   box-shadow:0 8px 18px #0002;
+}
+/* A card lifted on hover leaves the pointer behind at its bottom edge: it
+   un-hovers, drops back under the pointer and lifts again, every frame. The strip
+   it vacates stays part of the card while it is lifted, so hover settles. The
+   1px lifts on buttons and response options went for the same reason. */
+.procedure-card:not(:disabled):hover::after {
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:100%;
+  height:4px;
 }
 .procedure-top {
   display:flex;
@@ -1913,7 +1924,6 @@ a {
 }
 .response-options button:hover {
   border-color:var(--lime);
-  transform:translateY(-1px);
 }
 .response-options strong {
   font-size:var(--type-body);
@@ -4977,9 +4987,9 @@ html,body {
   .hypothesis-board.has-reading .hypothesis-options {
     display:none;
   }
-  .hypothesis-options button>span,.hypothesis-options button>small {
-    display:none;
-  }
+  /* Before a reading is recorded the premises are the decision itself, so the
+     cards keep them, and the procedures below stay locked until one is chosen:
+     the height costs nothing a player could have used. */
   .hypothesis-options {
     grid-template-columns:1fr 1fr;
   }
@@ -5879,6 +5889,30 @@ html,body {
   line-height:var(--leading-base);
   color:#a9baa6;
   margin:-3px 0 9px;
+}
+.report-ending {
+  display:grid;
+  gap:4px;
+  margin-bottom:14px;
+  padding:12px 14px;
+  border:1px solid #9c6250;
+  border-left-width:4px;
+  border-radius:8px;
+  background:#2a1d18;
+}
+.report-ending.ending-exercise {
+  border-color:#6d7f57;
+  background:#18231b;
+}
+.report-ending strong {
+  font-size:var(--type-body);
+}
+.report-ending p {
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+}
+.phone-quick-start {
+  display:none;
 }
 .quick-start-guide {
   display:grid;
@@ -7435,5 +7469,22 @@ in colour, and the carried plan is stated before the options. */
   }
   .hypothesis-gate strong {
     display:inline;
+  }
+  .phone-quick-start {
+    display:grid;
+    gap:8px;
+    margin-top:18px;
+  }
+  .phone-quick-start .primary-button {
+    width:100%;
+    min-height:48px;
+    justify-content:space-between;
+  }
+  .phone-quick-start small {
+    color:var(--text-soft);
+    font-size:var(--type-caption);
+  }
+  .hypothesis-options {
+    grid-template-columns:1fr;
   }
 }

@@ -6,6 +6,7 @@ import { namedSpecialists } from "@/lib/phase8";
 import { specialistReaction } from "@/lib/phase9";
 import { unlockedCapabilities } from "@/lib/campaign";
 import type { GameSession } from "@/hooks/use-game-session";
+import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 
 export function DebriefDialog({ session }: { session: GameSession }) {
   const {
@@ -15,11 +16,11 @@ export function DebriefDialog({ session }: { session: GameSession }) {
 
   return (
     <Dialog open={debrief} onOpenChange={setDebrief}>
-      <DialogContent className="game-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"}>
+      <DialogContent className="game-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onCloseAutoFocus={returnFocusToAwaiting}>
         <DialogHeader>
           <div className="eyebrow">AFTER-ACTION REVIEW</div>
           <DialogTitle>{game?.status === "won" ? `${outcome?.grade} / ${outcome?.title}` : game?.status === "exercise" ? "Exercise concluded." : game ? `${getLossReason(game).title}.` : ""}</DialogTitle>
-          <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? `${game.status === "lost" ? `${getLossReason(game).detail} ` : ""}${game.revealed.length} of 4 stages found in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}. This is a learning outcome, not a security assessment.` : ""}</DialogDescription>
+          <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? `${game.status === "lost" ? `${getLossReason(game).detail} ` : ""}${game.status === "lost" && getLossReason(game).cause === "window" ? "" : `${game.revealed.length} of 4 stages found in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}. `}This is a learning outcome, not a security assessment.` : ""}</DialogDescription>
         </DialogHeader>
         {game && outcome && <>
           <section className="first-read" aria-label="Before the detail">

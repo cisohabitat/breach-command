@@ -604,7 +604,13 @@ export function useGameSession() {
   useEffect(() => {
     const loadTimer = setTimeout(() => {
       const stored = readStored(CAMPAIGN_KEY);
-      setCampaign(parseCampaign(stored));
+      const loaded = parseCampaign(stored);
+      setCampaign(loaded);
+      // A first operation starts at Training, the only difficulty that discloses
+      // what the team is seeing; without that clue the opening reading is a guess
+      // between four routes, which is the wrong first lesson. The player can still
+      // choose otherwise before beginning.
+      if (loaded.operations === 0) setDifficulty("training");
       if (!storageWritable()) setStorageNotice("This browser is not allowing saved data, so progress from this visit will not be kept.");
       else if (stored !== null && !campaignReadable(stored)) setStorageNotice("Campaign progress on this device could not be read, so a new campaign has started.");
     }, 0);

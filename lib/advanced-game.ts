@@ -1143,6 +1143,10 @@ function breached(g: Game) {
   return g.impact >= 100 || g.continuity <= 0 || g.sectorHealth <= 0 || g.objectiveProgress >= 100;
 }
 
+// One narrative for every failed roll the grace did not absorb. A failed check
+// settles nothing about the reading, and the words must not say otherwise.
+const FAILED_CHECK = "The action did not produce reliable evidence. A failed check settles nothing about the working hypothesis either way; the team reorients.";
+
 function settle(g: Game, status: GameStatus): Game {
   g.status = status;
   if (terminal(status)) {
@@ -1155,12 +1159,17 @@ function settle(g: Game, status: GameStatus): Game {
 
 // Why the operation ended, in its own terms. The investigation window is only
 // one of five ways to lose and was previously named for all of them.
-export function getLossReason(game: Game): { title: string; detail: string } {
-  if (game.objectiveProgress >= 100) return { title: "The adversary completed its objective", detail: `${adversaryObjectives[game.objective].title} reached 100 before the response closed the route.` };
-  if (game.impact >= 100) return { title: "Business impact reached its limit", detail: "Exposure grew faster than the investigation could reduce it." };
-  if (game.continuity <= 0) return { title: "The essential service stopped", detail: `${scenarioDynamics[game.scenario].label} fell to zero and the operation was taken out of the response team's hands.` };
-  if (game.sectorHealth <= 0) return { title: "Sector confidence collapsed", detail: `${sectorSystems[game.scenario].title} fell to zero while the chain was still open.` };
-  return { title: "The investigation window closed", detail: `${game.revealed.length} of 4 stages were confirmed in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}.` };
+export type LossCause = "objective" | "impact" | "continuity" | "sector" | "window";
+
+// `cause` lets a caller tell the endings apart without comparing titles; the
+// window ending's detail already counts the stages, so callers add that count
+// only for the other four.
+export function getLossReason(game: Game): { cause: LossCause; title: string; detail: string } {
+  if (game.objectiveProgress >= 100) return { cause: "objective", title: "The adversary completed its objective", detail: `${adversaryObjectives[game.objective].title} reached 100 before the response closed the route.` };
+  if (game.impact >= 100) return { cause: "impact", title: "Business impact reached its limit", detail: "Exposure grew faster than the investigation could reduce it." };
+  if (game.continuity <= 0) return { cause: "continuity", title: "The essential service stopped", detail: `${scenarioDynamics[game.scenario].label} fell to zero and the operation was taken out of the response team's hands.` };
+  if (game.sectorHealth <= 0) return { cause: "sector", title: "Sector confidence collapsed", detail: `${sectorSystems[game.scenario].title} fell to zero while the chain was still open.` };
+  return { cause: "window", title: "The investigation window closed", detail: `${game.revealed.length} of 4 stages were confirmed in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}.` };
 }
 
 export function playTurn(game: Game, procedure: string, forcedRoll?: number, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }): Game {
@@ -1241,14 +1250,19 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // objective moves no further than on a success. Reasoning is protected;
     // certainty is not. It is checked before the grace so a failure that was
     // already protected does not spend it.
-    narrative = "The action did not produce evidence this time, but the reasoning held: the route under test was the right one to ask about, and the team keeps its footing.";
+    //
+    // The protection is the player's to earn, not to be told about: whether it
+    // applied depends on the hidden route, so this reads exactly as an ordinary
+    // failure does. Saying "the route under test was the right one" handed over
+    // the answer, and so would any wording that differed.
+    narrative = FAILED_CHECK;
   } else if (g.graceRemaining > 0) {
     // Rapid coordination absorbs the first unlucky action of the operation. The
     // team reorients on its own time rather than the adversary's.
     g.graceRemaining -= 1;
     narrative = "The action did not produce evidence, but the team reorients on its own time: coordination absorbed the setback before the actor could use it.";
   } else {
-    narrative = "The action did not produce reliable evidence. The actor gains freedom while the team reorients.";
+    narrative = FAILED_CHECK;
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   }
   if (success) {

@@ -14,6 +14,7 @@ export function EndState({ session }: { session: GameSession }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useRecoverFocus(heading, game?.status);
   if (!game) return null;
+  const loss = getLossReason(game);
   const openDebrief = () => setDebrief(true);
 
   if (game.status === "won") {
@@ -24,7 +25,7 @@ export function EndState({ session }: { session: GameSession }) {
           <div className="end-icon"><ShieldCheck /></div>
           <div>
             <span className="eyebrow">RESOLUTION · STAND DOWN</span>
-            <h2 ref={heading} tabIndex={-1}>{outcome?.title}</h2>
+            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{outcome?.title}</h2>
             <p>{outcome?.detail} Impact is {game.impact} and {getOperationalLabel(game).toLowerCase()} is {game.continuity}. The captain has closed the active response.</p>
           </div>
           <button className="primary-button" onClick={openDebrief}>Open after-action review <ArrowRight size={17} /></button>
@@ -45,8 +46,8 @@ export function EndState({ session }: { session: GameSession }) {
           <div className="end-icon"><CircleSlash /></div>
           <div>
             <span className="eyebrow">OPERATION CLOSED</span>
-            <h2 ref={heading} tabIndex={-1}>{getLossReason(game).title}.</h2>
-            <p>{getLossReason(game).detail} {game.revealed.length} of 4 stages were confirmed, leaving impact at {game.impact}. No stand-down was issued.</p>
+            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{loss.title}.</h2>
+            <p>{loss.detail} {loss.cause === "window" ? "" : `${game.revealed.length} of 4 stages were confirmed. `}Impact stands at {game.impact}. No stand-down was issued.</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>Review the record <ArrowRight size={17} /></button>
         </div>
@@ -62,7 +63,7 @@ export function EndState({ session }: { session: GameSession }) {
           <div className="end-icon"><ClipboardCheck /></div>
           <div>
             <span className="eyebrow">AUTHORISED EXERCISE</span>
-            <h2 ref={heading} tabIndex={-1}>Exercise concluded at the boundary.</h2>
+            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>Exercise concluded at the boundary.</h2>
             <p>{game.revealed.length} of 4 stages were identified before the drill stopped. No live incident was declared and no service action was taken.</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>Review the drill <ArrowRight size={17} /></button>

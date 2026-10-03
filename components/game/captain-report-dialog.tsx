@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { ArrowRight, BrainCircuit, CheckCheck, Eye, MessagesSquare, Shield, ShieldCheck, Siren, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, describeChange, getHypothesisStanding, hypothesisSources, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
+import { attacks, describeChange, getHypothesisStanding, getLossReason, hypothesisSources, getOperationalLabel, procedureIntensities, procedureScopes, procedureById, stages } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
+import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
   const { report, game, ended, config, dismissReport, decide } = session;
@@ -29,6 +30,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
         // control is a decision option. Focus the report itself so Space or Enter,
         // pressed to read, cannot commit a command choice.
         onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
+        onCloseAutoFocus={returnFocusToAwaiting}
       >
         <DialogHeader>
           <div className="eyebrow">CAPTAIN’S REPORT <span className="separator">/</span> TURN {report?.number}</div>
@@ -36,11 +38,20 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
           <DialogDescription>{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
         </DialogHeader>
         {report && game && <>
+          {/* The turn that ends an operation is still reported as a turn, so its
+              headline can be good news on a lost operation. Say how it ended first. */}
+          {ended && report.number === game.turns.length && game.status !== "won" && (
+            <div className={`report-ending ending-${game.status}`} role="status">
+              <span className="eyebrow">{game.status === "exercise" ? "EXERCISE CONCLUDED" : "OPERATION LOST"}</span>
+              <strong>{game.status === "exercise" ? "The controller stood the operation down as an authorised exercise." : `${getLossReason(game).title}.`}</strong>
+              {game.status === "lost" && <p>{getLossReason(game).detail}</p>}
+            </div>
+          )}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
             <section className="report-summary" aria-label="Procedure result">
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
-                <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus ? " including hypothesis bonus" : ""}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
+                <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
                 {report.success ? <CheckCheck size={23} /> : <X size={23} />}
               </div>
               <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>{describeChange("sector", report.sectorChange)}</span><span>{describeChange("objective", report.objectiveChange)}</span></div>

@@ -31,6 +31,19 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           })}
         </div>
         <div className="first-move"><Dices size={20} /><p>Form a hypothesis, test evidence, command the response.</p></div>
+        {/* On a phone the assignment panel, and the start button inside it, sit two
+            screens below the introduction, behind the campaign record. This puts the
+            first move on the first screen: resume the saved operation, or start the
+            selected assignment. Wider layouts show the panel beside the introduction
+            and hide the strip. */}
+        <section className="phone-quick-start" aria-label="Quick start">
+          {savedSession ? (
+            <button className="primary-button" onClick={() => resume(savedSession)}>Resume {scenarios[savedSession.game.scenario].title} <ArrowRight size={18} /></button>
+          ) : (
+            <button className="primary-button" onClick={() => start()}>Start {activeScenario.title} <ArrowRight size={18} /></button>
+          )}
+          <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title} · ${namedSpecialists[specialist].name}`} · or choose the assignment below</small>
+        </section>
         <section className="career-card" aria-label="Command career progression">
           <div><span className="eyebrow">COMMAND CAREER</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents · trust {campaign.leadershipTrust} · readiness {campaign.readiness}</small></div>
           <b>{campaign.xp}<small> XP</small></b>

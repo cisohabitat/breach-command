@@ -359,6 +359,7 @@ test("ends the operation whichever step takes a meter to its limit", () => {
   const isolated=resolveMapAction({...baseline(),sectorHealth:4},"service","isolate");
   assert.equal(isolated.status,"lost","isolating the critical node with no sector margin left loses");
   assert.equal(getLossReason(isolated).title,"Sector confidence collapsed");
+  assert.equal(getLossReason(isolated).cause,"sector","the cause is named without comparing titles");
   const midway={...baseline(),objectiveProgress:50};
   const effect=getMapActionEffect(midway,"service","isolate");
   const paid=resolveMapAction(midway,"service","isolate");
@@ -407,6 +408,11 @@ test("keeps the deck, the grace and the decisions honest", () => {
   const absorbed=playTurn({...setHypothesis(baseline(),"cloud"),graceRemaining:1,injectDeck:[]},"endpoint",2);
   assert.equal(absorbed.graceRemaining,0,"an unsound failure is what the grace absorbs");
   assert.equal(absorbed.turns[0].objectiveChange-sound.turns[0].objectiveChange,4,"the sound failure adds nothing to the actor's objective beyond its ordinary advance");
+  // Whether that protection applied depends on the hidden route, so the words
+  // cannot differ: a sound failure reads exactly as an unprotected one.
+  const unprotected=playTurn({...setHypothesis(baseline(),"cloud"),graceRemaining:0,injectDeck:[]},"endpoint",2);
+  assert.equal(sound.turns[0].narrative,unprotected.turns[0].narrative,"a protected failure is not announced");
+  assert.ok(!/right one|reasoning held/i.test(sound.turns[0].narrative),"and never says the route was right");
   // The partner can disclose a stage on the same turn a procedure finds one. Each
   // gets its own decision, one after the other.
   let both=playTurn({...baseline(),injectDeck:[3]},"endpoint",20);

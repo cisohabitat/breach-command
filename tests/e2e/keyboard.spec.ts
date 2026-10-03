@@ -100,6 +100,11 @@ test.describe("keyboard play", () => {
     // The final choice ends the operation; focus moves to the resolution it produced.
     await expect(page.locator(".resolution h2")).toBeFocused();
     expect(await focusedText(page)).not.toEqual("");
+    // The review opens over the resolution; closing it returns there, not to the page.
+    await page.locator(".resolution").getByRole("button").first().click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".resolution h2")).toBeFocused();
   });
 
   test("single-key shortcuts can be turned off", async ({ page }) => {

@@ -21,6 +21,21 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
 
   return (
     <>
+      {/* What needs the player leads Command: a pending decision, the response
+          sequence, the ending, or otherwise the current intelligence and the next
+          move. The situation picture follows. Below it, on a phone, a decision
+          sat two screens down with nothing on screen saying one was waiting. */}
+      {activeWorkspace === "command" && game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
+      {activeWorkspace === "command" && game.status === "playing" && <SectorSetPiece game={game} onChoose={sectorDecision} />}
+      {activeWorkspace === "command" && (ended ? (
+        <EndState session={session} />
+      ) : game.status === "response" ? (
+        <ResponsePanel game={game} onChoose={respond} />
+      ) : (<>
+        <section className="lead-strip"><Activity size={20} /><div><span className="eyebrow">CURRENT INTELLIGENCE</span><p>{getLead(game)}</p></div></section>
+        {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <section className="command-next-action"><div><span className="eyebrow">NEXT ACTION</span><strong>Build and test a working hypothesis.</strong><p>Open Investigate to select an explanation, focus the relevant infrastructure and run one evidence procedure.</p></div><button onClick={() => setActiveWorkspace("investigate")}>Open Investigate <ArrowRight size={17} /></button></section>}
+      </>))}
+
       <section className={`attack-section ${game.status === "won" ? "resolved" : ""}`} hidden={activeWorkspace !== "command"}>
         <div className="section-heading"><h2>Attack chain</h2><span className="mono muted">{game.revealed.length} / 4 REVEALED</span></div>
         <div className="attack-grid">
@@ -46,19 +61,6 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       <div hidden={activeWorkspace !== "command"}><SectorBoard game={game} /></div>
       {activeWorkspace === "command" && <SectorSituation game={game} />}
       {activeWorkspace === "command" && <SectorOperationalScene game={game} />}
-
-      {activeWorkspace === "command" && (ended ? (
-        <EndState session={session} />
-      ) : game.status === "response" ? (
-        <ResponsePanel game={game} onChoose={respond} />
-      ) : (<>
-        <section className="lead-strip"><Activity size={20} /><div><span className="eyebrow">CURRENT INTELLIGENCE</span><p>{getLead(game)}</p></div></section>
-        {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <section className="command-next-action"><div><span className="eyebrow">NEXT ACTION</span><strong>Build and test a working hypothesis.</strong><p>Open Investigate to select an explanation, focus the relevant infrastructure and run one evidence procedure.</p></div><button onClick={() => setActiveWorkspace("investigate")}>Open Investigate <ArrowRight size={17} /></button></section>}
-      </>))}
-
-      {activeWorkspace === "command" && game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
-
-      {activeWorkspace === "command" && game.status === "playing" && <SectorSetPiece game={game} onChoose={sectorDecision} />}
     </>
   );
 }

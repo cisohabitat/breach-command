@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Check, CircleHelp, LayoutDashboard, MessagesSquare, Search, TriangleAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { TutorialCoach } from "@/components/game/tutorial-coach";
@@ -18,6 +19,23 @@ export function GameScreen({ session }: { session: GameSession }) {
     game, activeScenario, config, ended, activeWorkspace, setActiveWorkspace,
     tutorial, dismissTutorial, setRules, meterPulse,
   } = session;
+  const tabs = useRef<HTMLElement>(null);
+  const shell = useRef<HTMLDivElement>(null);
+
+  // A workspace change is a change of page. Keeping the previous page's scroll
+  // position dropped a player half-way down the infrastructure map after a
+  // sector decision. The tabs are sticky, so the top is measured from the shell
+  // beneath them, and a player already above it is left where they are.
+  // Only a change counts: on mount the screen is already being scrolled to the
+  // top by whatever started or resumed the operation.
+  const shownWorkspace = useRef(activeWorkspace);
+  useEffect(() => {
+    if (shownWorkspace.current === activeWorkspace) return;
+    shownWorkspace.current = activeWorkspace;
+    if (!shell.current) return;
+    const top = shell.current.getBoundingClientRect().top + window.scrollY - (tabs.current?.offsetHeight ?? 0) - 12;
+    if (window.scrollY > top) window.scrollTo({ top });
+  }, [activeWorkspace]);
 
   if (!game) return null;
 
@@ -75,13 +93,13 @@ export function GameScreen({ session }: { session: GameSession }) {
 
       <BotControl session={session} />
 
-      <nav className="workspace-tabs" aria-label="Command workspace">
+      <nav className="workspace-tabs" aria-label="Command workspace" ref={tabs}>
         <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><LayoutDashboard size={18} /><span><strong>Command</strong><small>Situation and decisions</small></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Action</b>}</button>
         <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><Search size={18} /><span><strong>Investigate</strong><small>Map, theory and evidence</small></span><b>{game.evidence.length}</b></button>
         <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><MessagesSquare size={18} /><span><strong>Briefing</strong><small>Captain and incident log</small></span><b>{game.turns.length}</b></button>
       </nav>
 
-      <div className="game-layout workspace-shell">
+      <div className="game-layout workspace-shell" ref={shell}>
         <div className="table-area" hidden={activeWorkspace === "briefing"}>
           {activeWorkspace !== "briefing" && tutorial && game.status === "playing" && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <TutorialCoach game={game} workspace={activeWorkspace} onNavigate={() => setActiveWorkspace("investigate")} onDismiss={dismissTutorial} />}
           <CommandWorkspace session={session} />
