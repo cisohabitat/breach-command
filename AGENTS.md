@@ -32,10 +32,12 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `hooks/use-preferences.ts`: audio, haptics and contrast, loaded once and persisted after.
 - `hooks/use-challenge-code.ts`: the shareable configuration — seed, code field and whether the operation is reproducible.
 - `hooks/use-recover-focus.ts`: returns focus to a panel's heading when the control just used was replaced by it.
+- `hooks/use-meter-pulse.ts`, `hooks/use-keyboard-shortcuts.ts`, `hooks/use-incident-state-tool.ts`: the meter change feedback, the single-key shortcuts and the read-only browser-agent tool, each self-contained.
 - `app/globals.css`: visual system, game layouts and responsive behaviour. One declaration per line, nested by block; keep it that way so a rule change is a one-line diff.
 - `components/game/`: focused gameplay surfaces. Prefer a new component here when a coherent game system would otherwise make `app/page.tsx` substantially harder to follow.
 - `lib/game.ts`: scenarios, procedures, attacks and baseline rules data.
-- `lib/advanced-game.ts`: authoritative game state and transition engine.
+- `lib/advanced-game.ts`: the engine's public surface, re-exporting exactly the names the rest of the app and the tests use. Import from here, not from `lib/engine/`.
+- `lib/engine/`: the engine itself — `content.ts` (authored tables), `types.ts`, `rules.ts` (availability, the roll modifier, map costs, the loss check and `settle`), `reads.ts` (everything shown during play, which may not read the hidden chain), `transitions.ts` (every change to an operation) and `review.ts` (score, ledger, counterfactuals). At runtime the modules form a line — `content`, `rules`, then `reads` and `transitions`, then `review` — and `types` is imported only as types; keep it that way. Types are imported with `type`, because the tests run under Node's type stripping and a type imported as a value fails at runtime.
 - `lib/command-systems.ts`: modes, specialists, scope, intensity, objectives and sector systems.
 - `lib/phase8.ts`: infrastructure maps, named specialists, sector set pieces and challenge-code encoding.
 - `lib/phase9.ts`: campaign routes, authored incident variants, objective theories and specialist reactions.

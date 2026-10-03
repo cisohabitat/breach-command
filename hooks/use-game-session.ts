@@ -2,7 +2,6 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
-  attacks,
   scenarios,
   hypotheses,
   difficulties,
@@ -29,7 +28,6 @@ import {
   getOperationalLabel,
   getObjectiveRead,
   getLossReason,
-  getTurnLimit,
   adversaryObjectives,
   type Difficulty,
   type GameMode,
@@ -44,7 +42,6 @@ import {
   type MapAction,
   type SetPieceChoice,
   hypothesisSources,
-  proceduresFor,
   procedureById,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, sessionFromNewerBuild, SESSION_KEY, type SavedSession } from "@/lib/session";
@@ -57,26 +54,13 @@ import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9"
 import { chooseBotAction, type BotAction } from "@/lib/game-bot";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useChallengeCode } from "@/hooks/use-challenge-code";
+import { useIncidentStateTool } from "@/hooks/use-incident-state-tool";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, useMeterPulse } from "@/hooks/use-meter-pulse";
 
 type WorkspaceView = "command" | "investigate" | "briefing";
 
-// Moment-to-moment feedback for the case meters. The deltas describe what the
-// last resolved step did to business impact and operational continuity, plus
-// whether that step pushed either readout across a meaningful threshold.
-export type MeterPulse = {
-  key: number;
-  impact: number;
-  continuity: number;
-  objective: number;
-  impactCritical: boolean;
-  continuityAtRisk: boolean;
-  objectiveImminent: boolean;
-};
-export const IMPACT_CRITICAL = 70;
-export const CONTINUITY_AT_RISK = 45;
-// Adversary progress is the clock that actually closes most operations, so it
-// gets the same threshold treatment as the other two pressure readouts.
-export const OBJECTIVE_IMMINENT = 70;
+export { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type MeterPulse } from "@/hooks/use-meter-pulse";
 
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -125,7 +109,7 @@ export function useGameSession() {
   });
 
   const [pendingUndo, setPendingUndo] = useState<{ label: string; game: Game } | null>(null);
-  const [meterPulse, setMeterPulse] = useState<MeterPulse | null>(null);
+  const { meterPulse, pulseMeters, clearMeterPulse } = useMeterPulse();
   const [botEnabled, setBotEnabled] = useState(false);
   const [botRun, setBotRun] = useState(false);
   const [botActive, setBotActive] = useState(false);
@@ -144,8 +128,6 @@ export function useGameSession() {
   // in play stops overwriting the save, and returning to assignments offers the
   // restored one instead of deleting it.
   const importedRef = useRef<SavedSession | null>(null);
-  const pulseKey = useRef(0);
-  const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeScenario = scenarios[game?.scenario ?? scenarioChoice];
   const ScenarioIcon = activeScenario.icon;
@@ -172,28 +154,6 @@ export function useGameSession() {
     setSavedSession(null);
   }
 
-  // Describe the meter movement caused by one resolved step. Threshold crossings
-  // are recorded as a boolean so the interface can mark them as an event even
-  // when the underlying number only moved by a single point.
-  function pulseMeters(previous: Game | null, next: Game) {
-    if (!previous) return;
-    const impact = next.impact - previous.impact;
-    const continuity = next.continuity - previous.continuity;
-    const objective = next.objectiveProgress - previous.objectiveProgress;
-    const impactCritical = previous.impact < IMPACT_CRITICAL && next.impact >= IMPACT_CRITICAL;
-    const continuityAtRisk = previous.continuity > CONTINUITY_AT_RISK && next.continuity <= CONTINUITY_AT_RISK;
-    const objectiveImminent = previous.objectiveProgress < OBJECTIVE_IMMINENT && next.objectiveProgress >= OBJECTIVE_IMMINENT;
-    if (!impact && !continuity && !objective && !impactCritical && !continuityAtRisk && !objectiveImminent) return;
-    pulseKey.current += 1;
-    setMeterPulse({ key: pulseKey.current, impact, continuity, objective, impactCritical, continuityAtRisk, objectiveImminent });
-    if (pulseTimer.current) clearTimeout(pulseTimer.current);
-    pulseTimer.current = setTimeout(() => setMeterPulse(null), 1400);
-  }
-
-  function clearMeterPulse() {
-    if (pulseTimer.current) clearTimeout(pulseTimer.current);
-    setMeterPulse(null);
-  }
 
   function start(index = scenarioChoice) {
     if (busyRef.current) return;
@@ -621,27 +581,16 @@ export function useGameSession() {
 
   // M is "mute": it silences cues and the score together, and brings the cues
   // back. Toggling only the cues left the music playing under a muted game.
-  const toggleMute = useEffectEvent(() => {
-    if (soundEnabled || musicEnabled) {
-      setSoundEnabled(false);
-      setMusic(false);
-    } else setSoundEnabled(true);
+  useKeyboardShortcuts(shortcutsEnabled, {
+    f: () => setRules(value => !value),
+    m: () => {
+      if (soundEnabled || musicEnabled) {
+        setSoundEnabled(false);
+        setMusic(false);
+      } else setSoundEnabled(true);
+    },
+    g: () => setGuided(value => !value),
   });
-
-  useEffect(() => {
-    if (!shortcutsEnabled) return;
-    const handleKeyboard = (event: KeyboardEvent) => {
-      const target = event.target;
-      if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
-      // Typing to jump through a select or into any editable field is not a shortcut.
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || (target instanceof HTMLElement && target.isContentEditable)) return;
-      if (event.key.toLowerCase() === "f") setRules(value => !value);
-      if (event.key.toLowerCase() === "m") toggleMute();
-      if (event.key.toLowerCase() === "g") setGuided(value => !value);
-    };
-    window.addEventListener("keydown", handleKeyboard);
-    return () => window.removeEventListener("keydown", handleKeyboard);
-  }, [shortcutsEnabled]);
 
   useEffect(() => {
     campaignRef.current = campaign;
@@ -686,49 +635,9 @@ export function useGameSession() {
 
   useEffect(() => () => {
     timers.current.forEach(clearTimeout);
-    if (pulseTimer.current) clearTimeout(pulseTimer.current);
   }, []);
 
-  useEffect(() => {
-    const context = (document as Document & { modelContext?: { registerTool: (tool: unknown, options: { signal: AbortSignal }) => void | Promise<void> } }).modelContext;
-    if (!context?.registerTool) return;
-    const lifecycle = new AbortController();
-    try {
-      const registration = context.registerTool({
-        name: "read_incident_state",
-        title: "Read incident state",
-        description: "Read the visible incident, working hypothesis, operational condition and available procedures. Hidden attacks are not disclosed.",
-        inputSchema: { type: "object", properties: {}, additionalProperties: false },
-        annotations: { readOnlyHint: true, untrustedContentHint: false },
-        execute(input: unknown) {
-          if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).length) throw new Error("Expected an empty object.");
-          const current = stateRef.current;
-          if (!current) return { status: "briefing" };
-          return {
-            status: current.status,
-            difficulty: current.difficulty,
-            incident: scenarios[current.scenario].title,
-            turnsUsed: current.turns.length,
-            turnsRemaining: Math.max(0, getTurnLimit(current) - current.turns.length),
-            impact: current.impact,
-            operationalCondition: current.continuity,
-            hypothesis: current.hypothesis,
-            adversaryState: getAdversaryState(current),
-            discovered: current.revealed.map(id => attacks.find(attack => attack.id === id)?.title),
-            lead: getLead(current),
-            procedures: proceduresFor(current).map(procedure => ({
-              id: procedure.id,
-              title: procedure.title,
-              established: current.established.includes(procedure.id),
-              cooldown: availableIn(current, procedure.id),
-            })),
-          };
-        },
-      }, { signal: lifecycle.signal });
-      Promise.resolve(registration).catch(() => {});
-    } catch {}
-    return () => lifecycle.abort();
-  }, []);
+  useIncidentStateTool(stateRef);
 
   // Derived, never stored: the warning can only ever describe the meters as they
   // are now, and it clears itself the moment the operation is no longer running.

@@ -118,7 +118,8 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `components/game/` | Workspaces, gameplay boards, maps, dialogs, end states and the tutorial |
 | `components/ui/` | The interface primitives the game actually imports |
 | `lib/game.ts` | Scenario, procedure and attack data |
-| `lib/advanced-game.ts` | Game state, transitions, adaptive adversary and scoring |
+| `lib/advanced-game.ts` | The engine's public surface: game state, transitions, adaptive adversary and scoring |
+| `lib/engine/` | The engine, split into content, types, shared rules, play-time reads, transitions and the review |
 | `lib/game-bot.ts` | Visible-evidence Bot Commander policy and action selection |
 | `lib/command-systems.ts` | Modes, specialists, procedure plans, objectives and sector rules |
 | `lib/phase8.ts` | Infrastructure topologies, named team, set pieces and challenge codes |
