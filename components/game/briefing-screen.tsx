@@ -113,6 +113,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           </section>
         )}
         <button className="primary-button start-button" onClick={() => start()}>Begin investigation <ArrowRight size={19} /></button>
+        {savedSession && <p className="replace-note">Beginning a new investigation replaces the saved one.</p>}
         <div className="mission-meta"><span><Clock3 size={14} /> 20–35 minutes solo</span><span><LockKeyhole size={14} /> No real systems</span></div>
       </section>
       <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator.</p>

@@ -298,3 +298,27 @@ test("credits a reading that was wrong but properly tested", () => {
   assert.equal(score([turn({ hypothesis: "identity", hypothesisMatched: false, success: false, procedure: identitySource })]), 0, "a failed roll settles nothing, so it earns nothing");
   assert.equal(score([turn({ hypothesis: "identity", hypothesisMatched: false, success: true, procedure: "server" })]), 0, "and a source the reading does not predict cannot rule it out");
 });
+
+test("pays no credit for testing a reading the record had already excluded", () => {
+  // Half credit rewards ruling a reading out. A reading the record had already
+  // excluded teaches nothing when tested again, and paying for it let a player
+  // cycling readings at random collect credit a sound one did not.
+  const start=()=>({...newGame(0,"operational",()=>0),injectDeck:[],established:[],chain:["phish","printqueue","task","backup-out"]});
+  const run=(firstSource:string)=>{
+    let game=setHypothesis(start(),"application");
+    game=playTurn(game,firstSource,20);
+    game=setHypothesis(game,"identity");
+    game=playTurn(game,"change-review",20);
+    assert.equal(game.revealed.length,0,"both checks completed and found nothing");
+    return game;
+  };
+  // Neither first check is one of the application reading's own sources, so
+  // neither earns anything itself. An identity audit rules out both identity
+  // techniques the first stage could use; a cloud audit rules out neither.
+  const excluded=run("identity");
+  const open=run("cloud");
+  assert.equal(getReadingOdds({...excluded,turns:excluded.turns.slice(0,1),hypothesis:"identity"}).candidates.identity.open,0,"after the audit nothing on the identity route is open");
+  assert.ok(getReadingOdds({...open,turns:open.turns.slice(0,1),hypothesis:"identity"}).candidates.identity.open>0,"after the DNS review it still is");
+  assert.equal(getScoreBreakdown(excluded).hypothesis,0,"testing an already excluded reading earns nothing");
+  assert.ok(getScoreBreakdown(open).hypothesis>0,"testing one still open earns the half credit");
+});

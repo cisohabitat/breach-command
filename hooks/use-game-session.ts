@@ -44,7 +44,7 @@ import {
   hypothesisSources,
   procedureById,
 } from "@/lib/advanced-game";
-import { parseSession, serialiseSession, sessionFromNewerBuild, SESSION_KEY, type SavedSession } from "@/lib/session";
+import { parseSession, serialiseSession, sessionFromNewerBuild, PARKED_SESSION_KEY, SESSION_KEY, type SavedSession } from "@/lib/session";
 import { campaignAct, campaignEnding, campaignReadable, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
 import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
@@ -149,7 +149,17 @@ export function useGameSession() {
   const finalEnding = campaignEnding(campaign);
   const challengeCode = codeFor(scenarioChoice, difficulty, mode, specialist);
 
+  // A newer build's save found on load. It is moved aside, never overwritten,
+  // before anything else is written to the save slot.
+  const newerSaveRef = useRef<string | null>(null);
+  function parkNewerSave() {
+    if (!newerSaveRef.current) return;
+    writeStored(PARKED_SESSION_KEY, newerSaveRef.current);
+    newerSaveRef.current = null;
+  }
+
   function clearStoredSession() {
+    parkNewerSave();
     removeStored(SESSION_KEY);
     setSavedSession(null);
   }
@@ -544,15 +554,26 @@ export function useGameSession() {
   });
 
   useEffect(() => {
-    const stored = readStored(SESSION_KEY);
+    let stored = readStored(SESSION_KEY);
+    // A save an older build parked because it could not read it: once this build
+    // can, it goes back in the slot and is offered like any other.
+    const parked = readStored(PARKED_SESSION_KEY);
+    if (!stored && parked) {
+      const restored = parseSession(parked);
+      if (restored && (restored.game.status === "playing" || restored.game.status === "response") && writeStored(SESSION_KEY, parked)) {
+        removeStored(PARKED_SESSION_KEY);
+        stored = parked;
+      } else if (!restored && !sessionFromNewerBuild(parked)) removeStored(PARKED_SESSION_KEY);
+    }
     if (!stored) return;
     const session = parseSession(stored);
+    if (!session && sessionFromNewerBuild(stored)) newerSaveRef.current = stored;
     const loadTimer = setTimeout(() => {
       // Only an operation still in progress is offered. A finished one has nothing
       // left to resume, and opening it landed on a disabled workspace.
       if (session && (session.game.status === "playing" || session.game.status === "response")) setSavedSession(session);
       else if (session) removeStored(SESSION_KEY);
-      else if (sessionFromNewerBuild(stored)) setStorageNotice("The saved operation on this device was written by a newer version of Breach Command and cannot be opened here. It has been left in place; starting a new operation will replace it.");
+      else if (sessionFromNewerBuild(stored)) setStorageNotice("The saved operation on this device was written by a newer version of Breach Command and cannot be opened here. It is kept aside, and a version that can open it will offer it again.");
       else {
         removeStored(SESSION_KEY);
         setStorageNotice("The saved operation on this device could not be read and has been removed. Campaign progress is not affected.");
@@ -609,6 +630,7 @@ export function useGameSession() {
       removeStored(SESSION_KEY);
       return;
     }
+    parkNewerSave();
     if (writeStored(SESSION_KEY, serialiseSession(game, guided, fastResolve))) return;
     const notice = setTimeout(() => setStorageNotice("This browser is not allowing saved data, so this operation is being played from memory only."), 0);
     return () => clearTimeout(notice);

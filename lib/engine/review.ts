@@ -2,7 +2,7 @@
 import { attacks, stages, hypotheses, scenarioDynamics } from "../game.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseOptionsFor } from "./rules.ts";
-import { getLossReason } from "./reads.ts";
+import { getLossReason, getReadingOdds } from "./reads.ts";
 
 // The full review is written for someone who already knows the trade. A first
 // operation needs four sentences before any of it: one thing that went well, one
@@ -73,6 +73,14 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   };
 }
 
+// The visible record as it stood before a turn: the turns played, the stages
+// confirmed by them and the decisions taken on those stages.
+function recordBefore(game: Game, index: number): Game {
+  const turns = game.turns.slice(0, index);
+  const revealed = turns.flatMap(turn => [turn.revealed, turn.injectReveal]).filter((id): id is string => !!id);
+  return { ...game, turns, revealed, decisions: game.decisions.filter(item => revealed.includes(item.stage)) };
+}
+
 export function getScoreBreakdown(game: Game): ScoreBreakdown {
   const investigation = clamp(25 - Math.max(0, game.turns.length - 4) * 3, 0, 25);
   const impact = Math.round((100 - game.impact) * 0.15);
@@ -91,17 +99,21 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   // the same empty reading is not. A failed roll settles nothing and earns none.
   // Ruling a reading out is worth credit once. Declaring it again after its own
   // sources came back empty is the opposite of the lesson, so those turns earn
-  // nothing and still count in the denominator.
+  // nothing and still count in the denominator. Nor does testing a reading the
+  // record had already excluded. Measured over 800 operations, that took a
+  // player choosing readings at random from 4.8 to 3.3 and one who never revises
+  // from 5.4 to 4.4, while sound play stayed at 7.5.
   const ruledOut = new Set<string>();
   let soundNegatives = 0;
-  for (const turn of tested) {
+  game.turns.forEach((turn, index) => {
     if (turn.revealed || turn.injectReveal) ruledOut.clear();
-    if (turn.hypothesisMatched || !turn.success) continue;
-    if (!hypothesisSources(game, turn.hypothesis!).includes(turn.procedure)) continue;
-    if (ruledOut.has(turn.hypothesis!)) continue;
-    ruledOut.add(turn.hypothesis!);
+    if (!turn.hypothesis || !turn.hypothesisTarget || turn.hypothesisMatched || !turn.success) return;
+    if (!hypothesisSources(game, turn.hypothesis).includes(turn.procedure)) return;
+    if (ruledOut.has(turn.hypothesis)) return;
+    ruledOut.add(turn.hypothesis);
+    if (!getReadingOdds(recordBefore(game, index)).candidates[turn.hypothesis].open) return;
     soundNegatives++;
-  }
+  });
   const credit = aligned + soundNegatives * 0.5;
   const hypothesis = tested.length ? Math.round(clamp(credit / tested.length, 0, 1) * 10) : 0;
   return { investigation, impact, continuity, decisions, response, hypothesis, total: investigation + impact + continuity + decisions + response + hypothesis };

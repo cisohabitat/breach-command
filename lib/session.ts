@@ -2,6 +2,10 @@ import { attacks, scenarios, difficulties, infrastructureTopologies, adversaryPr
 import type { NodePosture } from "./advanced-game";
 
 export const SESSION_KEY = "breach-command.session";
+// Where a save this build cannot read is moved before anything replaces it, so a
+// newer build's operation outlives an older bundle served offline. A build that
+// can read it moves it back and offers it for resume.
+export const PARKED_SESSION_KEY = "breach-command.session.parked";
 export const SESSION_VERSION = 14;
 
 export type SavedSession = {

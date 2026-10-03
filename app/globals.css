@@ -2467,14 +2467,14 @@ a {
 .timeline>.eyebrow {
   margin-bottom:9px;
 }
-.timeline>div {
+.timeline>details>div {
   display:grid;
   grid-template-columns:30px 1fr;
   gap:10px;
   padding:10px 0;
   border-top:1px solid #29392d;
 }
-.timeline>div>span {
+.timeline>details>div>span {
   font:500 var(--type-caption) ui-monospace,SFMono-Regular,Consolas,monospace;
   color:var(--lime);
 }
@@ -4083,7 +4083,7 @@ html,body {
   display:block;
   margin-bottom:8px;
 }
-.evidence-review>div {
+.evidence-review>details>div {
   border-top:1px solid #2e4033;
   padding:10px 0;
 }
@@ -5911,6 +5911,35 @@ html,body {
   color:var(--text-soft);
   font-size:var(--type-caption);
 }
+.debrief-fold {
+  margin-top:10px;
+}
+.debrief-fold>summary {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:center;
+  gap:6px 14px;
+  min-height:44px;
+  padding:10px 14px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+.debrief-fold>summary span {
+  color:var(--text-soft);
+  font-weight:400;
+  font-size:var(--type-caption);
+}
+.debrief-fold[open]>summary {
+  margin-bottom:12px;
+}
+.replace-note {
+  margin-top:8px;
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+}
 .phone-quick-start {
   display:none;
 }
@@ -6864,7 +6893,7 @@ they want without scrolling past the other nine. */
   line-height:var(--leading-base);
   max-width:82ch;
 }
-.hypothesis-ledger>div {
+.hypothesis-ledger>details>div {
   display:grid;
   grid-template-columns:auto minmax(0,1fr) auto;
   gap:4px 13px;
@@ -6872,28 +6901,28 @@ they want without scrolling past the other nine. */
   padding:10px 0;
   border-top:1px solid #23302799;
 }
-.hypothesis-ledger>div>span {
+.hypothesis-ledger>details>div>span {
   font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
   font-size:var(--type-caption);
   color:var(--text-soft);
 }
-.hypothesis-ledger>div p {
+.hypothesis-ledger>details>div p {
   margin:0;
   display:grid;
   gap:3px;
   min-width:0;
 }
-.hypothesis-ledger>div strong {
+.hypothesis-ledger>details>div strong {
   font-weight:500;
   font-size:var(--type-body);
 }
-.hypothesis-ledger>div small,.hypothesis-ledger>div em {
+.hypothesis-ledger>details>div small,.hypothesis-ledger>details>div em {
   font-size:var(--type-caption);
   color:var(--text-soft);
   font-style:normal;
   line-height:var(--leading-compact);
 }
-.hypothesis-ledger>div b {
+.hypothesis-ledger>details>div b {
   justify-self:end;
   white-space:nowrap;
   font:600 var(--type-micro) ui-monospace,SFMono-Regular,Consolas,monospace;
@@ -6903,11 +6932,11 @@ they want without scrolling past the other nine. */
   border:1px solid var(--line);
   color:var(--text-soft);
 }
-.hypothesis-ledger>div.matched b {
+.hypothesis-ledger>details>div.matched b {
   border-color:#5f7a4c;
   color:var(--lime);
 }
-.hypothesis-ledger>div.missed b {
+.hypothesis-ledger>details>div.missed b {
   border-color:#6b5a4e;
   color:#d6a98f;
 }
@@ -6915,11 +6944,11 @@ they want without scrolling past the other nine. */
   .hypothesis-ledger {
     padding:13px 13px 4px;
   }
-  .hypothesis-ledger>div {
+  .hypothesis-ledger>details>div {
     grid-template-columns:auto minmax(0,1fr);
     row-gap:6px;
   }
-  .hypothesis-ledger>div b {
+  .hypothesis-ledger>details>div b {
     grid-column:2;
     justify-self:start;
   }

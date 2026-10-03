@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { newGame, type Game } from "../../lib/advanced-game";
-import { SESSION_KEY, SESSION_VERSION, serialiseSession } from "../../lib/session";
+import { PARKED_SESSION_KEY, SESSION_KEY, SESSION_VERSION, serialiseSession } from "../../lib/session";
 
 const PREFERENCES = "breach-command.preferences";
 
@@ -88,5 +88,43 @@ test.describe("local persistence", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/written by a newer version/)).toBeVisible();
     expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY), "a newer build's save is not deleted").toEqual(newer);
+  });
+
+  test("a newer build's save is parked, not overwritten, when an operation begins", async ({ page }) => {
+    const newer = JSON.stringify({ version: SESSION_VERSION + 1, savedAt: new Date().toISOString(), game: newGame(0, "operational", () => 0), guided: true, fastResolve: false });
+    await page.addInitScript(([key, value]) => {
+      try {
+        if (localStorage.getItem("breach-command.seeded")) return;
+        localStorage.clear();
+        localStorage.setItem("breach-command.tutorial-complete", "true");
+        localStorage.setItem(key, value);
+        localStorage.setItem("breach-command.seeded", "1");
+      } catch {}
+    }, [SESSION_KEY, newer] as const);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByText(/written by a newer version/)).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: /Begin investigation/ }).click();
+    await page.getByRole("button", { name: /Assume command/ }).click();
+    await page.waitForTimeout(300);
+    const [parked, current] = await page.evaluate(([parkedKey, sessionKey]) => [localStorage.getItem(parkedKey), localStorage.getItem(sessionKey)], [PARKED_SESSION_KEY, SESSION_KEY] as const);
+    expect(parked, "the newer save is kept aside").toEqual(newer);
+    expect(current, "and the new operation has the save slot").not.toEqual(newer);
+  });
+
+  test("a parked save this build can read is offered again", async ({ page }) => {
+    const inProgress = serialiseSession(newGame(0, "operational", () => 0), true, false);
+    await page.addInitScript(([key, value]) => {
+      try {
+        if (localStorage.getItem("breach-command.seeded")) return;
+        localStorage.clear();
+        localStorage.setItem("breach-command.tutorial-complete", "true");
+        localStorage.setItem(key, value);
+        localStorage.setItem("breach-command.seeded", "1");
+      } catch {}
+    }, [PARKED_SESSION_KEY, inProgress] as const);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    expect(await page.evaluate(key => localStorage.getItem(key), PARKED_SESSION_KEY), "it leaves the parking slot").toBeNull();
   });
 });
