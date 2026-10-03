@@ -142,7 +142,7 @@ export const scenarios: Scenario[] = [
 
 export type Difficulty = "training"|"operational"|"crisis";
 export const difficulties: Record<Difficulty,{title:string;description:string;threshold:number;maxTurns:number;startImpact:number}> = {
-  training:{title:"Training",description:"More time, clearer margin for experimentation.",threshold:10,maxTurns:12,startImpact:14},
+  training:{title:"Training",description:"More time and a clearer margin to learn in; the score still rewards a quick finish.",threshold:10,maxTurns:12,startImpact:14},
   operational:{title:"Operational",description:"Balanced uncertainty, pressure and time.",threshold:11,maxTurns:11,startImpact:22},
   crisis:{title:"Crisis",description:"Tighter rolls, fewer turns and higher starting impact.",threshold:12,maxTurns:10,startImpact:34},
 };
