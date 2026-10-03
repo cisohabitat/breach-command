@@ -141,7 +141,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   // nothing stood out beside calls graded one and two out of five. The weakest
   // is named with the reason it was weak at the time.
   const weakest = [...game.decisions].sort((a, b) => a.quality - b.quality)[0];
-  if (weakest && weakest.quality <= 2 && breakdown.decisions < 11) return {
+  if (weakest && weakest.quality <= 2) return {
     strength,
     gap: `Your weakest call was “${weakest.title}” on ${attacks.find(item => item.id === weakest.stage)?.title.toLowerCase() ?? "a confirmed stage"}: ${weakest.rationale.charAt(0).toLowerCase()}${weakest.rationale.slice(1)}`,
     concept: "No response is right in every incident. What decides it is the pressure at that moment: how high business impact is, how fast the actor is moving, and how much margin the service and the sector have left.",

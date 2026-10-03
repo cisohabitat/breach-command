@@ -162,7 +162,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             </div>
           )}
           <section className="counterfactuals"><span className="eyebrow">WHAT MIGHT HAVE CHANGED</span><details className="debrief-fold"><summary>Other calls you could have made<span>{getCounterfactuals(game).length} alternatives</span></summary>{getCounterfactuals(game).map((item, index) => <p key={index}>{item}</p>)}</details></section>
-          <section className="evidence-review"><span className="eyebrow">EVIDENCE RECONSTRUCTION</span><details className="debrief-fold"><summary>Every finding<span>{game.evidence.length} finding{game.evidence.length === 1 ? "" : "s"} · {game.evidence.filter(item => item.supports).length} confirmed a stage</span></summary>{game.evidence.map(item => <div key={item.id}><strong>{item.id} · {item.title}</strong><span>{item.system} · {item.source} · {item.confidence}</span><p>{item.detail}</p></div>)}</details></section>
+          <section className="evidence-review"><span className="eyebrow">EVIDENCE RECONSTRUCTION</span><details className="debrief-fold"><summary>Every finding<span>{game.evidence.length} finding{game.evidence.length === 1 ? "" : "s"} · {game.evidence.filter(item => item.supports).length} confirmed a stage</span></summary>{game.evidence.map(item => <div key={item.id}><strong>{`Turn ${item.turn}`} · {item.title}</strong><span>{item.system} · {item.source} · {item.confidence}</span><p>{item.detail}</p></div>)}</details></section>
           <details className="debrief-fold debrief-chain-fold" id="debrief-chain">
             <summary>The attack chain<span>{game.revealed.length} of 4 stages confirmed · see what each one was</span></summary>
           <div className="debrief-chain">

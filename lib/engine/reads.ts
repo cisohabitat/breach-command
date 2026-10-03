@@ -409,7 +409,8 @@ export function sourceSeesReading(game: Game, procedure: string): boolean | null
   const candidates = scenarios[game.scenario].choices[stage]
     .map(id => attacks.find(item => item.id === id))
     .filter(attack => attack?.vector === game.hypothesis);
-  if (!candidates.length) return null;
+  // A reading with no technique at this stage cannot be tested by any source.
+  if (!candidates.length) return false;
   return candidates.some(attack => attack!.detect.includes(procedure));
 }
 
@@ -417,7 +418,10 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
   const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
   // A completed check that found nothing is a result. A failed roll is not: it
   // tells the player nothing about the source, and must not read as though it did.
-  const attempts = game.turns.filter(turn => turn.procedure === procedure);
+  // Scoped to the stage under test: "checked 1× · no stage found" carried from
+  // stage 2 to stage 4 steered a playtest away from the source that held it.
+  const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
+  const attempts = game.turns.filter(turn => turn.procedure === procedure && turn.number > lastConfirmation);
   const spent = attempts.filter(turn => turn.success && !turn.revealed).length;
   const inconclusive = attempts.filter(turn => !turn.success).length;
   const spentNote = [
@@ -434,7 +438,7 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
 // window ending's detail already counts the stages, so callers add that count
 // only for the other four.
 export function getLossReason(game: Game): { cause: LossCause; title: string; detail: string } {
-  if (game.objectiveProgress >= 100) return { cause: "objective", title: "The adversary completed its objective", detail: `${adversaryObjectives[game.objective].title} reached 100 before the response closed the route.` };
+  if (game.objectiveProgress >= 100) return { cause: "objective", title: "The adversary completed its objective", detail: `Adversary progress toward ${adversaryObjectives[game.objective].title.toLowerCase()} reached 100 before the response closed the route.` };
   if (game.impact >= 100) return { cause: "impact", title: "Business impact reached its limit", detail: "Exposure grew faster than the investigation could reduce it." };
   if (game.continuity <= 0) return { cause: "continuity", title: "The essential service stopped", detail: `${scenarioDynamics[game.scenario].label} fell to zero and the operation was taken out of the response team's hands.` };
   if (game.sectorHealth <= 0) return { cause: "sector", title: `${sectorSystems[game.scenario].title} reached zero`, detail: "The sector's own margin ran out while the attack chain was still open." };

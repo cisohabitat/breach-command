@@ -159,7 +159,8 @@ function previewDecision(game: Game, choice: DecisionChoice) {
       describeMeterChange(game, "continuity", next.continuity - game.continuity),
       describeMeterChange(game, "sector", next.sectorHealth - game.sectorHealth),
       describeMeterChange(game, "objective", next.objectiveProgress - game.objectiveProgress),
-    ].join(" · ");
+      next.nextModifier !== game.nextModifier ? `next roll ${next.nextModifier > game.nextModifier ? "+" : "−"}${Math.abs(next.nextModifier - game.nextModifier)}` : "",
+    ].filter(Boolean).join(" · ");
   } catch {
     return null;
   }

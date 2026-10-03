@@ -184,6 +184,10 @@ export function useGameSession() {
     const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, seed), seed: reproducible ? seed : null });
     spendChallenge();
     setGame(next);
+    // A new operation starts on the default plan; Exhaustive carried over from
+    // the last one became a new operation's "Starting plan" unasked.
+    setActionScope("focused");
+    setActionIntensity("balanced");
     botRunRef.current = automated;
     setBotRun(automated);
     setBotActive(automated);
