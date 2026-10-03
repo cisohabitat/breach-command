@@ -8115,6 +8115,18 @@ in colour, and the carried plan is stated before the options. */
     letter-spacing:0;
     text-transform:none;
   }
+  /* Two lines each above the grid otherwise: the stage keeps its number and
+     name, the margin its value and title. */
+  .hypothesis-standing .reading-for,.sector-margin-line .margin-prefix {
+    display:none;
+  }
+  .sector-margin-line {
+    display:block;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-top:4px;
+  }
   /* The report's padding is 24px here, so the cue strip reaches that far. */
   .report-dialog .evidence-decision .options-below {
     bottom:-24px;

@@ -70,7 +70,7 @@ export function GameScreen({ session }: { session: GameSession }) {
               readouts, and a Crisis playtest lost to it having never seen it:
               it lived on Command's board until the alert at 35. It stays in
               view here, in the readout's own name. */}
-          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono">SECTOR MARGIN</span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
+          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono"><span className="margin-prefix">SECTOR </span>MARGIN</span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
         </div>
         <div className="case-meters">
           <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>

@@ -65,7 +65,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 : report.success
                   ? "The check completed and found no stage, which rules out what this source could see at this stage; the adversary used the time."
                   : report.planningBonus > 0
-                    ? "The check failed, so it settled nothing. It was one of your reading's own sources, so the failure gave the adversary no extra ground, though any failed check raises business impact more."
+                    ? "The check failed, so it settled nothing. It was one of your reading's own sources, so the failure gave the adversary no extra progress, though any failed check raises business impact more and wears the sector margin."
                     : "The check failed, so it settled nothing and gave the adversary the most time."}{report.adversaryEvent ? " It also made a move, below." : ""}</span></p>
               <p className="report-narrative"><Glossed text={report.narrative} /></p>
               {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small></div></div>}

@@ -54,7 +54,7 @@ export function HypothesisBoard({
           {/* A reading is tested one stage at a time, and the label says which: a
               playtest read the premise as covering the whole incident and could
               not see why "Holding" became "Untested" after a find. */}
-          <span className="eyebrow">{underTest ? `READING FOR STAGE ${underTest.index + 1} · ${underTest.name.toUpperCase()}` : "CURRENT READING"}</span>
+          <span className="eyebrow">{underTest ? <><span className="reading-for">READING FOR </span>STAGE {underTest.index + 1} · {underTest.name.toUpperCase()}</> : "CURRENT READING"}</span>
           {active && <b className="standing-reading">{active.title}</b>}
           <strong>{standing.label}</strong>
           <span className="standing-meter" aria-hidden="true">
