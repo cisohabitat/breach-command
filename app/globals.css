@@ -699,6 +699,15 @@ a {
 .established .procedure-bottom {
   color:#c0d5a6;
 }
+/* Set like the own-source tag above it: the same size and face at each width. */
+.procedure-bottom .established-label {
+  font-size:var(--type-micro);
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.established-label .nowrap {
+  white-space:nowrap;
+}
 .cooling {
   opacity:.48;
   background:#18221b;
@@ -7877,6 +7886,13 @@ in colour, and the carried plan is stated before the options. */
   .investigation-dashboard .procedure-card .alignment-label {
     margin-top:6px;
     font-family:inherit;
+    font-weight:600;
+    letter-spacing:0;
+    text-transform:none;
+  }
+  .investigation-dashboard .procedure-card .established-label {
+    font-family:var(--font-ui);
+    font-size:var(--type-caption);
     font-weight:600;
     letter-spacing:0;
     text-transform:none;

@@ -65,7 +65,9 @@ export function ProcedureGrid({
             {read && !cooldown && read.spent > 0 && <small className="spent-label">CHECKED {read.spent}× · NO STAGE FOUND</small>}
             {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} ATTEMPT{read.inconclusive === 1 ? "" : "S"} FAILED · INCONCLUSIVE</small>}
             <div className="procedure-bottom">
-              <span>{cooldown ? "ON COOLDOWN" : established ? "ESTABLISHED · +2" : "STANDARD"}</span>
+              {/* An ordinary source carries no label: "STANDARD" told a newcomer nothing.
+                  An established one says what it is in words, as the own-source tag does. */}
+              <span>{cooldown ? "ON COOLDOWN" : established ? <span className="established-label">Established <span className="nowrap">· +2</span></span> : null}</span>
               {!cooldown && <ChevronRight size={15} />}
             </div>
           </button>

@@ -229,7 +229,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   }
   if (success) {
     const source = procedureById(g, procedure)!;
-    const evidenceTitle = revealed ? `${attacks.find(item => item.id === revealed)!.title} evidence` : `${source.title} exception`;
+    const evidenceTitle = revealed ? `${attacks.find(item => item.id === revealed)!.title} evidence` : `${source.title} came back empty`;
     g.evidence.push({
       id: `E${number}-${procedure}`,
       turn: number,

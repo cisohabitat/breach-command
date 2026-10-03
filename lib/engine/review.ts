@@ -33,6 +33,42 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   // wrong more often than right is named before an untested correlation. In the
   // other order a player who held a dead route for a whole operation was told
   // only about the correlation.
+  // A player who revised as the standing asked and still missed was told to
+  // revise when the standing weakens — advice they had just followed. Name what
+  // the record shows instead: a reading carried into a new stage, readings left
+  // untested by their own sources, or the ordinary cost of open routes.
+  if (tested.length && aligned * 2 < tested.length && revisions >= 2) {
+    const stageOfAttack = (id: string) => attacks.find(item => item.id === id)!.stage;
+    const misses = tested.filter(turn => !turn.hypothesisMatched);
+    const carried = misses.filter(turn => {
+      const stage = stageOfAttack(turn.hypothesisTarget!);
+      const declared = game.hypothesisHistory.filter(entry => entry.turn <= turn.number).pop()?.turn ?? 1;
+      const opened = game.turns.find(earlier => [earlier.revealed, earlier.injectReveal].some(id => !!id && stageOfAttack(id) === stage - 1));
+      return stage > 0 && !!opened && declared <= opened.number;
+    }).length;
+    const untested = misses.filter(turn => !turn.success || !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure)).length;
+    const gap = `Your working hypothesis matched the route actually under test on ${aligned} of ${tested.length} turns, though you revised it ${revisions} times.`;
+    if (carried * 2 >= misses.length) return {
+      strength,
+      gap: `${gap} On ${carried} of the misses you were still testing a reading chosen for an earlier stage.`,
+      concept: "Each stage of an intrusion can travel a different route: a stolen account can open the way in and a compromised server can carry the data out. Confirming one stage answers that stage and opens the next question.",
+      next: "Next operation, as soon as a stage is confirmed, compare the four readings again and choose the one that fits the next stage before you run another procedure.",
+    };
+    if (untested * 2 >= misses.length) return {
+      strength,
+      gap: `${gap} On ${untested} of the misses the check either failed or used a source the reading does not predict, so it could not rule the reading out.`,
+      concept: "A wrong reading is only corrected by a completed check of one of its own sources. A failed roll or another reading's source leaves it exactly as open as before.",
+      next: "Next operation, run a procedure marked “Own source” for the reading you hold, so that an empty result rules it out instead of leaving it standing.",
+    };
+    return {
+      strength,
+      gap: `${gap} You tested each reading with its own sources, which is the habit; with three or four routes open at most stages, some misses are the cost of finding out.`,
+      concept: "A wrong reading tested properly is how the right one is found, and it still earns half its credit in the hypothesis score. What costs turns is testing a route the record has already ruled out.",
+      next: game.mode === "expert"
+        ? "Next operation, keep your own tally of the routes your completed checks have ruled out, and never declare one of them again."
+        : "Next operation, when a reading weakens, compare all four before choosing the next, and pass over any the comparison marks as ruled out.",
+    };
+  }
   if (tested.length && aligned * 2 < tested.length) return {
     strength,
     gap: `Your working hypothesis matched the route actually under test on ${aligned} of ${tested.length} turns${revisions === 0 ? ", and you never revised it" : ""}.`,

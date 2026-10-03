@@ -452,3 +452,21 @@ test("gives an Expert player advice that does not lean on a withheld read", () =
   assert.ok(/standing/.test(misread("campaign").next),"a guided player is pointed at the standing");
   assert.ok(!/standing/.test(misread("expert").next)&&/tally/.test(misread("expert").next),"an Expert player is given the habit without it");
 });
+
+test("does not tell a player who revised to revise", () => {
+  // Six revisions, each when the standing asked, and the review still said
+  // "when it says weakening, change the reading". It names what the record shows.
+  const oneTurn=playTurn(baseline(),"endpoint",20).turns[0];
+  const later=attacks.find(attack=>attack.stage===1&&attack.vector!=="endpoint")!.id;
+  const turn=(number:number,hypothesis:Game["hypothesis"],procedure:string,extra:Partial<Game["turns"][number]>={})=>({...oneTurn,number,hypothesis,procedure,hypothesisTarget:"phish",hypothesisMatched:false,success:true,revealed:null,injectReveal:null,...extra});
+  const review=(turns:Game["turns"],history:Game["hypothesisHistory"])=>getBeginnerReview({...baseline(),turns,hypothesisHistory:history});
+  const opening=[turn(1,"cloud","cloud"),turn(2,"identity","identity")];
+  const carried=review([...opening,turn(3,"endpoint","endpoint",{hypothesisMatched:true,revealed:"phish"}),...[4,5,6].map(number=>turn(number,"endpoint","endpoint",{hypothesisTarget:later}))],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"endpoint"}]);
+  assert.ok(!/When it says weakening/.test(carried.next),"a player who revised is not told to start revising");
+  assert.ok(/revised it 2 times/.test(carried.gap)&&/earlier stage/.test(carried.gap)&&/stage is confirmed/.test(carried.next),"a reading carried into a new stage is named");
+  const untested=review([...opening,turn(3,"application","endpoint"),turn(4,"application","server",{success:false})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"}]);
+  assert.ok(/could not rule the reading out/.test(untested.gap)&&/Own source/.test(untested.next),"checks that could not test the reading are named");
+  const sound=review([...opening,turn(3,"application","server"),turn(4,"endpoint","endpoint",{hypothesisMatched:true,revealed:"phish"})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"},{turn:4,id:"endpoint"}]);
+  assert.ok(/which is the habit/.test(sound.gap)&&/ruled out/.test(sound.next),"sound revision is credited, and the advice is what is left to gain");
+  assert.ok(/When it says weakening/.test(review([turn(1,"cloud","cloud"),turn(2,"cloud","cloud")],[{turn:1,id:"cloud"}]).next),"a reading never revised still gets the standing advice");
+});

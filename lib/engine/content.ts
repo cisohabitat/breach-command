@@ -345,6 +345,16 @@ export const scenarioProfiles: AdversaryProfileId[][] = [
 // and wrong for a first-time player reading it cold. Every term here is one a
 // playtest reported needing translated.
 export const plainLanguage: Record<string, string> = {
+  "endpoint": "An individual computer — a laptop, desktop or server — as opposed to the network or an online service.",
+  "control plane": "The management layer of a cloud service: the settings, roles and keys that decide what everything else in the account may do.",
+  "pivot": "Using one compromised system or account as a stepping stone to reach the next.",
+  "C2": "Command and control: the channel an intruder uses to send instructions to compromised systems and receive what they collect.",
+  "egress": "Traffic leaving the organisation's network for the internet.",
+  "east-west traffic": "Traffic between systems inside the network, rather than in from or out to the internet.",
+  "DNS": "The internet's address book, which turns names into network addresses. Its lookups can be abused to smuggle small amounts of data.",
+  "established source": "An evidence source your team already knows well: a few start that way and the campaign adds more. It adds +2 to the roll.",
+  "inject": "An unplanned event the exercise controller adds part-way through: a disclosure, an outage or a lucky break.",
+  "pre-positioning": "Gaining quiet access now in order to act later, often during a crisis, rather than to take anything today.",
   "privileged tier": "Accounts with powerful administrative access — the ones that can change anything.",
   "trust boundary": "The line between two systems that are allowed to rely on each other. Crossing it is how an intruder spreads.",
   "actor tempo": "How quickly the intruder is moving. It rises when you give them time and falls when you press them.",

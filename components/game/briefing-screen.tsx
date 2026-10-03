@@ -58,7 +58,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <div className="mission-symbol"><ScenarioIcon size={33} strokeWidth={1.4} /><span>{activeScenario.sector}</span></div>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
-        {previewVariant && <div className="variant-brief"><span className="eyebrow">AUTHORED VARIANT</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
+        {previewVariant && <div className="variant-brief"><span className="eyebrow">INCIDENT VARIANT</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
         <div className="mission-selector" aria-label="Select incident">
           {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery stars` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1).padStart(2, "0")}</span>{campaign.completed.includes(index) && <small>{Array.from({ length: campaign.mastery[String(index)] ?? 0 }).map((_, star) => <Star key={star} size={8} fill="currentColor" />)}</small>}</button>)}
         </div>

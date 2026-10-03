@@ -52,12 +52,12 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             <section className="report-summary" aria-label="Procedure result">
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
-                <div><span>Natural roll {report.raw} {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
+                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
                 {report.success ? <CheckCheck size={23} aria-hidden="true" /> : <CircleSlash size={23} aria-hidden="true" />}
               </div>
               <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span>{report.specialistBonus > 0 && <span>Specialist +{report.specialistBonus}</span>}<span>{describeChange("sector", report.sectorChange)}</span><span>{describeChange("objective", report.objectiveChange)}</span></div>
               <p className="report-narrative">{report.narrative}</p>
-              {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
+              {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong></div></div>}
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
                   is where the player is looking when it lands. A failed roll settles

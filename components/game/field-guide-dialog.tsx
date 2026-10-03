@@ -13,7 +13,7 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
         <div className="rules-content">
           <section className="quick-start-guide" aria-label="Quick start">
             <div><span>1</span><p><strong>Form a hypothesis</strong>Open Investigate and choose the access path that best explains the intelligence.</p></div>
-            <div><span>2</span><p><strong>Test it</strong>Run a procedure marked “Own source”: one your reading predicts. Every procedure uses one turn.</p></div>
+            <div><span>2</span><p><strong>Test it</strong>Run a procedure marked “Own source”: one your reading predicts. Every procedure uses one turn and rolls a twenty-sided die; the roll plus its modifier must reach 10 at Training, 11 at Operational or 12 at Crisis.</p></div>
             <div><span>3</span><p><strong>Decide</strong>When a stage is confirmed, choose a command response: observe, act, attribute, contain or notify.</p></div>
             <div><span>4</span><p><strong>Respond</strong>Reveal all four stages, then contain, assure and recover the service.</p></div>
           </section>
@@ -28,10 +28,10 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
           </section>
           <div className="rules-grid">
             <section><h3>01 / Objective</h3><p>Reveal four hidden attack stages before the turn limit or impact reaches 100. Then complete containment, assurance and recovery decisions.</p></section>
-            <section><h3>02 / Hypotheses &amp; evidence</h3><p>Record one explanation per turn. Testing it with one of its own evidence sources adds +1, whether or not it turns out to be right; established procedures add +2. A completed check that finds nothing rules out every technique its source could have seen, and the reading’s standing shows what is left. Being right is rewarded by what you find and by the hypothesis score afterwards.</p></section>
+            <section><h3>02 / Hypotheses &amp; evidence</h3><p>Record one explanation per turn. Testing it with one of its own evidence sources adds +1, whether or not it turns out to be right; an established source — one your team already knows well, a few at the start and more as the campaign goes on — adds +2. A completed check that finds nothing rules out every technique its source could have seen, and the reading’s standing shows what is left. Being right is rewarded by what you find and by the hypothesis score afterwards.</p></section>
             <section><h3>03 / Adaptive adversary</h3><p>The actor escalates according to its behaviour profile and can move to a route less exposed by your recent procedures after intervention.</p></section>
             <section><h3>04 / Contextual decisions</h3><p>Each discovery offers five command verbs. Observation and attribution build evidence and analytical depth. Act presses the actor and forces adaptation. Contain protects the sector margin. Notify protects continuity but exposes your read and costs tempo. The right choice depends on impact, adversary tempo, sector condition and continuity.</p></section>
-            <section><h3>05 / Hidden consequences</h3><p>Decision cards show disruption, confidence and residual risk rather than exact scores. Natural rolls and failure streaks can trigger injects.</p></section>
+            <section><h3>05 / Hidden consequences</h3><p>Decision cards show disruption, confidence and residual risk rather than exact scores. A roll of 20 or 1 on the die, or a run of failed rolls, can trigger an inject: an unplanned event that helps or hinders.</p></section>
             <section><h3>06 / Score &amp; recovery</h3><p>The 100-point review covers investigation speed, impact, continuity, decision quality, response quality and hypothesis accuracy.</p></section>
             <section><h3>07 / Saved sessions</h3><p>Your current investigation is saved on this device. Refresh safely and resume from the assignment screen.</p></section>
             <section><h3>08 / Fast resolution</h3><p>After turn one, fast mode skips confirmation and dice animation for routine actions. Discoveries and major events still receive full reports.</p></section>
