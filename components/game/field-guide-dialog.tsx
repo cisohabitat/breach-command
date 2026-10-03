@@ -13,7 +13,7 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
         <div className="rules-content">
           <section className="quick-start-guide" aria-label="Quick start">
             <div><span>1</span><p><strong>Form a hypothesis</strong>Open Investigate and choose the access path that best explains the intelligence.</p></div>
-            <div><span>2</span><p><strong>Test it</strong>Run a procedure marked “Hypothesis evidence”. Every procedure uses one turn.</p></div>
+            <div><span>2</span><p><strong>Test it</strong>Run a procedure marked “Own source”: one your reading predicts. Every procedure uses one turn.</p></div>
             <div><span>3</span><p><strong>Decide</strong>When a stage is confirmed, choose a command response: observe, act, attribute, contain or notify.</p></div>
             <div><span>4</span><p><strong>Respond</strong>Reveal all four stages, then contain, assure and recover the service.</p></div>
           </section>

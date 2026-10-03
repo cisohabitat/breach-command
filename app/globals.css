@@ -1406,22 +1406,6 @@ a {
   }
 }
 @media(max-width:650px) {
-  .hypothesis-detail {
-    display:none;
-    gap:5px;
-    margin-top:11px;
-    padding:12px;
-    border:1px solid #3d5040;
-    border-radius:8px;
-    font-size:var(--type-caption);
-    line-height:var(--leading-base);
-  }
-  .hypothesis-detail strong {
-    color:var(--lime);
-  }
-  .hypothesis-detail span,.hypothesis-detail small {
-    color:var(--text-soft);
-  }
   .topbar {
     min-height:74px;
     padding:14px 18px;
@@ -1640,9 +1624,11 @@ a {
     font-size:var(--type-caption);
     letter-spacing:0;
   }
+  /* A long dialog fills the screen less a hair, so the page does not show
+     underneath it as a stray strip of content. */
   .game-dialog {
     padding:24px 20px!important;
-    max-height:91dvh;
+    max-height:calc(100dvh - 16px);
     gap:17px!important;
   }
   .game-dialog [data-slot=dialog-title] {
@@ -1929,9 +1915,9 @@ a {
   letter-spacing:.01em;
 }
 .response-options small {
-  font-family:monospace;
   font-size:var(--type-micro);
   color:#c1d69f;
+  letter-spacing:.01em;
 }
 /* The meter effect sits under the qualitative line, in the body face so the
    numbers read as numbers. An option that would end the operation says so in
@@ -2349,8 +2335,10 @@ a {
 .alignment-label {
   display:block;
   color:var(--lime);
-  font-family:monospace;
-  font-size:var(--type-caption);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:var(--type-micro);
+  letter-spacing:.04em;
+  text-transform:uppercase;
   margin-top:10px;
   line-height:var(--leading-compact);
 }
@@ -2558,9 +2546,6 @@ a {
   }
   .procedure-card.hypothesis-aligned {
     box-shadow:inset 0 0 0 1px #78975d;
-  }
-  .alignment-label {
-    font-size:var(--type-caption);
   }
 }
 @media print {
@@ -4170,6 +4155,11 @@ html,body {
 }
 .set-piece-options button {
   position:relative;
+  /* A button centres its content vertically, so a title above a shorter
+     description started lower than its neighbours'. */
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
   border:1px solid #785b3e;
   background:#2a2018;
   color:#eddfd2;
@@ -4194,16 +4184,22 @@ html,body {
 }
 .set-piece-options span {
   display:block;
+  flex:1;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
   color:#c3b3a4;
   margin:7px 0;
 }
+/* The cost is what the decision turns on, so it reads in the body face at the
+   response options' size, not as a ten-pixel footnote. */
 .set-piece-options small {
   display:block;
-  font:500 var(--type-micro) ui-monospace,SFMono-Regular,Consolas,monospace;
-  color:#e5b47e;
-  line-height:var(--leading-compact);
+  padding-top:8px;
+  border-top:1px solid #5a4430;
+  font-size:var(--type-caption);
+  font-weight:500;
+  color:#f1dcc4;
+  line-height:var(--leading-base);
 }
 .evidence-review {
   border:1px solid #3f5142;
@@ -4814,6 +4810,33 @@ html,body {
   font-size:var(--type-caption);
   margin-top:4px;
 }
+/* The label takes the meter's full width and two lines of room, and the number
+   sits beside its bar, as on a phone. Beside the number, a scenario's own label
+   ("business service integrity") ran to three lines while the other two took
+   one, and the three numbers stood at three different heights. */
+.case-meters>div {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"label label" "bar value" "status status";
+  align-items:center;
+  column-gap:8px;
+}
+.case-meters>div>.mono {
+  grid-area:label;
+  align-self:end;
+  overflow-wrap:normal;
+}
+.case-meters>div>strong {
+  grid-area:value;
+  margin:0;
+  line-height:1.1;
+}
+.case-meters>div>[data-slot=progress] {
+  grid-area:bar;
+}
+.case-meters>div>small {
+  grid-area:status;
+}
 .workspace-tabs {
   position:sticky;
   top:0;
@@ -4913,10 +4936,126 @@ html,body {
 .director-live {
   margin-top:14px;
 }
-/* The folded pair only exists at phone width; wide screens show every premise on
-   its own card. */
+/* The folded pair replaces the four cards once a reading is recorded, at every
+   width: the declared reading appeared twice on a wide screen, and the column ran
+   nine hundred pixels beside the procedures. */
 .hypothesis-detail,.hypothesis-compare {
   display:none;
+}
+.hypothesis-detail {
+  gap:5px;
+  margin-top:11px;
+  padding:12px;
+  border:1px solid #3d5040;
+  border-radius:8px;
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+}
+.hypothesis-detail strong {
+  color:var(--lime);
+}
+.hypothesis-detail span,.hypothesis-detail small {
+  color:var(--text-soft);
+}
+/* Beside the strip, which already lists the reading's sources, the comparison
+   does not list them again; on a phone the strip folds away and it does. */
+.hypothesis-compare-sources {
+  display:none;
+}
+/* Four expanded premises are 955px on a phone and push the procedure grid three
+   screens down. Once a reading is recorded the cards give way to a compact
+   strip, and all four stay one tap away inside the comparison — where they are
+   still selectable, so changing the reading costs a tap, not a lost control. */
+.hypothesis-board.has-reading .hypothesis-options {
+  display:none;
+}
+.hypothesis-board.has-reading .hypothesis-detail {
+  display:grid;
+}
+/* The standing readout above already names the reading and how it is holding
+   up, so the strip carries only what it does not: the sources this reading
+   predicts. The premise is one tap away in the comparison. */
+.hypothesis-detail>strong,.hypothesis-detail>span {
+  display:none;
+}
+/* The comparison shows wherever the board stacks, so its summary is styled
+   here and not only on a phone, where it once ran "readingsnone" together. */
+.hypothesis-compare {
+  display:block;
+  margin-top:9px;
+}
+.hypothesis-compare>summary {
+  cursor:pointer;
+  list-style:none;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:4px 12px;
+  min-height:44px;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  font-size:var(--type-caption);
+}
+.hypothesis-compare>summary::-webkit-details-marker {
+  display:none;
+}
+.hypothesis-compare>summary:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
+}
+.hypothesis-compare>summary span {
+  color:var(--text-soft);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:var(--type-micro);
+}
+.hypothesis-compare dl {
+  margin:9px 0 0;
+  display:grid;
+  gap:9px;
+}
+.hypothesis-compare dt {
+  color:var(--text);
+  font-size:var(--type-caption);
+}
+.hypothesis-compare dd {
+  margin:2px 0 0;
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+}
+/* Before a reading is recorded the four cards already are the comparison. */
+.hypothesis-board:not(.has-reading) .hypothesis-compare {
+  display:none;
+}
+.hypothesis-compare-options {
+  display:grid;
+  gap:8px;
+  margin-top:9px;
+}
+.hypothesis-compare-options button {
+  display:grid;
+  gap:4px;
+  min-height:44px;
+  padding:11px 12px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:transparent;
+  color:var(--text);
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+}
+.hypothesis-compare-options button.active {
+  border-color:var(--lime);
+}
+.hypothesis-compare-options button span {
+  color:var(--text-soft);
+}
+.hypothesis-compare-options button:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
 }
 /* What a completed check that found nothing actually settled. It sits in the
    captain's report because that is where the player is looking when the turn
@@ -4971,6 +5110,10 @@ html,body {
 }
 .investigation-lead>*:last-child {
   margin-bottom:0;
+}
+/* The board's own top margin left it twenty pixels below the procedures beside it. */
+.investigation-lead>.hypothesis-board:first-child {
+  margin-top:0;
 }
 .investigation-dashboard .infrastructure-console {
   margin-top:0;
@@ -5145,13 +5288,6 @@ html,body {
     grid-template-columns:1fr;
     grid-template-areas:"lead" "actions" "context";
   }
-  /* Four expanded premises are 955px on a phone and push the procedure grid three
-     screens down. Once a reading is recorded the cards give way to a compact
-     strip, and all four stay one tap away inside the comparison — where they are
-     still selectable, so changing the reading costs a tap, not a lost control. */
-  .hypothesis-board.has-reading .hypothesis-options {
-    display:none;
-  }
   /* Before a reading is recorded the premises are the decision itself, so the
      cards keep them, and the procedures below stay locked until one is chosen:
      the height costs nothing a player could have used. */
@@ -5161,94 +5297,6 @@ html,body {
   .hypothesis-options button {
     min-height:48px;
     padding:12px;
-  }
-  .hypothesis-board.has-reading .hypothesis-detail {
-    display:grid;
-  }
-  /* The standing readout above already names the reading and how it is holding
-     up, so the strip carries only what it does not: the sources this reading
-     predicts. The premise is one tap away in the comparison. */
-  .hypothesis-detail>strong,.hypothesis-detail>span {
-    display:none;
-  }
-  /* The comparison shows wherever the board stacks, so its summary is styled
-     here and not only on a phone, where it once ran "readingsnone" together. */
-  .hypothesis-compare {
-    display:block;
-    margin-top:9px;
-  }
-  .hypothesis-compare>summary {
-    cursor:pointer;
-    list-style:none;
-    display:flex;
-    flex-wrap:wrap;
-    align-items:baseline;
-    justify-content:space-between;
-    gap:4px 12px;
-    min-height:44px;
-    padding:11px 12px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    font-size:var(--type-caption);
-  }
-  .hypothesis-compare>summary::-webkit-details-marker {
-    display:none;
-  }
-  .hypothesis-compare>summary:focus-visible {
-    outline:2px solid var(--lime);
-    outline-offset:2px;
-  }
-  .hypothesis-compare>summary span {
-    color:var(--text-soft);
-    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
-    font-size:var(--type-micro);
-  }
-  .hypothesis-compare dl {
-    margin:9px 0 0;
-    display:grid;
-    gap:9px;
-  }
-  .hypothesis-compare dt {
-    color:var(--text);
-    font-size:var(--type-caption);
-  }
-  .hypothesis-compare dd {
-    margin:2px 0 0;
-    color:var(--text-soft);
-    font-size:var(--type-caption);
-    line-height:var(--leading-base);
-  }
-  /* Before a reading is recorded the four cards already are the comparison. */
-  .hypothesis-board:not(.has-reading) .hypothesis-compare {
-    display:none;
-  }
-  .hypothesis-compare-options {
-    display:grid;
-    gap:8px;
-    margin-top:9px;
-  }
-  .hypothesis-compare-options button {
-    display:grid;
-    gap:4px;
-    min-height:44px;
-    padding:11px 12px;
-    text-align:left;
-    border:1px solid var(--line);
-    border-radius:8px;
-    background:transparent;
-    color:var(--text);
-    font-size:var(--type-caption);
-    line-height:var(--leading-base);
-  }
-  .hypothesis-compare-options button.active {
-    border-color:var(--lime);
-  }
-  .hypothesis-compare-options button span {
-    color:var(--text-soft);
-  }
-  .hypothesis-compare-options button:focus-visible {
-    outline:2px solid var(--lime);
-    outline-offset:2px;
   }
   .investigation-actions {
     position:static;
@@ -5895,7 +5943,7 @@ html,body {
   gap:7px;
 }
 .report-dialog .evidence-decision button {
-  min-height:82px;
+  min-height:0;
   padding:11px 12px;
 }
 .report-dialog .inject-box {
@@ -6304,12 +6352,22 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
   color:var(--lime);
 }
 .hypothesis-gate {
-  border-color:#57683f;
+  padding:11px 13px;
+  border:1px solid #57683f;
+  border-left:3px solid #e8c968;
+  border-radius:7px;
   background:#242c18;
   color:#e6d9a4;
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+  max-width:none;
+}
+.hypothesis-gate svg {
+  margin-top:2px;
 }
 .hypothesis-gate strong {
   color:#f2e6bb;
+  font-size:inherit;
 }
 .report-gate {
   margin-top:4px;
@@ -6837,6 +6895,36 @@ still sees the meter marked as crossed once the ring is suppressed. */
 .debrief-dialog[data-outcome=lost] [data-slot=dialog-header] {
   animation-duration:.5s;
   animation-timing-function:cubic-bezier(.33,0,.2,1);
+}
+/* The review's headline: the grade, the score and what the operation found. */
+.debrief-verdict {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px 16px;
+  margin-top:12px;
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+}
+.debrief-verdict b {
+  display:grid;
+  place-items:center;
+  min-width:44px;
+  height:44px;
+  padding:0 8px;
+  border:1px solid var(--lime);
+  border-radius:8px;
+  background:#c3ee8d14;
+  color:var(--lime);
+  font:600 var(--type-title) ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.debrief-verdict strong {
+  color:var(--text);
+  font:600 var(--type-title) ui-monospace,SFMono-Regular,Consolas,monospace;
+  margin-right:2px;
+}
+.debrief-dialog[data-outcome=lost] .debrief-verdict strong {
+  color:#f0a48c;
 }
 @media(prefers-reduced-motion:reduce) {
   .attack-card.revealed,.attack-card.revealed:after,.attack-section.resolved .attack-card.revealed {
@@ -7549,15 +7637,31 @@ awareness. */
 .training-prompt .prompt-why summary {
   display:inline-flex;
   align-items:center;
-  min-height:28px;
-  padding:0 4px;
+  gap:4px;
+  min-height:32px;
+  padding:0 10px;
   vertical-align:middle;
   cursor:pointer;
+  list-style:none;
+  border:1px solid #4b5f3f;
+  border-radius:999px;
   color:var(--lime);
+  font-size:var(--type-caption);
+  font-weight:500;
+}
+/* It reads as a control, not a tag: a bordered pill that says it opens. */
+.training-prompt .prompt-why summary::-webkit-details-marker {
+  display:none;
+}
+.training-prompt .prompt-why summary::after {
+  content:"+";
   font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
-  font-size:var(--type-micro);
-  letter-spacing:.04em;
-  text-transform:uppercase;
+}
+.training-prompt .prompt-why[open] summary::after {
+  content:"−";
+}
+.training-prompt .prompt-why[open] summary {
+  margin-bottom:4px;
 }
 .training-prompt .prompt-why summary:focus-visible {
   outline:2px solid var(--lime);
@@ -7610,8 +7714,9 @@ in colour, and the carried plan is stated before the options. */
      more than half of it. The three deciding readouts still share the top row and
      still say their state in words; they lose the stacked layout, and the
      investigation window — which rarely ends an operation — loses its bar. */
-  .game-identity .eyebrow .separator,.game-identity .eyebrow>span {
-    display:none;
+  .game-identity .eyebrow .separator {
+    margin:0 2px;
+    opacity:.55;
   }
   .game-heading {
     gap:10px;
@@ -7724,6 +7829,15 @@ in colour, and the carried plan is stated before the options. */
   .investigation-dashboard .procedure-card p {
     font-size:var(--type-micro);
     line-height:1.3;
+  }
+  /* In capitals and monospace the tag was the loudest line on the card and
+     broke before its bonus; in the card's own face it reads as a label. */
+  .investigation-dashboard .procedure-card .alignment-label {
+    margin-top:6px;
+    font-family:inherit;
+    font-weight:600;
+    letter-spacing:0;
+    text-transform:none;
   }
   /* With a reading recorded, the board becomes a bar: what is declared, how it is
      holding up, and the way to change it. The premises and the sources live one
@@ -7846,12 +7960,34 @@ in colour, and the carried plan is stated before the options. */
   .game-layout {
     padding-top:0;
   }
-  .investigation-lead>.hypothesis-board:first-child {
-    margin-top:0;
-  }
 }
 @media(max-width:650px) {
   /* The index wraps to two rows on a phone, so a section it jumps to stops below both. */
+  /* An icon column beside a heading left the text about 25 characters a line.
+     On a phone the icon sits beside the kicker and the text takes the width. */
+  .response-heading,.set-piece-title,.end-banner {
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    align-items:center;
+    gap:6px 10px;
+  }
+  .response-heading>div,.set-piece-title>div,.end-banner>div:nth-child(2) {
+    display:contents;
+  }
+  .response-heading>div>*:not(.eyebrow),.set-piece-title>div>*:not(.eyebrow),.end-banner>div:nth-child(2)>*:not(.eyebrow),.end-banner>.primary-button {
+    grid-column:1/-1;
+  }
+  .response-icon {
+    width:30px;
+    height:30px;
+  }
+  .response-icon svg,.set-piece-title>svg,.end-icon svg {
+    width:18px;
+    height:18px;
+  }
+  .response-heading h2,.set-piece-title h2,.end-banner h2 {
+    margin-top:2px;
+  }
   #debrief-score,#debrief-hypothesis,#debrief-timeline,#debrief-decisions,#debrief-chain,#debrief-campaign {
     scroll-margin-top:136px;
   }

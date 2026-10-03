@@ -22,7 +22,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
             <div><span>DEPLOYED SPECIALIST</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
             <div><span>ATTRIBUTION</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div>
           </div>
-          <div className="briefing-first-move"><span>01</span><p><strong>Your first move</strong>Assume command, open Investigate, choose a working hypothesis and run a procedure marked “Hypothesis evidence”.</p></div>
+          <div className="briefing-first-move"><span>01</span><p><strong>Your first move</strong>Assume command, open Investigate, choose a working hypothesis and run a procedure marked “Own source”.</p></div>
           <details className="briefing-more">
             <summary>Operation context<span>{gameModes[game.mode].title} · {campaignRoutes[game.campaignRoute].title} · {game.variant.title}</span></summary>
             <div className="briefing-readouts">

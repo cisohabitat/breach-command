@@ -31,8 +31,18 @@ export function DebriefDialog({ session }: { session: GameSession }) {
       <DialogContent className="game-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onCloseAutoFocus={returnFocusToAwaiting}>
         <DialogHeader>
           <div className="eyebrow">AFTER-ACTION REVIEW</div>
-          <DialogTitle>{game?.status === "won" ? `${outcome?.grade} / ${outcome?.title}` : game?.status === "exercise" ? "Exercise concluded." : game ? `${getLossReason(game).title}.` : ""}</DialogTitle>
+          <DialogTitle>{game?.status === "won" ? outcome?.title : game?.status === "exercise" ? "Exercise concluded." : game ? `${getLossReason(game).title}.` : ""}</DialogTitle>
           <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? `${game.status === "lost" ? `${getLossReason(game).detail} ` : ""}${game.status === "lost" && getLossReason(game).cause === "window" ? "" : `${game.revealed.length} of 4 stages found in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}. `}This is a learning outcome, not a security assessment.` : ""}</DialogDescription>
+          {/* The grade and the score are the review's headline. Below four other
+              blocks, the score sat under the fold of a laptop screen. A grade is
+              only given to a completed response. */}
+          {game && outcome && (
+            <p className="debrief-verdict">
+              {game.status === "won" && <b><span className="sr-only">Grade </span>{outcome.grade}</b>}
+              <span><strong>{outcome.breakdown.total}</strong>/100 final score</span>
+              <span>{game.revealed.length} of 4 stages · {game.turns.length} turn{game.turns.length === 1 ? "" : "s"}</span>
+            </p>
+          )}
         </DialogHeader>
         {game && outcome && <>
           <section className="first-read" aria-label="Before the detail">

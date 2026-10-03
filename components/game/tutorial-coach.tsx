@@ -10,7 +10,7 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
   ];
   const current = steps.findIndex(step => !step.done);
   const nextMove = current === 0
-    ? workspace === "investigate" ? "Choose the explanation that best fits the current intelligence. Matching procedures will be marked as hypothesis evidence." : "Open Investigate, then choose the explanation that best fits the current intelligence."
+    ? workspace === "investigate" ? "Choose the explanation that best fits the current intelligence. The procedures it predicts will be marked as its own sources." : "Open Investigate, then choose the explanation that best fits the current intelligence."
     : current === 1
       ? workspace === "investigate" ? "Choose a procedure, review its roll modifier and operational cost, then run it." : "Open Investigate and run an evidence procedure that supports your hypothesis."
       : current === 2

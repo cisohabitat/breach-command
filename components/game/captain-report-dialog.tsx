@@ -17,6 +17,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   const settled = !!report && !!game && report.number === game.turns.length && report.success && !report.revealed && !report.injectReveal && !!game.hypothesis;
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
+  const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">INJECT <span className="separator">/</span> {report.inject.reason}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>;
 
   return (
     <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
@@ -69,13 +70,19 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 </div>
               )}
               {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">ACTOR MOVEMENT</span><p>{report.adversaryEvent}</p></div></div>}
+              {/* With a decision waiting, the inject joins the result: beside four
+                  options it pushed the last one under the fold and left this
+                  column half empty. */}
+              {decision && injectBox}
             </section>
             {(report.inject || decision) && <section className="report-briefing" aria-label="Operational update">
-              {report.inject && <div className="inject-box"><span className="eyebrow">INJECT <span className="separator">/</span> {report.inject.reason}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>}
+              {!decision && injectBox}
               {decision && (
                 <div className="evidence-decision">
                   <span className="eyebrow">OPERATIONAL DECISION REQUIRED</span>
-                  <h3>{decision.attack.title}: choose a command response.</h3>
+                  {/* The count says how many there are: the last of five sat below the fold
+                      of a laptop screen with nothing saying it was there. */}
+                  <h3>{decision.attack.title}: choose one of {["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length} command responses.</h3>
                   <div>
                     {decision.options.map(option => (
                       <button key={option.id} onClick={() => decide(option.id)}>
