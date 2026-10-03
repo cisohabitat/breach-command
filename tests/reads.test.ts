@@ -154,7 +154,7 @@ test("shows the modifier it will resolve with", () => {
   }
   // Every term the resolution can apply is named in the preview.
   assert.deepEqual(getModifierBreakdown(previewBase,"endpoint").parts.map(part=>part.label),
-    ["Established","Own source","Since your last roll","Persistence","Specialist","Map focus","Focused","Balanced","Expert mode"]);
+    ["Established","Own source","Since your last roll","After two failed rolls","Specialist","Map focus","Focused","Balanced","Expert mode"]);
   // The own-source bonus follows the declared reading, not the hidden route, so
   // it reads the same whatever the chain is.
   const declared=setHypothesis(previewBase,"identity");
@@ -165,7 +165,7 @@ test("shows the modifier it will resolve with", () => {
 
   // Two failed rolls in a row is variance. The bonus that answers it is read from
   // the player's own record, shown before the action, and gone once one lands.
-  const persistence=(game:Game)=>getModifierBreakdown(game,"endpoint").parts.find(part=>part.label==="Persistence")!.value;
+  const persistence=(game:Game)=>getModifierBreakdown(game,"endpoint").parts.find(part=>part.label==="After two failed rolls")!.value;
   const sample=playTurn(previewBase,"identity",10).turns[0];
   const failed=(number:number,success:boolean)=>({...sample,number,success});
   assert.equal(persistence(previewBase),0,"no failures, no bonus");

@@ -3997,7 +3997,9 @@ html,body {
   display:block;
   font-size:var(--type-caption);
   line-height:var(--leading-compact);
-  overflow-wrap:anywhere;
+  /* "Managemen t edge": a node name never breaks inside a word. */
+  overflow-wrap:normal;
+  hyphens:none;
 }
 .topology-nodes em {
   display:block;
@@ -6072,6 +6074,11 @@ html,body {
   margin-top:4px;
   font-size:var(--type-caption);
   color:var(--text-soft);
+}
+/* Node names sit in narrow cells beside each other; at the body step the
+   longest word in "Management edge" was wider than its cell. */
+.topology-nodes button strong {
+  font-size:var(--type-caption);
 }
 /* The response just chosen and what it did. */
 .decision-recorded {

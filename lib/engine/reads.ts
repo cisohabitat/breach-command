@@ -65,14 +65,14 @@ export function getSectorRead(game: Game): SectorRead {
     detail: `${service} is what the organisation is delivering right now. ${margin} is how much room is left before the sector's own limit. They stand at ${game.continuity} and ${game.sectorHealth}, close enough that what the service shows is roughly what the sector has left.`,
   };
   return gap > 0 ? {
-    headline: `${service} is holding while ${margin.toLowerCase()} is not`,
+    headline: `${margin} has fallen further than ${service.toLowerCase()}`,
     diverged: true,
     // "Thin" at 84 read as alarm over a margin with plenty of room left.
     detail: game.sectorHealth <= 50
       ? `The organisation is still delivering, but the margin behind it is thin: ${margin.toLowerCase()} is at ${game.sectorHealth} against ${service.toLowerCase()} at ${game.continuity}. Service looks normal from outside and there is little room left for the next thing to go wrong.`
       : `The margin is falling faster than the service: ${margin.toLowerCase()} is at ${game.sectorHealth} against ${service.toLowerCase()} at ${game.continuity}. There is still room, but service looking normal from outside is not the whole picture.`,
   } : {
-    headline: `${margin} is holding while ${service.toLowerCase()} is not`,
+    headline: `${service} has fallen further than ${margin.toLowerCase()}`,
     diverged: true,
     detail: `Delivery is degraded but the sector's limit is not close: ${service.toLowerCase()} is at ${game.continuity} against ${margin.toLowerCase()} at ${game.sectorHealth}. Running reduced while the margin stays intact is a deliberate trade, and it is usually the safer one.`,
   };
@@ -411,7 +411,11 @@ export function sourceSeesReading(game: Game, procedure: string): boolean | null
     .filter(attack => attack?.vector === game.hypothesis);
   // A reading with no technique at this stage cannot be tested by any source.
   if (!candidates.length) return false;
-  return candidates.some(attack => attack!.detect.includes(procedure));
+  // Only techniques the record still leaves open: once the player's checks have
+  // ruled a route out here, its sources have nothing left to test.
+  const ruledOutBy = getReadingOdds(game).ruledOutBy;
+  const open = candidates.filter(attack => !ruledOutBy.some(source => attack!.detect.includes(source)));
+  return open.some(attack => attack!.detect.includes(procedure));
 }
 
 export function getDiscriminatingRead(game: Game, procedure: string): DiscriminatingRead {

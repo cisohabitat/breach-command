@@ -5,7 +5,7 @@ import { encodeChallenge } from "../phase8.ts";
 import { inSentence } from "./content.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseOptionsFor } from "./rules.ts";
-import { getLossReason, getReadingOdds, readyToCorrelate } from "./reads.ts";
+import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate } from "./reads.ts";
 
 // The full review is written for someone who already knows the trade. A first
 // operation needs four sentences before any of it: one thing that went well, one
@@ -106,7 +106,10 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   // to do what they had done twelve times.
   const emptyOffReading = game.turns.filter(turn => turn.success && !turn.revealed && turn.hypothesis && !hypothesisSources(game, turn.hypothesis).includes(turn.procedure)).length;
   // A player who revised on those empty checks did what this would tell them.
-  if (emptySuccesses >= 3 && (emptyOffReading * 2 >= emptySuccesses || revisions < 2)) return emptyOffReading * 2 >= emptySuccesses ? {
+  // "The turns are lost when the reading is kept after it" only fits a player
+  // who kept a reading the board had already called weakening or unsupported.
+  const keptAgainst = game.turns.filter((turn, index) => turn.hypothesis && ["weakening", "unsupported"].includes(getHypothesisStanding({ ...recordBefore(game, index), hypothesis: turn.hypothesis }).level)).length;
+  if (emptySuccesses >= 3 && (emptyOffReading * 2 >= emptySuccesses || (revisions < 2 && keptAgainst > 0))) return emptyOffReading * 2 >= emptySuccesses ? {
     strength,
     gap: `${emptySuccesses} of your successful checks produced no new stage, and ${emptyOffReading} of them used a source your reading did not predict.`,
     concept: "A check that succeeds but finds nothing has still cost a turn. Choosing where to look matters more than how hard you look.",
@@ -327,7 +330,8 @@ export function getCounterfactuals(game: Game) {
   }).length;
   if (unprompted >= 2) items.push(`The working hypothesis changed ${unprompted} times with no completed check in between. A reading is worth changing once a result has turned against it, not before.`);
   else if (!game.hypothesisHistory.length) items.push("No working hypothesis was recorded, so the team could not compare its assumptions with the final chain.");
-  const weakCorrelations = game.correlations.filter(record => !record.valid).length;
+  // A pair correctly called coincidental was a right call, not a missed link.
+  const weakCorrelations = game.correlations.filter(record => !record.valid && !record.correct).length;
   if (weakCorrelations) items.push(`${weakCorrelations} tested evidence relationship${weakCorrelations === 1 ? " was" : "s were"} temporal rather than causal. A stronger system-to-identity link would have reduced analytical noise.`);
   if (readyToCorrelate(game)) items.push("Multiple findings were preserved but never correlated. The team left potential causal relationships untested.");
   if (game.setPieceHistory.some(record => record.quality <= 2)) items.push("The sector crisis decision protected short-term convenience but increased strategic exposure.");

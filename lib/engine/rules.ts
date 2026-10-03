@@ -145,7 +145,7 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
     { label: "Established", value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
     { label: "Own source", value: ownSourceBonus(game, procedure), detail: "One of the declared reading's own evidence sources. Testing the explanation you have committed to earns this; it says nothing about whether the explanation is right." },
     { label: game.nextModifierSource ?? "Since your last roll", value: game.nextModifier, detail: "Set up by something since your last roll: monitoring a node on the map, an evidence decision, a command event, a correct comparison of two findings, or an inject. It applies to this roll only." },
-    { label: "Persistence", value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
+    { label: "After two failed rolls", value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
     specialist.procedures.includes(procedure as never) && game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT
       ? { label: "Specialist", value: 0, suppressed: true, detail: `${specialist.title} works this source, but at fatigue ${game.specialistFatigue} of 6 the bonus no longer applies. Rest comes from finishing the operation.` }
       : { label: "Specialist", value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },
