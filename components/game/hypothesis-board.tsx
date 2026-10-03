@@ -3,6 +3,7 @@ import {
   getAttributionRead,
   getAdversaryState,
   getHypothesisStanding,
+  getRuledOutRoutes,
   hypotheses,
   procedureById, hypothesisSources,
   type Game,
@@ -20,6 +21,8 @@ export function HypothesisBoard({
   // Expert operations withhold every read, this one included.
   const standing = game.mode === "expert" ? null : getHypothesisStanding(game);
   const active = hypotheses.find(item => item.id === game.hypothesis);
+  const ruledOut = game.mode === "expert" ? null : getRuledOutRoutes(game);
+  const outMark = (id: HypothesisId) => ruledOut?.routes.includes(id) && <em className="route-ruled-out">{ruledOut.reason[id] === "unused" ? "Not in play" : "Ruled out"} at the {ruledOut.stage} stage</em>;
   return (
     <section className={`hypothesis-board ${active ? "has-reading" : ""}`} aria-labelledby="hypothesis-heading">
       <div className="hypothesis-heading">
@@ -63,6 +66,7 @@ export function HypothesisBoard({
               aria-pressed={game.hypothesis === hypothesis.id}
             >
               <strong>{hypothesis.title}</strong>
+              {outMark(hypothesis.id)}
               <span>{hypothesis.premise}</span>
               <small>Evidence: {evidenceSources}</small>
             </button>
@@ -92,6 +96,7 @@ export function HypothesisBoard({
               aria-pressed={game.hypothesis === hypothesis.id}
             >
               <strong>{hypothesis.title}</strong>
+              {outMark(hypothesis.id)}
               <span>{hypothesis.premise}</span>
             </button>
           ))}

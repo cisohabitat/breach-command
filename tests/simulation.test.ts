@@ -1,7 +1,7 @@
 // Complete playthroughs: every mode, specialist and difficulty terminates.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,scenarios,nextEvidenceSource,decisionChoices,difficulties,getTurnLimit,attackVector,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId,getReadingOdds} from "../lib/advanced-game.ts";
+import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,scenarios,nextEvidenceSource,decisionChoices,difficulties,getTurnLimit,attackVector,getRuledOutRoutes,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId,getReadingOdds} from "../lib/advanced-game.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
 import {chooseBotAction,type BotAction} from "../lib/game-bot.ts";
 
@@ -106,4 +106,40 @@ test("the bot commander revises a reading the record has ruled out", () => {
     assert.notEqual(action.hypothesis,"identity");
     assert.ok(odds.candidates[action.hypothesis].open>0,"to a route that is still open");
   }
+});
+
+test("never marks the route the hidden stage uses as ruled out", () => {
+  // The comparison marks routes the record has excluded. The route the stage
+  // under test actually uses can never be among them: a completed check that
+  // could see its technique would have found it.
+  const apply=(game:Game,action:BotAction):Game=>{
+    switch(action.type){
+      case "decision":return resolveDecision(game,action.choice);
+      case "command":return resolveCommand(game,action.choice);
+      case "set-piece":return resolveSetPiece(game,action.choice);
+      case "response":return resolveResponse(game,action.choice);
+      case "hypothesis":return setHypothesis(game,action.hypothesis);
+      case "case-theory":return setCaseTheory(game,action.objective);
+      case "correlate":return correlateEvidence(game,action.evidence,action.assessment);
+      case "focus":return setInfrastructureFocus(game,action.nodeId);
+      case "map":return resolveMapAction(game,action.nodeId,action.action);
+      case "procedure":return playTurn(game,action.procedure,undefined,action.plan);
+      case "complete":return game;
+    }
+  };
+  let checked=0,marked=0;
+  for(let scenario=0;scenario<scenarios.length;scenario++)for(const difficulty of ["training","operational","crisis"] as Difficulty[])for(let run=0;run<4;run++){
+    let game=newGame(scenario,difficulty,seededChallengeRandom(700000+scenario*10+run));
+    game={...game,seed:700000+scenario*10+run};
+    for(let step=0;step<160&&game.status==="playing";step++){
+      const ruled=getRuledOutRoutes(game);
+      const stage=getReadingOdds(game).stage;
+      if(stage!==null){
+        assert.ok(!ruled.routes.includes(attackVector(game.chain[stage])),`scenario ${scenario} ${difficulty}: the true route is never ruled out`);
+        checked++;marked+=ruled.routes.length;
+      }
+      game=apply(game,chooseBotAction(game));
+    }
+  }
+  assert.ok(checked>500&&marked>0,"the property was exercised and some routes were marked");
 });

@@ -3445,6 +3445,23 @@ html,body {
   color:var(--lime);
   margin-bottom:5px;
 }
+/* A route the record has excluded at this stage, marked in words on its card. */
+.route-ruled-out {
+  display:block;
+  margin-top:4px;
+  color:#f0a48c;
+  font:normal 500 var(--type-micro) ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+/* Where a confirmed finding sits: its stage and its route. */
+.evidence-cards .evidence-placement {
+  display:block;
+  margin:2px 0 4px;
+  color:var(--lime);
+  font-weight:500;
+  font-size:var(--type-caption);
+}
 /* Copy result, under the resolution. */
 .share-result {
   display:flex;
@@ -7756,6 +7773,10 @@ in colour, and the carried plan is stated before the options. */
   /* With its icon, "Investigate" ran into its own edge at 390. */
   .workspace-tabs button>svg {
     display:none;
+  }
+  /* Side by side at 375, each map action's cost wrapped to eight lines. */
+  .map-command-bar {
+    grid-template-columns:1fr;
   }
 }
 @media(max-width:360px) {

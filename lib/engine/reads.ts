@@ -260,6 +260,20 @@ export function getDecisionOptions(game: Game) {
 // reading as weakening nearly as often as a wrong one — holding readings were
 // right 29% of the time and weakening ones 22% — because any one technique is
 // visible to only about three sources. This is the same evidence, weighed.
+// The routes the record has already excluded at the stage under test — every
+// technique they could be using there ruled out by a completed check, or none
+// that travels by them at all. Declaring one is the only other way to learn it,
+// and a Crisis playtest declared all four in turn before finding one still open.
+// It names only routes that are out; it never names the one that is right.
+// "unused" is a route none of the incident's techniques at this stage travels
+// by, known before any check; "excluded" is one completed checks have closed.
+export function getRuledOutRoutes(game: Game): { stage: string | null; routes: HypothesisId[]; reason: Partial<Record<HypothesisId, "unused" | "excluded">> } {
+  const odds = getReadingOdds(game);
+  if (odds.stage === null) return { stage: null, routes: [], reason: {} };
+  const routes = hypotheses.map(item => item.id).filter(id => odds.candidates[id].open === 0);
+  return { stage: stages[odds.stage].name.toLowerCase(), routes, reason: Object.fromEntries(routes.map(id => [id, odds.candidates[id].total ? "excluded" : "unused"])) };
+}
+
 export function getReadingOdds(game: Game): ReadingOdds {
   const revealedStages = new Set(game.revealed.map(stageOf));
   const stage = [0, 1, 2, 3].find(index => !revealedStages.has(index)) ?? null;
