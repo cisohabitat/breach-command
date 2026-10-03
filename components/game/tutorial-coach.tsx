@@ -19,6 +19,16 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
           ? game.revealed.length < 2 ? "Confirm a second attack stage. Then use the Evidence Workspace to declare what you think the actor wants." : "Use the Evidence Workspace to declare the actor's likely objective. You can revise it as evidence changes."
           : "You have completed the guided opening. The same Command, Investigate and Briefing workspaces remain available for the rest of the incident.";
   const actionLabel = current < 0 ? "Finish tutorial" : workspace === "investigate" ? null : "Open Investigate";
+  // On Investigate the next-step note above the procedures already says what to
+  // do, and the full card said it again above the board, pushing the grid down
+  // for exactly the player who most needs it in view. There it is a progress line.
+  if (workspace === "investigate" && current >= 0) return (
+    <section className="tutorial-coach compact" aria-label="Command academy tutorial">
+      <GraduationCap size={17} />
+      <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>ACADEMY {current + 1}/{steps.length}</span><strong>{steps[current].title}</strong></p>
+      <button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button>
+    </section>
+  );
   return (
     <section className="tutorial-coach" aria-label="Command academy tutorial">
       <div className="tutorial-head"><GraduationCap size={20} /><div><span className="eyebrow">COMMAND ACADEMY</span><strong>{current < 0 ? "Field qualification complete" : `Step ${current + 1} of ${steps.length}`}</strong></div><button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button></div>

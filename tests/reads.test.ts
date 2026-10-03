@@ -416,3 +416,21 @@ test("explains each part of the score in the player's own numbers", () => {
   assert.ok(rows.find(row=>row.label==="Investigation")!.rule.includes("You took 6 turns"),"the turn rule uses the player's count");
   assert.ok(/not reached/.test(rows.find(row=>row.label==="Containment & recovery")!.rule),"an unreached response says why it scored nothing");
 });
+
+test("tells a run that confirmed nothing what it did earn, and revises only on the standing", () => {
+  // "You confirmed 0 of 4 stages under real pressure" was praise for nothing.
+  const lost=(turns:Game["turns"])=>getBeginnerReview({...baseline(),status:"lost",impact:100,revealed:[],evidence:[],turns});
+  const empty=playTurn(setHypothesis({...baseline(),injectDeck:[]},"cloud"),"cloud",20).turns[0];
+  const failed=playTurn(setHypothesis({...baseline(),injectDeck:[]},"cloud"),"cloud",2).turns[0];
+  assert.ok(!empty.revealed&&empty.success,"the fixture is a completed check that found nothing");
+  assert.ok(/No stage was confirmed, but your 1 completed check ruled out/.test(lost([empty]).strength),"completed checks are what it earned");
+  assert.ok(/No check completed/.test(lost([failed]).strength),"and with none, the dice are named honestly");
+  assert.ok(!/0 of 4/.test(lost([failed]).strength));
+
+  // The captain asks for a revision when the standing does, not whenever an
+  // empty check has ever been made.
+  const holding=setHypothesis({...baseline(),injectDeck:[]},"identity");
+  const afterEmpty={...holding,turns:[{...empty,hypothesis:"identity"}]} as Game;
+  assert.ok(["untested","holding"].includes(getHypothesisStanding(afterEmpty).level));
+  assert.ok(!/Revise/.test(getCoachPrompt(afterEmpty,true)),"a reading that is holding is not told to revise");
+});

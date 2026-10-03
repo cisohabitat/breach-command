@@ -6,13 +6,23 @@ import { CommandWorkspace } from "@/components/game/command-workspace";
 import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
 import { BriefingWorkspace } from "@/components/game/briefing-workspace";
 import { BotControl } from "@/components/game/bot-control";
-import { gameModes, getOperationalLabel, getTurnLimit } from "@/lib/advanced-game";
+import { gameModes, getLossReason, getOperationalLabel, getTurnLimit, type LossCause } from "@/lib/advanced-game";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
 
 // Whether a change helped or hurt is carried by shape as well as colour.
 function DeltaMark({ adverse }: { adverse: boolean }) {
   return adverse ? <TriangleAlert size={10} strokeWidth={2.4} /> : <Check size={10} strokeWidth={2.6} />;
 }
+
+// The final status names what ended a lost operation. It said "Window closed"
+// for all five endings, under a banner that said impact had reached its limit.
+const lossStatus: Record<LossCause, string> = {
+  objective: "Adversary objective reached",
+  impact: "Impact limit reached",
+  continuity: "Essential service stopped",
+  sector: "Sector confidence collapsed",
+  window: "Window closed",
+};
 
 export function GameScreen({ session }: { session: GameSession }) {
   const {
@@ -50,7 +60,7 @@ export function GameScreen({ session }: { session: GameSession }) {
               pressures that do. */}
           <div className="operation-status">
             <span className="mono">{game.status === "response" ? "RESPONSE PHASE" : ended ? "FINAL STATUS" : "INVESTIGATION WINDOW"}</span>
-            <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> of {getTurnLimit(game)} turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : "Window closed"}</span>
+            <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> of {getTurnLimit(game)} turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : lossStatus[getLossReason(game).cause]}</span>
             <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Investigation window remaining" />
           </div>
         </div>

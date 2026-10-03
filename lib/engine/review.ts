@@ -20,7 +20,14 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     ? `You confirmed the whole attack chain — all four stages — in ${game.turns.length} turns.`
     : game.impact <= 40
       ? `You kept business impact down to ${game.impact} while the picture was still forming, which buys the team room to work.`
-      : `You confirmed ${game.revealed.length} of 4 stages under real pressure, and the record you built is where the next shift starts.`;
+      : game.revealed.length
+        ? `You confirmed ${game.revealed.length} of 4 stages under real pressure, and the record you built is where the next shift starts.`
+        // With nothing confirmed, praise for the stages found would be false.
+        // What a player did earn is the checks that completed and ruled
+        // something out, or, if none did, a record that says the dice were part of it.
+        : emptySuccesses
+          ? `No stage was confirmed, but ${emptySuccesses === 1 ? "your 1 completed check ruled out what its source" : `each of your ${emptySuccesses} completed checks ruled out what its source`} could see, which narrows the search for the next shift.`
+          : `No check completed before the operation closed, so the record says more about the pressure and the dice than about your reasoning.`;
 
   // Reading the route is the skill the game is built on, so a reading that was
   // wrong more often than right is named before an untested correlation. In the

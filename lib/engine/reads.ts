@@ -117,7 +117,11 @@ export function getCoachPrompt(game: Game, guided = false) {
   if (readyForTheory(game)) return "Two stages are confirmed, so the adversary's objective can now be assessed. Record a case theory: a comparison that fits it relieves more pressure than one that does not.";
   if (readyToCorrelate(game)) return "Two findings have confirmed stages. Before the next procedure, compare them: did one enable the other, or do they only overlap in time?";
   if (game.impact >= 70) return "Pressure is critical. Test the hypothesis whose failure would create the greatest consequence.";
-  if (game.turns.some(turn => turn.success && !turn.revealed)) return "A successful check did not support the chain. Revise the hypothesis or select a source that can distinguish alternatives.";
+  // The advice to revise follows the reading's standing. Keyed to any empty
+  // check ever made, it told a player to revise for the rest of the operation,
+  // including while the board said the reading was holding.
+  const standing = getHypothesisStanding(game).level;
+  if (standing === "unsupported" || standing === "weakening") return "The record no longer favours this reading. Revise it, or choose a source that can tell the remaining routes apart.";
   return "Use confirmed facts to predict the attacker’s next requirement, not merely the next available tool.";
 }
 
