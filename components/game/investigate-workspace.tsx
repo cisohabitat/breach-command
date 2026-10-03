@@ -5,7 +5,7 @@ import { InfrastructureConsole } from "@/components/game/infrastructure-console"
 import { KnownFacts } from "@/components/game/known-facts";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
-import { cooldownWindow, getCoachPrompt, procedureIntensities, procedureScopes } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, procedureIntensities, procedureScopes } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
@@ -17,11 +17,17 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
 
   if (!game) return null;
 
+  // The prompt's longer explanation folds away where the board already carries
+  // it — the reading's standing says why to test or revise — and stays inline
+  // where it is the instruction itself.
+  const foldWhy = trainingPrompt?.step === "test" || trainingPrompt?.step === "revise";
   const trainingNote = trainingPrompt && (
     <div className={`guide-nudge training-prompt step-${trainingPrompt.step}`}>
       <GraduationCap size={15} />
       <span>
-        <strong>{trainingPrompt.title}.</strong> {trainingPrompt.detail}
+        <strong>{trainingPrompt.title}.</strong>{foldWhy
+          ? <> <details className="prompt-why"><summary>Why</summary>{trainingPrompt.detail}</details></>
+          : <> {trainingPrompt.detail}</>}
         {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: {trainingPrompt.clue}</b>}
         {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(" · ")}</b>}
       </span>
@@ -66,12 +72,18 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {!game.pendingCommand && !game.pendingSetPiece && (
           <section className="procedure-section">
             <div className="section-heading">
-              <div><h2>Investigation procedures</h2><p>Choose one action per turn. A used action is unavailable for the next {cooldownWindow(game) === 3 ? "two turns" : "three turns"}, and its card counts the turns down.</p></div>
+              <div><h2>Investigation procedures</h2><p>One action per turn. A used source sits out the next {cooldownWindow(game) === 3 ? "two turns" : "three turns"}; its card counts them down.</p></div>
               <span className="established-key">{procedureScopes[actionScope].title} · {procedureIntensities[actionIntensity].title}</span>
             </div>
-            {guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}</span></div>}
-            {game.hypothesis && trainingNote}
-            {!game.hypothesis && <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong>Choose the explanation that best fits the current intelligence. Matching evidence then earns the reasoning bonus.</span></div>}
+            {/* One next step above the cards, not three: until a reading exists, the
+                hint that unlocks them; then the Training prompt where there is one,
+                or the Captain's prompt. Stacked, they put the first card below the
+                fold on a desktop. */}
+            {!game.hypothesis
+              ? <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits what the team is seeing. Its own sources then earn the +{OWN_SOURCE_BONUS} own-source bonus.</span></div>
+              : trainingNote
+                ? trainingNote
+                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}

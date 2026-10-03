@@ -86,8 +86,11 @@ export function availableIn(game: Game, id: string) {
   return Math.max(0, game.lastUsed[id] + cooldownWindow(game) - (game.turns.length + 1));
 }
 
-export function describeChange(meter: keyof typeof meterDirection | string, value: number) {
-  const direction = meterDirection[meter];
+export function describeChange(meter: keyof typeof meterDirection | string, value: number, label?: string) {
+  const known = meterDirection[meter];
+  // A scenario names its own continuity meter ("Business service integrity"), and
+  // the change reads in that name rather than "<name>: Continuity".
+  const direction = known && label ? { ...known, label } : known;
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
   const amount = `${sign}${Math.abs(value)}`;
   if (!direction) return `${meter} ${amount}`;

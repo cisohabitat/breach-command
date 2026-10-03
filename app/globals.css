@@ -566,7 +566,7 @@ a {
 }
 .guide-nudge {
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:9px;
   font-size:var(--type-body);
   color:#a7b9a5;
@@ -575,7 +575,11 @@ a {
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
+/* The icon sits on the first line, not the middle of a note that runs to several. */
 .guide-nudge svg {
+  flex-shrink:0;
+  margin-top:5px;
+  margin-top:calc((1lh - 15px) / 2);
   color:var(--lime);
 }
 .guide-nudge strong {
@@ -1617,7 +1621,7 @@ a {
     letter-spacing:.01em;
   }
   .guide-nudge svg {
-    margin-top:2px;
+    margin-top:calc((1lh - 15px) / 2);
   }
   .captain-column {
     grid-template-columns:1fr;
@@ -2124,12 +2128,19 @@ a {
   color:#e8b28d;
   background:#3c2b211f;
 }
+/* Two across: the premises are sentences, and four narrow columns ran each to
+   a dozen lines. Content sits at the top so the titles line up. */
 .hypothesis-options {
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(2,1fr);
   gap:8px;
 }
 .hypothesis-options button {
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  align-items:stretch;
+  gap:6px;
   background:#202d23;
   border:1px solid #35483a;
   border-radius:5px;
@@ -4879,10 +4890,13 @@ html,body {
 .action-sheet .procedure-planner {
   margin-top:4px;
 }
+/* The fade above the sticky button hides what scrolls up to it; the solid
+   shadow below covers the sheet's bottom padding, where text otherwise showed
+   through under the button. */
 .action-sheet .primary-button {
   position:sticky;
   bottom:0;
-  box-shadow:0 -12px 24px #142018;
+  box-shadow:0 -12px 24px #142018,0 24px 0 0 #142018;
 }
 .relationship-assessment {
   display:grid;
@@ -7272,6 +7286,37 @@ awareness. */
   letter-spacing:.04em;
   color:var(--lime);
 }
+.alignment-label .nowrap {
+  white-space:nowrap;
+}
+/* The longer reason folds behind "Why" where the reading's standing already says it. */
+/* Closed, the toggle rides the title's line; open, the reason takes its own. */
+.training-prompt .prompt-why {
+  display:inline;
+  margin-left:4px;
+  color:var(--text-soft);
+}
+.training-prompt .prompt-why[open] {
+  display:block;
+  margin:2px 0 0;
+}
+.training-prompt .prompt-why summary {
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:0 4px;
+  vertical-align:middle;
+  cursor:pointer;
+  color:var(--lime);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:var(--type-micro);
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.training-prompt .prompt-why summary:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
+}
 .training-prompt.step-revise {
   border-left:3px solid #e8c968;
 }
@@ -7512,5 +7557,14 @@ in colour, and the carried plan is stated before the options. */
   }
   .hypothesis-options {
     grid-template-columns:1fr;
+  }
+  /* The inline heading takes its sentence's size; a desktop rule sets it to body size. */
+  .guide-nudge strong {
+    font-size:inherit;
+  }
+  /* The cards below already mark the reading's own sources; listing them again
+     here put the first card under the fold. */
+  .procedure-section .training-prompt .prompt-sources {
+    display:none;
   }
 }

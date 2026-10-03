@@ -20,6 +20,7 @@ import {
   hypothesisSources,
   proceduresFor,
   type Game,
+  OWN_SOURCE_BONUS,
 } from "@/lib/advanced-game";
 
 // The last icon belongs to the sector procedure, which is always listed last.
@@ -54,13 +55,15 @@ export function ProcedureGrid({
           >
             <div className="procedure-top">
               <span className="procedure-icon"><Icon size={20} /></span>
-              <span className={`procedure-badge ${established ? "bonus" : ""}`}>
-                {cooldown ? <><Clock3 size={12} /> {cooldown} turn{cooldown === 1 ? "" : "s"}</> : established ? "+2" : "+0"}
-              </span>
+              {/* Only a badge that carries something: the cooldown, or the established
+                  bonus. A "+0" on every other card buried the one that mattered. */}
+              {(cooldown > 0 || established) && <span className={`procedure-badge ${established && !cooldown ? "bonus" : ""}`}>
+                {cooldown ? <><Clock3 size={12} /> {cooldown} turn{cooldown === 1 ? "" : "s"}</> : "+2"}
+              </span>}
             </div>
             <h3>{procedure.title}</h3>
             <p>{procedure.short}</p>
-            {aligned && !cooldown && <small className="alignment-label">HYPOTHESIS EVIDENCE</small>}
+            {aligned && !cooldown && <small className="alignment-label">HYPOTHESIS EVIDENCE <span className="nowrap">· +{OWN_SOURCE_BONUS}</span></small>}
             {read && !cooldown && read.spent > 0 && <small className="spent-label">CHECKED {read.spent}× · NO STAGE FOUND</small>}
             {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} ATTEMPT{read.inconclusive === 1 ? "" : "S"} FAILED · INCONCLUSIVE</small>}
             <div className="procedure-bottom">
