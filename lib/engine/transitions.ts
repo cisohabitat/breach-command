@@ -285,8 +285,12 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     const index = g.injectDeck.splice(position, 1)[0];
     inject = { ...injects[index], reason };
     if (g.failures >= 3) g.failures = 0;
-    if (inject.effect === "bonus") { g.nextModifier = carryModifier(g.nextModifier, 2); g.nextModifierSource = `Inject: ${inject.title}`; }
-    if (inject.effect === "penalty") { g.nextModifier = carryModifier(g.nextModifier, -2); g.nextModifierSource = `Inject: ${inject.title}`; impactChange += 6; }
+    if (inject.effect === "bonus" || inject.effect === "penalty") {
+      const before = g.nextModifier;
+      g.nextModifier = carryModifier(before, inject.effect === "bonus" ? 2 : -2);
+      g.nextModifierSource = carriedSource(before, g.nextModifierSource, g.nextModifier, `Inject: ${inject.title}`);
+      if (inject.effect === "penalty") impactChange += 6;
+    }
     if (inject.effect === "pressure") impactChange += 8;
     if (inject.effect === "relief") impactChange -= 8;
     if (inject.effect === "restore") {
