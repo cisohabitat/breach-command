@@ -5,6 +5,10 @@ import { infrastructureTopologies } from "../phase8.ts";
 import { adversaryProfiles, meterDirection, responseProfiles } from "./content.ts";
 import { type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
 
+// The fatigue at which a specialist's bonus stops applying. The roll, its
+// preview and the deployment screen all read it here.
+export const SPECIALIST_EXHAUSTED_AT = 5;
+
 export function responseOptionsFor(game: Game): ResponseProfile {
   return responseProfiles[game.scenario] ?? responseProfiles[0];
 }
@@ -127,7 +131,7 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
     { label: "Own source", value: ownSourceBonus(game, procedure), detail: "One of the declared reading's own evidence sources. Testing the explanation you have committed to earns this; it says nothing about whether the explanation is right." },
     { label: "Carried", value: game.nextModifier, detail: "Carried from the previous turn's event or decision." },
     { label: "Persistence", value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
-    specialist.procedures.includes(procedure as never) && game.specialistFatigue >= 5
+    specialist.procedures.includes(procedure as never) && game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT
       ? { label: "Specialist", value: 0, suppressed: true, detail: `${specialist.title} works this source, but at fatigue ${game.specialistFatigue} of 6 the bonus no longer applies. Rest comes from finishing the operation.` }
       : { label: "Specialist", value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },
     { label: "Focus", value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: `The focused node covers this source${focusNode ? `: ${focusNode.label}.` : "."}` },

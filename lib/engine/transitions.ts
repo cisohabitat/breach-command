@@ -5,7 +5,7 @@ import { infrastructureTopologies, sectorSetPieces, seededRoll } from "../phase8
 import { objectiveTheory } from "../phase9.ts";
 import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguage, decisionTitles, injects, scenarioProfiles } from "./content.ts";
 import { type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type Inject, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice } from "./types.ts";
-import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf } from "./rules.ts";
+import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
 
 export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max), setup: GameSetup = {}): Game {
   if (!Number.isInteger(scenario) || !scenarios[scenario]) throw new Error("Unknown incident");
@@ -176,7 +176,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   const discriminating = !!nextHidden && attacks.find(item => item.id === nextHidden)!.detect.includes(procedure);
   const planningBonus = ownSourceBonus(game, procedure);
   const specialist = specialists[g.specialist];
-  const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < 5 ? 1 : 0;
+  const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < SPECIALIST_EXHAUSTED_AT ? 1 : 0;
   const scope = procedureScopes[plan.scope];
   const intensity = procedureIntensities[plan.intensity];
   const focusNode = infrastructureTopologies[g.scenario].nodes.find(node => node.id === g.focusedNode)!;

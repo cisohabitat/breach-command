@@ -1,5 +1,6 @@
 import { useRef, type CSSProperties } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
+import { CONTINUITY_AT_RISK } from "@/hooks/use-meter-pulse";
 import { ArrowRight, Zap, ShieldCheck, HeartPulse } from "lucide-react";
 import { describeChange, responseOptionsFor, type Game } from "@/lib/advanced-game";
 
@@ -36,10 +37,14 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
 function OptionEffect({ game, impact, continuity }: { game: Game; impact: number; continuity: number }) {
   const after = { impact: Math.min(100, Math.max(0, game.impact + impact)), continuity: Math.min(100, Math.max(0, game.continuity + continuity)) };
   const ends = after.impact >= 100 || after.continuity <= 0;
+  // Crossing into the meter's "At risk" band is said here, in the meter's own
+  // word, rather than left for the player to work out from the number.
+  const atRisk = !ends && game.continuity > CONTINUITY_AT_RISK && after.continuity <= CONTINUITY_AT_RISK;
   return (
-    <small className={`response-effect ${ends ? "ends" : ""}`}>
+    <small className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
       {describeChange("impact", impact)} · {describeChange("continuity", continuity)}, to {after.continuity}
       {ends && <b> · Ends the operation</b>}
+      {atRisk && <b> · At risk</b>}
     </small>
   );
 }

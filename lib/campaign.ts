@@ -112,8 +112,13 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
   // authorised: nothing was missed, no access was left open, and the command
   // record should not read as though the incident got away.
   const drill = game.status === "exercise";
-  const specialistFatigue = Object.fromEntries(Object.entries(current.specialistFatigue).map(([id, fatigue]) => [id, Math.max(0, fatigue - 1)]));
-  specialistFatigue[game.specialist] = Math.max(0, Math.min(6, game.specialistFatigue));
+  // The team rests between incidents. Benched specialists recover two points and
+  // the one just deployed recovers one. Without that rest the deployed specialist
+  // carried an operation's fatigue into the next: a player who kept the default
+  // specialist started every operation after the first at five of six, where the
+  // specialist's bonus no longer applies, for the rest of the campaign.
+  const specialistFatigue = Object.fromEntries(Object.entries(current.specialistFatigue).map(([id, fatigue]) => [id, Math.max(0, fatigue - 2)]));
+  specialistFatigue[game.specialist] = Math.max(0, Math.min(6, game.specialistFatigue - 1));
   const mastery = score >= 88 ? 3 : score >= 74 ? 2 : won ? 1 : 0;
   const commandPosture = {
     observe: current.commandPosture.observe + game.decisions.filter(item => item.choice === "observe").length,

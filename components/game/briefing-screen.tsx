@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { ArrowRight, Bot, Clock3, Dices, GitBranch, LockKeyhole, RefreshCw, Settings2, Star, Trophy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { stageIcons } from "@/components/game/stage-icons";
-import { difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
+import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
 import { campaignRank } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -68,9 +68,11 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <p>{difficulties[difficulty].description}</p>
         </div>
         <div className="specialist-picker">
-          <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small id="specialist-fatigue">Fatigue carries between campaign operations.</small></label>
+          <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small id="specialist-fatigue">{(campaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
+            ? `${namedSpecialists[specialist].name} is at fatigue ${campaign.specialistFatigue[specialist]} of 6, where the specialist bonus no longer applies. Deploying someone else lets them rest.`
+            : "Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty."}</small></label>
           <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
-            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name} · {specialists[id].title} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
+            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name} · fatigue {campaign.specialistFatigue[id] ?? 0}/6 · {specialists[id].title}</option>)}
           </select>
           <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].role}. {specialists[specialist].ability} Cohesion {campaign.specialistBonds[specialist] ?? 35}/100.</p>
         </div>

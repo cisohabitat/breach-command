@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { mapOfferGame, openWithSave, responsePhaseGame, twoStagesGame } from "./fixtures";
 
 type AxeViolation = { id: string; impact: string | null; help: string; nodes: { target: string[]; failureSummary?: string }[] };
 
@@ -118,4 +119,51 @@ test.describe("accessibility audit", () => {
       await expect(page.getByRole("button", { name, exact: true })).toBeVisible();
     }
   });
+
+  // The surfaces added since the audit was written: the sector warning and its
+  // fold, the case-theory, comparison and map prompts, the folded reference
+  // column, the response effects, Copy result and the review's newer folds.
+  for (const width of [375, 1280] as const) {
+    test(`investigation prompts and the sector warning at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await openWithSave(page, { ...twoStagesGame(), sectorHealth: 28 }, true);
+      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /Investigate/ }).first().click();
+      await expect(page.locator(".sector-alert")).toBeVisible();
+      if (width < 651) await page.locator(".sector-rule-fold > summary").click();
+      await expect(page.getByRole("button", { name: /Record a case theory/ })).toBeVisible();
+      await expectNoViolations(page, `investigation prompts ${width}`);
+      await page.getByRole("button", { name: /Record a case theory/ }).click();
+      await expect(page.locator(".evidence-workspace")).toBeVisible();
+      await expectNoViolations(page, `evidence workspace ${width}`);
+    });
+
+    test(`the map offer at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await openWithSave(page, mapOfferGame(), true);
+      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /Investigate/ }).first().click();
+      await expect(page.locator(".prompt-aside")).toBeVisible();
+      await expectNoViolations(page, `map offer ${width}`);
+      await page.locator(".prompt-aside").getByRole("button").click();
+      await expect(page.locator(".infrastructure-console")).toBeVisible();
+      await expectNoViolations(page, `map opened ${width}`);
+    });
+
+    test(`the response, the ending and the review's folds at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await openWithSave(page, responsePhaseGame());
+      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await expect(page.locator(".response-effect").first()).toBeVisible();
+      await expectNoViolations(page, `response ${width}`);
+      for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
+      await expect(page.getByRole("button", { name: /Copy result/ })).toBeVisible();
+      await expectNoViolations(page, `ending ${width}`);
+      await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
+      const review = page.getByRole("dialog");
+      for (const fold of [".debrief-detail-fold", ".debrief-campaign-fold"]) await review.locator(`${fold} > summary`).click();
+      await expect(review.locator(".score-breakdown small").first()).toBeVisible();
+      await expectNoViolations(page, `review folds ${width}`);
+    });
+  }
 });

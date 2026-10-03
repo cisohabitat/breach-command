@@ -1942,7 +1942,7 @@ a {
   font-size:var(--type-caption);
   color:var(--text);
 }
-.response-options small.response-effect.ends {
+.response-options small.response-effect.ends,.response-options small.response-effect.at-risk {
   color:#f0a48c;
 }
 .response-options svg {
@@ -3014,8 +3014,13 @@ html,body {
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
-.capability-review .locked {
-  opacity:.48;
+/* A locked milestone says so in words; dimmed by opacity it fell below
+   contrast, so it is muted by colour that still passes. */
+.capability-review .locked strong {
+  color:#9aab95;
+}
+.capability-review .locked span {
+  color:#8c9c88;
 }
 .capability-review .unlocked strong {
   color:var(--lime);

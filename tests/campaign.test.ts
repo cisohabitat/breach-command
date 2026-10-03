@@ -1,7 +1,7 @@
 // Persistent progression: standing, seniority, routes and endings.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {newGame,playTurn,type Game} from "../lib/advanced-game.ts";
+import {SPECIALIST_EXHAUSTED_AT,newGame,playTurn,type Game} from "../lib/advanced-game.ts";
 import {campaignAct,campaignEnding,campaignReadable,defaultCampaign,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
 import {campaignRoutes,incidentVariant,routeForCampaign} from "../lib/phase9.ts";
 
@@ -65,4 +65,15 @@ test("tells a damaged campaign record from a missing one", () => {
   assert.equal(campaignReadable("{}"),true,"an old record missing fields is still a record");
   for(const damaged of ["{broken","null","[]","42"])assert.equal(campaignReadable(damaged),false,`${damaged} is not a campaign`);
   assert.deepEqual(parseCampaign("null"),defaultCampaign);
+});
+
+test("rests the team between operations", () => {
+  // Without rest, a player who kept the default specialist started every
+  // operation after the first at five of six, where the bonus no longer applies.
+  const game={...newGame(0,"operational",()=>0,{specialist:"hunter"}),status:"won" as const,specialistFatigue:5};
+  const before={...defaultCampaign,specialistFatigue:{hunter:2,forensics:4}};
+  const after=recordCampaignResult(before,game,80);
+  assert.equal(after.specialistFatigue.hunter,4,"the deployed specialist recovers a point");
+  assert.ok(after.specialistFatigue.hunter<SPECIALIST_EXHAUSTED_AT,"and is fit to earn the bonus again");
+  assert.equal(after.specialistFatigue.forensics,2,"a benched specialist recovers two");
 });
