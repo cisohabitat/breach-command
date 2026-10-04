@@ -1,4 +1,4 @@
-import { ArrowRight, Check, GraduationCap, X } from "lucide-react";
+import { ArrowRight, Check, X } from "lucide-react";
 import type { Game } from "@/lib/advanced-game";
 
 export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game: Game; workspace: "command" | "investigate" | "briefing"; onNavigate: () => void; onDismiss: () => void }) {
@@ -27,14 +27,13 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
   if (workspace === "investigate" && current < 0) return null;
   if (workspace === "investigate") return (
     <section className="tutorial-coach compact" aria-label="Command academy tutorial">
-      <GraduationCap size={17} />
-      <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>Academy {current + 1}/{steps.length}</span><strong>{steps[current].title}</strong></p>
+            <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>Academy {current + 1}/{steps.length}</span><strong>{steps[current].title}</strong></p>
       <button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button>
     </section>
   );
   return (
     <section className="tutorial-coach" aria-label="Command academy tutorial">
-      <div className="tutorial-head"><GraduationCap size={20} /><div><span className="eyebrow">Command academy</span><strong>{current < 0 ? "Field qualification complete" : `Step ${current + 1} of ${steps.length}`}</strong></div><button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button></div>
+      <div className="tutorial-head"><div><span className="eyebrow">Command academy</span><strong>{current < 0 ? "Field qualification complete" : `Step ${current + 1} of ${steps.length}`}</strong></div><button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button></div>
       <div className="tutorial-steps">{steps.map((step, index) => <div key={step.title} className={step.done ? "done" : index === current ? "current" : ""}><span>{step.done ? <Check size={14} /> : index + 1}</span><p><strong>{step.title}</strong><small>{step.detail}</small></p></div>)}</div>
       <div className="tutorial-next"><div><span className="eyebrow">Your next move</span><p>{nextMove}</p></div>{actionLabel && <button onClick={current < 0 ? onDismiss : onNavigate}>{actionLabel} <ArrowRight size={16} /></button>}</div>
     </section>

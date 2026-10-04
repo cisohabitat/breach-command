@@ -1,7 +1,7 @@
 import { useRef, type CSSProperties } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { CONTINUITY_AT_RISK } from "@/hooks/use-meter-pulse";
-import { ArrowRight, Zap, ShieldCheck, HeartPulse } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { describeMeterChange, getOperationalLabel, responseOptionsFor, type Game } from "@/lib/advanced-game";
 import { EffectList } from "@/components/game/effect-list";
 
@@ -23,8 +23,7 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
       {/* Each phase swaps the animation on this wrapper, so the beat restarts without remounting the controls. */}
       <div className="response-stage">
         <div className="response-heading">
-          <span className="response-icon">{containment ? <Zap size={24} /> : assurance ? <ShieldCheck size={24} /> : <HeartPulse size={24} />}</span>
-          <div><span className="eyebrow">{containment ? "Containment decision" : assurance ? "Assurance gate" : "Recovery decision"}</span><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p>{containment
+          <div><span className="eyebrow">{containment ? "Containment decision" : assurance ? "Assurance gate" : "Recovery decision"}</span><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "Stop the confirmed activity." : assurance ? "Prove the boundary is ready for restoration." : "Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p>{containment
             ? <p className="muted small"><strong>Sector constraint:</strong> {profile.constraint}</p>
             // Each later phase opens on what the one before it did, in place of the
             // constraint already read: a playtest saw no result between choices.

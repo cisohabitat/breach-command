@@ -1,4 +1,4 @@
-import { Activity, ArrowUp, CircleDot, Crosshair, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
+import { ArrowUp, CircleDot, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { attacks, describeMeterChange, procedureById, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
 
@@ -27,7 +27,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
   const criticalFocus = focused.id === topology.critical;
   return (
     <section className="infrastructure-console" aria-label="Interactive infrastructure map" tabIndex={-1}>
-      <div className="map-heading"><div><span className="eyebrow">Live infrastructure command</span><h2>{topology.title}</h2></div><span className="focus-instruction"><Activity size={14} /> {game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} left</span></div>
+      <div className="map-heading"><div><span className="eyebrow">Live infrastructure command</span><h2>{topology.title}</h2></div><span className="focus-instruction">{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} left</span></div>
       <div className="incident-flow" aria-hidden="true"><span style={{ width: `${Math.max(8, activeStage / 4 * 100)}%` }} /></div>
       <div className="topology-shell">
         <div className="topology-nodes">
@@ -59,7 +59,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
         </details>
       </div>
       <div className="map-command-bar">
-        <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{criticalFocus ? "CRITICAL DEPENDENCY · " : ""}{posture === "normal" ? "No active control" : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
+        <div><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{criticalFocus ? "CRITICAL DEPENDENCY · " : ""}{posture === "normal" ? "No active control" : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
             roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">Map focus +1 for {focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(" · ")}</small></span></div>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? "Monitored: its bonus is waiting for your next roll" : "Already monitored: its bonus went to the roll after it was set") : posture === "isolated" ? "Isolated: nothing left to monitor here" : costLine(game, focused.id, "monitor")}</small></span></button>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>{posture === "isolated" ? "Already isolated" : costLine(game, focused.id, "isolate")}</small></span></button>

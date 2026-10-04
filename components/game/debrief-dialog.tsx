@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, Printer, Star, Trophy } from "lucide-react";
+import { ArrowRight, Printer, Star } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, describeMeterChange, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
@@ -29,7 +29,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
 
   return (
     <Dialog open={debrief} onOpenChange={setDebrief}>
-      <DialogContent className="game-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onCloseAutoFocus={returnFocusToAwaiting}>
+      <DialogContent className="game-dialog paper-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onCloseAutoFocus={returnFocusToAwaiting}>
         <DialogHeader>
           <div className="eyebrow">After-action review</div>
           <DialogTitle>{game?.status === "won" ? outcome?.title : game?.status === "exercise" ? "Exercise concluded." : game ? `${getLossReason(game).title}.` : ""}</DialogTitle>
@@ -180,7 +180,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <section className="specialist-reaction"><span className="eyebrow">Team after-action note · rapport with {namedSpecialists[game.specialist].name} {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status !== "lost", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
             <section className="mastery-panel"><div><span className="eyebrow">Scenario mastery</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
           </details>
-          {finalEnding && <section className="campaign-finale"><Trophy size={23} /><div><span className="eyebrow">Final command briefing</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}
+          {finalEnding && <section className="campaign-finale"><div><span className="eyebrow">Final command briefing</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}
           <div className="debrief-actions">
             <button className="secondary-button" onClick={() => window.print()}><Printer size={17} /> Print review</button>
             <button className="primary-button" onClick={() => { const nextScenario = nextCase(campaign, scenarios.length); resetToBriefing(); setScenarioChoice(nextScenario); }}>{finalEnding ? "Return to campaign command" : "Choose next incident"} <ArrowRight size={18} /></button>

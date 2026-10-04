@@ -1,4 +1,3 @@
-import { ClipboardList } from "lucide-react";
 import { getKnownFacts, type Game } from "@/lib/advanced-game";
 
 export function KnownFacts({ game }: { game: Game }) {
@@ -6,8 +5,7 @@ export function KnownFacts({ game }: { game: Game }) {
   return (
     <details className="known-facts" open={!facts.confirmed.length}>
       <summary>
-        <ClipboardList size={15} />
-        What we already know
+                What we already know
         <span>{facts.observations.length} observation{facts.observations.length === 1 ? "" : "s"} · {facts.confirmed.length} of 4 stages confirmed</span>
       </summary>
       <p className="known-timeline">{facts.timeline}</p>

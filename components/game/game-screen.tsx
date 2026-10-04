@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, CircleHelp, LayoutDashboard, MessagesSquare, Search, TriangleAlert } from "lucide-react";
+import { Check, CircleHelp, TriangleAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { TutorialCoach } from "@/components/game/tutorial-coach";
 import { CommandWorkspace } from "@/components/game/command-workspace";
@@ -130,9 +130,9 @@ export function GameScreen({ session }: { session: GameSession }) {
       <BotControl session={session} />
 
       <nav className="workspace-tabs" aria-label="Command workspace" ref={tabs}>
-        <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><LayoutDashboard size={18} /><span><strong>Command</strong><small>Situation and decisions</small></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Action</b>}</button>
-        <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><Search size={18} /><span><strong>Investigate</strong><small>Map, theory and evidence</small></span><b>{game.evidence.length}</b></button>
-        <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><MessagesSquare size={18} /><span><strong>Briefing</strong><small>Captain and incident log</small></span><b>{game.turns.length}</b></button>
+        <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><span><strong>Command</strong><small>Situation and decisions</small></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Action</b>}</button>
+        <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><span><strong>Investigate</strong><small>Map, theory and evidence</small></span><b>{game.evidence.length}</b></button>
+        <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><span><strong>Briefing</strong><small>Captain and incident log</small></span><b>{game.turns.length}</b></button>
         {/* A copy for sighted players who have scrolled past the readouts; the
             readouts themselves stay the accessible source. */}
         <div className={`pinned-readouts ${metersAway ? "shown" : ""}`} aria-hidden="true">

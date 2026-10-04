@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowUp, Braces, Check, GitBranch, Link2, Search, X } from "lucide-react";
+import { ArrowUp, Check, Link2, X } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { adversaryObjectives, attacks, getObjectiveRead, hypotheses, stages, type AdversaryObjectiveId, type Game } from "@/lib/advanced-game";
 import { objectiveTheory } from "@/lib/phase9";
@@ -25,12 +25,12 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
   };
   return (
     <section className="evidence-workspace" aria-label="Evidence correlation workspace" tabIndex={-1}>
-      <div className="map-heading"><div><span className="eyebrow">Evidence workspace</span><h2>Build the causal picture</h2></div><span className="focus-instruction"><Braces size={14} /> {game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"} tested</span></div>
+      <div className="map-heading"><div><span className="eyebrow">Evidence workspace</span><h2>Build the causal picture</h2></div><span className="focus-instruction">{game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"} tested</span></div>
       <div className="case-theory">
-        <div><GitBranch size={17} /><span><strong>Case theory</strong><small>Declare intent, then test it against causal evidence. {objective.confidence === "LOW" ? "The objective can be assessed once two stages are confirmed." : `Current assessment: ${objectiveTheory[game.objective].title.toLowerCase()}, ${objective.confidence.toLowerCase()} confidence.`}</small></span></div>
+        <div><span><strong>Case theory</strong><small>Declare intent, then test it against causal evidence. {objective.confidence === "LOW" ? "The objective can be assessed once two stages are confirmed." : `Current assessment: ${objectiveTheory[game.objective].title.toLowerCase()}, ${objective.confidence.toLowerCase()} confidence.`}</small></span></div>
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">RECORDED</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
       </div>
-      {!game.evidence.length ? <div className="evidence-empty"><Search size={20} /><p>Successful procedures will place findings here. A check can succeed and still settle nothing — that is recorded too. Select two findings to test whether they form a causal sequence.</p></div> : <>
+      {!game.evidence.length ? <div className="evidence-empty"><p>Successful procedures will place findings here. A check can succeed and still settle nothing — that is recorded too. Select two findings to test whether they form a causal sequence.</p></div> : <>
         <details className="evidence-detail" open={game.evidence.length <= 3}>
           {/* A finding is not a stage. A check that succeeds without exposing one is
               kept because it still narrows the search, so the count has to say which

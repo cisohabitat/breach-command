@@ -39,7 +39,7 @@ test.describe("keyboard play", () => {
   test("focus follows the response sequence instead of dropping to the page", async ({ page }) => {
     await openWithSave(page, responsePhaseGame());
     await page.getByRole("button", { name: "Resume", exact: true }).click();
-    for (const next of ["Prove the boundary is ready for restoration.", "The threat is constrained. Restore trusted service."]) {
+    for (const next of ["Prove the boundary is ready for restoration.", "Restore trusted service."]) {
       const option = page.locator(".response-options > button").first();
       await option.focus();
       await page.keyboard.press("Enter");
@@ -60,7 +60,7 @@ test.describe("keyboard play", () => {
   test("single-key shortcuts can be turned off", async ({ page }) => {
     await openWithSave(page, null);
     await page.keyboard.press("f");
-    await expect(page.getByRole("dialog", { name: "Investigate. Decide. Recover." })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "How an operation runs" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
 

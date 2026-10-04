@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { ArrowDown, ArrowRight, BrainCircuit, CheckCheck, CircleSlash, Eye, MessagesSquare, Shield, ShieldCheck, Siren } from "lucide-react";
+import { ArrowDown, ArrowRight, BrainCircuit, Eye, MessagesSquare, Shield, Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { attacks, decisionRollShift, describeMeterChange, describePart, describeRollShift, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -48,7 +48,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
     <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
       <DialogContent
         ref={content}
-        className="game-dialog report-dialog"
+        className="game-dialog paper-dialog report-dialog"
         showCloseButton={!awaitingDecision}
         onEscapeKeyDown={event => { if (awaitingDecision) event.preventDefault(); }}
         // With a decision pending there is no close button, so the first tabbable
@@ -61,6 +61,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
           <div className="eyebrow">Captain’s report <span className="separator">/</span> turn {report?.number}</div>
           <DialogTitle>{lostHere ? (game?.status === "exercise" ? "The operation stood down." : "The operation is lost.") : report?.revealed ? (report.windfall ? "A later stage was found." : "Evidence confirmed.") : report?.injectReveal ? "A partner disclosed a stage." : report?.success ? "The check came back empty." : "The action was unsuccessful."}</DialogTitle>
           <DialogDescription>{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
+          {report && !lostHere && <span className={`report-stamp ${report.revealed || report.injectReveal ? "confirmed" : report.success ? "" : "failed"}`} aria-hidden="true">{report.revealed || report.injectReveal ? "Stage confirmed" : report.success ? "No stage found" : "Check failed"}</span>}
         </DialogHeader>
         {report && game && <>
           {/* The turn that ends an operation is still reported as a turn, so its
@@ -77,7 +78,6 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
                 <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{rollParts(report)}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
-                {report.success ? <CheckCheck size={23} aria-hidden="true" /> : <CircleSlash size={23} aria-hidden="true" />}
               </div>
               {/* The plan and the turn's movement are told apart: a playtest read
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
@@ -91,7 +91,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                     ? `The check failed, so it settled nothing. Because it was one of your reading's own sources, the ${report.objectiveChange >= 0 ? "+" : "−"}${Math.abs(report.objectiveChange)} adversary progress this turn is only what its pace and your plan gave it, without the extra 4 a failed check adds; business impact and the sector margin moved as on any turn that finds nothing.`
                     : "The check failed, so it settled nothing and gave the adversary the most time."}{injectImpact(report) ? ` The inject below accounts for ${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))} of the business impact change.` : ""}{report.adversaryEvent ? " The situation also escalated, below, which adds business impact and costs service." : ""}</p></div>
               <p className="report-narrative"><Glossed text={report.narrative} /></p>
-              {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">Your reading was {hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase()}, so the stage was found but the route was not predicted.</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">This is stage {attacks.find(attack => attack.id === report.revealed)!.stage + 1}, further along the chain. The stage you were testing, stage {attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1}, is still open, and a find here says nothing about the route it used.</small>}</div></div>}
+              {report.revealed && <div className="discovery"><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">Your reading was {hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase()}, so the stage was found but the route was not predicted.</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">This is stage {attacks.find(attack => attack.id === report.revealed)!.stage + 1}, further along the chain. The stage you were testing, stage {attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1}, is still open, and a find here says nothing about the route it used.</small>}</div></div>}
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
                   is where the player is looking when it lands. A failed roll settles

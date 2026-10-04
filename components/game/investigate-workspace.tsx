@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from "react";
-import { ArrowDown, ArrowRight, BrainCircuit, GraduationCap, Sparkles, X } from "lucide-react";
+import { ArrowDown, ArrowRight, X } from "lucide-react";
 import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
 import { InfrastructureConsole } from "@/components/game/infrastructure-console";
@@ -89,8 +89,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   const foldWhy = trainingPrompt?.step === "test" || trainingPrompt?.step === "revise";
   const trainingNote = trainingPrompt && (
     <div className={`guide-nudge training-prompt step-${trainingPrompt.step}`}>
-      <GraduationCap size={15} />
-      <span>
+            <span>
         <strong>{trainingPrompt.title}{/[?.!]$/.test(trainingPrompt.title) ? "" : "."}</strong>{foldWhy
           ? <> <details className="prompt-why"><summary>Why</summary>{trainingPrompt.detail}</details></>
           : <> {trainingPrompt.detail}</>}
@@ -115,13 +114,13 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {/* Beyond Training the first reading was chosen with nothing above the four
             premises to base it on; the latest observation is what there is. */}
         {!game.hypothesis && !trainingNote && latestObservation && !game.pendingCommand && !game.pendingSetPiece && (
-          <div className="guide-nudge"><Sparkles size={15} /><span><strong>Choose the reading that best explains what you know.</strong><b className="prompt-clue">Latest from the team: <Glossed text={latestObservation} /></b></span></div>
+          <div className="guide-nudge"><span><strong>Choose the reading that best explains what you know.</strong><b className="prompt-clue">Latest from the team: <Glossed text={latestObservation} /></b></span></div>
         )}
         {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={declare} />}
         {/* The board and the procedures step aside while a decision waits, and the
             column was left empty with only a tab badge saying why. */}
         {(game.pendingCommand || game.pendingSetPiece) && (
-          <div className="guide-nudge decision-waiting" role="status"><Sparkles size={15} /><span><strong>A {game.pendingSetPiece ? "sector decision" : "command event"} is waiting on Command.</strong> Resolve it there, then come back to investigate.<button className="compare-findings" onClick={() => setActiveWorkspace("command")}>Go to Command <ArrowRight size={14} /></button></span></div>
+          <div className="guide-nudge decision-waiting" role="status"><span><strong>A {game.pendingSetPiece ? "sector decision" : "command event"} is waiting on Command.</strong> Resolve it there, then come back to investigate.<button className="compare-findings" onClick={() => setActiveWorkspace("command")}>Go to Command <ArrowRight size={14} /></button></span></div>
         )}
       </div>
       <details className="investigation-context reference-fold" open={!phone || referenceOpen} onToggle={event => phone && setReferenceOpen(event.currentTarget.open)}>
@@ -167,10 +166,10 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
                 or the Captain's prompt. Stacked, they put the first card below the
                 fold on a desktop. */}
             {!game.hypothesis
-              ? <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits {game.difficulty === "training" ? "what the team is seeing" : "what you know so far"}. Its own sources then earn the +{OWN_SOURCE_BONUS} own-source bonus.</span></div>
+              ? <div className="guide-nudge hypothesis-gate" role="status"><span><strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits {game.difficulty === "training" ? "what the team is seeing" : "what you know so far"}. Its own sources then earn the +{OWN_SOURCE_BONUS} own-source bonus.</span></div>
               : trainingNote
                 ? trainingNote
-                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{latestObservation && <b className="prompt-clue">Latest from the team: <Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}
+                : guidance !== "off" && <div className="guide-nudge"><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{latestObservation && <b className="prompt-clue">Latest from the team: <Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}

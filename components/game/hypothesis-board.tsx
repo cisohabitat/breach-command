@@ -1,4 +1,3 @@
-import { BrainCircuit, Gauge } from "lucide-react";
 import {
   attacks,
   availableIn,
@@ -37,8 +36,7 @@ export function HypothesisBoard({
     <section className={`hypothesis-board ${active ? "has-reading" : ""}`} aria-labelledby="hypothesis-heading">
       <div className="hypothesis-heading">
         <div>
-          <BrainCircuit size={20} />
-          <span>
+                    <span>
             <strong id="hypothesis-heading">Working hypothesis</strong>
             <small>Select the explanation you are testing. One hypothesis is recorded per turn.</small>
           </span>
@@ -47,7 +45,7 @@ export function HypothesisBoard({
           className={`adversary-state tempo-${game.adversaryTempo}`}
           title={attribution.detail}
         >
-          <Gauge size={14} /> PACE: {getAdversaryState(game).toUpperCase()}
+          PACE: {getAdversaryState(game).toUpperCase()}
         </span>
       </div>
       {standing && standing.level !== "none" && (

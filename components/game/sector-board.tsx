@@ -1,4 +1,3 @@
-import { Activity, Crosshair, Radio, Users } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { getAttributionRead, getObjectiveRead, getSectorRead, sectorSystems, specialists, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
@@ -14,7 +13,7 @@ export function SectorBoard({ game }: { game: Game }) {
   return (
     <section className="sector-board" aria-label="Sector and adversary command picture">
       <div className="sector-card">
-        <div className="sector-title"><Activity size={18} /><span><small>SECTOR MARGIN</small><strong>{sector.title}</strong></span><b>{game.sectorHealth}</b></div>
+        <div className="sector-title"><span><small>SECTOR MARGIN</small><strong>{sector.title}</strong></span><b>{game.sectorHealth}</b></div>
         {/* One name for the meter everywhere: a second name in capitals above it read
             as a different meter ("PATIENT SERVICE MARGIN" over "Clinical service margin"). */}
         <Progress value={game.sectorHealth} aria-label={sector.title} />
@@ -22,13 +21,13 @@ export function SectorBoard({ game }: { game: Game }) {
         <p>{sector.rule}</p>
       </div>
       <div className="objective-card">
-        <div className="sector-title"><Crosshair size={18} /><span><small>ASSESSED ADVERSARY OBJECTIVE · {objective.confidence}</small><strong>{objective.title}</strong></span><b>{game.objectiveProgress}</b></div>
+        <div className="sector-title"><span><small>ASSESSED ADVERSARY OBJECTIVE · {objective.confidence}</small><strong>{objective.title}</strong></span><b>{game.objectiveProgress}</b></div>
         <Progress value={game.objectiveProgress} aria-label={`Adversary progress: ${objective.title}`} />
         <p>{objective.detail}</p>
       </div>
       <div className="command-feed">
-        <div><Radio size={16} /><span><small>LIVE TRANSMISSION</small><strong>{transmission}</strong></span></div>
-        <div><Users size={16} /><span><small>{person.callsign} · {attribution.confidence === "ATTRIBUTED" ? "ATTRIBUTED" : `${attribution.confidence} ATTRIBUTION`} · FATIGUE {game.specialistFatigue}/6</small><strong>{person.name}, {specialist.title}: “{person.voice}”</strong></span></div>
+        <div><span><small>LIVE TRANSMISSION</small><strong>{transmission}</strong></span></div>
+        <div><span><small>{person.callsign} · {attribution.confidence === "ATTRIBUTED" ? "ATTRIBUTED" : `${attribution.confidence} ATTRIBUTION`} · FATIGUE {game.specialistFatigue}/6</small><strong>{person.name}, {specialist.title}: “{person.voice}”</strong></span></div>
       </div>
     </section>
   );

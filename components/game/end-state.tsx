@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ArrowRight, Check, CircleSlash, ClipboardCheck, Copy, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Copy } from "lucide-react";
 import { getLossReason, getOperationalLabel, getResultSummary, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
@@ -22,7 +22,6 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-won" data-resolution="won">
         <span className="resolution-sweep" aria-hidden="true" />
         <div className="end-banner end-won">
-          <div className="end-icon"><ShieldCheck /></div>
           <div>
             <span className="eyebrow">Resolution · stand down</span>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{outcome?.title}</h2>
@@ -44,7 +43,6 @@ export function EndState({ session }: { session: GameSession }) {
     return (
       <section className="resolution resolution-lost" data-resolution="lost">
         <div className="end-banner end-lost">
-          <div className="end-icon"><CircleSlash /></div>
           <div>
             <span className="eyebrow">Operation closed</span>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{loss.title}.</h2>
@@ -62,7 +60,6 @@ export function EndState({ session }: { session: GameSession }) {
     return (
       <section className="resolution resolution-exercise" data-resolution="exercise">
         <div className="end-banner end-exercise">
-          <div className="end-icon"><ClipboardCheck /></div>
           <div>
             <span className="eyebrow">Authorised exercise</span>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>Exercise concluded at the boundary.</h2>

@@ -1,5 +1,5 @@
 import { commandEvents, describeMeterChange, describeRollShift, type CommandEventId, type Game } from "@/lib/advanced-game";
-import { ArrowRight, RadioTower } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { EffectList } from "@/components/game/effect-list";
@@ -11,7 +11,7 @@ export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice
   const event = commandEvents[game.pendingCommand as CommandEventId];
   return (
     <section className="command-event" aria-labelledby="command-event-title">
-      <div className="command-event-heading"><RadioTower size={22} /><div><span className="eyebrow">Command event</span><h2 id="command-event-title" ref={heading} tabIndex={-1} data-awaiting-heading>{event.title}</h2><p>{event.prompt}</p></div></div>
+      <div className="command-event-heading"><div><span className="eyebrow">Command event</span><h2 id="command-event-title" ref={heading} tabIndex={-1} data-awaiting-heading>{event.title}</h2><p>{event.prompt}</p></div></div>
       <div className="command-options">
         {(["a", "b"] as const).map(choice => <button key={choice} onClick={() => onChoose(choice)}><strong>{event[choice].title}</strong><span>{event[choice].description}</span><small>{event[choice].signal}</small><EffectList className="command-effect" items={effectLine(game, event[choice])} /><ArrowRight size={17} /></button>)}
       </div>

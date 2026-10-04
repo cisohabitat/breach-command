@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, RotateCcw, Settings2, Shield, Terminal, X } from "lucide-react";
+import { BookOpen, RotateCcw, Settings2, X } from "lucide-react";
 import { ActionSheet } from "@/components/game/action-sheet";
 import { BriefingScreen } from "@/components/game/briefing-screen";
 import { CaptainReportDialog } from "@/components/game/captain-report-dialog";
@@ -34,11 +34,9 @@ export default function Home() {
       )}
       <header className="topbar">
         <Link href="/" className="brand" aria-label="Breach Command home">
-          <span className="brand-mark"><Shield size={24} /></span>
-          <span>BREACH<span className="brand-light">COMMAND</span></span>
+          <span className="brand-name">Breach Command</span><span className="brand-light">Incident desk</span>
         </Link>
         <div className="top-actions">
-          <span className="solo-label"><Terminal size={14} /> SINGLE PLAYER</span>
           <button className="quiet-button" onClick={() => setRules(true)} aria-label="Field guide"><BookOpen size={17} /><span>Field guide</span></button>
           <button className="quiet-button" onClick={() => setSettings(true)} aria-label="Game settings"><Settings2 size={17} /><span>Settings</span></button>
           {game && <button className="quiet-button" disabled={rolling} onClick={() => ended ? resetToBriefing() : setNewConfirm(true)} aria-label="New incident"><RotateCcw size={16} /><span>New incident</span></button>}

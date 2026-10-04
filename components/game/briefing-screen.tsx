@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, Bot, Clock3, GitBranch, LockKeyhole, RefreshCw, Settings2, Star, Trophy } from "lucide-react";
+import { ArrowRight, Bot, RefreshCw, Settings2, Star } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { stageIcons } from "@/components/game/stage-icons";
 import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
@@ -13,7 +13,7 @@ const stageQuestions = ["How they got in", "Where they went, and as whom", "How 
 export function BriefingScreen({ session }: { session: GameSession }) {
   const {
     campaign, currentAct, currentRoute, finalEnding,
-    scenarioChoice, setScenarioChoice, activeScenario, ScenarioIcon, previewVariant,
+    scenarioChoice, setScenarioChoice, activeScenario, previewVariant,
     difficulty, setDifficulty, specialist, setSpecialist, mode, setMode,
     challengeCode, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed,
     guided, setGuided, fastResolve, setFastResolve,
@@ -52,12 +52,12 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
         <section className="campaign-act-card"><span className="act-number">ACT {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved access{campaign.unresolvedThreads ? " — each starts later operations under more pressure" : ""}</small></div></section>
-        <section className="campaign-route-card"><GitBranch size={19} /><div><span className="field-label">Campaign route · {currentRoute.title}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
-        {finalEnding && <section className="campaign-ending"><Trophy size={20} /><div><span className="field-label">Campaign conclusion</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
+        <section className="campaign-route-card"><div><span className="field-label">Campaign route · {currentRoute.title}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
+        {finalEnding && <section className="campaign-ending"><div><span className="field-label">Campaign conclusion</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
       </div>
       <section className="mission-panel">
         <div className="panel-top"><span className="case-number">Case {String(scenarioChoice + 1).padStart(2, "0")} of {String(scenarios.length).padStart(2, "0")}</span><span className={`case-stamp ${campaign.completed.includes(scenarioChoice) ? "cleared" : ""}`}>{campaign.completed.includes(scenarioChoice) ? "Cleared" : "Open"}</span></div>
-        <div className="mission-symbol"><ScenarioIcon size={33} strokeWidth={1.4} /><span>{activeScenario.sector}</span></div>
+        <div className="mission-symbol"><span>{activeScenario.sector}</span></div>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
         {previewVariant && <div className="variant-brief"><span className="field-label">Incident variant</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
@@ -114,7 +114,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </details>
         {savedSession && (
           <section className="resume-card">
-            <div><Clock3 size={19} /><span><strong>Investigation saved</strong><small>{scenarios[savedSession.game.scenario].title} · Turn {savedSession.game.turns.length} · {savedSession.game.impact} impact</small></span></div>
+            <div><span><strong>Investigation saved</strong><small>{scenarios[savedSession.game.scenario].title} · Turn {savedSession.game.turns.length} · {savedSession.game.impact} impact</small></span></div>
             <div className="resume-actions">
               <button onClick={() => resume(savedSession)}>Resume</button>
               <button onClick={clearStoredSession}>Discard</button>
@@ -129,7 +129,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <button className="secondary-button begin-instead" onClick={() => start()}>Begin a new investigation instead</button>
           <p className="replace-note">Beginning a new investigation replaces the saved one.</p>
         </> : <button className="primary-button start-button" onClick={() => start()}>Begin investigation <ArrowRight size={19} /></button>}
-        <div className="mission-meta"><span><Clock3 size={14} /> 20–35 minutes solo</span><span><LockKeyhole size={14} /> No real systems</span></div>
+        <div className="mission-meta"><span>20–35 minutes solo</span><span>No real systems</span></div>
       </section>
       <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator.</p>
     </main>
