@@ -218,6 +218,21 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     sources: [],
     clue,
   };
+  // A reading declared for an earlier stage reads, under "Test …", like the
+  // aid's own recommendation for the new one. Once a stage has been confirmed
+  // since the reading was chosen, the prompt asks whether it still fits — before
+  // a case theory or a comparison, and whatever the standing reads: a phone
+  // playtest carried a "Holding" reading into stage 3 under a theory prompt and
+  // was never asked.
+  const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
+  const declaredAt = game.hypothesisHistory[game.hypothesisHistory.length - 1]?.turn ?? 0;
+  if (lastConfirmation && declaredAt <= lastConfirmation && !game.turns.some(turn => turn.number > lastConfirmation && turn.hypothesis === hypothesis.id)) return {
+    step: "test",
+    title: `New stage: does ${hypothesis.title.toLowerCase()} still fit?`,
+    detail: "A stage was just confirmed, and the next one can travel a different route. Read what the team is seeing now and keep this reading only if it fits; otherwise choose the one that does before you run a procedure.",
+    sources: open,
+    clue,
+  };
   if (readyForTheory(game)) return {
     step: "theory",
     title: "Name what the adversary is after",
@@ -230,18 +245,6 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     title: "Two findings can be compared",
     detail: "Select two findings in the evidence workspace and decide whether one plausibly enabled the other, or whether they only overlap in time. Testing that judgement is part of the work.",
     sources: [],
-    clue,
-  };
-  // A reading declared for an earlier stage reads, under "Test …", like the
-  // aid's own recommendation for the new one. Once a stage has been confirmed
-  // since the reading was chosen, the prompt asks whether it still fits.
-  const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
-  const declaredAt = game.hypothesisHistory[game.hypothesisHistory.length - 1]?.turn ?? 0;
-  if (lastConfirmation && declaredAt <= lastConfirmation && standing.level === "untested") return {
-    step: "test",
-    title: `New stage: does ${hypothesis.title.toLowerCase()} still fit?`,
-    detail: "A stage was just confirmed, and the next one can travel a different route. Read what the team is seeing now and keep this reading only if it fits; otherwise choose the one that does before you run a procedure.",
-    sources: open,
     clue,
   };
   return {

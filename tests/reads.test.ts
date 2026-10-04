@@ -126,6 +126,13 @@ test("offers the case theory and the map when they can help, and not before", ()
   assert.equal(readyForTheory(twoStages),true,"two confirmed stages make it assessable");
   assert.ok(/case theory/.test(getCoachPrompt(twoStages,true)));
   assert.equal(getTrainingPrompt({...twoStages,difficulty:"training"},true)?.step,"theory","Training names the step");
+  // A reading carried over the confirmation is questioned first: under a theory
+  // prompt a phone playtest kept a "Holding" reading into stage 3 unasked.
+  const played=playTurn(declared,"identity",20).turns[0];
+  const carried={...twoStages,difficulty:"training" as const,hypothesisHistory:[{turn:1,id:"identity" as const}],turns:[{...played,number:1,revealed:declared.chain[0]},{...played,number:2,revealed:declared.chain[1]}]};
+  assert.match(getTrainingPrompt(carried,true)?.title??"",/^New stage: does identity-led intrusion still fit\?/,"a carried reading is questioned before the theory");
+  const retested={...carried,turns:[...carried.turns,{...played,number:3,revealed:null,success:false,hypothesis:"identity" as const}]};
+  assert.equal(getTrainingPrompt(retested,true)?.step,"theory","once it has been tested at the new stage, the theory prompt returns");
   assert.equal(readyForTheory(setCaseTheory(twoStages,"exfiltration")),false,"and stops once a theory is recorded");
   assert.ok(!/exfiltration|data theft/i.test(getCoachPrompt(twoStages,true)),"the prompt never names the objective");
 
