@@ -105,7 +105,7 @@ export function HypothesisBoard({
               key={hypothesis.id}
               className={game.hypothesis === hypothesis.id ? "active" : ""}
               disabled={!!game.pendingDecision}
-              onClick={() => onChoose(hypothesis.id)}
+              onClick={event => { onChoose(hypothesis.id); const fold = event.currentTarget.closest("details"); if (fold) { fold.open = false; fold.querySelector("summary")?.focus(); } }}
               aria-pressed={game.hypothesis === hypothesis.id}
             >
               <strong>{hypothesis.title}</strong>

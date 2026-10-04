@@ -112,6 +112,11 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             is made from, so they sit above the four readings rather than below
             them; once one is declared they move back beside the procedures. */}
         {!game.hypothesis && !game.pendingCommand && !game.pendingSetPiece && trainingNote}
+        {/* Beyond Training the first reading was chosen with nothing above the four
+            premises to base it on; the latest observation is what there is. */}
+        {!game.hypothesis && !trainingNote && latestObservation && !game.pendingCommand && !game.pendingSetPiece && (
+          <div className="guide-nudge"><Sparkles size={15} /><span><strong>Choose the reading that best explains what you know.</strong><b className="prompt-clue">Latest from the team: <Glossed text={latestObservation} /></b></span></div>
+        )}
         {!game.pendingCommand && !game.pendingSetPiece && <HypothesisBoard game={game} onChoose={declare} />}
         {/* The board and the procedures step aside while a decision waits, and the
             column was left empty with only a tab badge saying why. */}

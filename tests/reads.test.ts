@@ -465,7 +465,7 @@ test("does not tell a player who revised to revise", () => {
   assert.ok(!/When it says weakening/.test(carried.next),"a player who revised is not told to start revising");
   assert.ok(/revised it 2 times/.test(carried.gap)&&/earlier stage/.test(carried.gap)&&/stage is confirmed/.test(carried.next),"a reading carried into a new stage is named");
   const untested=review([...opening,turn(3,"application","endpoint"),turn(4,"application","server",{success:false})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"}]);
-  assert.ok(/could not rule the reading out/.test(untested.gap)&&/Own source/.test(untested.next),"checks that could not test the reading are named");
+  assert.ok(/settled nothing about the reading/.test(untested.gap)&&/able to test/.test(untested.next),"checks that could not test the reading are named");
   const dice=review([turn(1,"cloud","cloud",{success:false}),turn(2,"identity","identity",{success:false}),turn(3,"application","server",{success:false})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"}]);
   assert.ok(/failed on the roll/.test(dice.gap)&&!/Own source/.test(dice.next),"misses that were own sources failing on the roll are put down to the dice");
   const sound=review([...opening,turn(3,"application","server"),turn(4,"endpoint","endpoint",{hypothesisMatched:true,revealed:"phish"})],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"application"},{turn:4,id:"endpoint"}]);

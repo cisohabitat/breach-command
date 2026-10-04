@@ -8323,13 +8323,24 @@ in colour, and the carried plan is stated before the options. */
   font-style:normal;
   font-weight:600;
 }
-@media(max-width:900px) {
+/* On a phone the tabs bar is already most of what is pinned; the strip is for
+   tablets and wider, where the meters sit a screen or more above the map. */
+@media(max-width:650px) {
   .pinned-readouts,.pinned-readouts.shown {
     display:none;
   }
 }
 .procedure-card .alignment-label.other-sees {
   color:var(--text-soft);
+}
+/* The sheet's corner close control was a 16 px icon; a thumb needs 40. */
+.action-sheet>button.absolute {
+  display:grid;
+  place-items:center;
+  width:40px;
+  height:40px;
+  top:8px;
+  right:8px;
 }
 /* A small laptop has room for the three readouts beside the case title. Stacked
    under it they took a second band of 120 px and left half the width empty, and

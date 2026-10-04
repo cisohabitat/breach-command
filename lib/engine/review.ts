@@ -5,7 +5,7 @@ import { encodeChallenge } from "../phase8.ts";
 import { inSentence } from "./content.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseOptionsFor } from "./rules.ts";
-import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate } from "./reads.ts";
+import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
 
 // The full review is written for someone who already knows the trade. A first
 // operation needs four sentences before any of it: one thing that went well, one
@@ -47,7 +47,12 @@ export function getBeginnerReview(game: Game): BeginnerReview {
       const opened = game.turns.find(earlier => [earlier.revealed, earlier.injectReveal].some(id => !!id && stageOfAttack(id) === stage - 1));
       return stage > 0 && !!opened && declared <= opened.number;
     }).length;
-    const untested = misses.filter(turn => !turn.success || !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure)).length;
+    // Untested means the turn's own credit says so: a failed roll, or a source
+    // that could not see the reading. A source marked able to test it counts as a test.
+    const credits = turnCredits(game);
+    const reasonOf = (turn: Game["turns"][number]) => credits[game.turns.indexOf(turn)]?.reason;
+    const untested = misses.filter(turn => reasonOf(turn) === "failed" || reasonOf(turn) === "other-source").length;
+    const blindMisses = misses.filter(turn => reasonOf(turn) === "other-source").length;
     // Misses that were own sources failing on the roll are the dice, not the
     // choice of source; telling that player to "run an Own source" told them
     // to do what they had done on every turn.
@@ -67,9 +72,11 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     };
     if (untested * 2 >= misses.length) return {
       strength,
-      gap: `${gap} On ${untested} of the misses the check either failed or used a source the reading does not predict, so it could not rule the reading out.`,
-      concept: "A wrong reading is only corrected by a completed check of one of its own sources. A failed roll or another reading's source leaves it exactly as open as before.",
-      next: "Next operation, run a procedure marked “Own source” for the reading you hold, so that an empty result rules it out instead of leaving it standing.",
+      gap: `${gap} On ${untested} of the misses the check settled nothing about the reading: ${[untested - blindMisses && `${untested - blindMisses} failed on the roll`, blindMisses && `${blindMisses} used a source that could not see it`].filter(Boolean).join(" and ")}.`,
+      concept: "A wrong reading is only corrected by a completed check of a source that can see it. A failed roll, or a source that cannot see the reading, leaves it exactly as open as before.",
+      next: game.mode === "expert"
+        ? "Next operation, before each action, check by hand that the source can see a technique your reading could still be using at this stage."
+        : "Next operation, run a card marked as able to test the reading you hold — its own source, or one marked “Can also test this reading” — so that an empty result rules it out instead of leaving it standing.",
     };
     return {
       strength,
@@ -169,16 +176,28 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     next: "Next operation, revise as soon as the reading weakens, and spend each turn on a source that can still settle the stage under test.",
   };
   // A slow but sound operation was told nothing stood out beside an
-  // investigation score of 13 of 25.
+  // investigation score of 13 of 25. The advice names what the turns went on:
+  // telling a player whose every source could see the stage to "check the card
+  // can see this stage" was advice their game did not support.
   const extraTurns = game.turns.length - freeTurns(game);
-  if (extraTurns >= 2) return {
-    strength,
-    gap: `The reasoning held, but the investigation took ${game.turns.length} turns where ${freeTurns(game)} are free at ${difficulties[game.difficulty].title}, and the score charged 3 for each one after that.`,
-    concept: "A turn spent on a source that cannot settle the stage under test costs twice: once on the score and once in the pressure the adversary gains.",
-    next: game.mode === "expert"
-      ? "Next operation, keep your own note of which sources your reading predicts and which have already come back empty at this stage; when none is left, revise the reading rather than spend the turn."
-      : "Next operation, before each action, check that the card is one of your reading's own sources and can see this stage; when none can, revise the reading rather than spend the turn.",
-  };
+  if (extraTurns >= 2) {
+    const failed = game.turns.filter(turn => !turn.success).length;
+    const blind = turnCredits(game).filter(item => item.reason === "absent" || item.reason === "excluded").length;
+    const empty = game.turns.filter(turn => turn.success && !turn.revealed && !turn.injectReveal).length;
+    const counted = [failed && `${failed} failed roll${failed === 1 ? "" : "s"}`, empty && `${empty} completed check${empty === 1 ? "" : "s"} that found no stage`].filter(Boolean).join(" and ");
+    return {
+      strength,
+      gap: `The reasoning held, but the investigation took ${game.turns.length} turns where ${freeTurns(game)} are free at ${difficulties[game.difficulty].title}, and the score charged 3 for each one after that${counted ? `; the extra turns went on ${counted}` : ""}.`,
+      concept: "Empty checks are how routes are ruled out, so some are the work itself. Failed rolls are the dice; an established source, map focus and a carried bonus are what shift the odds.",
+      next: blind
+        ? game.mode === "expert"
+          ? "Next operation, keep your own note of which sources your reading predicts and which have already come back empty at this stage; when none is left, revise the reading rather than spend the turn."
+          : "Next operation, before each action, check the card can test your reading here; when none of its own sources can, revise the reading or use a card marked as able to test it."
+        : game.mode === "expert"
+          ? "Next operation, before a procedure, look for a bonus you can add: a monitored node, map focus on the source's system, or an established source."
+          : "Next operation, before a procedure, look for a bonus you can add — a monitored node, map focus on the source's system, an established source — and use the comparison's ruled-out marks to skip routes that are already out.",
+    };
+  }
   return {
     strength,
     gap: "Nothing stands out as a misunderstanding in this operation.",
@@ -286,7 +305,11 @@ function turnCredits(game: Game): TurnCredit[] {
     if (!turn.hypothesis || !turn.hypothesisTarget) return { credit: 0, reason: "none" };
     if (turn.hypothesisMatched) return { credit: 1, reason: "matched" };
     if (!turn.success) return { credit: 0, reason: "failed" };
-    if (!hypothesisSources(game, turn.hypothesis).includes(turn.procedure)) return { credit: 0, reason: "other-source" };
+    // A source outside the reading's list that could still see one of its open
+    // techniques tests it as surely as its own: the card said "Can also test this
+    // reading", the board ruled the route out on the empty result, and the ledger
+    // once paid nothing for it.
+    if (!hypothesisSources(game, turn.hypothesis).includes(turn.procedure) && !sourceSeesReading({ ...recordBefore(game, index), hypothesis: turn.hypothesis }, turn.procedure)) return { credit: 0, reason: "other-source" };
     const key = `${turn.hypothesisTarget}:${turn.hypothesis}`;
     if (paid.has(key)) return { credit: 0, reason: "repeated" };
     paid.add(key);
@@ -314,7 +337,7 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
       matched: "",
       tested: "You tested it with one of its own sources and the check completed, which is testing it properly: half credit.",
       failed: "The roll failed, so the check settled nothing and the wrong prediction scored nothing.",
-      "other-source": "The procedure was not one of that reading's own sources, so it could not rule the reading out, and the prediction scored nothing.",
+      "other-source": "The procedure was not one of that reading's own sources and could not see any technique it could still be using here, so it could not rule the reading out, and the prediction scored nothing.",
       repeated: "The half credit for testing a wrong reading properly is paid once at each stage, and this reading had already earned it here; the check still narrowed the search.",
       excluded: "Your earlier checks had already ruled that route out at this stage, so testing it scored nothing.",
       absent: "None of the techniques this incident could use at this stage travels that route, which the board showed as \"cannot explain this stage\", so testing it scored nothing.",

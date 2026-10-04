@@ -19,7 +19,7 @@ export function returnFocusToAwaiting(event: Event) {
     // anywhere from the meters to half-way down the grid. Focus stays where the
     // dialog returns it; only the scroll moves.
     const dashboard = document.querySelector<HTMLElement>(".investigation-dashboard");
-    if (dashboard && window.matchMedia("(min-width: 901px)").matches) requestAnimationFrame(() => {
+    if (dashboard) requestAnimationFrame(() => {
       // The workspace tabs stay pinned at the top of the screen, so the landing
       // clears them rather than tucking the reading's heading underneath.
       const tabs = document.querySelector<HTMLElement>(".workspace-tabs");

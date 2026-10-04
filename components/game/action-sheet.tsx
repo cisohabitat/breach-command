@@ -28,7 +28,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
         onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
       >
         <SheetHeader><div className="eyebrow">PREPARE ACTION</div><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc && <Glossed text={proc.description} />}</SheetDescription></SheetHeader>
-        {proc && game && <p className="carried-plan" role="status">{game.turns.length ? "Carried from your last action: " : "Starting plan: "}<strong>{procedureScopes[actionScope].title} scope</strong> and <strong>{procedureIntensities[actionIntensity].title} analysis</strong>. {game.turns.length ? "These stay selected until you change them in the plan options below the Run button." : "Change them in the plan options below the Run button; whatever you choose stays selected for later turns until you change it."}</p>}
+        {proc && game && <p className="carried-plan" role="status">{game.turns.length ? "Carried from your last action: " : "Starting plan: "}<strong>{procedureScopes[actionScope].title} scope</strong> and <strong>{procedureIntensities[actionIntensity].title} analysis</strong>. {game.turns.length ? "These stay selected until you change them in the plan options in this sheet." : "Change them in the plan options in this sheet; whatever you choose stays selected for later turns until you change it."}</p>}
         {proc && game && <>
           <div className="action-note"><span className="eyebrow">HYPOTHESIS CHECK</span><p><Glossed text={proc.question} /></p></div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>

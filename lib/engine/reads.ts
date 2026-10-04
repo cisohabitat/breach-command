@@ -281,7 +281,7 @@ export function getDecisionOptions(game: Game) {
   const risk: Record<DecisionChoice, string> = {
     observe: "Attacker opportunity increases",
     act: "Immediate exposure falls",
-    attribute: "The actor keeps moving",
+    attribute: "Business impact still rises",
     contain: "Parallel access paths remain",
     notify: "Your read is disclosed",
   };
