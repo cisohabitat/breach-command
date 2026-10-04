@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { ArrowDown, ArrowRight, BrainCircuit, CheckCheck, CircleSlash, Eye, MessagesSquare, Shield, ShieldCheck, Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, decisionRollShift, describeMeterChange, describeRollShift, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game } from "@/lib/advanced-game";
+import { attacks, decisionRollShift, describeMeterChange, describePart, describeRollShift, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { Glossed } from "@/components/game/glossed";
@@ -15,8 +15,7 @@ function injectImpact(report: Game["turns"][number]) {
 // The report names the roll's parts as the action sheet named them. It once said
 // "own source +1, other parts +5" beside a sheet that listed all four.
 function rollParts(report: Game["turns"][number]) {
-  const signed = (value: number) => `${value < 0 ? "−" : "+"}${Math.abs(value)}`;
-  if (report.parts?.length) return ` (${report.parts.map(part => `${part.label} ${signed(part.value)}`).join(", ")})`;
+  if (report.parts?.length) return ` (${report.parts.map(part => describePart(part.label, part.value)).join("; ")})`;
   return report.planningBonus > 0 || report.specialistBonus > 0 ? ` (${[report.planningBonus > 0 ? `own source +${report.planningBonus}` : "", report.specialistBonus > 0 ? `specialist +${report.specialistBonus}` : "", report.modifier - report.planningBonus - report.specialistBonus ? `other parts ${report.modifier - report.planningBonus - report.specialistBonus > 0 ? "+" : "−"}${Math.abs(report.modifier - report.planningBonus - report.specialistBonus)}` : ""].filter(Boolean).join(", ")})` : "";
 }
 
@@ -141,7 +140,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {/* At every difficulty but Expert: the review grades every decision by this,
                       and an Operational playtest was graded on a rule it was never shown. */}
                   {game.mode !== "expert" && (
-                    <p className="decision-pressure">Pressure now: business impact {game.impact}; adversary progress {game.objectiveProgress}, growing at a pace of “{getAdversaryState(game).toLowerCase()}” each turn. {game.impact >= 55 || game.adversaryTempo >= 2 ? "That is high: acting fits best, with containing close behind." : "That is low: watching or attributing is affordable."}</p>
+                    <p className="decision-pressure">Pressure now: business impact {game.impact}; adversary progress {game.objectiveProgress}, growing at a pace of “{getAdversaryState(game).toLowerCase()}” each turn. {game.impact >= 55 || game.adversaryTempo >= 2 ? `That is high, because ${game.impact >= 55 ? `business impact is ${game.impact}` : "the pace is fast"}: acting fits best, with containing close behind.` : "That is low: watching or attributing is affordable."}</p>
                   )}
                   <div ref={optionList}>
                     {decision.options.map(option => (

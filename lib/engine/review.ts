@@ -17,7 +17,9 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const emptySuccesses = game.turns.filter(turn => turn.success && !turn.revealed).length;
   const revisions = game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0);
 
-  const strength = game.revealed.length === 4
+  const strength = game.status === "exercise"
+    ? `You confirmed ${game.revealed.length} of 4 stages in ${game.turns.length} turns before the controller stood the activity down as an authorised exercise; a natural 20 brought that card, and nothing was missed.`
+    : game.revealed.length === 4
     ? `You confirmed the whole attack chain — all four stages — in ${game.turns.length} turns.`
     : game.impact <= 40
       ? `You kept business impact down to ${game.impact} while the picture was still forming, which buys the team room to work.`
@@ -246,7 +248,12 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   // from 5.4 to 4.4, while sound play stayed at 7.5.
   const credit = turnCredits(game).reduce((sum, item) => sum + item.credit, 0);
   const hypothesis = tested.length ? Math.round(clamp(credit / tested.length, 0, 1) * 10) : 0;
-  return { investigation, impact, continuity, decisions, response, hypothesis, total: investigation + impact + continuity + decisions + response + hypothesis };
+  // A drill stands down before the response phase, so containment and recovery
+  // are not scored rather than scored zero: the other parts are scaled to 100.
+  // The banner said "not scored" beside 0 of 20 inside the total.
+  const rest = investigation + impact + continuity + decisions + hypothesis;
+  const total = game.status === "exercise" ? Math.round(rest * 100 / 80) : rest + response;
+  return { investigation, impact, continuity, decisions, response, hypothesis, total };
 }
 
 export function getOutcome(game: Game) {
@@ -284,7 +291,7 @@ export function getScoreRows(game: Game) {
     { label: "Impact control", value: breakdown.impact, maximum: 15, rule: `Rises as final business impact falls towards zero. It finished at ${game.impact}.` },
     { label: "Continuity", value: breakdown.continuity, maximum: 15, rule: `${scenarioDynamics[game.scenario].label} and the sector's margin at the end, averaged: ${game.continuity} and ${game.sectorHealth}.` },
     { label: "Operational decisions", value: breakdown.decisions, maximum: 15, rule: decided ? `The average quality of your ${plural(decided, "evidence, command and sector decision")}; the review's decision record grades each one.` : "No decisions were taken, so there was nothing to score." },
-    { label: "Containment & recovery", value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? responseRule(game) : "The response phase was not reached, so nothing was scored. It opens once all four stages are confirmed." },
+    { label: "Containment & recovery", value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? responseRule(game) : game.status === "exercise" ? "Not scored: the drill stood down before the response phase, so the other five parts are scaled up to make the total out of 100." : "The response phase was not reached, so nothing was scored. It opens once all four stages are confirmed." },
     { label: "Hypothesis accuracy", value: breakdown.hypothesis, maximum: 10, rule: "Full credit for each turn whose reading named the route under test, half for a wrong reading tested properly once. The ledger below goes turn by turn." },
   ];
 }

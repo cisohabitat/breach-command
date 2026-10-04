@@ -31,6 +31,9 @@ test("resolves a turn, its decision and its cooldown", () => {
   // signal; it now reaches past it to the relief card behind.
   g=baseline();g=playTurn(g,"endpoint",20);assert.equal(g.turns[0].inject?.reason,"Natural 20");assert.equal(g.turns[0].inject?.effect,"relief","a natural 20 never hands the player a penalty");const oldPivot=g.chain[1];g=resolveDecision(g,"act");assert.equal(g.nextModifier,-1);assert.equal(g.impact,2);assert.notEqual(g.chain[1],oldPivot);assert.ok(g.adversaryEvent);
   g=baseline();g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(g.turns[2].inject?.reason,"Three failed rolls");assert.equal(g.failures,0);assert.ok(g.turns[2].adversaryEvent);assert.ok(g.continuity<100);
+  // Three failed rolls never draw the authorised stand-down: it ended a newcomer's
+  // climax twice under a banner saying the investigation had earned it.
+  g=baseline();g.injectDeck=[8,7];g.revealed=g.chain.slice(0,2);g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(g.turns[2].inject?.reason,"Three failed rolls");assert.notEqual(g.turns[2].inject?.id,"exercise");assert.notEqual(g.status,"exercise","the operation goes on");
   g=baseline();g.injectDeck=[2];g=playTurn(g,"endpoint",20);assert.equal(availableIn(g,"endpoint"),0,"restoration override");
   // A stage the partner hands over has to leave a finding, or the player holds a
   // confirmed stage they cannot select in the evidence workspace.

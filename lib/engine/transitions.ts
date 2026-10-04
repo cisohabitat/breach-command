@@ -283,7 +283,11 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   // reaches past cards of the wrong valence rather than reshuffling. If none of
   // the wanted kind is left, a critical roll draws nothing rather than take the
   // next card, which would be a penalty on a 20 or a gift on a 1.
-  const position = !reason || !g.injectDeck.length ? -1 : wanted ? g.injectDeck.findIndex(item => wanted.includes(injects[item].valence)) : 0;
+  // A run of failed rolls still draws from the whole deck, except the authorised
+  // stand-down: it ended a newcomer's operation twice in two games at the climax,
+  // under a banner saying the investigation had earned it after three misses.
+  // The stand-down is reached on a natural 20, where "earned" is true.
+  const position = !reason || !g.injectDeck.length ? -1 : wanted ? g.injectDeck.findIndex(item => wanted.includes(injects[item].valence)) : g.injectDeck.findIndex(item => injects[item].effect !== "end");
   if (reason && position >= 0) {
     const index = g.injectDeck.splice(position, 1)[0];
     inject = { ...injects[index], reason };

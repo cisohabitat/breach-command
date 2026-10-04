@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { CheckCheck, CircleHelp, Dices } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { describeMeterChange, getDiscriminatingRead, getModifierBreakdown, procedureIntensities, procedureScopes, type ProcedureIntensity, type ProcedureScope } from "@/lib/advanced-game";
+import { describeMeterChange, describePart, getDiscriminatingRead, getModifierBreakdown, procedureIntensities, procedureScopes, type ProcedureIntensity, type ProcedureScope } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { Glossed } from "@/components/game/glossed";
 
@@ -47,7 +47,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
           </div>
           {breakdown && (
             <details className="modifier-details">
-              <summary>How this modifier is calculated<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => `${part.label} ${part.value < 0 ? "−" : "+"}${Math.abs(part.value)}`).join(" · ") || (breakdown.parts.some(part => part.suppressed) ? "One bonus is unavailable — see why" : "Nothing applies")}</span></summary>
+              <summary>How this modifier is calculated<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => describePart(part.label, part.value)).join(" · ") || (breakdown.parts.some(part => part.suppressed) ? "One bonus is unavailable — see why" : "Nothing applies")}</span></summary>
               <ul className="modifier-breakdown">
                 {breakdown.parts.filter(part => part.value !== 0 || part.suppressed || part.shown).map(part => (
                   <li key={part.label} className={part.suppressed ? "suppressed" : ""}><span>{part.label}</span><strong>{part.suppressed ? "—" : `${part.value < 0 ? "−" : "+"}${Math.abs(part.value)}`}</strong><small>{part.detail}</small></li>

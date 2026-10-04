@@ -25,6 +25,10 @@ function effectLine(game: Game, option: { impact: number; continuity: number; mo
     describeMeterChange(game, "impact", option.impact),
     describeMeterChange(game, "continuity", option.continuity),
     describeRollShift(game.nextModifier, option.modifier),
-    option.tempo ? `adversary pace one step ${option.tempo > 0 ? "faster" : "slower"}: about ${Math.abs(option.tempo) * 3} ${option.tempo > 0 ? "more" : "less"} adversary progress each turn` : "",
+    // Pace runs from 0 to 3; a step past either end changes nothing, and said
+    // "one step faster" beside a pace already at "pressing hard".
+    option.tempo && Math.min(3, Math.max(0, game.adversaryTempo + option.tempo)) !== game.adversaryTempo
+      ? `adversary pace one step ${option.tempo > 0 ? "faster" : "slower"}: about ${Math.abs(option.tempo) * 3} ${option.tempo > 0 ? "more" : "less"} adversary progress each turn`
+      : option.tempo ? `adversary pace unchanged (already ${option.tempo > 0 ? "at its fastest" : "at its slowest"})` : "",
   ].filter(Boolean).join(" · ");
 }

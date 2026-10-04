@@ -80,7 +80,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           <section className="score-card" id="debrief-score">
             <div className="score-total"><span>FINAL SCORE</span><strong>{outcome.breakdown.total}<small>/100</small></strong></div>
             <div className="score-breakdown">
-              {getScoreRows(game).map(row => <div key={row.label}><span>{row.label}</span><strong>{row.value}/{row.maximum}</strong><small>{row.rule}</small></div>)}
+              {getScoreRows(game).map(row => <div key={row.label}><span>{row.label}</span><strong>{game.status === "exercise" && row.label === "Containment & recovery" ? "Not scored" : `${row.value}/${row.maximum}`}</strong><small>{row.rule}</small></div>)}
             </div>
           </section>
           <section className="hypothesis-ledger" id="debrief-hypothesis">
@@ -174,7 +174,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <summary>Campaign and team<span>trust {campaign.leadershipTrust} · readiness {campaign.readiness} · {campaign.mastery[String(game.scenario)] ?? 0} mastery star{(campaign.mastery[String(game.scenario)] ?? 0) === 1 ? "" : "s"}</span></summary>
             <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
             <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
-            <section className="specialist-reaction"><span className="eyebrow">TEAM AFTER-ACTION NOTE · COHESION {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status === "won", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
+            <section className="specialist-reaction"><span className="eyebrow">TEAM AFTER-ACTION NOTE · COHESION {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status !== "lost", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
             <section className="mastery-panel"><div><span className="eyebrow">SCENARIO MASTERY</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
           </details>
           {finalEnding && <section className="campaign-finale"><Trophy size={23} /><div><span className="eyebrow">FINAL COMMAND BRIEFING</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}

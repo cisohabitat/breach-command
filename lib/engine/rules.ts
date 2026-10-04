@@ -164,6 +164,17 @@ export function responseFit(game: Game, phaseIndex: number, choice: string) {
   return { preferred, objectiveAligned: objectiveResponses[game.objective][phaseIndex] === choice };
 }
 
+// One part of the roll in words. Two or more carried sources share one label —
+// "Inject: Hard going −2; Monitored Access boundary +2, together" — and printed
+// with its value after it the line read as a sum to do in the head, so it is
+// set as "Since your last roll +0 (from …)".
+export function describePart(label: string, value: number) {
+  const signed = (n: number) => `${n < 0 ? "−" : "+"}${Math.abs(n)}`;
+  const joined = label.match(/^(.*?)(, together|: [+−]\d+, capped at)$/);
+  if (!joined) return `${label} ${signed(value)}`;
+  return `Since your last roll ${signed(value)} (from ${joined[1].replace(/; /g, ", ")}${joined[2] === ", together" ? "" : `, capped at ${signed(value)}`})`;
+}
+
 export function getModifierBreakdown(game: Game, procedure: string, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }) {
   const specialist = specialists[game.specialist];
   const focusNode = infrastructureTopologies[game.scenario].nodes.find(node => node.id === game.focusedNode);
