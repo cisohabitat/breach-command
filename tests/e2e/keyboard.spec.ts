@@ -16,12 +16,12 @@ test.describe("keyboard play", () => {
     await page.getByRole("button", { name: "Resume", exact: true }).click();
     const report = page.getByRole("dialog");
     await expect(report).toBeVisible();
-    await expect(report.getByText("OPERATIONAL DECISION REQUIRED")).toBeVisible();
+    await expect(report.getByText("Operational decision required")).toBeVisible();
     expect(await focusedRole(page), "focus lands on the report itself").toBe("dialog");
     // Space scrolls a dialog and Enter is pressed to read on; neither may commit a choice.
     await page.keyboard.press("Space");
     await page.keyboard.press("Enter");
-    await expect(report.getByText("OPERATIONAL DECISION REQUIRED")).toBeVisible();
+    await expect(report.getByText("Operational decision required")).toBeVisible();
     await expect(report.getByText(/This report stays open until the choice is recorded/)).toBeVisible();
   });
 

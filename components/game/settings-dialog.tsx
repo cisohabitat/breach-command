@@ -21,7 +21,7 @@ export function SettingsDialog({ session }: { session: GameSession }) {
         // autofocus would let Space — the key that scrolls a dialog — turn it off.
         onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
       >
-        <DialogHeader><div className="eyebrow">GAME SETTINGS</div><DialogTitle>Command interface</DialogTitle><DialogDescription>Adjust feedback, accessibility and display behaviour. Preferences stay on this device.</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">Game settings</div><DialogTitle>Command interface</DialogTitle><DialogDescription>Adjust feedback, accessibility and display behaviour. Preferences stay on this device.</DialogDescription></DialogHeader>
         <div className="settings-list">
           <label htmlFor="sound-setting"><span><Volume2 size={19} /><b>Sound cues</b><small>Procedural audio for discoveries, warnings and outcomes.</small></span><Switch id="sound-setting" checked={soundEnabled} onCheckedChange={setSoundEnabled} /></label>
           <label htmlFor="music-setting"><span><Headphones size={19} /><b>Adaptive score</b><small>Sector-specific command ambience intensifies as operational pressure rises.</small></span><Switch id="music-setting" checked={musicEnabled} onCheckedChange={setMusic} /></label>

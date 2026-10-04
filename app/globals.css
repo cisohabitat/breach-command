@@ -121,7 +121,7 @@ a {
   background:#ede2c9;
   color:#111417;
 }
-.mono,.eyebrow,.solo-label,.procedure-badge,.procedure-bottom,.attack-footer,.captain-label span,.brief-label,.game-footer,.mission-meta {
+.mono,.game-identity .eyebrow,.solo-label,.procedure-badge,.procedure-bottom,.attack-footer,.captain-label span,.brief-label,.game-footer,.mission-meta {
   font-family:var(--font-mono);
 }
 .muted {
@@ -132,12 +132,17 @@ a {
 }
 .eyebrow {
   font-size:var(--type-caption);
-  letter-spacing:.12em;
-  font-weight:500;
+  letter-spacing:0;
+  font-weight:600;
   display:flex;
   align-items:center;
   gap:9px;
   color:var(--lime);
+}
+/* The case breadcrumb is data, a file reference, and stays in capitals and mono. */
+.game-identity .eyebrow {
+  font-weight:500;
+  letter-spacing:.1em;
 }
 .separator {
   opacity:.45;
@@ -1067,10 +1072,11 @@ a {
   display:flex;
   gap:15px;
   align-items:center;
-  padding:17px;
-  border:1px solid #635e52;
-  background:#272d35;
-  border-radius:3px;
+  padding:0 0 17px;
+  border:0;
+  border-bottom:1px solid #635e52;
+  background:none;
+  border-radius:0;
   color:var(--lime);
 }
 .result-roll.failure {
@@ -1489,7 +1495,6 @@ a {
   }
   .eyebrow {
     font-size:var(--type-caption);
-    letter-spacing:.08em;
   }
   .briefing-chain {
     margin:25px 0 0;
@@ -1819,9 +1824,10 @@ a {
   background:#ff967d;
 }
 .evidence-decision {
-  border:1px solid #4d5561;
-  background:#16191e;
-  border-radius:3px;
+  border:0;
+  border-left:2px solid #4d5561;
+  background:none;
+  border-radius:0;
   padding:18px;
 }
 .evidence-decision h3 {
@@ -1884,7 +1890,7 @@ a {
   display:grid;
   place-items:center;
   background:#ede2c912;
-  border:1px solid #515c6b;
+  border:0;
   color:var(--lime);
   flex:0 0 auto;
 }
@@ -1943,13 +1949,18 @@ a {
 /* The meter effect sits under the qualitative line, in the body face so the
    numbers read as numbers. An option that would end the operation says so in
    words as well as colour. */
-.response-options small.response-effect {
+.response-options span.response-effect {
+  display:block;
   margin-top:6px;
+}
+.response-options .response-effect>small {
+  display:block;
+  margin-top:4px;
   font-family:inherit;
   font-size:var(--type-caption);
-  color:var(--text);
+  color:#d7d1c3;
 }
-.response-options small.response-effect.ends,.response-options small.response-effect.at-risk {
+.response-options .response-effect.ends>small,.response-options .response-effect.at-risk>small {
   color:#f0a48c;
 }
 .response-options svg {
@@ -2125,7 +2136,7 @@ a {
   align-items:center;
   gap:6px;
   border:1px solid #4e555f;
-  border-radius:999px;
+  border-radius:2px;
   padding:7px 10px;
   font-family:var(--font-mono);
   font-size:var(--type-micro);
@@ -2800,7 +2811,7 @@ html,body {
   align-items:center;
   gap:6px;
   border:1px solid #555c65;
-  border-radius:999px;
+  border-radius:2px;
   padding:7px 10px;
   font:500 var(--type-caption) var(--font-mono);
   color:#cfc7b6;
@@ -2960,13 +2971,8 @@ html,body {
 }
 /* The cost is read in the body face, as sector decisions and response options
    state theirs; in micro monospace it read as a footnote. */
-.command-options small.command-effect {
+.command-options .command-effect {
   margin-top:3px;
-  color:#e8d7b9;
-  font-family:inherit;
-  font-size:var(--type-body);
-  font-weight:400;
-  line-height:var(--leading-base);
 }
 .command-options svg {
   grid-column:2;
@@ -3490,7 +3496,7 @@ html,body {
   border:1px solid #4c525a;
   background:#1c2026;
   color:#ccc5b3;
-  border-radius:999px;
+  border-radius:2px;
   padding:5px 9px;
   font:500 var(--type-micro) var(--font-mono);
 }
@@ -4031,10 +4037,11 @@ html,body {
   color:#cbc4b3;
 }
 .topology-routes {
-  border:1px solid #373c44;
-  background:#0f1913;
-  border-radius:3px;
-  padding:7px 12px;
+  border:0;
+  border-top:1px solid #373c44;
+  background:none;
+  border-radius:0;
+  padding:7px 0;
 }
 .topology-routes>div {
   display:grid;
@@ -4253,16 +4260,6 @@ html,body {
 }
 /* The cost is what the decision turns on, so it reads in the body face at the
    response options' size, not as a ten-pixel footnote. */
-.set-piece-options small {
-  display:block;
-  margin-right:-24px;
-  padding-top:8px;
-  border-top:1px solid #5a4430;
-  font-size:var(--type-caption);
-  font-weight:500;
-  color:#f1dcc4;
-  line-height:var(--leading-base);
-}
 .evidence-review {
   border:1px solid #42474e;
   background:#16191d;
@@ -4586,10 +4583,11 @@ html,body {
   letter-spacing:.01em;
 }
 .case-theory {
-  border:1px solid #424850;
-  background:#131519;
-  border-radius:3px;
-  padding:13px;
+  border:0;
+  border-top:1px solid #424850;
+  background:none;
+  border-radius:0;
+  padding:13px 0;
   margin-top:14px;
 }
 .case-theory>div:first-child {
@@ -4930,9 +4928,9 @@ html,body {
   padding:10px;
   /* Opaque: text scrolling under a translucent bar read through it. */
   background:#111417;
-  border:1px solid #383d44;
-  border-radius:3px;
-  box-shadow:0 12px 26px #0004;
+  border:0;
+  border-bottom:1px solid #383d44;
+  border-radius:0;
   backdrop-filter:blur(14px);
 }
 .workspace-tabs button {
@@ -4940,20 +4938,21 @@ html,body {
   display:flex;
   align-items:center;
   gap:10px;
-  border:1px solid transparent;
-  border-radius:3px;
-  background:#191c20;
+  border:0;
+  border-bottom:3px solid transparent;
+  border-radius:0;
+  background:transparent;
   color:#b2ac9d;
-  padding:8px 12px;
+  padding:8px 12px 5px;
   text-align:left;
 }
 .workspace-tabs button:hover:not(:disabled) {
-  border-color:#535a63;
+  border-bottom-color:#535a63;
   color:#e8e5dd;
 }
 .workspace-tabs button.active {
-  border-color:var(--lime);
-  background:#2b3038;
+  border-bottom-color:var(--lime);
+  background:#1a1d21;
   color:#f6f1e4;
 }
 .workspace-tabs button:disabled {
@@ -5027,9 +5026,10 @@ html,body {
 .hypothesis-detail {
   gap:5px;
   margin-top:11px;
-  padding:12px;
-  border:1px solid #40454d;
-  border-radius:3px;
+  padding:12px 0 0;
+  border:0;
+  border-top:1px solid #40454d;
+  border-radius:0;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
 }
@@ -5080,8 +5080,10 @@ html,body {
   gap:4px 12px;
   min-height:44px;
   padding:11px 12px;
-  border:1px solid var(--line);
-  border-radius:3px;
+  border:0;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  border-radius:0;
   font-size:var(--type-caption);
 }
 .hypothesis-compare>summary::-webkit-details-marker {
@@ -5789,7 +5791,7 @@ html,body {
   justify-self:end;
   padding:3px 6px;
   border:1px solid #3c4148;
-  border-radius:999px;
+  border-radius:2px;
   line-height:var(--leading-compact);
   font-size:var(--type-caption);
 }
@@ -6062,11 +6064,8 @@ html,body {
   color:#f6f1e4;
   font-weight:600;
 }
-.evidence-decision button small.decision-effect {
-  display:block;
-  margin-top:4px;
-  color:#e3d2b0;
-  font-size:var(--type-caption);
+.evidence-decision button .decision-effect {
+  margin-top:6px;
 }
 .decision-pressure {
   margin:0 0 10px;
@@ -6112,12 +6111,69 @@ html,body {
   line-height:var(--leading-base);
   color:#d7d1c3;
 }
-.turn-movement b {
+.turn-movement>b {
+  display:block;
   color:#f6f1e4;
   font-weight:600;
 }
-.turn-movement span {
+.turn-movement>p {
+  margin-top:6px;
   color:var(--text-soft);
+}
+/* A choice's effects, one meter a line: the name, the number in mono and the
+   direction in words, so neither the sign nor the colour carries it alone. */
+span.effect-list {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  column-gap:10px;
+  margin-top:6px;
+  padding-top:6px;
+  border-top:1px solid #ffffff14;
+  font-size:var(--type-caption);
+  font-weight:400;
+  line-height:var(--leading-compact);
+  text-align:left;
+}
+span.effect-list>span.effect {
+  display:contents;
+}
+span.effect-list>span.effect>span {
+  display:block;
+  padding:2px 0;
+  color:#d7d1c3;
+  font-family:var(--font-ui);
+  font-size:var(--type-caption);
+  font-weight:400;
+}
+span.effect-list>span.effect>b {
+  display:block;
+  padding:2px 0;
+  text-align:right;
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  font-weight:500;
+  color:#eeebe6;
+}
+span.effect-list>span.effect>em {
+  display:block;
+  padding:2px 0;
+  font-style:normal;
+  font-size:var(--type-caption);
+  color:var(--text-soft);
+}
+span.effect-list>span.effect>span,span.effect-list>span.effect>b,span.effect-list>span.effect>em {
+  margin:0;
+  line-height:var(--leading-compact);
+  align-self:baseline;
+}
+span.effect-list>span.effect.worse>b,span.effect-list>span.effect.worse>em {
+  color:#f0a48c;
+}
+span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
+  color:#8c9198;
+}
+span.effect-list>span.effect.note>span {
+  grid-column:1/-1;
 }
 /* What each verb trades away, one tap down on a Training operation's first decision. */
 .decision-primer {
@@ -6198,7 +6254,7 @@ html,body {
   padding:6px 14px;
   border:1px solid var(--lime);
   margin:0;
-  border-radius:999px;
+  border-radius:2px;
   background:#22262c;
   color:inherit;
   font-size:inherit;
@@ -6809,7 +6865,7 @@ every value it carries is also present as static text. */
   right:0;
   z-index:3;
   padding:1px 6px;
-  border-radius:999px;
+  border-radius:2px;
   border:1px solid #5e6978;
   background:#121418f2;
   color:#f3ebda;
@@ -7484,7 +7540,7 @@ they want without scrolling past the other nine. */
   min-height:40px;
   padding:5px 11px;
   border:1px solid var(--line);
-  border-radius:999px;
+  border-radius:2px;
   background:transparent;
   color:var(--text-soft);
   font-size:var(--type-caption);
@@ -7542,7 +7598,7 @@ they want without scrolling past the other nine. */
   font:600 var(--type-micro) var(--font-mono);
   letter-spacing:.07em;
   padding:3px 8px;
-  border-radius:999px;
+  border-radius:2px;
   border:1px solid var(--line);
   color:var(--text-soft);
 }
@@ -7674,14 +7730,17 @@ the player already holds, so neither narrows the answer for them. */
   scroll-margin-top:58px;
 }
 /* How the declared reading is holding up against the player's own results. */
+.hypothesis-standing .stage-only {
+  display:none;
+}
 .hypothesis-standing {
   display:grid;
   gap:4px;
   margin:12px 0 0;
   padding:11px 13px;
-  border:1px solid var(--line);
-  border-left-width:3px;
-  border-radius:3px;
+  border:0;
+  border-left:3px solid var(--line);
+  border-radius:0;
 }
 .hypothesis-standing strong {
   font-weight:500;
@@ -7846,9 +7905,8 @@ awareness. */
   gap:9px;
 }
 .first-read dt {
-  font-size:var(--type-micro);
-  letter-spacing:.07em;
-  text-transform:uppercase;
+  font-size:var(--type-caption);
+  font-weight:600;
   color:var(--text-soft);
 }
 .first-read dd {
@@ -7962,7 +8020,7 @@ awareness. */
   cursor:pointer;
   list-style:none;
   border:1px solid #454d59;
-  border-radius:999px;
+  border-radius:2px;
   color:var(--lime);
   font-size:var(--type-caption);
   font-weight:500;
@@ -8166,6 +8224,9 @@ in colour, and the carried plan is stated before the options. */
   }
   /* Two lines each above the grid otherwise: the stage keeps its number and
      name, the margin its value and title. */
+  .hypothesis-standing .stage-only {
+    display:inline;
+  }
   .hypothesis-standing .reading-for,.sector-margin-line .margin-prefix {
     display:none;
   }
@@ -8216,12 +8277,27 @@ in colour, and the carried plan is stated before the options. */
   .hypothesis-board:not(.has-reading) .hypothesis-compare {
     display:none;
   }
+  /* The plan sits beside the heading where it fits and wraps under it where it
+     does not, which gave a phone back a line above the cards. */
   .procedure-section .section-heading {
-    display:block;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    row-gap:4px;
+    margin-bottom:10px;
   }
   .procedure-section .section-heading .established-key {
     display:inline-block;
-    margin-top:6px;
+    margin-top:0;
+  }
+  .procedure-section .section-heading>div {
+    display:contents;
+  }
+  .procedure-section .section-heading>div>p {
+    order:2;
+    flex-basis:100%;
+    margin-top:2px;
   }
   .investigation-dashboard {
     gap:12px;

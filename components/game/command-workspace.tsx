@@ -32,8 +32,8 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       ) : game.status === "response" ? (
         <ResponsePanel game={game} onChoose={respond} />
       ) : (<>
-        <section className="lead-strip"><Activity size={20} /><div><span className="eyebrow">CURRENT INTELLIGENCE</span><p>{getLead(game)}</p></div></section>
-        {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <section className="command-next-action"><div><span className="eyebrow">NEXT ACTION</span><strong>Build and test a working hypothesis.</strong><p>Open Investigate to select an explanation, focus the relevant infrastructure and run one evidence procedure.</p></div><button onClick={() => setActiveWorkspace("investigate")}>Open Investigate <ArrowRight size={17} /></button></section>}
+        <section className="lead-strip"><Activity size={20} /><div><span className="eyebrow">Current intelligence</span><p>{getLead(game)}</p></div></section>
+        {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <section className="command-next-action"><div><span className="eyebrow">Next action</span><strong>Build and test a working hypothesis.</strong><p>Open Investigate to select an explanation, focus the relevant infrastructure and run one evidence procedure.</p></div><button onClick={() => setActiveWorkspace("investigate")}>Open Investigate <ArrowRight size={17} /></button></section>}
       </>))}
 
       <section className={`attack-section ${game.status === "won" ? "resolved" : ""}`} hidden={activeWorkspace !== "command"}>
@@ -56,7 +56,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
         </div>
       </section>
 
-      <section className="director-live" hidden={activeWorkspace !== "command"}><div><span className="eyebrow">{campaignRoutes[game.campaignRoute].title.toUpperCase()} ROUTE · {game.variant.title.toUpperCase()}</span><strong>{game.variant.briefing}</strong><small>{game.variant.modifier}</small></div><div><span className="eyebrow">ATTRIBUTION · {getAttributionRead(game).confidence}</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div></section>
+      <section className="director-live" hidden={activeWorkspace !== "command"}><div><span className="eyebrow">{campaignRoutes[game.campaignRoute].title} route · {game.variant.title}</span><strong>{game.variant.briefing}</strong><small>{game.variant.modifier}</small></div><div><span className="eyebrow">ATTRIBUTION · {getAttributionRead(game).confidence}</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div></section>
 
       <div hidden={activeWorkspace !== "command"}><SectorBoard game={game} /></div>
       {activeWorkspace === "command" && <SectorSituation game={game} />}

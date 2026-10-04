@@ -81,7 +81,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <details className="advanced-setup">
           <summary><Settings2 size={16} /> Advanced operation settings <span>{gameModes[mode].title}</span></summary>
           <div className="mode-picker">
-            <span className="eyebrow">OPERATION MODE</span>
+            <span className="eyebrow">Operation mode</span>
             <div>{(Object.keys(gameModes) as GameMode[]).map(id => <button key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => setMode(id)}><strong>{gameModes[id].title}</strong><small>{gameModes[id].description}</small></button>)}</div>
             {/* Whether a mode counts toward the campaign, and whether the campaign
                 reaches into it, was nowhere on screen. */}
@@ -90,7 +90,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
               : `This operation's result counts toward the campaign, with ${gameModes[mode].reward}× the experience. Your unlocked capabilities and team carry into it; trust, readiness, unresolved access and the route's modifiers do not.${mode === "daily" ? " Daily operation is today's case, the same for every commander." : ""}`}</p>
           </div>
           <div className="challenge-console">
-            <div><span className="eyebrow">SCENARIO CODE</span><button onClick={generateSeed}><RefreshCw size={14} /> New seed</button></div>
+            <div><span className="eyebrow">Scenario code</span><button onClick={generateSeed}><RefreshCw size={14} /> New seed</button></div>
             <code>{challengeCode ?? "Preparing code"}</code>
             <p className="muted small">A code reproduces the incident, its variant and its dice. Daily operation plays today’s code; an ordinary campaign operation draws a fresh incident unless you load a code or generate a seed, which applies to the next operation you begin. Campaign standing is not part of a code, so two commands at different seniority will see different modifiers from the same code.</p>
             <div className="challenge-load"><input aria-label="Challenge code" value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder="Enter a BC challenge code" /><button onClick={loadChallengeCode}>Load</button></div>

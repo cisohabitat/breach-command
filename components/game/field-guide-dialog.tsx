@@ -9,7 +9,7 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
   return (
     <Dialog open={rules} onOpenChange={setRules}>
       <DialogContent className="game-dialog wide-dialog">
-        <DialogHeader><div className="eyebrow">FIELD GUIDE</div><DialogTitle>Investigate. Decide. Recover.</DialogTitle><DialogDescription>A complete solo incident-response exercise with hidden information and operational consequences.</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">Field guide</div><DialogTitle>Investigate. Decide. Recover.</DialogTitle><DialogDescription>A complete solo incident-response exercise with hidden information and operational consequences.</DialogDescription></DialogHeader>
         <div className="rules-content">
           <section className="quick-start-guide" aria-label="Quick start">
             <div><span>1</span><p><strong>Form a hypothesis</strong>Open Investigate and choose the access path that best explains the intelligence.</p></div>

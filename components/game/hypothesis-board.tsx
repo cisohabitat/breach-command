@@ -55,7 +55,7 @@ export function HypothesisBoard({
           {/* A reading is tested one stage at a time, and the label says which: a
               playtest read the premise as covering the whole incident and could
               not see why "Holding" became "Untested" after a find. */}
-          <span className="eyebrow">{underTest ? <><span className="reading-for">READING FOR </span>STAGE {underTest.index + 1} · {underTest.name.toUpperCase()}</> : "CURRENT READING"}</span>
+          <span className="eyebrow">{underTest ? <span><span className="reading-for">Reading for stage</span><span className="stage-only">Stage</span> {underTest.index + 1} · {underTest.name}</span> : "Current reading"}</span>
           {active && <b className="standing-reading">{active.title}</b>}
           <strong>{standing.label}</strong>
           <span className="standing-meter" aria-hidden="true">
@@ -68,7 +68,7 @@ export function HypothesisBoard({
           board named the declared route nowhere but a small "change from" line. */}
       {!standing && active && (
         <div className="hypothesis-standing level-none" role="status">
-          <span className="eyebrow">{underTest ? <><span className="reading-for">READING FOR </span>STAGE {underTest.index + 1} · {underTest.name.toUpperCase()}</> : "CURRENT READING"}</span>
+          <span className="eyebrow">{underTest ? <span><span className="reading-for">Reading for stage</span><span className="stage-only">Stage</span> {underTest.index + 1} · {underTest.name}</span> : "Current reading"}</span>
           <b className="standing-reading">{active.title}</b>
         </div>
       )}

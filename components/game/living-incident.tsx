@@ -20,7 +20,7 @@ export function SectorSituation({ game }: { game: Game }) {
   const severity = game.continuity <= 45 ? "critical" : game.continuity <= 75 ? "degraded" : "stable";
   return <section className={`sector-situation ${severity}`} aria-label="Live sector condition">
     <span className="situation-icon">{severity === "stable" ? <ShieldCheck size={21} /> : severity === "degraded" ? <Activity size={21} /> : <TriangleAlert size={21} />}</span>
-    <div><span className="eyebrow">LIVE SECTOR CONDITION · {getOperationalLabel(game).toUpperCase()}</span><strong>{title}</strong><p>{detail}</p></div>
+    <div><span className="eyebrow">Live sector condition · {getOperationalLabel(game)}</span><strong>{title}</strong><p>{detail}</p></div>
     <b>{game.continuity}<small>/100</small></b>
   </section>;
 }

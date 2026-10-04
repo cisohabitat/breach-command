@@ -135,7 +135,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {inlineReport && (
           <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
             <div>
-              <span className="eyebrow">TURN {inlineReport.number} · QUICK RESULT</span>
+              <span className="eyebrow">Turn {inlineReport.number} · quick result</span>
               <strong>{inlineReport.success ? "Procedure succeeded" : "Procedure unsuccessful"} · {inlineReport.total}</strong>
               <p>{inlineReport.narrative}</p>
             </div>
@@ -146,12 +146,12 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             saying it was recorded, a playtest compared the meters to find out. */}
         {sectorRecorded && (
           <section className="undo-strip" role="status">
-            <div><span className="eyebrow">SECTOR DECISION RECORDED</span><strong>{sectorRecorded.title}</strong></div>
+            <div><span className="eyebrow">Sector decision recorded</span><strong>{sectorRecorded.title}</strong></div>
           </section>
         )}
         {pendingUndo && (
           <section className="undo-strip" role="status">
-            <div><span className="eyebrow">LAST ACTION</span><strong>{pendingUndo.label}</strong></div>
+            <div><span className="eyebrow">Last action</span><strong>{pendingUndo.label}</strong></div>
             <button onClick={undo}>Undo</button>
           </section>
         )}

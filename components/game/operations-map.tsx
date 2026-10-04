@@ -8,7 +8,7 @@ export function OperationsMap({ game }: { game: Game }) {
   return (
     <section className="operations-map" aria-label="Live incident operations map">
       <div className="map-heading">
-        <div><span className="eyebrow"><Network size={15} /> LIVE OPERATIONS MAP</span><h2>Observed attack path</h2></div>
+        <div><span className="eyebrow"><Network size={15} /> Live operations map</span><h2>Observed attack path</h2></div>
         <span className={`map-tempo tempo-${game.adversaryTempo}`}><ShieldAlert size={14} /> {getAdversaryState(game)}</span>
       </div>
       <div className="map-path">

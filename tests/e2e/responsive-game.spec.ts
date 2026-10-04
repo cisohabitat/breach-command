@@ -59,11 +59,11 @@ async function installDeterministicAudit(page: Page) {
     window.__breachResponsiveAudit = audit;
     const scan = () => {
       const text = document.body?.innerText ?? "";
-      audit.decision ||= text.includes("OPERATIONAL DECISION REQUIRED");
-      audit.containment ||= text.includes("CONTAINMENT DECISION");
-      audit.assurance ||= text.includes("ASSURANCE GATE");
-      audit.recovery ||= text.includes("RECOVERY DECISION");
-      audit.debrief ||= text.includes("AFTER-ACTION REVIEW");
+      audit.decision ||= text.includes("Operational decision required");
+      audit.containment ||= text.includes("Containment decision");
+      audit.assurance ||= text.includes("Assurance gate");
+      audit.recovery ||= text.includes("Recovery decision");
+      audit.debrief ||= text.includes("After-action review");
     };
     const observe = () => {
       scan();
@@ -184,7 +184,7 @@ test.describe("responsive interaction audit", () => {
       // resolution screen behind it is the surface being audited, then open the
       // review the way a player does. Checking and closing in one retried step
       // avoids racing the bot's own timer.
-      const openDebrief = page.getByRole("dialog").filter({ hasText: "AFTER-ACTION REVIEW" });
+      const openDebrief = page.getByRole("dialog").filter({ hasText: "After-action review" });
       const review = page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/i });
       await expect(async () => {
         if (await openDebrief.count()) await page.keyboard.press("Escape");
@@ -193,7 +193,7 @@ test.describe("responsive interaction audit", () => {
 
       await expectReachableTarget(page, review, "Open review");
       await review.click();
-      await expect(page.getByText("AFTER-ACTION REVIEW", { exact: true })).toBeVisible();
+      await expect(page.getByText("After-action review", { exact: true })).toBeVisible();
       await expectNoHorizontalOverflow(page, viewport.label + " debrief");
 
       const audit = await page.evaluate(() => window.__breachResponsiveAudit);
@@ -219,7 +219,7 @@ test.describe("responsive interaction audit", () => {
       await expectReachableTarget(page, resume, "Resume saved operation");
       await resume.click();
 
-      for (const stage of ["CONTAINMENT DECISION", "ASSURANCE GATE", "RECOVERY DECISION"] as const) {
+      for (const stage of ["Containment decision", "Assurance gate", "Recovery decision"] as const) {
         await expect(page.getByText(stage, { exact: true })).toBeVisible();
         await expectNoHorizontalOverflow(page, viewport.label + " " + stage.toLowerCase());
         const choice = page.locator(".response-options > button").first();

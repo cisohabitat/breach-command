@@ -94,7 +94,7 @@ test.describe("accessibility audit", () => {
     // The bot opens the review itself a beat after the operation resolves, so
     // either the click gets there first or the bot does. Retrying the whole step
     // keeps a lost race from failing the audit.
-    const heading = page.getByText("AFTER-ACTION REVIEW", { exact: true });
+    const heading = page.getByText("After-action review", { exact: true });
     const openReview = page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/i });
     await expect(async () => {
       if (await heading.isVisible()) return;
@@ -108,7 +108,7 @@ test.describe("accessibility audit", () => {
     await expect(index).toBeVisible();
     await index.getByRole("button", { name: "Hypothesis" }).click();
     await expect(page.locator("#debrief-hypothesis")).toBeVisible();
-    await expect(page.locator("#debrief-hypothesis").getByText(/HYPOTHESIS ACCURACY/)).toBeVisible();
+    await expect(page.locator("#debrief-hypothesis").getByText(/Hypothesis accuracy/)).toBeVisible();
   });
 
   // Every topbar control keeps a name at the width where its label is hidden.

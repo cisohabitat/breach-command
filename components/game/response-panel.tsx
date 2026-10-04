@@ -3,6 +3,7 @@ import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { CONTINUITY_AT_RISK } from "@/hooks/use-meter-pulse";
 import { ArrowRight, Zap, ShieldCheck, HeartPulse } from "lucide-react";
 import { describeMeterChange, getOperationalLabel, responseOptionsFor, type Game } from "@/lib/advanced-game";
+import { EffectList } from "@/components/game/effect-list";
 
 export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choice: string) => void }) {
   const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
@@ -23,7 +24,7 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
       <div className="response-stage">
         <div className="response-heading">
           <span className="response-icon">{containment ? <Zap size={24} /> : assurance ? <ShieldCheck size={24} /> : <HeartPulse size={24} />}</span>
-          <div><span className="eyebrow">{containment ? "CONTAINMENT DECISION" : assurance ? "ASSURANCE GATE" : "RECOVERY DECISION"}</span><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p>{containment
+          <div><span className="eyebrow">{containment ? "Containment decision" : assurance ? "Assurance gate" : "Recovery decision"}</span><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "The chain is known. Stop the active risk." : assurance ? "Prove the boundary is ready for restoration." : "The threat is constrained. Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p>{containment
             ? <p className="muted small"><strong>Sector constraint:</strong> {profile.constraint}</p>
             // Each later phase opens on what the one before it did, in place of the
             // constraint already read: a playtest saw no result between choices.
@@ -47,11 +48,10 @@ function OptionEffect({ game, impact, continuity }: { game: Game; impact: number
   // word, rather than left for the player to work out from the number.
   const atRisk = !ends && game.continuity > CONTINUITY_AT_RISK && after.continuity <= CONTINUITY_AT_RISK;
   return (
-    <small className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
+    <span className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
       {/* The change the meter will actually show: "−22 better" at an impact of 0 promised nothing. */}
-      {describeMeterChange(game, "impact", after.impact - game.impact)} · {describeMeterChange(game, "continuity", after.continuity - game.continuity)}, to {after.continuity}
-      {ends && <b> · Ends the operation</b>}
-      {atRisk && <b> · At risk</b>}
-    </small>
+      <EffectList items={[describeMeterChange(game, "impact", after.impact - game.impact), describeMeterChange(game, "continuity", after.continuity - game.continuity)]} />
+      <small>{getOperationalLabel(game)} ends at {after.continuity}{ends && <b> · Ends the operation</b>}{atRisk && <b> · At risk</b>}</small>
+    </span>
   );
 }

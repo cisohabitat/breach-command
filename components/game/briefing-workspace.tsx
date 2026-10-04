@@ -33,7 +33,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
         {question && <div className="captain-answer" aria-live="polite">{answer}</div>}
         <div className="guided-inline"><label htmlFor="guided-game"><Sparkles size={14} /> {game.mode === "expert" ? "Guidance disabled in Expert" : "Guided reflection"}</label><Switch id="guided-game" checked={guided} disabled={game.mode === "expert"} onCheckedChange={setGuided} /></div>
         <div className="guided-inline"><label htmlFor="fast-game"><FastForward size={14} /> Fast resolution</label><Switch id="fast-game" checked={fastResolve} onCheckedChange={setFastResolve} /></div>
-        <div className="adversary-read"><span className="eyebrow">ACTOR MODEL</span><p>{getAdversaryRead(game)}</p></div>
+        <div className="adversary-read"><span className="eyebrow">Actor model</span><p>{getAdversaryRead(game)}</p></div>
       </section>
 
       <section className="journal-panel">

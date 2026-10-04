@@ -11,7 +11,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
   return (
     <Dialog open={missionBriefing} onOpenChange={setMissionBriefing}>
       <DialogContent className="game-dialog cinematic-briefing" showCloseButton={false}>
-        <DialogHeader><div className="eyebrow">SECURE COMMAND BRIEFING · CASE {String((game?.scenario ?? 0) + 1).padStart(2, "0")}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">Secure command briefing · case {String((game?.scenario ?? 0) + 1).padStart(2, "0")}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
         {game && <>
           {/* What shapes the first decisions stays open: the sector's condition,
               the specialist on hand and what is known of the operator. The rest
@@ -33,7 +33,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
               {game.mode === "campaign" && <div><span>CAMPAIGN ROUTE</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>}
               <div><span>INCIDENT VARIANT</span><strong>{game.variant.title}</strong><small>{game.variant.briefing}</small></div>
             </div>
-            <div className="director-order"><Radio size={20} /><p><span className="eyebrow">DIRECTOR’S INTENT</span>{game.mode === "campaign" ? `${campaignRoutes[game.campaignRoute].order} ` : ""}Establish the chain, declare an objective theory and preserve the essential service.</p></div>
+            <div className="director-order"><Radio size={20} /><p><span className="eyebrow">Director’s intent</span>{game.mode === "campaign" ? `${campaignRoutes[game.campaignRoute].order} ` : ""}Establish the chain, declare an objective theory and preserve the essential service.</p></div>
           </details>
           <button className="primary-button full" onClick={() => setMissionBriefing(false)}>Assume command <ArrowRight size={18} /></button>
         </>}

@@ -2,6 +2,7 @@ import { commandEvents, describeMeterChange, describeRollShift, type CommandEven
 import { ArrowRight, RadioTower } from "lucide-react";
 import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
+import { EffectList } from "@/components/game/effect-list";
 
 export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice: "a" | "b") => void }) {
   const heading = useRef<HTMLHeadingElement>(null);
@@ -10,9 +11,9 @@ export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice
   const event = commandEvents[game.pendingCommand as CommandEventId];
   return (
     <section className="command-event" aria-labelledby="command-event-title">
-      <div className="command-event-heading"><RadioTower size={22} /><div><span className="eyebrow">COMMAND EVENT</span><h2 id="command-event-title" ref={heading} tabIndex={-1} data-awaiting-heading>{event.title}</h2><p>{event.prompt}</p></div></div>
+      <div className="command-event-heading"><RadioTower size={22} /><div><span className="eyebrow">Command event</span><h2 id="command-event-title" ref={heading} tabIndex={-1} data-awaiting-heading>{event.title}</h2><p>{event.prompt}</p></div></div>
       <div className="command-options">
-        {(["a", "b"] as const).map(choice => <button key={choice} onClick={() => onChoose(choice)}><strong>{event[choice].title}</strong><span>{event[choice].description}</span><small>{event[choice].signal}</small><small className="command-effect">{effectLine(game, event[choice])}</small><ArrowRight size={17} /></button>)}
+        {(["a", "b"] as const).map(choice => <button key={choice} onClick={() => onChoose(choice)}><strong>{event[choice].title}</strong><span>{event[choice].description}</span><small>{event[choice].signal}</small><EffectList className="command-effect" items={effectLine(game, event[choice])} /><ArrowRight size={17} /></button>)}
       </div>
     </section>
   );
@@ -30,5 +31,5 @@ function effectLine(game: Game, option: { impact: number; continuity: number; mo
     option.tempo && Math.min(3, Math.max(0, game.adversaryTempo + option.tempo)) !== game.adversaryTempo
       ? `adversary pace one step ${option.tempo > 0 ? "faster" : "slower"}: about ${Math.abs(option.tempo) * 3} ${option.tempo > 0 ? "more" : "less"} adversary progress each turn`
       : option.tempo ? `adversary pace unchanged (already ${option.tempo > 0 ? "at its fastest" : "at its slowest"})` : "",
-  ].filter(Boolean).join(" · ");
+  ];
 }

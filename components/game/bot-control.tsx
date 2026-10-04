@@ -15,7 +15,7 @@ export function BotControl({ session }: { session: GameSession }) {
     <section className={`bot-control ${botPaused ? "paused" : ""}`} aria-live="polite" aria-label="Bot commander status">
       <span className="bot-control-icon"><Bot size={21} aria-hidden="true" /></span>
       <div className="bot-control-copy">
-        <span className="eyebrow">PRACTICE OPERATION</span>
+        <span className="eyebrow">Practice operation</span>
         <strong>{title}</strong>
         <small>{botStatus} No campaign rewards or balance records are written.</small>
       </div>

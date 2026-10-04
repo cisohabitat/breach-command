@@ -25,7 +25,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
   };
   return (
     <section className="evidence-workspace" aria-label="Evidence correlation workspace" tabIndex={-1}>
-      <div className="map-heading"><div><span className="eyebrow">EVIDENCE WORKSPACE</span><h2>Build the causal picture</h2></div><span className="focus-instruction"><Braces size={14} /> {game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"} tested</span></div>
+      <div className="map-heading"><div><span className="eyebrow">Evidence workspace</span><h2>Build the causal picture</h2></div><span className="focus-instruction"><Braces size={14} /> {game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"} tested</span></div>
       <div className="case-theory">
         <div><GitBranch size={17} /><span><strong>Case theory</strong><small>Declare intent, then test it against causal evidence. {objective.confidence === "LOW" ? "The objective can be assessed once two stages are confirmed." : `Current assessment: ${objectiveTheory[game.objective].title.toLowerCase()}, ${objective.confidence.toLowerCase()} confidence.`}</small></span></div>
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">RECORDED</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
