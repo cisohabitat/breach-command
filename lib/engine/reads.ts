@@ -3,7 +3,7 @@ import { attacks, scenarios, stages, hypotheses, scenarioDynamics, type Hypothes
 import { adversaryObjectives, sectorSystems } from "../command-systems.ts";
 import { decisionChoices, decisionLanguage, decisionText, decisionTitles, inSentence } from "./content.ts";
 import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type Game, type GuidanceLevel, type HypothesisStanding, type KnownFacts, type LossCause, type ReadingOdds, type SectorRead, type TrainingPrompt } from "./types.ts";
-import { availableIn, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
+import { availableIn, carryModifier, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
 import { infrastructureTopologies } from "../phase8.ts";
 export function getAttributionRead(game: Game) {
   const profile = getAdversaryProfile(game);
@@ -115,7 +115,10 @@ export function getMapHint(game: Game) {
   const topology = infrastructureTopologies[game.scenario];
   const monitor = getMapActionEffect(game, topology.nodes[0].id, "monitor");
   const count = game.mapActionsRemaining;
-  return `You hold ${count} infrastructure action${count === 1 ? "" : "s"}, and using one takes no turn. Monitoring a system adds +${monitor.modifier} to your next procedure; isolating one slows the adversary at a cost to the service.`;
+  // The bonus as the button will state it: with the cap already reached, "+2"
+  // here sat above a Monitor button that read "next roll +0".
+  const room = carryModifier(game.nextModifier, monitor.modifier) - game.nextModifier;
+  return `You hold ${count} infrastructure action${count === 1 ? "" : "s"}, and using one takes no turn. ${room > 0 ? `Monitoring a system adds +${room} to your next procedure` : "Monitoring a system would add nothing to your next procedure, which already carries the most it can"}; isolating one slows the adversary at a cost to the service.`;
 }
 
 // Two findings that each confirmed a stage, and no relationship tested yet.

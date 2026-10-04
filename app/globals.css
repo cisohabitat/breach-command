@@ -4018,6 +4018,12 @@ html,body {
 .topology-nodes .focused em {
   color:var(--lime);
 }
+/* The hover background is lighter, and the state line in its resting grey fell
+   below contrast there; it was found when "Open the map" left the pointer
+   resting on a node after the jump. */
+.topology-nodes button:hover:not(.focused) em {
+  color:#b9c9b5;
+}
 .topology-routes {
   border:1px solid #34473a;
   background:#0f1913;
@@ -8321,6 +8327,9 @@ in colour, and the carried plan is stated before the options. */
   .pinned-readouts,.pinned-readouts.shown {
     display:none;
   }
+}
+.procedure-card .alignment-label.other-sees {
+  color:var(--text-soft);
 }
 /* A small laptop has room for the three readouts beside the case title. Stacked
    under it they took a second band of 120 px and left half the width empty, and

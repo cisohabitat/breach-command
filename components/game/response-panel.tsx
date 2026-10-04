@@ -2,7 +2,7 @@ import { useRef, type CSSProperties } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { CONTINUITY_AT_RISK } from "@/hooks/use-meter-pulse";
 import { ArrowRight, Zap, ShieldCheck, HeartPulse } from "lucide-react";
-import { describeMeterChange, responseOptionsFor, type Game } from "@/lib/advanced-game";
+import { describeMeterChange, getOperationalLabel, responseOptionsFor, type Game } from "@/lib/advanced-game";
 
 export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choice: string) => void }) {
   const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
@@ -27,7 +27,7 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
             ? <p className="muted small"><strong>Sector constraint:</strong> {profile.constraint}</p>
             // Each later phase opens on what the one before it did, in place of the
             // constraint already read: a playtest saw no result between choices.
-            : previous && <p className="response-recorded"><strong>{assurance ? "Containment" : "Assurance"} recorded:</strong> {previous.title}: {describeMeterChange(game, "impact", previous.impact)} · {describeMeterChange(game, "continuity", previous.continuity)}.</p>}</div>
+            : previous && <p className="response-recorded"><strong>{assurance ? "Containment" : "Assurance"} recorded:</strong> {previous.title}, leaving business impact at {game.impact} and {getOperationalLabel(game).toLowerCase()} at {game.continuity}.</p>}</div>
         </div>
         <div className="response-options">
           {options.map((option, index) => <button key={option.id} style={{ "--option-index": index } as CSSProperties} onClick={() => onChoose(option.id)}><strong>{option.title}</strong><span>{option.description}</span><small>{option.disruption} disruption · {option.confidence.toLowerCase()} confidence · {option.residual.toLowerCase()} residual risk</small><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /><ArrowRight size={17} /></button>)}

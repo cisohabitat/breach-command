@@ -71,6 +71,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
     });
   };
   const evidenceReady = readyForTheory(game) || readyToCorrelate(game);
+  // The sector decision comes after the second turn; it is named until the next procedure.
+  const sectorRecorded = game.turns.length === 2 && !game.pendingSetPiece ? game.setPieceHistory.at(-1) ?? null : null;
   // Beyond Training there is no clue, and the prompt once sent the player to
   // Command to read what they were reasoning from. The latest observation is
   // already on the record, so it is quoted where the reading is chosen.
@@ -133,6 +135,13 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
               <p>{inlineReport.narrative}</p>
             </div>
             <button onClick={() => setInlineReport(null)} aria-label="Dismiss quick result"><X size={18} /></button>
+          </section>
+        )}
+        {/* A sector decision sends the player straight back here; without a line
+            saying it was recorded, a playtest compared the meters to find out. */}
+        {sectorRecorded && (
+          <section className="undo-strip" role="status">
+            <div><span className="eyebrow">SECTOR DECISION RECORDED</span><strong>{sectorRecorded.title}</strong></div>
           </section>
         )}
         {pendingUndo && (
