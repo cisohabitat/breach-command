@@ -8361,6 +8361,15 @@ in colour, and the carried plan is stated before the options. */
   margin:8px 0 0;
   color:var(--text-soft);
 }
+.career-card .standing-effects {
+  display:block;
+  margin-top:4px;
+  line-height:var(--leading-base);
+}
+.mission-panel .begin-instead {
+  width:100%;
+  margin-top:8px;
+}
 /* A small laptop has room for the three readouts beside the case title. Stacked
    under it they took a second band of 120 px and left half the width empty, and
    the procedures started below the fold of a 1024 x 768 screen. */

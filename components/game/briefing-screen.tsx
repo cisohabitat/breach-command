@@ -3,7 +3,7 @@ import { ArrowRight, Bot, Clock3, Dices, GitBranch, LockKeyhole, RefreshCw, Sett
 import { Switch } from "@/components/ui/switch";
 import { stageIcons } from "@/components/game/stage-icons";
 import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
-import { campaignRank } from "@/lib/campaign";
+import { campaignRank, standingEffects } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
 import type { GameSession } from "@/hooks/use-game-session";
 
@@ -45,11 +45,11 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title} · ${namedSpecialists[specialist].name}`} · or choose the assignment below</small>
         </section>
         <section className="career-card" aria-label="Command career progression">
-          <div><span className="eyebrow">COMMAND CAREER</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents · trust {campaign.leadershipTrust} · readiness {campaign.readiness}</small></div>
+          <div><span className="eyebrow">COMMAND CAREER</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents · trust {campaign.leadershipTrust} · readiness {campaign.readiness}</small><small className="standing-effects">{standingEffects(campaign).join(" ")}</small></div>
           <b>{campaign.xp}<small> XP</small></b>
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
-        <section className="campaign-act-card"><span className="act-number">ACT {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved campaign thread{campaign.unresolvedThreads === 1 ? "" : "s"}</small></div></section>
+        <section className="campaign-act-card"><span className="act-number">ACT {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved access{campaign.unresolvedThreads ? " — each starts later operations under more pressure" : ""}</small></div></section>
         <section className="campaign-route-card"><GitBranch size={19} /><div><span className="eyebrow">CAMPAIGN DIRECTOR · {currentRoute.title.toUpperCase()}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
         {finalEnding && <section className="campaign-ending"><Trophy size={20} /><div><span className="eyebrow">CAMPAIGN CONCLUSION</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
       </div>
@@ -74,7 +74,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
             {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{specialists[id].title} · {namedSpecialists[id].name} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
           </select>
-          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].title}, {specialists[specialist].role}, fatigue {campaign.specialistFatigue[specialist] ?? 0} of 6. {specialists[specialist].ability} Team cohesion {campaign.specialistBonds[specialist] ?? 35}/100: it grows with each operation together and shapes how the campaign ends.</p>
+          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].title}, {specialists[specialist].role}, fatigue {campaign.specialistFatigue[specialist] ?? 0} of 6. {specialists[specialist].ability} Rapport with {namedSpecialists[specialist].name} {campaign.specialistBonds[specialist] ?? 35}/100: it grows with each operation together, and the team&apos;s average shapes how the campaign ends.</p>
         </div>
         <details className="advanced-setup">
           <summary><Settings2 size={16} /> Advanced operation settings <span>{gameModes[mode].title}</span></summary>
@@ -85,7 +85,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
                 reaches into it, was nowhere on screen. */}
             <p className="muted small mode-campaign-note">{mode === "campaign"
               ? "Campaign standing — leadership trust, readiness, unresolved access and the route — shapes this operation, and its result counts toward the campaign."
-              : `This operation's result counts toward the campaign, with ${gameModes[mode].reward}× the experience, but campaign standing does not shape the operation itself.${mode === "daily" ? " Daily operation is today's case, the same for every commander." : ""}`}</p>
+              : `This operation's result counts toward the campaign, with ${gameModes[mode].reward}× the experience. Your unlocked capabilities and team carry into it; trust, readiness, unresolved access and the route's modifiers do not.${mode === "daily" ? " Daily operation is today's case, the same for every commander." : ""}`}</p>
           </div>
           <div className="challenge-console">
             <div><span className="eyebrow">SCENARIO CODE</span><button onClick={generateSeed}><RefreshCw size={14} /> New seed</button></div>
@@ -119,8 +119,14 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             </div>
           </section>
         )}
-        <button className="primary-button start-button" onClick={() => start()}>Begin investigation <ArrowRight size={19} /></button>
-        {savedSession && <p className="replace-note">Beginning a new investigation replaces the saved one.</p>}
+        {/* With an operation saved, the button that stays in view resumes it. On a
+            laptop the saved card sat under the sticky Begin button, which replaced
+            the save without a word. */}
+        {savedSession ? <>
+          <button className="primary-button start-button" onClick={() => resume(savedSession)}>Resume {scenarios[savedSession.game.scenario].title} <ArrowRight size={19} /></button>
+          <button className="secondary-button begin-instead" onClick={() => start()}>Begin a new investigation instead</button>
+          <p className="replace-note">Beginning a new investigation replaces the saved one.</p>
+        </> : <button className="primary-button start-button" onClick={() => start()}>Begin investigation <ArrowRight size={19} /></button>}
         <div className="mission-meta"><span><Clock3 size={14} /> 20–35 minutes solo</span><span><LockKeyhole size={14} /> No real systems</span></div>
       </section>
       <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator.</p>

@@ -74,6 +74,24 @@ export function unlockedCapabilities(xp: number) {
   ];
 }
 
+// What trust and readiness do to the next Campaign operation, in the thresholds
+// newGame applies. Both rose every operation and nothing said what they bought.
+export function standingEffects(state: CampaignState) {
+  const trust = state.leadershipTrust < 35
+    ? `Trust ${state.leadershipTrust}: below 35 costs a map action and adds 5 starting impact.`
+    : state.leadershipTrust >= 75
+      ? `Trust ${state.leadershipTrust}: 75 or more takes 3 off starting impact.`
+      : `Trust ${state.leadershipTrust}: no effect yet; at 75 it takes 3 off starting impact, below 35 it costs a map action.`;
+  const readiness = state.readiness < 30
+    ? `Readiness ${state.readiness}: below 30 costs a turn and 5 service at the start.`
+    : state.readiness >= 75
+      ? `Readiness ${state.readiness}: +3 service at the start and one more turn.`
+      : state.readiness >= 60
+        ? `Readiness ${state.readiness}: +3 service at the start; at 75 it adds a turn.`
+        : `Readiness ${state.readiness}: no effect yet; at 60 it adds 3 service at the start, at 75 a turn.`;
+  return [trust, readiness];
+}
+
 // The campaign's next case: the first not yet cleared, so a reload or a loss
 // does not offer a case already done or quietly skip one that was lost.
 export function nextCase(state: CampaignState, cases = 10) {
@@ -92,6 +110,9 @@ export function campaignChanges(before: CampaignState, after: CampaignState, gam
   lines.push(`Readiness ${signed(readiness)} to ${after.readiness}: ${game.status === "won" ? "+5 for a win" : game.status === "exercise" ? "+2 for exercising the process" : "−3 for a loss"}.`);
   const threads = after.unresolvedThreads - before.unresolvedThreads;
   if (threads) lines.push(`Unresolved access ${signed(threads)} to ${after.unresolvedThreads}: a lost operation leaves the adversary's access open. Four or more at the campaign's end decide its ending, and each one makes later operations start harder.`);
+  const xp = after.xp - before.xp;
+  if (xp) lines.push(`Experience +${xp} to ${after.xp}: the score (${score}), raised for a harder difficulty or mode and reduced for an operation not won.`);
+  for (const capability of unlockedCapabilities(after.xp)) if (capability.unlocked && !unlockedCapabilities(before.xp).find(item => item.title === capability.title)!.unlocked) lines.push(`Unlocked: ${capability.title}. ${capability.detail}`);
   if (after.completed.length > before.completed.length) lines.push(`Case cleared: ${after.completed.length} of 10. Every cleared case moves the campaign's acts and route forward.`);
   else if (game.status === "lost") lines.push("This case stays open in the campaign and is offered again as the next assignment.");
   return lines;

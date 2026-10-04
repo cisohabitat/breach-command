@@ -12,6 +12,12 @@ function injectImpact(report: Game["turns"][number]) {
   return report.inject?.effect === "penalty" ? 6 : report.inject?.effect === "pressure" ? 8 : report.inject?.effect === "relief" ? -8 : 0;
 }
 
+// The pressure line names the options as their buttons do: "acting fits best"
+// sat beside buttons titled Revoke, Segment, Remove and Block.
+function optionTitle(options: { id: DecisionChoice; title: string }[], id: DecisionChoice) {
+  return `“${options.find(option => option.id === id)?.title ?? id}”`;
+}
+
 // The report names the roll's parts as the action sheet named them. It once said
 // "own source +1, other parts +5" beside a sheet that listed all four.
 function rollParts(report: Game["turns"][number]) {
@@ -140,7 +146,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {/* At every difficulty but Expert: the review grades every decision by this,
                       and an Operational playtest was graded on a rule it was never shown. */}
                   {game.mode !== "expert" && (
-                    <p className="decision-pressure">Pressure now: business impact {game.impact}; adversary progress {game.objectiveProgress}, growing at a pace of “{getAdversaryState(game).toLowerCase()}” each turn. {game.impact >= 55 || game.adversaryTempo >= 2 ? `That is high, because ${game.impact >= 55 ? `business impact is ${game.impact}` : "the pace is fast"}: acting fits best, with containing close behind.` : "That is low: watching or attributing is affordable."}</p>
+                    <p className="decision-pressure">Pressure now: business impact {game.impact}; adversary progress {game.objectiveProgress}, growing at a pace of “{getAdversaryState(game).toLowerCase()}” each turn. {game.impact >= 55 || game.adversaryTempo >= 2 ? `That is high, because ${game.impact >= 55 ? `business impact is ${game.impact}` : "the pace is fast"}: ${optionTitle(decision.options, "act")} fits best, with ${optionTitle(decision.options, "contain")} close behind.` : `That is low: ${optionTitle(decision.options, "observe")} or ${optionTitle(decision.options, "attribute")} is affordable.`}</p>
                   )}
                   <div ref={optionList}>
                     {decision.options.map(option => (

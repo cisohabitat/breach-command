@@ -467,8 +467,10 @@ export function useGameSession() {
   // Daily operation gives every commander the same case today, so choosing it
   // also chooses today's case rather than the campaign's next one.
   function chooseMode(next: GameMode) {
-    setMode(next);
+    // Leaving Daily goes back to the campaign's own next case; it kept today's.
     if (next === "daily") setScenarioChoice(todaySeed() % scenarios.length);
+    else if (mode === "daily") setScenarioChoice(nextCase(campaign, scenarios.length));
+    setMode(next);
   }
 
   function recordProgress(result: Game) {
