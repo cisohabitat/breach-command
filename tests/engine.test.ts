@@ -1,7 +1,7 @@
 // Turn resolution, blocking states, end states and the decision layer.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,getModifierBreakdown,type Difficulty,type Game,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,getModifierBreakdown,getScoreRows,type Difficulty,type Game,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {CHALLENGE_VERSION,decodeChallenge,encodeChallenge,isOutdatedChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -358,6 +358,10 @@ test("moves each decision verb by its own terms", () => {
   const recovered=resolveResponse(assured,"rebuild");
   assert.equal(recovered.status,"won");
   assert.equal(recovered.continuity,77);
+  // The review's response row names its parts, and they add up to the score kept.
+  const rule=getScoreRows(recovered).find(row=>row.label==="Containment & recovery")!.rule;
+  const [own,preferred,aligned]=[/options scored (\d+)/,/(\d) of 3 were the sector's preferred/,/(\d) of 3 fitted/].map(pattern=>Number(rule.match(pattern)![1]));
+  assert.equal(own+4*preferred+4*aligned,recovered.responseScore,"the parts named add up to the response score");
 });
 
 test("ends the operation whichever step takes a meter to its limit", () => {

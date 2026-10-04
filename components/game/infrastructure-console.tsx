@@ -1,4 +1,5 @@
-import { Activity, CircleDot, Crosshair, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
+import { Activity, ArrowUp, CircleDot, Crosshair, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
+import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { attacks, describeMeterChange, procedureById, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
 
 const reachable = (current: number, change: number) => Math.min(100, Math.max(0, current + change)) - current;
@@ -63,6 +64,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? "Monitored: its bonus is waiting for your next roll" : "Already monitored: its bonus went to the roll after it was set") : posture === "isolated" ? "Isolated: nothing left to monitor here" : costLine(game, focused.id, "monitor")}</small></span></button>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>{posture === "isolated" ? "Already isolated" : costLine(game, focused.id, "isolate")}</small></span></button>
       </div>
+      {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>Back to the procedures <ArrowUp size={14} /></button>}
       <details className="map-intel-detail">
         <summary>Dependency and control notes<span>{game.revealed.length ? `${game.revealed.length} technique${game.revealed.length === 1 ? "" : "s"} confirmed` : "no techniques confirmed"}</span></summary>
         <p className="map-intel">Critical dependency: {topology.criticalRule} Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>

@@ -113,7 +113,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             <Progress value={game.objectiveProgress} aria-label="Adversary progress" />
             {/* The caption carries the pace as well, so "PACE: PRESSING HARD" beside a low
                 number reads as one picture: little done so far, rising fast. */}
-            <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}{game.adversaryTempo >= 2 ? ` · pace ${getAdversaryState(game).toLowerCase()}` : ""}</small>
+            <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? ` · pace ${getAdversaryState(game).toLowerCase()}` : ""}</small>
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">

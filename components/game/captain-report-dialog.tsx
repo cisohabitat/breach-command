@@ -141,7 +141,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {/* At every difficulty but Expert: the review grades every decision by this,
                       and an Operational playtest was graded on a rule it was never shown. */}
                   {game.mode !== "expert" && (
-                    <p className="decision-pressure">Pressure now: business impact {game.impact}; adversary progress {game.objectiveProgress}, growing at a pace of “{getAdversaryState(game).toLowerCase()}” each turn. {game.impact >= 55 || game.adversaryTempo >= 2 ? "That is high: acting or containing fits best." : "That is low: watching or attributing is affordable."}</p>
+                    <p className="decision-pressure">Pressure now: business impact {game.impact}; adversary progress {game.objectiveProgress}, growing at a pace of “{getAdversaryState(game).toLowerCase()}” each turn. {game.impact >= 55 || game.adversaryTempo >= 2 ? "That is high: acting fits best, with containing close behind." : "That is low: watching or attributing is affordable."}</p>
                   )}
                   <div ref={optionList}>
                     {decision.options.map(option => (

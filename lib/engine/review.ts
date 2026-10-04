@@ -4,7 +4,7 @@ import { gameModes, sectorSystems } from "../command-systems.ts";
 import { encodeChallenge } from "../phase8.ts";
 import { inSentence } from "./content.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
-import { clamp, hypothesisSources, procedureById, responseOptionsFor } from "./rules.ts";
+import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
 import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
 
 // The full review is written for someone who already knows the trade. A first
@@ -80,7 +80,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     };
     return {
       strength,
-      gap: `${gap} You tested each reading with its own sources, which is the habit; with three or four routes open at most stages, some misses are the cost of finding out.`,
+      gap: `${gap} You tested each reading with a source that could see it, which is the habit; with three or four routes open at most stages, some misses are the cost of finding out.`,
       concept: "A wrong reading tested properly is how the right one is found, and it still earns half its credit in the hypothesis score. What costs turns is testing a route the record has already ruled out.",
       next: game.mode === "expert"
         ? "Next operation, keep your own tally of the routes your completed checks have ruled out, and never declare one of them again."
@@ -147,7 +147,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     // costlier option as the stronger one in every phase.
     gap: `The response scored ${breakdown.response} of 20: in at least one phase another option closed more of the confirmed risk.`,
     concept: "Containment, assurance and recovery each trade disruption against certainty. The option that closes the risk you confirmed scores highest, even when it costs more service, unless that cost would end the operation.",
-    next: "Next operation, read each response option's confidence and residual risk before its cost; the decision record below names the stronger option in each phase.",
+    next: "Next operation, read each response option's confidence and residual risk before its cost, and where it leaves service integrity: the stronger option raises the response score, and service integrity is scored too, so weigh the two. The decision record below names the stronger option in each phase.",
   };
   // Picking sources that find things and reading the route correctly are two
   // different skills, and a run can do the first well while getting the second
@@ -260,6 +260,20 @@ export function getOutcome(game: Game) {
 // Each part of the score, with the rule that produced it in the player's own
 // numbers. A bare "7/25" next to "Investigation" read as a verdict with no way
 // to do better; the rule beside it says what would have moved it.
+// The response row in the player's own numbers: what the three options scored,
+// and the four points each for the sector's preferred call and for fitting the
+// adversary's objective. Three phases each read "the strongest option this
+// sector offered" beside 17 of 20, and nothing said where the rest went.
+function responseRule(game: Game) {
+  const phases = ["containment", "assurance", "recovery"] as const;
+  const options = responseOptionsFor(game);
+  const own = game.responseChoices.reduce((sum, choice, index) => sum + (options[phases[index]].find(item => item.id === choice)?.score ?? 0), 0);
+  const fits = game.responseChoices.map((choice, index) => responseFit(game, index, choice));
+  const preferred = fits.filter(fit => fit.preferred).length;
+  const aligned = fits.filter(fit => fit.objectiveAligned).length;
+  return `Your three options scored ${own}; ${preferred} of 3 were the sector's preferred call (+4 each) and ${aligned} of 3 fitted the adversary's objective (+4 each), out of 55 in all, scaled to 20.`;
+}
+
 export function getScoreRows(game: Game) {
   const breakdown = getScoreBreakdown(game);
   const turns = game.turns.length;
@@ -270,7 +284,7 @@ export function getScoreRows(game: Game) {
     { label: "Impact control", value: breakdown.impact, maximum: 15, rule: `Rises as final business impact falls towards zero. It finished at ${game.impact}.` },
     { label: "Continuity", value: breakdown.continuity, maximum: 15, rule: `${scenarioDynamics[game.scenario].label} and the sector's margin at the end, averaged: ${game.continuity} and ${game.sectorHealth}.` },
     { label: "Operational decisions", value: breakdown.decisions, maximum: 15, rule: decided ? `The average quality of your ${plural(decided, "evidence, command and sector decision")}; the review's decision record grades each one.` : "No decisions were taken, so there was nothing to score." },
-    { label: "Containment & recovery", value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? "Choices that fit the sector's constraint and the adversary's objective score highest; the cheapest option is not always the right one." : "The response phase was not reached, so nothing was scored. It opens once all four stages are confirmed." },
+    { label: "Containment & recovery", value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? responseRule(game) : "The response phase was not reached, so nothing was scored. It opens once all four stages are confirmed." },
     { label: "Hypothesis accuracy", value: breakdown.hypothesis, maximum: 10, rule: "Full credit for each turn whose reading named the route under test, half for a wrong reading tested properly once. The ledger below goes turn by turn." },
   ];
 }
@@ -348,7 +362,7 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
         ? (turn.planningBonus > 0
           ? `Correct: ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit, and the own-source bonus on the roll.${windfallNote}`
           : `Correct about the route — ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route — but the procedure was not one of that reading's sources, so it earned no own-source bonus.${windfallNote}`)
-        : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}. ${missNote[credits[index].reason]}${windfallNote}`;
+        : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}. ${credits[index].reason === "tested" && !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure) ? "You tested it with a source that could see it here, though not one of its own, and the check completed, which is testing it properly: half credit." : missNote[credits[index].reason]}${windfallNote}`;
     return {
       turn: turn.number,
       procedure: procedureById(game, turn.procedure)!.title,

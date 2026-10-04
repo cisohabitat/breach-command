@@ -5,7 +5,7 @@ import { infrastructureTopologies, sectorSetPieces, seededRoll } from "../phase8
 import { objectiveTheory } from "../phase9.ts";
 import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguage, decisionTitles, injects, scenarioProfiles, inSentence } from "./content.ts";
 import { type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type Inject, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice } from "./types.ts";
-import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, decisionRollShift, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
+import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, responseFit, decisionRollShift, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
 
 // Where the bonus or penalty waiting for the next roll came from, so the roll
 // can name it: "Since your last roll +2" covered a monitored node, an inject and
@@ -646,11 +646,7 @@ export function resolveResponse(game: Game, choice: string): Game {
   const option = responseOptionsFor(game)[phase].find(item => item.id === choice);
   if (!option) throw new Error("Unknown response choice.");
   const g: Game = { ...game, responseChoices: [...game.responseChoices, choice] };
-  const preferred = g.responseChoices.length === 2 ? choice !== "accelerate" : scenarios[g.scenario].preferred[g.responseChoices.length === 1 ? 0 : 1] === choice;
-  const objectiveResponses: Record<AdversaryObjectiveId, [string, string, string]> = {
-    exfiltration: ["isolate", "preserve", "rebuild"], disruption: ["monitor", "verify", "restore"], fraud: ["credential", "verify", "rebuild"], espionage: ["credential", "preserve", "rebuild"], preposition: ["isolate", "verify", "rebuild"],
-  };
-  const objectiveAligned = objectiveResponses[g.objective][g.responseChoices.length - 1] === choice;
+  const { preferred, objectiveAligned } = responseFit(g, g.responseChoices.length - 1, choice);
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
   g.responseScore += option.score + (preferred ? 4 : 0) + (objectiveAligned ? 4 : 0);

@@ -1,6 +1,6 @@
 // Rules shared by the reads and the transitions: availability, the roll modifier, map costs, the loss check and settle.
-import { attacks, procedures, sectorProcedures, hypotheses, scenarioDynamics, randomInt, type HypothesisId } from "../game.ts";
-import { procedureIntensities, procedureScopes, sectorSystems, specialists, type ProcedurePlan } from "../command-systems.ts";
+import { attacks, procedures, sectorProcedures, hypotheses, scenarioDynamics, scenarios, randomInt, type HypothesisId } from "../game.ts";
+import { procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { infrastructureTopologies } from "../phase8.ts";
 import { adversaryProfiles, meterDirection, responseProfiles } from "./content.ts";
 import { type DecisionChoice, type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
@@ -150,6 +150,18 @@ export function describeRollShift(before: number, shift: number) {
   const actual = carryModifier(before, shift) - before;
   const sign = actual < 0 || (actual === 0 && shift < 0) ? "−" : "+";
   return `next roll ${sign}${Math.abs(actual)}${actual !== shift ? ` (rolls carry ${shift > 0 ? "+3" : "−2"} at most)` : ""}`;
+}
+
+// What a response choice earns beyond its own score: four for the sector's
+// preferred call in that phase and four for the call that fits the adversary's
+// objective. The resolution and the review's score row both read this, so the
+// row can say where its points went.
+const objectiveResponses: Record<AdversaryObjectiveId, [string, string, string]> = {
+  exfiltration: ["isolate", "preserve", "rebuild"], disruption: ["monitor", "verify", "restore"], fraud: ["credential", "verify", "rebuild"], espionage: ["credential", "preserve", "rebuild"], preposition: ["isolate", "verify", "rebuild"],
+};
+export function responseFit(game: Game, phaseIndex: number, choice: string) {
+  const preferred = phaseIndex === 1 ? choice !== "accelerate" : scenarios[game.scenario].preferred[phaseIndex === 0 ? 0 : 1] === choice;
+  return { preferred, objectiveAligned: objectiveResponses[game.objective][phaseIndex] === choice };
 }
 
 export function getModifierBreakdown(game: Game, procedure: string, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }) {
