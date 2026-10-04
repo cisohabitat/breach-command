@@ -139,9 +139,11 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     // At (score - 50) / 8 a typical win returned three points against a loss's
     // eight, and 120 simulated twenty-operation campaigns by a command that won
     // two in three ended 27 per cent on "fractured trust". At this rate the
-    // spread is 53 per cent guarded stability, 33 collective resilience and 12
-    // fractured trust; at (score - 40) / 6 the best ending became the usual one.
-    leadershipTrust: Math.max(0, Math.min(100, current.leadershipTrust + (won ? Math.max(1, Math.round((score - 45) / 7)) : drill ? 0 : -8))),
+    // spread is about 55 per cent guarded stability, 33 collective resilience and
+    // 11 fractured trust; at (score - 40) / 6 the best ending became the usual
+    // one. The offset was 45 until Training and Operational allowed more turns
+    // before the score charged for them.
+    leadershipTrust: Math.max(0, Math.min(100, current.leadershipTrust + (won ? Math.max(1, Math.round((score - 48) / 7)) : drill ? 0 : -8))),
     readiness: Math.max(0, Math.min(100, current.readiness + (won ? 5 : drill ? 2 : -3))),
     streak: won ? current.streak + 1 : drill ? current.streak : 0,
     specialistFatigue,
