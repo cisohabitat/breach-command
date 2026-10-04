@@ -3,8 +3,8 @@ import { ArrowRight, Printer, Star, Trophy } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, describeMeterChange, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
-import { specialistReaction } from "@/lib/phase9";
-import { unlockedCapabilities } from "@/lib/campaign";
+import { campaignRoutes, routeForCampaign, routeReason, specialistReaction } from "@/lib/phase9";
+import { nextCase, unlockedCapabilities } from "@/lib/campaign";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { objectiveTheory } from "@/lib/phase9";
@@ -12,7 +12,7 @@ import { objectiveTheory } from "@/lib/phase9";
 export function DebriefDialog({ session }: { session: GameSession }) {
   const {
     debrief, setDebrief, game, outcome, activeScenario, campaign, finalEnding,
-    resetToBriefing, setScenarioChoice,
+    resetToBriefing, setScenarioChoice, campaignChange,
   } = session;
   const ledger = game ? getHypothesisLedger(game) : [];
   // The detail lists fold behind summaries that state what they hold: open, the
@@ -171,8 +171,11 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           </details>
           <section className="debrief-learning"><h3>Take this back to your team</h3><p>{game.turns.some(turn => turn.success && !turn.revealed) ? "Some actions passed without finding new evidence. Did each action separate plausible explanations, or simply use an available tool?" : "Which evidence sources or decision authorities would be weakest in a real response?"}</p><p>{activeScenario.lesson}</p></section>
           <details className="debrief-fold debrief-campaign-fold" id="debrief-campaign">
-            <summary>Campaign and team<span>trust {campaign.leadershipTrust} · readiness {campaign.readiness} · {campaign.mastery[String(game.scenario)] ?? 0} mastery star{(campaign.mastery[String(game.scenario)] ?? 0) === 1 ? "" : "s"}</span></summary>
-            <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : "Continue the campaign to unlock this milestone."}</span></div>)}</section>
+            <summary>Campaign and team<span>trust {campaign.leadershipTrust} · readiness {campaign.readiness} · {campaign.mastery[String(game.scenario)] ?? 0} mastery star{(campaign.mastery[String(game.scenario)] ?? 0) === 1 ? "" : "s"} on this case</span></summary>
+            {/* What this operation did to the campaign, and why. Trust and readiness
+                were totals with no change and no reason beside them. */}
+            {!!campaignChange.length && <section className="campaign-change"><span className="eyebrow">WHAT THIS OPERATION CHANGED</span><ul>{campaignChange.map(line => <li key={line}>{line}</li>)}</ul>{game.mode === "campaign" && <p>Route: {campaignRoutes[routeForCampaign(campaign)].title}. {routeReason(campaign)}</p>}</section>}
+            <section className="capability-review"><span className="eyebrow">CAMPAIGN CAPABILITIES</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : `Unlocks at ${item.at} campaign experience; you have ${campaign.xp}. ${item.detail}`}</span></div>)}</section>
             <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
             <section className="specialist-reaction"><span className="eyebrow">TEAM AFTER-ACTION NOTE · COHESION {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status !== "lost", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
             <section className="mastery-panel"><div><span className="eyebrow">SCENARIO MASTERY</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
@@ -180,7 +183,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           {finalEnding && <section className="campaign-finale"><Trophy size={23} /><div><span className="eyebrow">FINAL COMMAND BRIEFING</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}
           <div className="debrief-actions">
             <button className="secondary-button" onClick={() => window.print()}><Printer size={17} /> Print review</button>
-            <button className="primary-button" onClick={() => { const nextScenario = (game.scenario + 1) % scenarios.length; resetToBriefing(); setScenarioChoice(nextScenario); }}>{finalEnding ? "Return to campaign command" : "Choose next incident"} <ArrowRight size={18} /></button>
+            <button className="primary-button" onClick={() => { const nextScenario = nextCase(campaign, scenarios.length); resetToBriefing(); setScenarioChoice(nextScenario); }}>{finalEnding ? "Return to campaign command" : "Choose next incident"} <ArrowRight size={18} /></button>
           </div>
         </>}
       </DialogContent>

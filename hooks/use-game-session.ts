@@ -46,7 +46,7 @@ import {
   procedureById,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, sessionFromNewerBuild, PARKED_SESSION_KEY, SESSION_KEY, type SavedSession } from "@/lib/session";
-import { campaignAct, campaignEnding, campaignReadable, campaignTier, defaultCampaign, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { campaignAct, campaignChanges, campaignEnding, campaignReadable, campaignTier, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
 import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
@@ -97,6 +97,8 @@ export function useGameSession() {
   const [tutorial, setTutorial] = useState(false);
   const [telemetry, setTelemetry] = useState<BalanceTelemetry>(() => readTelemetry());
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
+  // What the last finished operation did to the campaign, for the review.
+  const [campaignChange, setCampaignChange] = useState<string[]>([]);
   const [backupInput, setBackupInput] = useState("");
   const [backupMessage, setBackupMessage] = useState("");
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
@@ -462,6 +464,13 @@ export function useGameSession() {
     } catch { setBackupMessage("Backup not recognised. Paste a complete Breach Command backup."); }
   }
 
+  // Daily operation gives every commander the same case today, so choosing it
+  // also chooses today's case rather than the campaign's next one.
+  function chooseMode(next: GameMode) {
+    setMode(next);
+    if (next === "daily") setScenarioChoice(todaySeed() % scenarios.length);
+  }
+
   function recordProgress(result: Game) {
     if (botRunRef.current || recordedRef.current) return;
     recordedRef.current = true;
@@ -471,6 +480,7 @@ export function useGameSession() {
     // The updater stays pure; the campaign is persisted from the value it
     // produced rather than from inside the reducer.
     const updated = recordCampaignResult(campaignRef.current, result, score);
+    setCampaignChange(campaignChanges(campaignRef.current, updated, result, score));
     campaignRef.current = updated;
     setCampaign(updated);
     if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice("This browser is not allowing saved data, so campaign progress was not kept.");
@@ -600,6 +610,9 @@ export function useGameSession() {
       const stored = readStored(CAMPAIGN_KEY);
       const loaded = parseCampaign(stored);
       setCampaign(loaded);
+      // The assignment offered on arrival is the campaign's next case. It began
+      // at case 01 on every load, a case already cleared.
+      setScenarioChoice(nextCase(loaded, scenarios.length));
       // A first operation starts at Training, the only difficulty that discloses
       // what the team is seeing; without that clue the opening reading is a guess
       // between four routes, which is the wrong first lesson. The player can still
@@ -696,7 +709,7 @@ export function useGameSession() {
     savedSession,
     difficulty, setDifficulty,
     scenarioChoice, setScenarioChoice,
-    mode, setMode,
+    mode, setMode: chooseMode, campaignChange,
     specialist, setSpecialist,
     guided, setGuided,
     fastResolve, setFastResolve,

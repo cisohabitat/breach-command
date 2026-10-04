@@ -8342,6 +8342,25 @@ in colour, and the carried plan is stated before the options. */
   top:8px;
   right:8px;
 }
+.campaign-change {
+  margin:12px 0;
+  padding:12px 14px;
+  border:1px solid #34483a;
+  border-radius:8px;
+  background:#121c17;
+}
+.campaign-change ul {
+  margin:8px 0 0;
+  padding-left:18px;
+  line-height:var(--leading-base);
+}
+.campaign-change li+li {
+  margin-top:4px;
+}
+.campaign-change p {
+  margin:8px 0 0;
+  color:var(--text-soft);
+}
 /* A small laptop has room for the three readouts beside the case title. Stacked
    under it they took a second band of 120 px and left half the width empty, and
    the procedures started below the fold of a 1024 x 768 screen. */

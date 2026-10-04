@@ -64,6 +64,14 @@ export function HypothesisBoard({
           <p>{standing.detail}</p>
         </div>
       )}
+      {/* Expert withholds the standing, not the reading itself: without this the
+          board named the declared route nowhere but a small "change from" line. */}
+      {!standing && active && (
+        <div className="hypothesis-standing level-none" role="status">
+          <span className="eyebrow">{underTest ? <><span className="reading-for">READING FOR </span>STAGE {underTest.index + 1} · {underTest.name.toUpperCase()}</> : "CURRENT READING"}</span>
+          <b className="standing-reading">{active.title}</b>
+        </div>
+      )}
       <div className="hypothesis-options">
         {hypotheses.map(hypothesis => {
           const evidenceSources = hypothesisSources(game, hypothesis.id)

@@ -148,8 +148,9 @@ export function carryModifier(before: number, change: number) {
 export function describeRollShift(before: number, shift: number) {
   if (!shift) return "";
   const actual = carryModifier(before, shift) - before;
-  const sign = actual < 0 || (actual === 0 && shift < 0) ? "−" : "+";
-  return `next roll ${sign}${Math.abs(actual)}${actual !== shift ? ` (rolls carry ${shift > 0 ? "+3" : "−2"} at most)` : ""}`;
+  // "next roll −0" read as a typo; a change the cap swallows whole says so.
+  if (!actual) return `next roll unchanged (rolls carry ${shift > 0 ? "+3" : "−2"} at most)`;
+  return `next roll ${actual < 0 ? "−" : "+"}${Math.abs(actual)}${actual !== shift ? ` (rolls carry ${shift > 0 ? "+3" : "−2"} at most)` : ""}`;
 }
 
 // What a response choice earns beyond its own score: four for the sector's

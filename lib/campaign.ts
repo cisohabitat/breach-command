@@ -68,10 +68,33 @@ export function campaignRank(xp: number) {
 
 export function unlockedCapabilities(xp: number) {
   return [
-    { title: "Evidence fusion", unlocked: xp >= 75, detail: "One additional evidence procedure begins established." },
-    { title: "Rapid coordination", unlocked: xp >= 200, detail: "One more command action, five less starting impact, and the first unlucky action of an operation no longer hands the actor tempo." },
-    { title: "Continuity command", unlocked: xp >= 450, detail: "A sixth established procedure and a deeper continuity reserve." },
+    { title: "Evidence fusion", unlocked: xp >= 75, at: 75, detail: "One additional evidence procedure begins established." },
+    { title: "Rapid coordination", unlocked: xp >= 200, at: 200, detail: "One more command action, five less starting impact, and the first unlucky action of an operation no longer hands the actor tempo." },
+    { title: "Continuity command", unlocked: xp >= 450, at: 450, detail: "A sixth established procedure and a deeper continuity reserve." },
   ];
+}
+
+// The campaign's next case: the first not yet cleared, so a reload or a loss
+// does not offer a case already done or quietly skip one that was lost.
+export function nextCase(state: CampaignState, cases = 10) {
+  const open = Array.from({ length: cases }, (_, index) => index).find(index => !state.completed.includes(index));
+  return open ?? 0;
+}
+
+// What one operation did to the campaign, in words, for the review. Trust and
+// readiness were shown as totals with no change and no reason.
+export function campaignChanges(before: CampaignState, after: CampaignState, game: Game, score: number) {
+  const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : "±"}${Math.abs(value)}`;
+  const lines: string[] = [];
+  const trust = after.leadershipTrust - before.leadershipTrust;
+  lines.push(`Leadership trust ${signed(trust)} to ${after.leadershipTrust}: ${game.status === "won" ? `a win restores trust by its score (${score} here)` : game.status === "exercise" ? "a drill neither costs nor earns trust" : "a loss costs eight"}.`);
+  const readiness = after.readiness - before.readiness;
+  lines.push(`Readiness ${signed(readiness)} to ${after.readiness}: ${game.status === "won" ? "+5 for a win" : game.status === "exercise" ? "+2 for exercising the process" : "−3 for a loss"}.`);
+  const threads = after.unresolvedThreads - before.unresolvedThreads;
+  if (threads) lines.push(`Unresolved access ${signed(threads)} to ${after.unresolvedThreads}: a lost operation leaves the adversary's access open. Four or more at the campaign's end decide its ending, and each one makes later operations start harder.`);
+  if (after.completed.length > before.completed.length) lines.push(`Case cleared: ${after.completed.length} of 10. Every cleared case moves the campaign's acts and route forward.`);
+  else if (game.status === "lost") lines.push("This case stays open in the campaign and is offered again as the next assignment.");
+  return lines;
 }
 
 export function campaignTier(xp: number) {
@@ -80,7 +103,8 @@ export function campaignTier(xp: number) {
 
 export function campaignAct(completed: number) {
   if (completed >= 7) return { number: 3, title: "Convergence", detail: "Cross-sector evidence points to a coordinated strategic campaign." };
-  if (completed >= 3) return { number: 2, title: "Escalation", detail: "Recurring infrastructure and trust paths connect previously separate incidents." };
+  // "Escalation" is also a mode; the act reads as its own thing.
+  if (completed >= 3) return { number: 2, title: "Widening pattern", detail: "Recurring infrastructure and trust paths connect previously separate incidents." };
   return { number: 1, title: "First contact", detail: "Establish the pattern behind a series of apparently isolated compromises." };
 }
 

@@ -278,7 +278,7 @@ function responseRule(game: Game) {
   const fits = game.responseChoices.map((choice, index) => responseFit(game, index, choice));
   const preferred = fits.filter(fit => fit.preferred).length;
   const aligned = fits.filter(fit => fit.objectiveAligned).length;
-  return `Your three options scored ${own}; ${preferred} of 3 were the sector's preferred call (+4 each) and ${aligned} of 3 fitted the adversary's objective (+4 each), out of 55 in all, scaled to 20.`;
+  return `Your three options scored ${own}; ${preferred} of 3 were the sector's preferred call (+4 each) and ${aligned} of 3 fitted the adversary's objective (+4 each), making ${own + 4 * preferred + 4 * aligned} of 55, scaled to 20.`;
 }
 
 export function getScoreRows(game: Game) {

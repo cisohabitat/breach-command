@@ -17,6 +17,19 @@ export function routeForCampaign(state: { completed: number[]; commandPosture: {
   return state.leadershipTrust >= 55 ? "common-ground" : "breakwater";
 }
 
+// Why the campaign is on its route, in the terms routeForCampaign reads. The
+// route changed from Common Ground to Breakwater with nothing saying why.
+export function routeReason(state: { completed: number[]; commandPosture: { observe: number; act: number }; leadershipTrust: number }) {
+  const route = routeForCampaign(state);
+  const { observe, act } = state.commandPosture;
+  if (route === "convergence") return "Seven or more cases are cleared, so every thread is being drawn together.";
+  if (state.completed.length < 2) return "Fewer than two cases are cleared, so the campaign is still on common ground.";
+  if (route === "watchtower") return `You have chosen to watch (${observe}) more than to act (${act}) in evidence decisions, so the command leans to observation.`;
+  if (route === "breakwater" && act > observe + 1) return `You have chosen to act (${act}) more than to watch (${observe}) in evidence decisions, so the command leans to holding the line.`;
+  if (route === "breakwater") return `Watching and acting are balanced, and leadership trust is below 55 (${state.leadershipTrust}), so the command is holding the line.`;
+  return `Watching and acting are balanced and leadership trust is ${state.leadershipTrust}, so the command keeps to common ground.`;
+}
+
 export type IncidentVariant = { id: string; title: string; briefing: string; modifier: string; impact: number; continuity: number; objective: number };
 
 // Each scenario holds five authored operational variants. The first three are stable across releases so

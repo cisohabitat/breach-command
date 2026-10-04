@@ -81,6 +81,11 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <div className="mode-picker">
             <span className="eyebrow">OPERATION MODE</span>
             <div>{(Object.keys(gameModes) as GameMode[]).map(id => <button key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => setMode(id)}><strong>{gameModes[id].title}</strong><small>{gameModes[id].description}</small></button>)}</div>
+            {/* Whether a mode counts toward the campaign, and whether the campaign
+                reaches into it, was nowhere on screen. */}
+            <p className="muted small mode-campaign-note">{mode === "campaign"
+              ? "Campaign standing — leadership trust, readiness, unresolved access and the route — shapes this operation, and its result counts toward the campaign."
+              : `This operation's result counts toward the campaign, with ${gameModes[mode].reward}× the experience, but campaign standing does not shape the operation itself.${mode === "daily" ? " Daily operation is today's case, the same for every commander." : ""}`}</p>
           </div>
           <div className="challenge-console">
             <div><span className="eyebrow">SCENARIO CODE</span><button onClick={generateSeed}><RefreshCw size={14} /> New seed</button></div>

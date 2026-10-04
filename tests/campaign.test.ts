@@ -2,8 +2,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {SPECIALIST_EXHAUSTED_AT,newGame,playTurn,type Game} from "../lib/advanced-game.ts";
-import {campaignAct,campaignEnding,campaignReadable,defaultCampaign,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
-import {campaignRoutes,incidentVariant,routeForCampaign} from "../lib/phase9.ts";
+import {campaignAct,campaignChanges,campaignEnding,campaignReadable,defaultCampaign,nextCase,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
+import {campaignRoutes,incidentVariant,routeForCampaign,routeReason} from "../lib/phase9.ts";
 
 
 test("records a drill as something other than a defeat", () => {
@@ -89,4 +89,20 @@ test("lets wins earn back trust that losses take away", () => {
   assert.equal(recordCampaignResult(start,won,73).leadershipTrust,44,"a typical win earns four");
   assert.equal(recordCampaignResult(start,won,52).leadershipTrust,41,"even a scrappy win earns one");
   assert.equal(recordCampaignResult(start,lost,30).leadershipTrust,32,"a loss still costs eight");
+});
+
+test("offers the next uncleared case and says what an operation changed", () => {
+  // After a reload the assignment began at case 01, already cleared, and a lost
+  // case was skipped without a word.
+  assert.equal(nextCase({...defaultCampaign,completed:[0,1,2]}),3,"the first case not yet cleared");
+  assert.equal(nextCase({...defaultCampaign,completed:[0,1,2,4]}),3,"a lost case is offered again");
+  assert.equal(nextCase({...defaultCampaign,completed:[0,1,2,3,4,5,6,7,8,9]}),0,"a finished campaign starts over at the first case");
+  const before={...defaultCampaign,leadershipTrust:61,readiness:55};
+  const lost={...newGame(3,"operational",()=>0),status:"lost" as const};
+  const after=recordCampaignResult(before,lost,30);
+  const lines=campaignChanges(before,after,lost,30);
+  assert.ok(lines.some(line=>/Leadership trust −8 to 53: a loss costs eight/.test(line)),"trust names its change and its reason");
+  assert.ok(lines.some(line=>/Unresolved access \+1/.test(line)),"an unresolved thread is named and explained");
+  assert.ok(lines.some(line=>/offered again/.test(line)),"and the lost case is said to come back");
+  assert.match(routeReason({completed:[0,1,2],commandPosture:{observe:0,act:8},leadershipTrust:53}),/act \(8\) more than to watch \(0\)/,"the route says why");
 });

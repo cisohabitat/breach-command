@@ -22,15 +22,18 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
             <div><span>DEPLOYED SPECIALIST</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
             <div><span>ATTRIBUTION</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div>
           </div>
-          <div className="briefing-first-move"><span>01</span><p><strong>Your first move</strong>Assume command, open Investigate, choose a working hypothesis and run a procedure marked “Own source”.</p></div>
+          {/* Expert withholds coaching; its brief said "Your first move" all the same. */}
+          {game.mode !== "expert" && <div className="briefing-first-move"><span>01</span><p><strong>Your first move</strong>Assume command, open Investigate, choose a working hypothesis and run a procedure marked “Own source”.</p></div>}
           <details className="briefing-more">
-            <summary>Operation context<span>{gameModes[game.mode].title} · {campaignRoutes[game.campaignRoute].title} · {game.variant.title}</span></summary>
+            <summary>Operation context<span>{gameModes[game.mode].title}{game.mode === "campaign" ? ` · ${campaignRoutes[game.campaignRoute].title}` : ""} · {game.variant.title}</span></summary>
             <div className="briefing-readouts">
               <div><span>MODE</span><strong>{gameModes[game.mode].title}</strong><small>{gameModes[game.mode].description}</small></div>
-              <div><span>CAMPAIGN ROUTE</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>
+              {/* Only a campaign operation runs under the campaign's route; an Expert
+                  brief named one that was not in effect. */}
+              {game.mode === "campaign" && <div><span>CAMPAIGN ROUTE</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>}
               <div><span>INCIDENT VARIANT</span><strong>{game.variant.title}</strong><small>{game.variant.briefing}</small></div>
             </div>
-            <div className="director-order"><Radio size={20} /><p><span className="eyebrow">DIRECTOR’S INTENT</span>{campaignRoutes[game.campaignRoute].order} Establish the chain, declare an objective theory and preserve the essential service.</p></div>
+            <div className="director-order"><Radio size={20} /><p><span className="eyebrow">DIRECTOR’S INTENT</span>{game.mode === "campaign" ? `${campaignRoutes[game.campaignRoute].order} ` : ""}Establish the chain, declare an objective theory and preserve the essential service.</p></div>
           </details>
           <button className="primary-button full" onClick={() => setMissionBriefing(false)}>Assume command <ArrowRight size={18} /></button>
         </>}

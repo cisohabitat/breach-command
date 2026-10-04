@@ -10,7 +10,7 @@ export const gameModes: Record<GameMode, { title: string; description: string; r
   daily: { title: "Daily operation", description: "A fixed incident seed gives every commander the same case today.", reward: 1.15 },
   ironman: { title: "Ironman", description: "No mid-incident save and one fewer turn. Decisions are final.", reward: 1.35 },
   escalation: { title: "Escalation", description: "Begin under pressure against an actor already moving.", reward: 1.4 },
-  expert: { title: "Expert", description: "No coaching or suggested evidence. Thresholds are one point higher.", reward: 1.5 },
+  expert: { title: "Expert", description: "No coaching or suggested evidence, and every roll is one harder (−1).", reward: 1.5 },
 };
 
 export const specialists = {
