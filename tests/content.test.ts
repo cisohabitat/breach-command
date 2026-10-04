@@ -195,5 +195,5 @@ test("gives every sector an investigative action of its own", () => {
 test("states each finding, never the log that held it", () => {
   // "Proxy and intelligence records reveal …" read as wrong when another source
   // found it; eight techniques still led with the records.
-  for (const attack of attacks) assert.ok(!/\b(records?|artefacts|history|configuration and [a-z ]+) (show|shows|reveal|reveals)\b/i.test(attack.evidence), `${attack.id} states its finding, not its source`);
+  for (const attack of attacks) assert.ok(!/\b(records?|artefacts|history|logs|traces|telemetry|analysis|configuration and [a-z ]+) (show|shows|reveal|reveals|link|links|tie|ties|connect|connects|correlate|correlates|identify|identifies|establish|establishes)\b/i.test(attack.evidence), `${attack.id} states its finding, not its source`);
 });

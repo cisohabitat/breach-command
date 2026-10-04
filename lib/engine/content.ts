@@ -120,7 +120,7 @@ export const responseProfiles: ResponseProfile[] = [
     ],
     assurance: [
       { id: "verify", title: "Validate the clinical boundary", description: "Prove identities, routes and dependent workflows before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -5, score: 13 },
-      { id: "preserve", title: "Preserve clinical support evidence", description: "Retain volatile artefacts before the support path changes again.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -6, score: 12 },
+      { id: "preserve", title: "Preserve clinical support evidence", description: "Keep the forensic images taken before containment so the restored path can be verified against them.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -6, score: 12 },
       { id: "accelerate", title: "Accept the clinical safety check", description: "Care teams verify records against their own independent checks, and every hour of manual working carries its own risk.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 3, continuity: 6, score: 11 },
     ],
     recovery: [
@@ -144,7 +144,7 @@ export const responseProfiles: ResponseProfile[] = [
     recovery: [
       { id: "rebuild", title: "Rebuild the support estate from baseline", description: "Strongest assurance, with the longest engineering-capacity gap.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -12, score: 14 },
       { id: "restore", title: "Restore validated support backups", description: "Returns maintenance capability faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place behind the plant boundary", description: "The engineering boundary holds while the support estate is patched, and instrumentation would show a process deviation.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -6, continuity: 7, score: 11 },
+      { id: "patch", title: "Patch in place behind the plant boundary", description: "The engineering boundary holds while the support estate is patched, and the independent safety system and local field readings would show a deviation that a compromised engineering path could not hide.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -6, continuity: 7, score: 11 },
     ],
   },
   {
@@ -252,7 +252,7 @@ export const responseProfiles: ResponseProfile[] = [
     recovery: [
       { id: "rebuild", title: "Rebuild the support environment from baseline", description: "Strongest assurance, with the longest manual-supervision period.", disruption: "High", confidence: "Strong", residual: "Low", impact: -17, continuity: -13, score: 14 },
       { id: "restore", title: "Restore validated support backups", description: "Returns engineering support faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -11, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place under manual supervision", description: "Supervision continues through the patch, and the process would show a deviation before an operator would.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -5, continuity: 7, score: 12 },
+      { id: "patch", title: "Patch in place under manual supervision", description: "Supervision continues through the patch, checked against the independent safety system and local field readings rather than the screens the attacker may have touched.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -5, continuity: 7, score: 12 },
     ],
   },
   {
@@ -362,6 +362,12 @@ export const plainLanguage: Record<string, string> = {
   "logon script": "A small program that runs automatically when someone signs in to a computer.",
   "delegated access": "Permission one account gives another to act on its behalf, such as reading its mailbox.",
   "unsigned payload": "A program or file with no maker's signature, so nothing vouches for where it came from.",
+  "MFA": "Multi-factor authentication: a second check at sign-in, such as a phone prompt, on top of the password.",
+  "federation": "An arrangement where one organisation's sign-in service is trusted by another's, so one account works across both.",
+  "historian": "The database that records an industrial plant's readings over time.",
+  "SaaS": "Software as a service: an application the organisation uses over the internet rather than running itself.",
+  "webhook": "An address one service calls automatically to tell another that something happened.",
+  "snapshot": "A point-in-time copy of a disk or system.",
   "token": "A digital pass a system issues after sign-in, so a person or program need not sign in again for every request.",
   "artefacts": "Traces a program leaves behind on a computer — files, settings and memory — that investigators can examine.",
   "API": "A way for programs to talk to a service directly, without a person clicking through screens.",

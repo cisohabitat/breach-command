@@ -39,9 +39,9 @@ export const infrastructureTopologies: InfrastructureTopology[] = [
   { title: "Generation support map", critical: "engineering", criticalRule: "The engineering zone holds operational authority, so it is critical and isolating it needs plant approval.", nodes: [
     { id: "supplier", label: "Supplier identity", type: "IDENTITY", procedures: ["identity", "email"] },
     { id: "gateway", label: "Maintenance gateway", type: "EDGE", procedures: ["firewall", "network", "dns"] },
-    { id: "jump", label: "Location jump host", type: "EDGE", procedures: ["endpoint", "network", "firewall"] },
-    { id: "patch", label: "Patch server", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
-    { id: "engineering", label: "Engineering zone", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "jump", label: "Maintenance jump host", type: "EDGE", procedures: ["endpoint", "network", "firewall"] },
+    { id: "patch", label: "Patch server", type: "APPLICATION", procedures: ["server", "endpoint", "forensic"] },
+    { id: "engineering", label: "Engineering zone", type: "CONTROL", procedures: ["identity", "endpoint", "hunt"] },
     { id: "historian", label: "Historian relay", type: "APPLICATION", procedures: ["server", "endpoint", "forensic"] },
     { id: "config", label: "Plant configuration", type: "ASSET", procedures: ["network", "server", "intel"] },
   ], edges: [
@@ -53,8 +53,8 @@ export const infrastructureTopologies: InfrastructureTopology[] = [
   { title: "Terminal dependency map", critical: "portal", criticalRule: "The booking portal is the partner-facing edge, so it is critical and isolating it severs external transactions first.", nodes: [
     { id: "partner", label: "Partner identity", type: "IDENTITY", procedures: ["identity", "email"] },
     { id: "portal", label: "Booking portal", type: "EDGE", procedures: ["server", "network", "firewall"] },
-    { id: "platform", label: "Terminal platform", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
-    { id: "planning", label: "Vessel planning", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "platform", label: "Terminal platform", type: "APPLICATION", procedures: ["server", "endpoint", "forensic"] },
+    { id: "planning", label: "Vessel planning", type: "CONTROL", procedures: ["identity", "endpoint", "hunt"] },
     { id: "schedules", label: "Cargo schedules", type: "ASSET", procedures: ["network", "cloud", "intel"] },
   ], edges: [
     { from: "partner", to: "portal", label: "CONNECTS" }, { from: "portal", to: "platform", label: "TRUSTS" },
@@ -110,8 +110,8 @@ export const infrastructureTopologies: InfrastructureTopology[] = [
   { title: "Water support map", critical: "supervision", criticalRule: "Process supervision carries safety authority, so it is critical and isolating it requires operations approval.", nodes: [
     { id: "engineer", label: "Engineer identity", type: "IDENTITY", procedures: ["identity", "email"] },
     { id: "remote", label: "Remote support", type: "EDGE", procedures: ["firewall", "network", "dns"] },
-    { id: "ops", label: "Operations server", type: "APPLICATION", procedures: ["server", "cloud", "forensic"] },
-    { id: "supervision", label: "Process supervision", type: "CONTROL", procedures: ["identity", "cloud", "hunt"] },
+    { id: "ops", label: "Operations server", type: "APPLICATION", procedures: ["server", "endpoint", "forensic"] },
+    { id: "supervision", label: "Process supervision", type: "CONTROL", procedures: ["identity", "endpoint", "hunt"] },
   ], edges: [
     { from: "engineer", to: "remote", label: "AUTHENTICATES" }, { from: "remote", to: "ops", label: "CONNECTS" },
     { from: "ops", to: "supervision", label: "CONTROLS" }, { from: "remote", to: "supervision", label: "SUPPORTS" },
@@ -170,7 +170,7 @@ const specialistIds: SpecialistId[] = ["hunter", "forensics", "identity", "ot", 
 // techniques themselves or the seeded draws change: an older code would
 // otherwise decode cleanly and quietly play a different incident. Version 1
 // codes were written as "BC-…" before the version was part of the code.
-export const CHALLENGE_VERSION = 4;
+export const CHALLENGE_VERSION = 5;
 const checksumOf = (text: string) => [...text].reduce((sum, char) => (sum + char.charCodeAt(0)) % 97, 0);
 
 export function encodeChallenge(setup: ChallengeSetup) {
