@@ -326,6 +326,10 @@ test("moves each decision verb by its own terms", () => {
   assert.deepEqual([containVerb.impact,containVerb.continuity,containVerb.adversaryTempo,containVerb.sectorHealth,containVerb.objectiveProgress],[12,97,0,63,0]);
   assert.equal(containVerb.decisions[0].quality,4,"contain scores well when the sector is the binding constraint");
   assert.deepEqual([containVerb.decisions[0].sectorChange,containVerb.decisions[0].continuityChange,containVerb.decisions[0].tempoChange],[3,-3,0]);
+  // Containment is not free: the actor is warned and the contained systems go
+  // quiet, which is why it grades low while watching is still affordable.
+  assert.equal(containVerb.nextModifier,-1);
+  assert.equal(resolveDecision(verbBase(),"contain").decisions[0].quality,2);
   const notifyVerb=resolveDecision(verbBase({continuity:60}),"notify");
   assert.equal(notifyVerb.decisions[0].choice,"notify");
   assert.deepEqual([notifyVerb.impact,notifyVerb.continuity,notifyVerb.adversaryTempo,notifyVerb.sectorHealth,notifyVerb.objectiveProgress,notifyVerb.nextModifier],[24,63,1,97,10,1]);

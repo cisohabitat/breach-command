@@ -3,7 +3,7 @@ import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scena
 import { objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { infrastructureTopologies, sectorSetPieces, seededRoll } from "../phase8.ts";
 import { objectiveTheory } from "../phase9.ts";
-import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguage, decisionTitles, injects, scenarioProfiles, inSentence } from "./content.ts";
+import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguageFor, decisionTitles, injects, scenarioProfiles, inSentence } from "./content.ts";
 import { type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type Inject, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice } from "./types.ts";
 import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, responseFit, decisionRollShift, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
 
@@ -443,7 +443,7 @@ export function decisionRationale(choice: DecisionChoice, highPressure: boolean,
     case "observe": return highPressure ? "Additional observation improved evidence but accepted substantial operational risk." : "Observation was proportionate while impact and adversary tempo remained manageable.";
     case "act": return highPressure ? "Intervention matched the elevated impact and adversary tempo." : "Intervention reduced exposure, although evidence collection still had room to continue.";
     case "attribute": return highPressure ? "Deep attribution delayed containment while the actor remained free to act." : "Attribution deepened the analytical picture while the actor stayed covert.";
-    case "contain": return bindingSector ? "Bounded containment protected a sector margin that a full intervention would have eroded." : highPressure ? "Containment absorbed pressure without removing the actor's parallel access." : "Containment cost service while impact and the actor's pace were still low enough to keep watching and gather evidence.";
+    case "contain": return bindingSector ? "Bounded containment protected a sector margin that a full intervention would have eroded." : highPressure ? "Containment absorbed pressure without removing the actor's parallel access." : "Containment warned the actor and stopped the contained systems showing what it does, while impact and its pace were low enough to keep watching instead.";
     case "notify": return bindingContinuity ? "Early notification protected service continuity while the picture stayed uncertain." : highPressure ? "Notification kept owners aligned, but it cost tempo and disclosed your read." : "Notification was low-cost, but it did not reduce exposure or preserve evidence.";
   }
 }
@@ -468,7 +468,8 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
   if (choice === "act") g.adversaryMemory.actChoices += 1;
   const stageId = g.pendingDecision!;
   const attack = attacks.find(item => item.id === stageId)!;
-  const language = decisionLanguage[attack.stage];
+  const language = decisionLanguageFor(g.scenario, attack.stage);
+  const sector = sectorSystems[g.scenario];
   const highPressure = g.impact >= 55 || g.adversaryTempo >= 2;
   const bindingSector = g.sectorHealth <= 70;
   const bindingContinuity = g.continuity <= 65;
@@ -485,6 +486,9 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.impact = clamp(g.impact + language.observeCost);
       g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
       g.objectiveProgress = clamp(g.objectiveProgress + 6);
+      // Watching is cheapest where the sector has its own instruments to watch
+      // with, and dearest where every hour the actor stays costs the margin.
+      g.sectorHealth = clamp(g.sectorHealth + sector.monitoringRecovery - 2);
       break;
     case "act":
       g.nextModifier = carryModifier(g.nextModifier, decisionRollShift.act);
@@ -492,7 +496,9 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.continuity = clamp(g.continuity + language.continuityCost);
       g.adversaryTempo = Math.max(0, g.adversaryTempo - 1);
       g.objectiveProgress = clamp(g.objectiveProgress - 8);
-      g.sectorHealth = clamp(g.sectorHealth - 2);
+      // An intervention costs the sector what its own isolations cost it: two
+      // points of business confidence, four of clinical or process margin.
+      g.sectorHealth = clamp(g.sectorHealth - sector.containmentCost);
       break;
     case "attribute":
       g.nextModifier = carryModifier(g.nextModifier, decisionRollShift.attribute);
@@ -501,6 +507,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.objectiveProgress = clamp(g.objectiveProgress - 4);
       break;
     case "contain":
+      g.nextModifier = carryModifier(g.nextModifier, decisionRollShift.contain);
       g.impact = clamp(g.impact + language.containRelief);
       g.continuity = clamp(g.continuity + language.containCost);
       g.sectorHealth = clamp(g.sectorHealth + 3);
@@ -515,7 +522,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
       break;
   }
-  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Evidence decision: ${decisionLanguage[attacks.find(item => item.id === game.pendingDecision)!.stage][decisionTitles[choice]]}`, decisionRollShift[choice]);
+  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Evidence decision: ${language[decisionTitles[choice]]}`, decisionRollShift[choice]);
 
   if (choice === "act") {
     const nextStage = Math.min(3, attack.stage + 1);

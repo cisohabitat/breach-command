@@ -1,7 +1,7 @@
 // Data invariants the authored content has to keep.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {newGame,attacks,hypotheses,procedures,responseProfiles,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
+import {newGame,resolveDecision,getDecisionOptions,attacks,hypotheses,procedures,responseProfiles,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
 import {sectorSetPieces} from "../lib/phase8.ts";
 import {hypothesisSources, proceduresFor, sectorProcedures} from "../lib/advanced-game.ts";
 import {adversaryObjectives} from "../lib/command-systems.ts";
@@ -196,4 +196,20 @@ test("states each finding, never the log that held it", () => {
   // "Proxy and intelligence records reveal …" read as wrong when another source
   // found it; eight techniques still led with the records.
   for (const attack of attacks) assert.ok(!/\b(records?|artefacts|history|logs|traces|telemetry|analysis|configuration and [a-z ]+) (show|shows|reveal|reveals|link|links|tie|ties|connect|connects|correlate|correlates|identify|identifies|establish|establishes)\b/i.test(attack.evidence), `${attack.id} states its finding, not its source`);
+});
+
+test("makes each evidence decision a call in the sector's own terms", () => {
+  // The five responses read the same at a hospital and a clearing house, and
+  // cost the same. Acting now costs what the sector's own isolations cost it,
+  // and watching is cheapest where the sector has instruments to watch with.
+  const effects = scenarios.map((_, scenario) => {
+    const game = { ...newGame(scenario, "operational"), pendingDecision: scenarios[scenario].choices[0][0], sectorHealth: 80 };
+    const options = getDecisionOptions(game)!;
+    assert.ok(options.options.some(option => option.id === "notify" && !/service owners/.test(option.title)) || scenario === 0, `scenario ${scenario} names who it notifies`);
+    for (const option of options.options) assert.ok(!/\{(owners|service)\}/.test(option.title + option.description + option.service), `scenario ${scenario} fills every term`);
+    return { act: resolveDecision(game, "act").sectorHealth - 80, observe: resolveDecision(game, "observe").sectorHealth - 80 };
+  });
+  effects.forEach((effect, scenario) => assert.equal(effect.act, -sectorSystems[scenario].containmentCost, `scenario ${scenario}: acting costs the sector's isolation cost`));
+  assert.ok(new Set(effects.map(effect => effect.act)).size >= 3, "acting costs the sector margin differently across sectors");
+  assert.ok(new Set(effects.map(effect => effect.observe)).size >= 3, "watching costs the sector margin differently across sectors");
 });

@@ -292,35 +292,58 @@ export const decisionLanguage: DecisionLanguage[] = [
     observeTitle: "Trace the access path", observe: "Keep the suspected route active long enough to correlate its origin.",
     actTitle: "Revoke the access path", act: "Terminate the observed access and invalidate related sessions.",
     attributeTitle: "Attribute the access pattern", attribute: "Correlate the access with prior behaviour and artefacts before changing anything.",
-    containTitle: "Contain the access path", contain: "Restrict the observed path to a bounded trust scope and hold it there.",
-    notifyTitle: "Notify command and service owners", notify: "Brief leadership and service owners on confirmed facts before the next action.",
+    containTitle: "Contain the access path", contain: "Restrict the observed path to a bounded trust scope, keeping {service} running.",
+    notifyTitle: "Notify command and {owners}", notify: "Brief leadership and {owners} on confirmed facts before the next action.",
     observeCost: 7, actRelief: -13, continuityCost: -4, containRelief: -10, containCost: -3,
   },
   {
     observeTitle: "Map lateral access", observe: "Watch the movement briefly to identify reached systems and identities.",
     actTitle: "Segment the movement path", act: "Block the observed administrative route before scope is complete.",
     attributeTitle: "Attribute the movement", attribute: "Map the identities and systems touched, and compare them with the actor's established behaviour.",
-    containTitle: "Contain the movement path", contain: "Segment the observed route at the nearest trust boundary while the estate stays live.",
-    notifyTitle: "Notify the reached service owners", notify: "Tell the owners of the reached systems what is confirmed and what remains uncertain.",
+    containTitle: "Contain the movement path", contain: "Segment the observed route at the nearest trust boundary, keeping {service} running.",
+    notifyTitle: "Notify {owners}", notify: "Tell {owners} which systems were reached, what is confirmed and what remains uncertain.",
     observeCost: 9, actRelief: -15, continuityCost: -7, containRelief: -11, containCost: -5,
   },
   {
     observeTitle: "Capture the persistence mechanism", observe: "Preserve volatile and configuration evidence before removal.",
     actTitle: "Remove the foothold", act: "Disable the confirmed mechanism and accept reduced visibility.",
     attributeTitle: "Attribute the persistence mechanism", attribute: "Identify the mechanism, its authoring pattern and any related access before removal.",
-    containTitle: "Contain the foothold", contain: "Disable the observed mechanism on a bounded system set while service continues.",
-    notifyTitle: "Notify platform owners", notify: "Brief platform owners on the confirmed mechanism and the change window it needs.",
+    containTitle: "Contain the foothold", contain: "Disable the observed mechanism on a bounded set of systems, keeping {service} running.",
+    notifyTitle: "Notify {owners}", notify: "Brief {owners} on the confirmed mechanism and the change window its removal needs.",
     observeCost: 8, actRelief: -14, continuityCost: -5, containRelief: -10, containCost: -4,
   },
   {
     observeTitle: "Trace the outbound channel", observe: "Collect destination and transfer evidence before blocking it.",
     actTitle: "Block the channel now", act: "Stop the confirmed connection before attribution and scope are complete.",
     attributeTitle: "Attribute the outbound channel", attribute: "Correlate destination, timing and volume to characterise the channel before blocking it.",
-    containTitle: "Contain the channel", contain: "Throttle and restrict the observed channel at the boundary rather than severing all egress.",
-    notifyTitle: "Notify data and compliance owners", notify: "Inform data owners and compliance of the confirmed export path and its uncertainty.",
+    containTitle: "Contain the channel", contain: "Throttle and restrict the observed channel at the boundary rather than cutting every connection {service} relies on.",
+    notifyTitle: "Notify {owners} and compliance", notify: "Inform {owners} and compliance of the confirmed export path and its uncertainty.",
     observeCost: 10, actRelief: -18, continuityCost: -3, containRelief: -12, containCost: -3,
   },
 ];
+
+// Who each sector briefs and what it keeps running, so the five responses read
+// as this sector's call: "Notify command and service owners" was the same line
+// at a hospital and a clearing house. Indexed by scenario.
+export const sectorDecisionTerms: { owners: string; service: string }[] = [
+  { owners: "business service owners", service: "payroll and shared applications" },
+  { owners: "clinical operations", service: "patient care" },
+  { owners: "plant operations", service: "generation" },
+  { owners: "vessel planners", service: "cargo operations" },
+  { owners: "affected tenants", service: "tenant workloads" },
+  { owners: "dependent organisations", service: "the shared services" },
+  { owners: "agency service leads", service: "public transactions" },
+  { owners: "network operations", service: "customer traffic" },
+  { owners: "plant operators", service: "water treatment" },
+  { owners: "fraud operations", service: "payment settlement" },
+];
+
+// A stage's decision wording in a scenario's own terms.
+export function decisionLanguageFor(scenario: number, stage: number): DecisionLanguage {
+  const terms = sectorDecisionTerms[scenario] ?? sectorDecisionTerms[0];
+  const fill = (text: string) => text.replaceAll("{owners}", terms.owners).replaceAll("{service}", terms.service);
+  return Object.fromEntries(Object.entries(decisionLanguage[stage]).map(([key, value]) => [key, typeof value === "string" ? fill(value) : value])) as DecisionLanguage;
+}
 
 export const decisionChoices: DecisionChoice[] = ["observe", "act", "attribute", "contain", "notify"];
 
@@ -441,6 +464,6 @@ export const decisionEffects: Record<DecisionChoice, string> = {
   observe: "Evidence improved while attacker opportunity increased.",
   act: "Immediate exposure reduced; service and telemetry were affected.",
   attribute: "Attribution depth improved before any change to the environment.",
-  contain: "The observed path was restricted without eroding the sector's own margin.",
+  contain: "The observed path was restricted; the actor was warned, and the contained systems stopped showing what it does.",
   notify: "Stakeholders were aligned on confirmed facts; the actor gained tempo.",
 };

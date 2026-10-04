@@ -193,7 +193,7 @@ const primerTrade: Record<DecisionChoice, string> = {
   observe: "builds evidence; the intruder keeps its opportunity.",
   act: "cuts exposure now; it costs some evidence and service, and the intruder adapts.",
   attribute: "learns who is behind it before touching anything; the intruder keeps moving.",
-  contain: "restricts the path while protecting the sector's margin.",
+  contain: "restricts the path and protects the sector's margin; the actor is warned and the contained systems stop showing it.",
   notify: "aligns leaders and protects service; the intruder gains time.",
 };
 

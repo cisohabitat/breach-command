@@ -138,7 +138,7 @@ export function ownSourceBonus(game: Game, procedure: string) {
 // already set +2, because the larger simply won; the map promised a bonus the
 // roll never showed.
 // What each evidence decision does to the next roll before the cap.
-export const decisionRollShift: Record<DecisionChoice, number> = { observe: 2, act: -1, attribute: 3, contain: 0, notify: 1 };
+export const decisionRollShift: Record<DecisionChoice, number> = { observe: 2, act: -1, attribute: 3, contain: -1, notify: 1 };
 
 export function carryModifier(before: number, change: number) {
   return Math.max(-2, Math.min(3, before + change));

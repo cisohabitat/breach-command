@@ -1,7 +1,7 @@
 // Everything shown to the player during an operation. Nothing here may read the hidden chain beyond what has been revealed, with the Training clue as the single stated exception.
 import { attacks, scenarios, stages, hypotheses, scenarioDynamics, type HypothesisId } from "../game.ts";
 import { adversaryObjectives, sectorSystems } from "../command-systems.ts";
-import { decisionChoices, decisionLanguage, decisionText, decisionTitles, inSentence } from "./content.ts";
+import { decisionChoices, decisionLanguageFor, decisionText, decisionTitles, inSentence, sectorDecisionTerms } from "./content.ts";
 import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type Game, type GuidanceLevel, type HypothesisStanding, type KnownFacts, type LossCause, type ReadingOdds, type SectorRead, type TrainingPrompt } from "./types.ts";
 import { availableIn, carryModifier, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
 import { infrastructureTopologies } from "../phase8.ts";
@@ -270,19 +270,21 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
 export function getDecisionOptions(game: Game) {
   if (!game.pendingDecision) return null;
   const attack = attacks.find(item => item.id === game.pendingDecision)!;
-  const language = decisionLanguage[attack.stage];
+  const language = decisionLanguageFor(game.scenario, attack.stage);
+  const terms = sectorDecisionTerms[game.scenario] ?? sectorDecisionTerms[0];
+  const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
   const service: Record<DecisionChoice, string> = {
     observe: "No immediate disruption",
-    act: language.continuityCost <= -7 ? "Significant service risk" : "Limited service risk",
+    act: `${language.continuityCost <= -7 ? "Interrupts much of" : "Interrupts part of"} ${terms.service}`,
     attribute: "Analyst time only",
-    contain: "Bounded service impact",
-    notify: "Service owners prepared",
+    contain: `Bounded impact on ${terms.service}`,
+    notify: `${capital(terms.owners)} prepared`,
   };
   const evidence: Record<DecisionChoice, string> = {
     observe: "Evidence confidence improves",
     act: "Some telemetry will be lost",
     attribute: "Attribution depth improves",
-    contain: "Local telemetry preserved",
+    contain: "Contained systems go quiet",
     notify: "No new evidence",
   };
   const risk: Record<DecisionChoice, string> = {
