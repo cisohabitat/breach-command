@@ -70,7 +70,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <div className="specialist-picker">
           <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small id="specialist-fatigue">{(campaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
             ? `${namedSpecialists[specialist].name} is at fatigue ${campaign.specialistFatigue[specialist]} of 6, where the specialist bonus no longer applies. Deploying someone else lets them rest.`
-            : "Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty."}</small></label>
+            : `Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty. At ${SPECIALIST_EXHAUSTED_AT} of 6 the specialist's +1 on their own sources no longer applies.`}</small></label>
           <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
             {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{specialists[id].title} · {namedSpecialists[id].name} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
           </select>
