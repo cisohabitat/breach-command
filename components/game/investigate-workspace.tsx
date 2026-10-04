@@ -6,7 +6,7 @@ import { InfrastructureConsole } from "@/components/game/infrastructure-console"
 import { KnownFacts } from "@/components/game/known-facts";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
-import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate, type HypothesisId } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getKnownFacts, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate, type HypothesisId } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { Glossed } from "@/components/game/glossed";
 
@@ -71,6 +71,10 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
     });
   };
   const evidenceReady = readyForTheory(game) || readyToCorrelate(game);
+  // Beyond Training there is no clue, and the prompt once sent the player to
+  // Command to read what they were reasoning from. The latest observation is
+  // already on the record, so it is quoted where the reading is chosen.
+  const latestObservation = game.difficulty !== "training" ? getKnownFacts(game).observations.at(-1) ?? null : null;
   const evidenceButton = evidenceReady && <button className="compare-findings" onClick={() => jumpTo(".evidence-workspace")}>{readyForTheory(game) ? "Record a case theory" : "Compare findings"} <ArrowDown size={14} /></button>;
   // The map is offered as an aside to the ordinary next step, never in place of
   // it, and not alongside a note that is already sending the player elsewhere.
@@ -140,7 +144,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {!game.pendingCommand && !game.pendingSetPiece && (
           <section className="procedure-section">
             <div className="section-heading">
-              <div><h2>Investigation procedures</h2><p>One action per turn. A used source sits out the next {cooldownWindow(game) === 3 ? "two turns" : "three turns"}; its card counts them down.</p></div>
+              <div><h2>Investigation procedures</h2>{/* The rule is read once; after the first turn the cards' countdowns carry it,
+                  and on a laptop its four lines held the first card below the panel's edge. */}{game.turns.length === 0 && <p>One action per turn. A used source sits out the next {cooldownWindow(game) === 3 ? "two turns" : "three turns"}; its card counts them down.</p>}</div>
               <span className="established-key">{procedureScopes[actionScope].title} · {procedureIntensities[actionIntensity].title}</span>
             </div>
             {/* One next step above the cards, not three: until a reading exists, the
@@ -148,10 +153,10 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
                 or the Captain's prompt. Stacked, they put the first card below the
                 fold on a desktop. */}
             {!game.hypothesis
-              ? <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits what the team is seeing. Its own sources then earn the +{OWN_SOURCE_BONUS} own-source bonus.</span></div>
+              ? <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits {game.difficulty === "training" ? "what the team is seeing" : "what you know so far"}. Its own sources then earn the +{OWN_SOURCE_BONUS} own-source bonus.</span></div>
               : trainingNote
                 ? trainingNote
-                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{evidenceButton}{mapAside}</span></div>}
+                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{latestObservation && <b className="prompt-clue">Latest observation: <Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}

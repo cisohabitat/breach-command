@@ -14,8 +14,10 @@ export function SectorBoard({ game }: { game: Game }) {
   return (
     <section className="sector-board" aria-label="Sector and adversary command picture">
       <div className="sector-card">
-        <div className="sector-title"><Activity size={18} /><span><small>{sector.unit}</small><strong>{sector.title}</strong></span><b>{game.sectorHealth}</b></div>
-        <Progress value={game.sectorHealth} aria-label={sector.unit} />
+        <div className="sector-title"><Activity size={18} /><span><small>SECTOR MARGIN</small><strong>{sector.title}</strong></span><b>{game.sectorHealth}</b></div>
+        {/* One name for the meter everywhere: a second name in capitals above it read
+            as a different meter ("PATIENT SERVICE MARGIN" over "Clinical service margin"). */}
+        <Progress value={game.sectorHealth} aria-label={sector.title} />
         <p className={`sector-read ${read.diverged ? "diverged" : ""}`}><strong>{read.headline}.</strong> {read.detail}</p>
         <p>{sector.rule}</p>
       </div>

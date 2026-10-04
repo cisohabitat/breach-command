@@ -21,13 +21,14 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
   const actionLabel = current < 0 ? "Finish tutorial" : workspace === "investigate" ? null : "Open Investigate";
   // On Investigate the next-step note above the procedures already says what to
   // do, and the full card said it again above the board, pushing the grid down
-  // for exactly the player who most needs it in view. There it is a progress line.
+  // for exactly the player who most needs it in view. There it is a progress line,
+  // and once the academy is complete it is nothing: "Field qualification complete"
+  // held a row above the procedures for the rest of the operation.
+  if (workspace === "investigate" && current < 0) return null;
   if (workspace === "investigate") return (
     <section className="tutorial-coach compact" aria-label="Command academy tutorial">
       <GraduationCap size={17} />
-      <p>{current >= 0
-        ? <><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>ACADEMY {current + 1}/{steps.length}</span><strong>{steps[current].title}</strong></>
-        : <><span className="eyebrow">ACADEMY COMPLETE</span><strong>Field qualification complete</strong></>}</p>
+      <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>ACADEMY {current + 1}/{steps.length}</span><strong>{steps[current].title}</strong></p>
       <button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button>
     </section>
   );

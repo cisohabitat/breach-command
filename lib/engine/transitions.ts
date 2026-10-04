@@ -5,25 +5,24 @@ import { infrastructureTopologies, sectorSetPieces, seededRoll } from "../phase8
 import { objectiveTheory } from "../phase9.ts";
 import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguage, decisionTitles, injects, scenarioProfiles, inSentence } from "./content.ts";
 import { type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type Inject, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice } from "./types.ts";
-import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
+import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, decisionRollShift, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
 
 // Where the bonus or penalty waiting for the next roll came from, so the roll
 // can name it: "Since your last roll +2" covered a monitored node, an inject and
 // a decision alike. Two different sources read as several.
-// Everything waiting for the next roll adds up under one cap, -2 to +3. A
-// monitored node's +2 once vanished whenever a comparison or a decision had
-// already set +2, because the larger simply won; the map promised a bonus the
-// roll never showed.
-function carryModifier(before: number, change: number) {
-  return Math.max(-2, Math.min(3, before + change));
-}
+const signed = (value: number) => `${value < 0 ? "−" : "+"}${Math.abs(value)}`;
+const JOINED = /, (together|capped at)$/;
 
-function carriedSource(before: number, beforeSource: string | null, after: number, source: string): string | null {
-  if (after === before) return beforeSource;
-  if (after === 0) return null;
-  if (before === 0 || beforeSource === source || !beforeSource) return source;
-  // Both named, so a breakdown never shows a total it does not explain.
-  return beforeSource.includes(source) ? beforeSource : `${beforeSource}; ${source}`;
+// With two or more sources each is named with its own share and the label ends on
+// how they combine, so "Monitored Access boundary +2; Inject: Hard going −2,
+// together" sits beside a 0 and still explains it. Netting to zero once dropped
+// the label, and with it the part: a map action looked wasted.
+function carriedSource(before: number, beforeSource: string | null, after: number, source: string, change = after - before): string | null {
+  if (change === 0) return beforeSource;
+  if (!beforeSource || (before === 0 && !JOINED.test(beforeSource))) return after === 0 ? null : source;
+  const listed = JOINED.test(beforeSource) ? beforeSource.replace(JOINED, "") : `${beforeSource} ${signed(before)}`;
+  const capped = before + change !== after || /capped at$/.test(beforeSource);
+  return `${listed}; ${source} ${signed(change)}, ${capped ? "capped at" : "together"}`;
 }
 
 export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max), setup: GameSetup = {}): Game {
@@ -139,7 +138,7 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
     mapActionsRemaining: game.mapActionsRemaining - 1,
     mapHistory: [...game.mapHistory, { node: nodeId, action, turn: game.turns.length, effect }],
     nextModifier: carryModifier(game.nextModifier, change.modifier),
-    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, carryModifier(game.nextModifier, change.modifier), `Monitored ${node.label}`),
+    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, carryModifier(game.nextModifier, change.modifier), `Monitored ${node.label}`, change.modifier),
     impact: clamp(game.impact + change.impact),
     continuity: clamp(game.continuity + change.continuity),
     sectorHealth: clamp(game.sectorHealth + change.sector),
@@ -202,7 +201,9 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   const intensity = procedureIntensities[plan.intensity];
   const focusNode = infrastructureTopologies[g.scenario].nodes.find(node => node.id === g.focusedNode)!;
   // One computation: the modifier the roll resolves with is the one previewed.
-  const modifier = getModifierBreakdown(g, procedure, plan).total;
+  const breakdown = getModifierBreakdown(g, procedure, plan);
+  const modifier = breakdown.total;
+  const parts = breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => ({ label: part.label, value: part.value }));
   const total = raw + modifier;
   const success = total >= config.threshold;
   g.nextModifier = 0;
@@ -287,8 +288,9 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     if (g.failures >= 3) g.failures = 0;
     if (inject.effect === "bonus" || inject.effect === "penalty") {
       const before = g.nextModifier;
-      g.nextModifier = carryModifier(before, inject.effect === "bonus" ? 2 : -2);
-      g.nextModifierSource = carriedSource(before, g.nextModifierSource, g.nextModifier, `Inject: ${inject.title}`);
+      const shift = inject.effect === "bonus" ? 2 : -2;
+      g.nextModifier = carryModifier(before, shift);
+      g.nextModifierSource = carriedSource(before, g.nextModifierSource, g.nextModifier, `Inject: ${inject.title}`, shift);
       if (inject.effect === "penalty") impactChange += 6;
     }
     if (inject.effect === "pressure") impactChange += 8;
@@ -392,7 +394,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.specialist === "communications") impactChange -= 2;
   g.impact = clamp(g.impact + impactChange);
   g.continuity = clamp(g.continuity + continuityChange);
-  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, sectorChange, objectiveChange, hypothesisTarget, hypothesisMatched, discriminating, windfall: !!revealed && revealed !== hypothesisTarget });
+  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, parts, sectorChange, objectiveChange, hypothesisTarget, hypothesisMatched, discriminating, windfall: !!revealed && revealed !== hypothesisTarget });
   if (breached(g)) settle(g, "lost");
   else if (exerciseEnd) settle(g, "exercise");
   else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");
@@ -473,13 +475,13 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
 
   switch (choice) {
     case "observe":
-      g.nextModifier = carryModifier(g.nextModifier, 2);
+      g.nextModifier = carryModifier(g.nextModifier, decisionRollShift.observe);
       g.impact = clamp(g.impact + language.observeCost);
       g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
       g.objectiveProgress = clamp(g.objectiveProgress + 6);
       break;
     case "act":
-      g.nextModifier = carryModifier(g.nextModifier, -1);
+      g.nextModifier = carryModifier(g.nextModifier, decisionRollShift.act);
       g.impact = clamp(g.impact + language.actRelief);
       g.continuity = clamp(g.continuity + language.continuityCost);
       g.adversaryTempo = Math.max(0, g.adversaryTempo - 1);
@@ -487,7 +489,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.sectorHealth = clamp(g.sectorHealth - 2);
       break;
     case "attribute":
-      g.nextModifier = carryModifier(g.nextModifier, 3);
+      g.nextModifier = carryModifier(g.nextModifier, decisionRollShift.attribute);
       g.impact = clamp(g.impact + 3);
       g.sectorHealth = clamp(g.sectorHealth - 1);
       g.objectiveProgress = clamp(g.objectiveProgress - 4);
@@ -499,7 +501,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.objectiveProgress = clamp(g.objectiveProgress - 6);
       break;
     case "notify":
-      g.nextModifier = carryModifier(g.nextModifier, 1);
+      g.nextModifier = carryModifier(g.nextModifier, decisionRollShift.notify);
       g.impact = clamp(g.impact + 2);
       g.continuity = clamp(g.continuity + 3);
       g.sectorHealth = clamp(g.sectorHealth - 3);
@@ -507,7 +509,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
       break;
   }
-  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Evidence decision: ${decisionLanguage[attacks.find(item => item.id === game.pendingDecision)!.stage][decisionTitles[choice]]}`);
+  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Evidence decision: ${decisionLanguage[attacks.find(item => item.id === game.pendingDecision)!.stage][decisionTitles[choice]]}`, decisionRollShift[choice]);
 
   if (choice === "act") {
     const nextStage = Math.min(3, attack.stage + 1);
@@ -569,7 +571,7 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   const option = event[choice];
   const g: Game = { ...game, commandHistory: [...game.commandHistory] };
   g.nextModifier = carryModifier(g.nextModifier, option.modifier);
-  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Command event: ${option.title}`);
+  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Command event: ${option.title}`, option.modifier);
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
   g.adversaryTempo = clamp(g.adversaryTempo + option.tempo, 0, 3);
@@ -628,7 +630,7 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const g: Game = {
     ...game,
     nextModifier: correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
-    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, "Correct comparison of findings"),
+    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, "Correct comparison of findings", correct ? (theoryAligned ? 3 : 2) : 0),
     impact: clamp(game.impact + (correct ? (theoryAligned ? -5 : -3) : 4)),
     objectiveProgress: clamp(game.objectiveProgress + (correct ? (theoryAligned ? -10 : -6) : 3)),
     correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding }],

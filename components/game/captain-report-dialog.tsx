@@ -1,10 +1,24 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { ArrowDown, ArrowRight, BrainCircuit, CheckCheck, CircleSlash, Eye, MessagesSquare, Shield, ShieldCheck, Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, describeMeterChange, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game } from "@/lib/advanced-game";
+import { attacks, decisionRollShift, describeMeterChange, describeRollShift, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { Glossed } from "@/components/game/glossed";
+
+// The business impact an inject added to the turn's movement, so a protected
+// failed check beside "Business impact +16 worse" says where the rest came from.
+function injectImpact(report: Game["turns"][number]) {
+  return report.inject?.effect === "penalty" ? 6 : report.inject?.effect === "pressure" ? 8 : report.inject?.effect === "relief" ? -8 : 0;
+}
+
+// The report names the roll's parts as the action sheet named them. It once said
+// "own source +1, other parts +5" beside a sheet that listed all four.
+function rollParts(report: Game["turns"][number]) {
+  const signed = (value: number) => `${value < 0 ? "−" : "+"}${Math.abs(value)}`;
+  if (report.parts?.length) return ` (${report.parts.map(part => `${part.label} ${signed(part.value)}`).join(", ")})`;
+  return report.planningBonus > 0 || report.specialistBonus > 0 ? ` (${[report.planningBonus > 0 ? `own source +${report.planningBonus}` : "", report.specialistBonus > 0 ? `specialist +${report.specialistBonus}` : "", report.modifier - report.planningBonus - report.specialistBonus ? `other parts ${report.modifier - report.planningBonus - report.specialistBonus > 0 ? "+" : "−"}${Math.abs(report.modifier - report.planningBonus - report.specialistBonus)}` : ""].filter(Boolean).join(", ")})` : "";
+}
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
   const { report, game, ended, config, dismissReport, decide } = session;
@@ -53,7 +67,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             <section className="report-summary" aria-label="Procedure result">
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
-                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{report.planningBonus > 0 || report.specialistBonus > 0 ? ` (${[report.planningBonus > 0 ? `own source +${report.planningBonus}` : "", report.specialistBonus > 0 ? `specialist +${report.specialistBonus}` : "", report.modifier - report.planningBonus - report.specialistBonus ? `other parts ${report.modifier - report.planningBonus - report.specialistBonus > 0 ? "+" : "−"}${Math.abs(report.modifier - report.planningBonus - report.specialistBonus)}` : ""].filter(Boolean).join(", ")})` : ""}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
+                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{rollParts(report)}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
                 {report.success ? <CheckCheck size={23} aria-hidden="true" /> : <CircleSlash size={23} aria-hidden="true" />}
               </div>
               {/* The plan and the turn's movement are told apart: a playtest read
@@ -65,8 +79,8 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 : report.success
                   ? "The check completed and found no stage, which rules out what this source could see at this stage; the adversary used the time."
                   : report.planningBonus > 0
-                    ? "The check failed, so it settled nothing. Because it was one of your reading's own sources, it carried no extra penalty, but a turn that finds nothing still lets adversary progress rise by its usual amount, raises business impact more than a success and wears the sector margin."
-                    : "The check failed, so it settled nothing and gave the adversary the most time."}{report.adversaryEvent ? " The situation also escalated, below, which adds business impact and costs service." : ""}</span></p>
+                    ? "The check failed, so it settled nothing. Because it was one of your reading's own sources, adversary progress did not take the extra step a failed check usually gives it; business impact and the sector margin still moved as they do on any turn that finds nothing."
+                    : "The check failed, so it settled nothing and gave the adversary the most time."}{injectImpact(report) ? ` The inject below accounts for ${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))} of the business impact change.` : ""}{report.adversaryEvent ? " The situation also escalated, below, which adds business impact and costs service." : ""}</span></p>
               <p className="report-narrative"><Glossed text={report.narrative} /></p>
               {report.revealed && <div className="discovery"><ShieldCheck size={22} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short} · {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">Your reading was {hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase()}, so the stage was found but the route was not predicted.</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">This is stage {attacks.find(attack => attack.id === report.revealed)!.stage + 1}, further along the chain. The stage you were testing, stage {attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1}, is still open, and a find here says nothing about the route it used.</small>}</div></div>}
               {/* A completed check that finds nothing rules out every technique its
@@ -87,7 +101,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 <div key={item.stage} className="decision-recorded" role="status">
                   <span className="eyebrow">RESPONSE RECORDED</span>
                   <strong>{item.title}</strong>
-                  <p>{item.effect} {describeMeterChange(game, "impact", item.impactChange)} · {describeMeterChange(game, "continuity", item.continuityChange)} · {describeMeterChange(game, "sector", item.sectorChange)} · {describeMeterChange(game, "objective", item.objectiveChange)}. How well it fitted the moment is judged in the review.</p>
+                  <p>{item.effect} {describeMeterChange(game, "impact", item.impactChange)} · {describeMeterChange(game, "continuity", item.continuityChange)} · {describeMeterChange(game, "sector", item.sectorChange)} · {describeMeterChange(game, "objective", item.objectiveChange)}{report.number === game.turns.length && game.nextModifierSource?.includes("Evidence decision") ? ` · next roll ${game.nextModifier < 0 ? "−" : "+"}${Math.abs(game.nextModifier)}${game.nextModifierSource.includes(";") ? " with what was already carried" : ""}` : ""}. How well it fitted the moment is judged in the review.</p>
                 </div>
               ))}
               {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">SITUATION ESCALATES</span><p>{report.adversaryEvent}</p></div></div>}
@@ -124,7 +138,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {/* At every difficulty but Expert: the review grades every decision by this,
                       and an Operational playtest was graded on a rule it was never shown. */}
                   {game.mode !== "expert" && (
-                    <p className="decision-pressure">Pressure now: business impact {game.impact}, actor pace {getAdversaryState(game).toLowerCase()} (how fast its progress grows each turn, not how far it has got). {game.impact >= 55 || game.adversaryTempo >= 2 ? "That is high: acting or containing fits best." : "That is low: watching or attributing is affordable."}</p>
+                    <p className="decision-pressure">Pressure now: business impact {game.impact}, adversary pace {getAdversaryState(game).toLowerCase()}: how fast adversary progress grows each turn, which is not how far it has got ({game.objectiveProgress} so far). {game.impact >= 55 || game.adversaryTempo >= 2 ? "That is high: acting or containing fits best." : "That is low: watching or attributing is affordable."}</p>
                   )}
                   <div ref={optionList}>
                     {decision.options.map(option => (
@@ -159,7 +173,7 @@ function previewDecision(game: Game, choice: DecisionChoice) {
       describeMeterChange(game, "continuity", next.continuity - game.continuity),
       describeMeterChange(game, "sector", next.sectorHealth - game.sectorHealth),
       describeMeterChange(game, "objective", next.objectiveProgress - game.objectiveProgress),
-      next.nextModifier !== game.nextModifier ? `next roll ${next.nextModifier > game.nextModifier ? "+" : "−"}${Math.abs(next.nextModifier - game.nextModifier)}` : "",
+      describeRollShift(game.nextModifier, decisionRollShift[choice]),
     ].filter(Boolean).join(" · ");
   } catch {
     return null;

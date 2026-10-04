@@ -6,7 +6,7 @@ export const SESSION_KEY = "breach-command.session";
 // newer build's operation outlives an older bundle served offline. A build that
 // can read it moves it back and offers it for resume.
 export const PARKED_SESSION_KEY = "breach-command.session.parked";
-export const SESSION_VERSION = 15;
+export const SESSION_VERSION = 16;
 
 export type SavedSession = {
   version: number;
@@ -99,7 +99,7 @@ export function parseSession(raw: string): SavedSession | null {
       failures: bounded(game.failures, 0, 0, 3),
       nextModifier: bounded(game.nextModifier, 0, -5, 5),
       // Version 15 names what set the modifier; older saves carry none.
-      nextModifierSource: typeof game.nextModifierSource === "string" && game.nextModifierSource.length <= 120 ? game.nextModifierSource : null,
+      nextModifierSource: typeof game.nextModifierSource === "string" && game.nextModifierSource.length <= 400 ? game.nextModifierSource : null,
       adversaryTempo: bounded(game.adversaryTempo, 0, 0, 3),
       responseScore: bounded(game.responseScore, 0, 0, 100),
       established: Array.isArray(game.established) ? game.established : [],
@@ -143,6 +143,9 @@ export function parseSession(raw: string): SavedSession | null {
         ...turn,
         plan: turn.plan ?? { scope: "focused", intensity: "balanced" },
         specialistBonus: Number.isFinite(turn.specialistBonus) ? turn.specialistBonus : 0,
+        // Version 16 names every part of the roll; an older turn has none and the
+        // report falls back to its own-source and specialist summary.
+        parts: Array.isArray(turn.parts) ? turn.parts.filter((part: unknown): part is { label: string; value: number } => !!part && typeof (part as { label?: unknown }).label === "string" && Number.isFinite((part as { value?: unknown }).value)).slice(0, 12) : [],
         hypothesisTarget: typeof turn.hypothesisTarget === "string" ? turn.hypothesisTarget : null,
         hypothesisMatched: turn.hypothesisMatched === true,
         discriminating: turn.discriminating === true,

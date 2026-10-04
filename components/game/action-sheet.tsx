@@ -28,7 +28,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
         onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
       >
         <SheetHeader><div className="eyebrow">PREPARE ACTION</div><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc && <Glossed text={proc.description} />}</SheetDescription></SheetHeader>
-        {proc && game && <p className="carried-plan" role="status">{game.turns.length ? "Carried from your last action: " : "Starting plan: "}<strong>{procedureScopes[actionScope].title} scope</strong> and <strong>{procedureIntensities[actionIntensity].title} analysis</strong>. {game.turns.length ? "These stay selected until you change them." : "Whatever you choose here stays selected for later turns until you change it."}</p>}
+        {proc && game && <p className="carried-plan" role="status">{game.turns.length ? "Carried from your last action: " : "Starting plan: "}<strong>{procedureScopes[actionScope].title} scope</strong> and <strong>{procedureIntensities[actionIntensity].title} analysis</strong>. {game.turns.length ? "These stay selected until you change them in the plan options below the Run button." : "Change them in the plan options below the Run button; whatever you choose stays selected for later turns until you change it."}</p>}
         {proc && game && <>
           <div className="action-note"><span className="eyebrow">HYPOTHESIS CHECK</span><p><Glossed text={proc.question} /></p></div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
@@ -47,12 +47,12 @@ export function ActionSheet({ session }: { session: GameSession }) {
           </div>
           {breakdown && (
             <details className="modifier-details">
-              <summary>How this modifier is calculated<span>{breakdown.parts.filter(part => part.value !== 0).map(part => `${part.label} ${part.value > 0 ? "+" : ""}${part.value}`).join(" · ") || (breakdown.parts.some(part => part.suppressed) ? "One bonus is unavailable — see why" : "Nothing applies")}</span></summary>
+              <summary>How this modifier is calculated<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => `${part.label} ${part.value > 0 ? "+" : ""}${part.value}`).join(" · ") || (breakdown.parts.some(part => part.suppressed) ? "One bonus is unavailable — see why" : "Nothing applies")}</span></summary>
               <ul className="modifier-breakdown">
-                {breakdown.parts.filter(part => part.value !== 0 || part.suppressed).map(part => (
+                {breakdown.parts.filter(part => part.value !== 0 || part.suppressed || part.shown).map(part => (
                   <li key={part.label} className={part.suppressed ? "suppressed" : ""}><span>{part.label}</span><strong>{part.suppressed ? "—" : `${part.value > 0 ? "+" : ""}${part.value}`}</strong><small>{part.detail}</small></li>
                 ))}
-                {breakdown.parts.every(part => part.value === 0 && !part.suppressed) && <li><span>No modifiers apply</span><strong>0</strong><small>This is a plain d20 against the difficulty threshold.</small></li>}
+                {breakdown.parts.every(part => part.value === 0 && !part.suppressed && !part.shown) && <li><span>No modifiers apply</span><strong>0</strong><small>This is a plain d20 against the difficulty threshold.</small></li>}
               </ul>
             </details>
           )}

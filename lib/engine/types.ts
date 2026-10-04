@@ -52,6 +52,9 @@ export type Turn = {
   hypothesis: HypothesisId | null;
   plan: ProcedurePlan;
   specialistBonus: number;
+  // Every part of the roll's modifier, named as the action sheet named it, so the
+  // report can explain its total instead of lumping "other parts".
+  parts: { label: string; value: number }[];
   sectorChange: number;
   objectiveChange: number;
   // What the working hypothesis was actually tested against on this turn. The
@@ -195,7 +198,9 @@ export type TrainingPrompt = {
   clue: string | null;
 };
 
-export type ModifierPart = { label: string; value: number; detail: string; suppressed?: boolean };
+// `shown` keeps a named part on screen at zero: two carried sources that cancel
+// still explain the total.
+export type ModifierPart = { label: string; value: number; detail: string; suppressed?: boolean; shown?: boolean };
 
 export type HypothesisStanding = {
   level: "none" | "untested" | "holding" | "weakening" | "unsupported";

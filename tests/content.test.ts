@@ -155,6 +155,9 @@ test("offers a graduated measure in every sector decision", () => {
     assert.ok(c.sector < a.sector && c.sector > b.sector, `${piece.id}: its sector effect sits between the two`);
     assert.ok(c.continuity >= a.continuity, `${piece.id}: it never costs more service than the decisive option`);
     assert.ok(c.quality >= 4, `${piece.id}: applying a control narrowly is defensible command judgement`);
+    // A narrow measure that improved every meter was no decision at all: two
+    // laptop playtests took it every time and read it as free.
+    assert.ok(c.impact > 0 || c.continuity < 0 || c.sector < 0 || c.objective > 0, `${piece.id}: the narrow measure costs something`);
   }
 });
 

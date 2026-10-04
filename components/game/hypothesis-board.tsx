@@ -1,6 +1,7 @@
 import { BrainCircuit, Gauge } from "lucide-react";
 import {
   attacks,
+  availableIn,
   getAttributionRead,
   getAdversaryState,
   getHypothesisStanding,
@@ -46,7 +47,7 @@ export function HypothesisBoard({
           className={`adversary-state tempo-${game.adversaryTempo}`}
           title={attribution.detail}
         >
-          <Gauge size={14} /> ACTOR: {getAdversaryState(game).toUpperCase()}
+          <Gauge size={14} /> PACE: {getAdversaryState(game).toUpperCase()}
         </span>
       </div>
       {standing && standing.level !== "none" && (
@@ -110,10 +111,13 @@ export function HypothesisBoard({
               <strong>{hypothesis.title}</strong>
               {outMark(hypothesis.id)}
               <span>{hypothesis.premise}</span>
+              {/* Each reading's own sources and whether they are ready, so a player
+                  can see which reading they could test this turn without declaring
+                  each in turn to find out. */}
+              <small className="compare-sources">Sources: {hypothesisSources(game, hypothesis.id).map(id => `${procedureById(game, id)?.title ?? id}${availableIn(game, id) ? ` (back in ${availableIn(game, id)})` : ""}`).join(" · ")}</small>
             </button>
           ))}
         </div>
-        {active && <small className="hypothesis-compare-sources">Evidence this reading predicts: {hypothesisSources(game, active.id).map(id => procedureById(game, id)?.title).filter(Boolean).join(" · ")}</small>}
       </details>
     </section>
   );

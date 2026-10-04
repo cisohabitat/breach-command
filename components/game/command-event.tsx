@@ -1,4 +1,4 @@
-import { commandEvents, describeMeterChange, type CommandEventId, type Game } from "@/lib/advanced-game";
+import { commandEvents, describeMeterChange, describeRollShift, type CommandEventId, type Game } from "@/lib/advanced-game";
 import { ArrowRight, RadioTower } from "lucide-react";
 import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
@@ -24,7 +24,7 @@ function effectLine(game: Game, option: { impact: number; continuity: number; mo
   return [
     describeMeterChange(game, "impact", option.impact),
     describeMeterChange(game, "continuity", option.continuity),
-    option.modifier ? `next roll ${option.modifier > 0 ? "+" : "−"}${Math.abs(option.modifier)}` : "",
-    option.tempo ? `actor pace ${option.tempo > 0 ? "+" : "−"}${Math.abs(option.tempo)} ${option.tempo > 0 ? "worse" : "better"}` : "",
+    describeRollShift(game.nextModifier, option.modifier),
+    option.tempo ? `adversary pace ${option.tempo > 0 ? "faster" : "slower"} (how fast adversary progress grows)` : "",
   ].filter(Boolean).join(" · ");
 }

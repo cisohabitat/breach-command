@@ -1,7 +1,7 @@
 // Turn resolution, blocking states, end states and the decision layer.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,type Difficulty,type Game,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,getModifierBreakdown,type Difficulty,type Game,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {CHALLENGE_VERSION,decodeChallenge,encodeChallenge,isOutdatedChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
@@ -474,9 +474,14 @@ test("stacks every bonus waiting for the next roll under one cap", () => {
   assert.equal(getMapActionEffect(base,node,"monitor").modifier,2,"monitoring the boundary offers +2");
   const monitored=resolveMapAction(base,node,"monitor");
   assert.equal(monitored.nextModifier,3,"a monitored node adds to a carried bonus, capped at +3");
-  assert.match(monitored.nextModifierSource??"",/Correct comparison of findings; Monitored /,"both sources are named");
+  assert.equal(monitored.nextModifierSource,"Correct comparison of findings +2; Monitored Access boundary +2, capped at","each source is named with its own share, and the cap is stated");
   const low=resolveMapAction({...base,nextModifier:-2,nextModifierSource:"Inject: x"},node,"monitor");
   assert.equal(low.nextModifier,0,"a bonus offsets a penalty rather than replacing it");
+  assert.equal(low.nextModifierSource,"Inject: x −2; Monitored Access boundary +2, together","sources that cancel are still named");
+  const part=getModifierBreakdown(low,"identity").parts.find(item=>item.label===low.nextModifierSource);
+  assert.ok(part?.shown&&part.value===0,"the preview keeps the cancelled part on screen");
+  const played=playTurn({...low,pendingDecision:null},"identity");
+  assert.ok(played.turns.at(-1)!.parts.some(item=>item.label===low.nextModifierSource),"the turn records the part the report names");
 });
 
 test("gives each difficulty its own allowance of free turns", () => {

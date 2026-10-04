@@ -5021,8 +5021,12 @@ html,body {
 }
 /* Beside the strip, which already lists the reading's sources, the comparison
    does not list them again; on a phone the strip folds away and it does. */
-.hypothesis-compare-sources {
-  display:none;
+.hypothesis-compare-options .compare-sources {
+  display:block;
+  margin-top:6px;
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
 }
 /* Four expanded premises are 955px on a phone and push the procedure grid three
    screens down. Once a reading is recorded the cards give way to a compact
@@ -5192,38 +5196,18 @@ html,body {
 .investigation-dashboard .procedure-top {
   margin-bottom:12px;
 }
+/* The procedures flow with the page. Beside the reading they once scrolled inside
+   a sticky panel of their own, and on a laptop that panel showed two to four of
+   twelve cards: two playtests picked from what they could see and missed the
+   stronger sources below its edge. */
 .investigation-actions {
-  position:sticky;
-  top:90px;
   border:1px solid #34483a;
   background:#121c17;
   border-radius:9px;
   padding:17px;
-  max-height:calc(100dvh - 108px);
-  overflow:auto;
-  scrollbar-width:thin;
-  scrollbar-color:#46563e transparent;
 }
 .investigation-actions .inline-result {
   margin-top:0;
-}
-/* Beside the reading the panel scrolls inside itself, and a heading cut by its
-   top border read as a layout fault. A strip pinned over the top padding fades
-   whatever scrolls under the edge; at rest it lies over blank padding. */
-@media(min-width:901px) {
-  .investigation-actions::before {
-    content:"";
-    position:sticky;
-    /* Sticky edges sit inside the panel's padding, so at top:0 the strip rested
-       over the heading's first line; it belongs in the padding above it. */
-    top:-17px;
-    z-index:3;
-    display:block;
-    height:18px;
-    margin:-17px -17px -1px;
-    background:linear-gradient(#121c17,#121c1700);
-    pointer-events:none;
-  }
 }
 .action-sheet {
   width:min(520px,94vw)!important;
@@ -6177,7 +6161,7 @@ html,body {
   padding:34px 15px 12px;
   border:0;
   border-radius:0 0 7px 7px;
-  background:linear-gradient(#14201800,#142018 46%);
+  background:linear-gradient(#14201800,#142018 22%);
   color:var(--lime);
   font-size:var(--type-caption);
   font-weight:500;
@@ -7867,7 +7851,7 @@ awareness. */
   max-width:80ch;
 }
 /* The training aid now prompts a step in the reasoning. */
-.training-prompt .prompt-clue {
+.training-prompt .prompt-clue,.guide-nudge .prompt-clue {
   display:block;
   margin-top:6px;
   font-weight:400;
@@ -8203,13 +8187,6 @@ in colour, and the carried plan is stated before the options. */
     color:var(--text);
     font-weight:500;
   }
-  .hypothesis-compare-sources {
-    display:block;
-    margin-top:9px;
-    color:var(--text-soft);
-    font-size:var(--type-caption);
-    line-height:var(--leading-base);
-  }
   /* Before a reading is recorded the four cards already are the comparison, so
      the folded copy of it only costs height. */
   .hypothesis-board:not(.has-reading) .hypothesis-compare {
@@ -8297,6 +8274,41 @@ in colour, and the carried plan is stated before the options. */
   }
   .game-layout {
     padding-top:0;
+  }
+}
+/* A small laptop has room for the three readouts beside the case title. Stacked
+   under it they took a second band of 120 px and left half the width empty, and
+   the procedures started below the fold of a 1024 x 768 screen. */
+@media(min-width:960px) and (max-width:1100px) {
+  .game-heading {
+    flex-direction:row;
+    align-items:center;
+    gap:24px;
+  }
+  .game-heading>div:first-child {
+    width:auto;
+    flex:1 1 360px;
+  }
+  .case-meters {
+    display:flex;
+    width:auto;
+    max-width:none;
+    flex:0 1 auto;
+  }
+  .case-meters>div {
+    width:138px;
+  }
+}
+/* Beside the reading, the reference column is narrow below 1195 px, and three map
+   controls side by side ran their cost lines to a word a line and past the panel
+   edge. The selected node takes the row and the two actions share the next. */
+@media(min-width:651px) and (max-width:1194px) {
+  .map-command-bar {
+    grid-template-columns:1fr 1fr;
+  }
+  .map-command-bar>div {
+    grid-column:1/-1;
+    min-height:0;
   }
 }
 @media(max-width:650px) {

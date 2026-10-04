@@ -3,7 +3,7 @@ import { attacks, procedures, sectorProcedures, hypotheses, scenarioDynamics, ra
 import { procedureIntensities, procedureScopes, sectorSystems, specialists, type ProcedurePlan } from "../command-systems.ts";
 import { infrastructureTopologies } from "../phase8.ts";
 import { adversaryProfiles, meterDirection, responseProfiles } from "./content.ts";
-import { type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
+import { type DecisionChoice, type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
 
 // The fatigue at which a specialist's bonus stops applying. The roll, its
 // preview and the deployment screen all read it here.
@@ -133,6 +133,25 @@ export function ownSourceBonus(game: Game, procedure: string) {
   return game.hypothesis && hypothesisSources(game, game.hypothesis).includes(procedure) ? OWN_SOURCE_BONUS : 0;
 }
 
+// Everything waiting for the next roll adds up under one cap, -2 to +3. A
+// monitored node's +2 once vanished whenever a comparison or a decision had
+// already set +2, because the larger simply won; the map promised a bonus the
+// roll never showed.
+// What each evidence decision does to the next roll before the cap.
+export const decisionRollShift: Record<DecisionChoice, number> = { observe: 2, act: -1, attribute: 3, contain: 0, notify: 1 };
+
+export function carryModifier(before: number, change: number) {
+  return Math.max(-2, Math.min(3, before + change));
+}
+
+// A carried change to the next roll in words, saying when the cap trims it.
+export function describeRollShift(before: number, shift: number) {
+  if (!shift) return "";
+  const actual = carryModifier(before, shift) - before;
+  const sign = actual < 0 || (actual === 0 && shift < 0) ? "−" : "+";
+  return `next roll ${sign}${Math.abs(actual)}${actual !== shift ? ` (rolls carry ${shift > 0 ? "+3" : "−2"} at most)` : ""}`;
+}
+
 export function getModifierBreakdown(game: Game, procedure: string, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }) {
   const specialist = specialists[game.specialist];
   const focusNode = infrastructureTopologies[game.scenario].nodes.find(node => node.id === game.focusedNode);
@@ -144,7 +163,7 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
   const parts: ModifierPart[] = [
     { label: "Established", value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
     { label: "Own source", value: ownSourceBonus(game, procedure), detail: "One of the declared reading's own evidence sources. Testing the explanation you have committed to earns this; it says nothing about whether the explanation is right." },
-    { label: game.nextModifierSource ?? "Since your last roll", value: game.nextModifier, detail: "Set up by something since your last roll: monitoring a node on the map, an evidence decision, a command event, a correct comparison of two findings, or an inject. It applies to this roll only." },
+    { label: game.nextModifierSource ?? "Since your last roll", value: game.nextModifier, shown: !!game.nextModifierSource, detail: "Set up by something since your last roll: monitoring a node on the map, an evidence decision, a command event, a correct comparison of two findings, or an inject. It applies to this roll only." },
     { label: "After two failed rolls", value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
     specialist.procedures.includes(procedure as never) && game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT
       ? { label: "Specialist", value: 0, suppressed: true, detail: `${specialist.title} works this source, but at fatigue ${game.specialistFatigue} of 6 the bonus no longer applies. Rest comes from finishing the operation.` }

@@ -1,5 +1,5 @@
 import { Activity, CircleDot, Crosshair, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
-import { attacks, describeMeterChange, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
+import { attacks, describeMeterChange, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
 
 // The full cost of a map action, in the same words and directions every other
 // meter change uses. Sector margin and actor progress were missing, and the
@@ -8,7 +8,7 @@ function costLine(game: Game, nodeId: string, action: MapAction) {
   const change = getMapActionEffect(game, nodeId, action);
   return [
     "Spend 1 action",
-    change.modifier ? (game.nextModifier + change.modifier > 3 ? `next procedure +${Math.max(0, 3 - game.nextModifier)} (bonuses cap at +3)` : `next procedure +${change.modifier}`) : null,
+    describeRollShift(game.nextModifier, change.modifier) || null,
     describeMeterChange(game, "impact", change.impact),
     change.continuity ? describeMeterChange(game, "continuity", change.continuity) : null,
     describeMeterChange(game, "sector", change.sector),

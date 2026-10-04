@@ -13,7 +13,22 @@ import { useEffect, type RefObject } from "react";
 // because it may have appeared behind the overlay.
 export function returnFocusToAwaiting(event: Event) {
   const awaiting = document.querySelector<HTMLElement>("[data-awaiting-heading]");
-  if (!awaiting) return;
+  if (!awaiting) {
+    // Back on Investigate the next turn starts from the reading and the cards, so
+    // that is where the page lands, the same place each turn. It once came back
+    // anywhere from the meters to half-way down the grid. Focus stays where the
+    // dialog returns it; only the scroll moves.
+    const dashboard = document.querySelector<HTMLElement>(".investigation-dashboard");
+    if (dashboard && window.matchMedia("(min-width: 901px)").matches) requestAnimationFrame(() => {
+      // The workspace tabs stay pinned at the top of the screen, so the landing
+      // clears them rather than tucking the reading's heading underneath.
+      const tabs = document.querySelector<HTMLElement>(".workspace-tabs");
+      const pinned = tabs && getComputedStyle(tabs).position === "sticky" ? tabs.getBoundingClientRect().height : 0;
+      const top = dashboard.getBoundingClientRect().top + window.scrollY - pinned - 12;
+      window.scrollTo({ top, behavior: "auto" });
+    });
+    return;
+  }
   event.preventDefault();
   awaiting.focus();
   awaiting.scrollIntoView({ block: "center" });
