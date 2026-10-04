@@ -133,7 +133,6 @@ export function getCoachPrompt(game: Game, guided = false) {
   // there is something worth comparing.
   if (readyForTheory(game)) return "Two stages are confirmed, so the adversary's objective can now be assessed. Record a case theory: a comparison that fits it relieves more pressure than one that does not.";
   if (readyToCorrelate(game)) return "Two findings have confirmed stages. Before the next procedure, compare them: did one enable the other, or do they only overlap in time?";
-  if (game.impact >= 70) return `Business impact is ${game.impact}, and the operation ends at 100. Spend this turn on a source your reading predicts that can see this stage, and when the next stage is confirmed, favour acting or containing over watching.`;
   // The advice to revise follows the reading's standing. Keyed to any empty
   // check ever made, it told a player to revise for the rest of the operation,
   // including while the board said the reading was holding.
@@ -144,7 +143,11 @@ export function getCoachPrompt(game: Game, guided = false) {
   if (standing.level === "unsupported" || standing.level === "weakening") return "The record no longer favours this reading. Revise it, or choose a source that can tell the remaining routes apart.";
   // With every source the reading predicts cooling or blind to this stage, the
   // generic line left a player at a dead end.
-  if (hypothesisSources(game, game.hypothesis!).every(id => availableIn(game, id) > 0 || sourceSeesReading(game, id) === false)) return "No source your reading predicts can test it this turn: they are cooling down or cannot see this stage. Revise the reading, or collect where you can and test it next turn.";
+  if (hypothesisSources(game, game.hypothesis!).every(id => availableIn(game, id) > 0 || sourceSeesReading(game, id) === false)) return "No source your reading predicts can test it this turn: they are cooling down or cannot see this stage. Compare all four readings to find one whose sources are ready, or collect where you can and test this one next turn.";
+  // Pressure comes after the dead ends above: at 70 impact it told a player to
+  // run a source their reading predicts while every such card read cooling or
+  // blind, at the moment the advice mattered most.
+  if (game.impact >= 70) return `Business impact is ${game.impact}, and the operation ends at 100. Spend this turn on a source your reading predicts that can see this stage, and when the next stage is confirmed, favour acting or containing over watching.`;
   return game.revealed.length ? "Use the stages you have confirmed to predict what the attacker needs next, not merely the next available tool." : game.difficulty === "training" ? "Read what the team is seeing, pick the route that best explains it, and test it with one of that reading's own sources." : "Read the latest observation, pick the route that best explains it, and test it with one of that reading's own sources.";
 }
 

@@ -47,10 +47,10 @@ export function ActionSheet({ session }: { session: GameSession }) {
           </div>
           {breakdown && (
             <details className="modifier-details">
-              <summary>How this modifier is calculated<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => `${part.label} ${part.value > 0 ? "+" : ""}${part.value}`).join(" · ") || (breakdown.parts.some(part => part.suppressed) ? "One bonus is unavailable — see why" : "Nothing applies")}</span></summary>
+              <summary>How this modifier is calculated<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => `${part.label} ${part.value < 0 ? "−" : "+"}${Math.abs(part.value)}`).join(" · ") || (breakdown.parts.some(part => part.suppressed) ? "One bonus is unavailable — see why" : "Nothing applies")}</span></summary>
               <ul className="modifier-breakdown">
                 {breakdown.parts.filter(part => part.value !== 0 || part.suppressed || part.shown).map(part => (
-                  <li key={part.label} className={part.suppressed ? "suppressed" : ""}><span>{part.label}</span><strong>{part.suppressed ? "—" : `${part.value > 0 ? "+" : ""}${part.value}`}</strong><small>{part.detail}</small></li>
+                  <li key={part.label} className={part.suppressed ? "suppressed" : ""}><span>{part.label}</span><strong>{part.suppressed ? "—" : `${part.value < 0 ? "−" : "+"}${Math.abs(part.value)}`}</strong><small>{part.detail}</small></li>
                 ))}
                 {breakdown.parts.every(part => part.value === 0 && !part.suppressed && !part.shown) && <li><span>No modifiers apply</span><strong>0</strong><small>This is a plain d20 against the difficulty threshold.</small></li>}
               </ul>

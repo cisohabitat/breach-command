@@ -70,8 +70,8 @@ export const commandEvents = {
   scope: {
     title: "Scope is expanding",
     prompt: "A connected service reports related activity. Decide how broadly the team should investigate.",
-    a: { title: "Expand the evidence boundary", description: "Bring the connected service into the investigation now.", signal: "Higher confidence · Slower next action", modifier: -1, impact: 2, continuity: 0, tempo: 0, quality: 4 },
-    b: { title: "Hold the current boundary", description: "Keep the team focused until the link is confirmed.", signal: "Faster action · Greater blind-spot risk", modifier: 1, impact: 5, continuity: 0, tempo: 1, quality: 3 },
+    a: { title: "Expand the evidence boundary", description: "Bring the connected service into the investigation now.", signal: "Wider scope, little added pressure · Next roll harder", modifier: -1, impact: 2, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Hold the current boundary", description: "Keep the team focused until the link is confirmed.", signal: "Next roll easier · More pressure, faster adversary", modifier: 1, impact: 5, continuity: 0, tempo: 1, quality: 3 },
   },
   leadership: {
     title: "Leadership needs a recommendation",

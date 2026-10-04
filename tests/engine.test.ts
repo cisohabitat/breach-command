@@ -474,7 +474,7 @@ test("stacks every bonus waiting for the next roll under one cap", () => {
   assert.equal(getMapActionEffect(base,node,"monitor").modifier,2,"monitoring the boundary offers +2");
   const monitored=resolveMapAction(base,node,"monitor");
   assert.equal(monitored.nextModifier,3,"a monitored node adds to a carried bonus, capped at +3");
-  assert.equal(monitored.nextModifierSource,"Correct comparison of findings +2; Monitored Access boundary +2, capped at","each source is named with its own share, and the cap is stated");
+  assert.equal(monitored.nextModifierSource,"Correct comparison of findings +2; Monitored Access boundary +2: +4, capped at","each source is named with its own share, and the cap is stated");
   const low=resolveMapAction({...base,nextModifier:-2,nextModifierSource:"Inject: x"},node,"monitor");
   assert.equal(low.nextModifier,0,"a bonus offsets a penalty rather than replacing it");
   assert.equal(low.nextModifierSource,"Inject: x −2; Monitored Access boundary +2, together","sources that cancel are still named");

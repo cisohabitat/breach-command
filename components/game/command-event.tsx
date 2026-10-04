@@ -25,6 +25,6 @@ function effectLine(game: Game, option: { impact: number; continuity: number; mo
     describeMeterChange(game, "impact", option.impact),
     describeMeterChange(game, "continuity", option.continuity),
     describeRollShift(game.nextModifier, option.modifier),
-    option.tempo ? `adversary pace ${option.tempo > 0 ? "faster" : "slower"} (how fast adversary progress grows)` : "",
+    option.tempo ? `adversary pace one step ${option.tempo > 0 ? "faster" : "slower"}: about ${Math.abs(option.tempo) * 3} ${option.tempo > 0 ? "more" : "less"} adversary progress each turn` : "",
   ].filter(Boolean).join(" · ");
 }

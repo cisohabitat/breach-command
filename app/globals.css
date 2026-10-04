@@ -2951,9 +2951,15 @@ html,body {
   color:#e4b58f;
   grid-column:1/-1;
 }
+/* The cost is read in the body face, as sector decisions and response options
+   state theirs; in micro monospace it read as a footnote. */
 .command-options small.command-effect {
   margin-top:3px;
   color:#e8d7b9;
+  font-family:inherit;
+  font-size:var(--type-body);
+  font-weight:400;
+  line-height:var(--leading-base);
 }
 .command-options svg {
   grid-column:2;
@@ -6158,10 +6164,14 @@ html,body {
   width:calc(100% + 30px);
   min-height:0;
   margin:0 -15px -15px;
-  padding:34px 15px 12px;
+  padding:10px 15px 12px;
   border:0;
+  border-top:1px solid #3c5143;
   border-radius:0 0 7px 7px;
-  background:linear-gradient(#14201800,#142018 22%);
+  /* A solid footer rather than a fade: under a fade the next option's cost line
+     showed half-hidden behind the pill, and three playtests read that as the cue
+     covering text. A footer reads as the panel's edge. */
+  background:#142018;
   color:var(--lime);
   font-size:var(--type-caption);
   font-weight:500;
@@ -8274,6 +8284,42 @@ in colour, and the carried plan is stated before the options. */
   }
   .game-layout {
     padding-top:0;
+  }
+}
+/* The compact readouts that hang under the pinned tabs once the full ones have
+   scrolled away. They hang below the bar rather than joining it: a row that
+   appeared inside the sticky bar changed its height mid-scroll, and scroll
+   anchoring then left the tabs unpinned. Slim enough to rest in the gap above
+   the content and the top padding of its panels. */
+.pinned-readouts {
+  position:absolute;
+  top:100%;
+  left:12px;
+  right:12px;
+  display:none;
+  gap:0 18px;
+  padding:2px 12px 3px;
+  background:#101817;
+  border:1px solid #34483a;
+  border-top:0;
+  border-radius:0 0 8px 8px;
+  color:var(--text-soft);
+  font-size:var(--type-micro);
+  line-height:1.4;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.pinned-readouts.shown {
+  display:flex;
+}
+.pinned-readouts em {
+  color:var(--foreground);
+  font-style:normal;
+  font-weight:600;
+}
+@media(max-width:900px) {
+  .pinned-readouts,.pinned-readouts.shown {
+    display:none;
   }
 }
 /* A small laptop has room for the three readouts beside the case title. Stacked

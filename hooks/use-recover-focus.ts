@@ -24,7 +24,9 @@ export function returnFocusToAwaiting(event: Event) {
       // clears them rather than tucking the reading's heading underneath.
       const tabs = document.querySelector<HTMLElement>(".workspace-tabs");
       const pinned = tabs && getComputedStyle(tabs).position === "sticky" ? tabs.getBoundingClientRect().height : 0;
-      const top = dashboard.getBoundingClientRect().top + window.scrollY - pinned - 12;
+      // Sixteen pixels leaves the tabs pinned and the compact readouts under them
+      // resting in the gap and the panels' top padding.
+      const top = dashboard.getBoundingClientRect().top + window.scrollY - pinned - 16;
       window.scrollTo({ top, behavior: "auto" });
     });
     return;

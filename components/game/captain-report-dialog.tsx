@@ -22,6 +22,9 @@ function rollParts(report: Game["turns"][number]) {
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
   const { report, game, ended, config, dismissReport, decide } = session;
+  // The turn that ends an operation is headed by how it ended: "Evidence
+  // confirmed." with a green tick sat above "OPERATION LOST".
+  const lostHere = !!(ended && report && game && report.number === game.turns.length && game.status !== "won");
   const content = useRef<HTMLDivElement>(null);
   const optionList = useRef<HTMLDivElement>(null);
   // A decision belongs to a running operation. Once the operation has ended the
@@ -50,7 +53,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
       >
         <DialogHeader>
           <div className="eyebrow">CAPTAIN’S REPORT <span className="separator">/</span> TURN {report?.number}</div>
-          <DialogTitle>{report?.revealed ? (report.windfall ? "A later stage was found." : "Evidence confirmed.") : report?.injectReveal ? "A partner disclosed a stage." : report?.success ? "The check came back empty." : "The action was unsuccessful."}</DialogTitle>
+          <DialogTitle>{lostHere ? (game?.status === "exercise" ? "The operation stood down." : "The operation is lost.") : report?.revealed ? (report.windfall ? "A later stage was found." : "Evidence confirmed.") : report?.injectReveal ? "A partner disclosed a stage." : report?.success ? "The check came back empty." : "The action was unsuccessful."}</DialogTitle>
           <DialogDescription>{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
         </DialogHeader>
         {report && game && <>

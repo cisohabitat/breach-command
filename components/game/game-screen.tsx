@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, CircleHelp, LayoutDashboard, MessagesSquare, Search, TriangleAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { TutorialCoach } from "@/components/game/tutorial-coach";
@@ -31,6 +31,19 @@ export function GameScreen({ session }: { session: GameSession }) {
   } = session;
   const tabs = useRef<HTMLElement>(null);
   const shell = useRef<HTMLDivElement>(null);
+  const meters = useRef<HTMLDivElement>(null);
+  // Once the readouts have scrolled away, a compact copy rides under the pinned
+  // tabs. After each report Investigate lands on the reading and the cards, and
+  // the meters' change marks played where nobody was looking.
+  const [metersAway, setMetersAway] = useState(false);
+  const scenarioShown = game ? game.scenario : -1;
+  useEffect(() => {
+    const target = meters.current;
+    if (!target || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setMetersAway(!entry.isIntersecting && entry.boundingClientRect.top < 0));
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [scenarioShown]);
 
   // A workspace change is a change of page. Keeping the previous page's scroll
   // position dropped a player half-way down the infrastructure map after a
@@ -43,7 +56,7 @@ export function GameScreen({ session }: { session: GameSession }) {
     if (shownWorkspace.current === activeWorkspace) return;
     shownWorkspace.current = activeWorkspace;
     if (!shell.current) return;
-    const top = shell.current.getBoundingClientRect().top + window.scrollY - (tabs.current?.offsetHeight ?? 0) - 12;
+    const top = shell.current.getBoundingClientRect().top + window.scrollY - (tabs.current?.offsetHeight ?? 0) - 16;
     if (window.scrollY > top) window.scrollTo({ top });
   }, [activeWorkspace]);
 
@@ -72,7 +85,7 @@ export function GameScreen({ session }: { session: GameSession }) {
               view here, in the readout's own name. */}
           <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono"><span className="margin-prefix">SECTOR </span>MARGIN</span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
         </div>
-        <div className="case-meters">
+        <div className="case-meters" ref={meters}>
           <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>
             <span className="mono">BUSINESS IMPACT</span><strong>{game.impact}</strong>
             <Progress value={game.impact} aria-label="Business impact" />
@@ -98,7 +111,9 @@ export function GameScreen({ session }: { session: GameSession }) {
           <div className={`objective-meter ${game.objectiveProgress >= OBJECTIVE_IMMINENT ? "critical" : ""} ${meterPulse?.objectiveImminent ? "crossing" : ""}`}>
             <span className="mono">ADVERSARY PROGRESS</span><strong>{game.objectiveProgress}</strong>
             <Progress value={game.objectiveProgress} aria-label="Adversary progress" />
-            <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}</small>
+            {/* The caption carries the pace as well, so "PACE: PRESSING HARD" beside a low
+                number reads as one picture: little done so far, rising fast. */}
+            <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}{game.adversaryTempo >= 2 ? ", rising fast" : ""}</small>
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
@@ -118,6 +133,14 @@ export function GameScreen({ session }: { session: GameSession }) {
         <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><LayoutDashboard size={18} /><span><strong>Command</strong><small>Situation and decisions</small></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Action</b>}</button>
         <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><Search size={18} /><span><strong>Investigate</strong><small>Map, theory and evidence</small></span><b>{game.evidence.length}</b></button>
         <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><MessagesSquare size={18} /><span><strong>Briefing</strong><small>Captain and incident log</small></span><b>{game.turns.length}</b></button>
+        {/* A copy for sighted players who have scrolled past the readouts; the
+            readouts themselves stay the accessible source. */}
+        <div className={`pinned-readouts ${metersAway ? "shown" : ""}`} aria-hidden="true">
+          <span>Business impact <em>{game.impact}</em></span>
+          <span>{getOperationalLabel(game)} <em>{game.continuity}</em></span>
+          <span>Adversary progress <em>{game.objectiveProgress}</em></span>
+          <span>Sector margin <em>{game.sectorHealth}</em></span>
+        </div>
       </nav>
 
       <div className="game-layout workspace-shell" ref={shell}>

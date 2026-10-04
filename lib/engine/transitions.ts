@@ -11,7 +11,7 @@ import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerou
 // can name it: "Since your last roll +2" covered a monitored node, an inject and
 // a decision alike. Two different sources read as several.
 const signed = (value: number) => `${value < 0 ? "−" : "+"}${Math.abs(value)}`;
-const JOINED = /, (together|capped at)$/;
+const JOINED = /(, together|: [+−]\d+, capped at)$/;
 
 // With two or more sources each is named with its own share and the label ends on
 // how they combine, so "Monitored Access boundary +2; Inject: Hard going −2,
@@ -20,9 +20,11 @@ const JOINED = /, (together|capped at)$/;
 function carriedSource(before: number, beforeSource: string | null, after: number, source: string, change = after - before): string | null {
   if (change === 0) return beforeSource;
   if (!beforeSource || (before === 0 && !JOINED.test(beforeSource))) return after === 0 ? null : source;
-  const listed = JOINED.test(beforeSource) ? beforeSource.replace(JOINED, "") : `${beforeSource} ${signed(before)}`;
-  const capped = before + change !== after || /capped at$/.test(beforeSource);
-  return `${listed}; ${source} ${signed(change)}, ${capped ? "capped at" : "together"}`;
+  const listed = (JOINED.test(beforeSource) ? beforeSource.replace(JOINED, "") : `${beforeSource} ${signed(before)}`).replace(/: [+−]\d+$/, "");
+  const sum = [...`${listed}; ${source} ${signed(change)}`.matchAll(/ ([+−])(\d+)(?=;|$)/g)].reduce((total, [, sign, value]) => total + (sign === "−" ? -1 : 1) * Number(value), 0);
+  // A capped total says what the parts came to before the cap, so "+3 and +2,
+  // capped at +3" does not read as a sum a newcomer has to reconcile.
+  return sum === after ? `${listed}; ${source} ${signed(change)}, together` : `${listed}; ${source} ${signed(change)}: ${signed(sum)}, capped at`;
 }
 
 export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max), setup: GameSetup = {}): Game {

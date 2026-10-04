@@ -156,7 +156,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
               ? <div className="guide-nudge hypothesis-gate" role="status"><BrainCircuit size={15} /><span><strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits {game.difficulty === "training" ? "what the team is seeing" : "what you know so far"}. Its own sources then earn the +{OWN_SOURCE_BONUS} own-source bonus.</span></div>
               : trainingNote
                 ? trainingNote
-                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{latestObservation && <b className="prompt-clue">Latest observation: <Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}
+                : guidance !== "off" && <div className="guide-nudge"><Sparkles size={15} /><span><strong>Captain’s prompt:</strong> {getCoachPrompt(game, guided)}{latestObservation && <b className="prompt-clue">Latest from the team: <Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}

@@ -168,6 +168,17 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     concept: "The window is where a misread stage runs out: each turn spent on a reading the record has already turned against is a turn the last stage does not get.",
     next: "Next operation, revise as soon as the reading weakens, and spend each turn on a source that can still settle the stage under test.",
   };
+  // A slow but sound operation was told nothing stood out beside an
+  // investigation score of 13 of 25.
+  const extraTurns = game.turns.length - freeTurns(game);
+  if (extraTurns >= 2) return {
+    strength,
+    gap: `The reasoning held, but the investigation took ${game.turns.length} turns where ${freeTurns(game)} are free at ${difficulties[game.difficulty].title}, and the score charged 3 for each one after that.`,
+    concept: "A turn spent on a source that cannot settle the stage under test costs twice: once on the score and once in the pressure the adversary gains.",
+    next: game.mode === "expert"
+      ? "Next operation, keep your own note of which sources your reading predicts and which have already come back empty at this stage; when none is left, revise the reading rather than spend the turn."
+      : "Next operation, before each action, check that the card is one of your reading's own sources and can see this stage; when none can, revise the reading rather than spend the turn.",
+  };
   return {
     strength,
     gap: "Nothing stands out as a misunderstanding in this operation.",
@@ -266,15 +277,19 @@ export function getResultSummary(game: Game): string[] {
 // score paid half for.
 type TurnCredit = { credit: number; reason: "none" | "matched" | "tested" | "failed" | "other-source" | "repeated" | "excluded" | "absent" };
 function turnCredits(game: Game): TurnCredit[] {
-  const ruledOut = new Set<string>();
+  // Half credit is paid once per reading for each technique under test. It was
+  // reset whenever a turn revealed anything, before that turn was graded, so a
+  // partner disclosure or a later-stage find paid a reading twice at a stage
+  // that was still open, against the ledger's own rule.
+  const paid = new Set<string>();
   return game.turns.map((turn, index): TurnCredit => {
-    if (turn.revealed || turn.injectReveal) ruledOut.clear();
     if (!turn.hypothesis || !turn.hypothesisTarget) return { credit: 0, reason: "none" };
     if (turn.hypothesisMatched) return { credit: 1, reason: "matched" };
     if (!turn.success) return { credit: 0, reason: "failed" };
     if (!hypothesisSources(game, turn.hypothesis).includes(turn.procedure)) return { credit: 0, reason: "other-source" };
-    if (ruledOut.has(turn.hypothesis)) return { credit: 0, reason: "repeated" };
-    ruledOut.add(turn.hypothesis);
+    const key = `${turn.hypothesisTarget}:${turn.hypothesis}`;
+    if (paid.has(key)) return { credit: 0, reason: "repeated" };
+    paid.add(key);
     const before = getReadingOdds(recordBefore(game, index)).candidates[turn.hypothesis];
     if (!before.total) return { credit: 0, reason: "absent" };
     if (!before.open) return { credit: 0, reason: "excluded" };

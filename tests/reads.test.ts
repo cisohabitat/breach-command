@@ -530,3 +530,23 @@ test("names what set the bonus waiting for the next roll", () => {
   const restored=parseSession(serialiseSession({...monitored,nextModifierSource:undefined} as unknown as Game,false,false))!;
   assert.equal(restored.game.nextModifierSource,null,"an older save carries no name");
 });
+
+test("pays half credit once per reading at a stage, whatever else a turn reveals", () => {
+  // The record of what had been paid was cleared at the start of any turn that
+  // revealed something, so a partner disclosure on the second identical check
+  // paid the same wrong reading twice at a stage that was still open.
+  const start = (() => { const b = newGame(0, "operational", () => 0); b.established = []; b.injectDeck = []; return b; })();
+  let paid: Game | null = null;
+  for (const reading of hypotheses.map(item => item.id)) for (const source of hypothesisSources(start, reading)) {
+    if (paid) break;
+    const played = playTurn(setHypothesis(start, reading), source, 19);
+    // A reading still open after the first check, so only the once-per-stage rule
+    // stands between it and a second half.
+    if (getHypothesisLedger(played)[0].credit === 0.5 && getReadingOdds(played).candidates[reading].open > 0) paid = played;
+  }
+  assert.ok(paid, "some wrong reading tested with its own source earns half credit and stays open");
+  const first = paid.turns[0];
+  const disclosed = attacks.find(item => item.id !== first.hypothesisTarget && paid!.chain.includes(item.id))!.id;
+  const twice = { ...paid, turns: [first, { ...first, number: 2, injectReveal: disclosed }] };
+  assert.deepEqual(getHypothesisLedger(twice).map(row => row.credit), [0.5, 0], "the second identical check earns nothing, disclosure or not");
+});

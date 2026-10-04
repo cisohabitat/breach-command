@@ -1,5 +1,7 @@
 import { Activity, CircleDot, Crosshair, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
-import { attacks, describeMeterChange, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
+import { attacks, describeMeterChange, procedureById, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
+
+const reachable = (current: number, change: number) => Math.min(100, Math.max(0, current + change)) - current;
 
 // The full cost of a map action, in the same words and directions every other
 // meter change uses. Sector margin and actor progress were missing, and the
@@ -9,10 +11,10 @@ function costLine(game: Game, nodeId: string, action: MapAction) {
   return [
     "Spend 1 action",
     describeRollShift(game.nextModifier, change.modifier) || null,
-    describeMeterChange(game, "impact", change.impact),
-    change.continuity ? describeMeterChange(game, "continuity", change.continuity) : null,
-    describeMeterChange(game, "sector", change.sector),
-    describeMeterChange(game, "objective", change.objective),
+    describeMeterChange(game, "impact", reachable(game.impact, change.impact)),
+    change.continuity ? describeMeterChange(game, "continuity", reachable(game.continuity, change.continuity)) : null,
+    describeMeterChange(game, "sector", reachable(game.sectorHealth, change.sector)),
+    describeMeterChange(game, "objective", reachable(game.objectiveProgress, change.objective)),
   ].filter(Boolean).join(" · ");
 }
 
@@ -56,9 +58,10 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
         </details>
       </div>
       <div className="map-command-bar">
-        <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{criticalFocus ? "CRITICAL DEPENDENCY · " : ""}{posture === "normal" ? "No active control" : posture}</em></span></div>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>{costLine(game, focused.id, "monitor")}</small></span></button>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>{costLine(game, focused.id, "isolate")}</small></span></button>
+        <div><Crosshair size={17} /><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{criticalFocus ? "CRITICAL DEPENDENCY · " : ""}{posture === "normal" ? "No active control" : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
+            roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">Map focus +1 for {focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(" · ")}</small></span></div>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>{posture === "monitored" ? "Already monitored: its bonus went to the roll after it was set" : posture === "isolated" ? "Isolated: nothing left to monitor here" : costLine(game, focused.id, "monitor")}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>{posture === "isolated" ? "Already isolated" : costLine(game, focused.id, "isolate")}</small></span></button>
       </div>
       <details className="map-intel-detail">
         <summary>Dependency and control notes<span>{game.revealed.length ? `${game.revealed.length} technique${game.revealed.length === 1 ? "" : "s"} confirmed` : "no techniques confirmed"}</span></summary>
