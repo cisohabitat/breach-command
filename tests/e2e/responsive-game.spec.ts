@@ -156,7 +156,7 @@ test.describe("responsive interaction audit", () => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await installDeterministicAudit(page);
       await page.goto("/", { waitUntil: "domcontentloaded" });
-      await expect(page.getByRole("heading", { name: /Find the breach/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /You have the incident/i })).toBeVisible();
       await expectNoHorizontalOverflow(page, viewport.label + " assignment");
 
       await enablePracticeRun(page);

@@ -1,11 +1,14 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, Bot, Clock3, Dices, GitBranch, LockKeyhole, RefreshCw, Settings2, Star, Trophy } from "lucide-react";
+import { ArrowRight, Bot, Clock3, GitBranch, LockKeyhole, RefreshCw, Settings2, Star, Trophy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { stageIcons } from "@/components/game/stage-icons";
 import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
 import { campaignRank, standingEffects } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
 import type { GameSession } from "@/hooks/use-game-session";
+
+// What each stage of the chain answers, in the words a newcomer would ask it.
+const stageQuestions = ["How they got in", "Where they went, and as whom", "How they stay", "What leaves, and how"];
 
 export function BriefingScreen({ session }: { session: GameSession }) {
   const {
@@ -21,16 +24,15 @@ export function BriefingScreen({ session }: { session: GameSession }) {
   return (
     <main className="briefing-screen" id="main-content">
       <div className="briefing-main">
-        <div className="eyebrow"><span className="status-beacon" /> INCIDENT RESPONSE SIMULATION</div>
-        <h1>Find the breach.<br /><span>Outthink the adversary.</span></h1>
-        <p className="intro">You lead the investigation. The computer adapts the hidden attack chain, escalates sector-specific consequences and reacts to intervention.</p>
-        <div className="briefing-chain" aria-label="Four attack stages">
+        <p className="desk-line">Incident desk · single-player exercise</p>
+        <h1>You have the incident.</h1>
+        <p className="intro">An intruder has worked through four stages somewhere in the organisation. Each turn you state what you think happened, test it against one evidence source and decide what to do with what you find. Once the whole chain is known, you lead the response.</p>
+        <ol className="briefing-chain" aria-label="The four stages you are looking for">
           {stages.map((stage, index) => {
             const Icon = stageIcons[index];
-            return <div key={stage.name} style={{ "--stage-color": stage.color } as CSSProperties}><Icon size={22} /><span>{stage.short}</span><small>0{index + 1}</small></div>;
+            return <li key={stage.name} style={{ "--stage-color": stage.color } as CSSProperties}><span className="chain-index">{String(index + 1).padStart(2, "0")}</span><Icon size={18} aria-hidden="true" /><strong>{stage.short}</strong><small>{stageQuestions[index]}</small></li>;
           })}
-        </div>
-        <div className="first-move"><Dices size={20} /><p>Form a hypothesis, test evidence, command the response.</p></div>
+        </ol>
         {/* On a phone the assignment panel, and the start button inside it, sit two
             screens below the introduction, behind the campaign record. This puts the
             first move on the first screen: resume the saved operation, or start the
@@ -45,30 +47,30 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title} · ${namedSpecialists[specialist].name}`} · or choose the assignment below</small>
         </section>
         <section className="career-card" aria-label="Command career progression">
-          <div><span className="eyebrow">COMMAND CAREER</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents · trust {campaign.leadershipTrust} · readiness {campaign.readiness}</small><small className="standing-effects">{standingEffects(campaign).join(" ")}</small></div>
+          <div><span className="field-label">Your command record</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents · trust {campaign.leadershipTrust} · readiness {campaign.readiness}</small><small className="standing-effects">{standingEffects(campaign).join(" ")}</small></div>
           <b>{campaign.xp}<small> XP</small></b>
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
         <section className="campaign-act-card"><span className="act-number">ACT {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved access{campaign.unresolvedThreads ? " — each starts later operations under more pressure" : ""}</small></div></section>
-        <section className="campaign-route-card"><GitBranch size={19} /><div><span className="eyebrow">CAMPAIGN DIRECTOR · {currentRoute.title.toUpperCase()}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
-        {finalEnding && <section className="campaign-ending"><Trophy size={20} /><div><span className="eyebrow">CAMPAIGN CONCLUSION</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
+        <section className="campaign-route-card"><GitBranch size={19} /><div><span className="field-label">Campaign route · {currentRoute.title}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
+        {finalEnding && <section className="campaign-ending"><Trophy size={20} /><div><span className="field-label">Campaign conclusion</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
       </div>
       <section className="mission-panel">
-        <div className="panel-top"><span className="eyebrow">YOUR NEXT ASSIGNMENT</span><span className="mono muted">{String(scenarioChoice + 1).padStart(2, "0")} / {String(scenarios.length).padStart(2, "0")}</span></div>
+        <div className="panel-top"><span className="case-number">Case {String(scenarioChoice + 1).padStart(2, "0")} of {String(scenarios.length).padStart(2, "0")}</span><span className={`case-stamp ${campaign.completed.includes(scenarioChoice) ? "cleared" : ""}`}>{campaign.completed.includes(scenarioChoice) ? "Cleared" : "Open"}</span></div>
         <div className="mission-symbol"><ScenarioIcon size={33} strokeWidth={1.4} /><span>{activeScenario.sector}</span></div>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
-        {previewVariant && <div className="variant-brief"><span className="eyebrow">INCIDENT VARIANT</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
+        {previewVariant && <div className="variant-brief"><span className="field-label">Incident variant</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
         <div className="mission-selector" aria-label="Select incident">
           {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery star${(campaign.mastery[String(index)] ?? 0) === 1 ? "" : "s"}` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1).padStart(2, "0")}</span>{campaign.completed.includes(index) && <small>{Array.from({ length: campaign.mastery[String(index)] ?? 0 }).map((_, star) => <Star key={star} size={8} fill="currentColor" />)}</small>}</button>)}
         </div>
         <div className="difficulty-picker">
-          <span className="eyebrow">DIFFICULTY</span>
+          <span className="field-label">Difficulty</span>
           <div>{(Object.keys(difficulties) as Difficulty[]).map(id => <button key={id} className={difficulty === id ? "active" : ""} aria-pressed={difficulty === id} onClick={() => setDifficulty(id)}><strong>{difficulties[id].title}</strong><small>{difficulties[id].maxTurns} turns · rolls need {difficulties[id].threshold}+</small></button>)}</div>
           <p>{difficulties[difficulty].description}</p>
         </div>
         <div className="specialist-picker">
-          <label htmlFor="specialist"><span className="eyebrow">DEPLOY SPECIALIST</span><small id="specialist-fatigue">{(campaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
+          <label htmlFor="specialist"><span className="field-label">Specialist on call</span><small id="specialist-fatigue">{(campaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
             ? `${namedSpecialists[specialist].name} is at fatigue ${campaign.specialistFatigue[specialist]} of 6, where the specialist bonus no longer applies. Deploying someone else lets them rest.`
             : `Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty. At ${SPECIALIST_EXHAUSTED_AT} of 6 the specialist's +1 on their own sources no longer applies.`}</small></label>
           <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>

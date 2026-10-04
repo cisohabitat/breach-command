@@ -114,7 +114,8 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `hooks/use-game-session.ts` | Game, session and campaign state, every transition, effect and derived readout |
 | `hooks/use-preferences.ts` | Audio, haptics and contrast, loaded once and persisted after |
 | `hooks/use-challenge-code.ts` | Seed, challenge code and whether the operation is reproducible |
-| `app/globals.css` | Tactical visual system, motion and responsive layouts |
+| `app/globals.css` | Case-file visual system (ink, paper and bone; flat ruled panels), motion and responsive layouts |
+| `app/fonts/` | Self-hosted Source Serif 4 (headings) and IBM Plex Mono (data), loaded through `next/font/local` |
 | `components/game/` | Workspaces, gameplay boards, maps, dialogs, end states and the tutorial |
 | `components/ui/` | The interface primitives the game actually imports |
 | `lib/game.ts` | Scenario, procedure and attack data |
