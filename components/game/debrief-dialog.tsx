@@ -32,7 +32,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
     <Dialog open={debrief} onOpenChange={setDebrief}>
       <DialogContent className="game-dialog paper-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onCloseAutoFocus={returnFocusToAwaiting}>
         <DialogHeader>
-          <div className="eyebrow">After-action review</div>
+          <div className="eyebrow">Form BC-300 <span className="separator">/</span> <span>After-action review</span></div>
           <DialogTitle>{game?.status === "won" ? outcome?.title : game?.status === "exercise" ? "Exercise concluded." : game ? `${getLossReason(game).title}.` : ""}</DialogTitle>
           <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? `${game.status === "lost" ? `${getLossReason(game).detail} ` : ""}${game.status === "lost" && getLossReason(game).cause === "window" ? "" : `${game.revealed.length} of 4 stages found in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}. `}This is a learning outcome, not a security assessment.` : ""}</DialogDescription>
           {/* The grade and the score are the review's headline. Below four other

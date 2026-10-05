@@ -1,10 +1,10 @@
 import { Building2, HeartPulse, Factory, Ship, Cloud, Network, Landmark, RadioTower, Droplets, BadgeDollarSign } from "lucide-react";
 
 export const stages = [
-  {name:"Initial compromise",short:"Entry",color:"#ff967d"},
-  {name:"Pivot & escalate",short:"Movement",color:"#e8c968"},
-  {name:"Persistence",short:"Foothold",color:"#dab6cd"},
-  {name:"C2 & exfiltration",short:"Outbound",color:"#75b9e7"},
+  {name:"Initial compromise",short:"Entry",color:"#9e3220"},
+  {name:"Pivot & escalate",short:"Movement",color:"#6f5200"},
+  {name:"Persistence",short:"Foothold",color:"#6e3657"},
+  {name:"C2 & exfiltration",short:"Outbound",color:"#1f5a85"},
 ];
 
 export const procedures = [

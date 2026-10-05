@@ -4,8 +4,8 @@
   "description": "A single-player cyber incident command simulation.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#111417",
-  "theme_color": "#111417",
+  "background_color": "#f1ece1",
+  "theme_color": "#f1ece1",
   "orientation": "any",
   "icons": [
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
