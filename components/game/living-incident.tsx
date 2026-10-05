@@ -1,4 +1,3 @@
-import { Activity, Database, Gauge, HeartPulse, Network, Radio, Wifi, Zap } from "lucide-react";
 import { getAttributionRead, getOperationalLabel, infrastructureTopologies, readyToCorrelate, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 
@@ -18,10 +17,11 @@ const sectorMoments = [
 export function SectorSituation({ game }: { game: Game }) {
   const [title, detail] = sectorMoments[game.scenario];
   const severity = game.continuity <= 45 ? "critical" : game.continuity <= 75 ? "degraded" : "stable";
-  return <section className={`sector-situation ${severity}`} aria-label="Live sector condition">
-    <div><span className="eyebrow">Live sector condition · {getOperationalLabel(game)}</span><strong>{title}</strong><p>{detail}</p></div>
-    <b>{game.continuity}<small>/100</small></b>
-  </section>;
+  return <div className={`log-entry sector-condition ${severity}`}>
+    <span className="log-label">Sector condition</span>
+    <div className="log-body"><p><strong>{title}.</strong> {detail}</p><small>{getOperationalLabel(game)}</small></div>
+    <b className="log-figure">{game.continuity}<small>/100</small></b>
+  </div>;
 }
 
 const clampReadout = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
@@ -31,59 +31,55 @@ export function SectorOperationalScene({ game }: { game: Game }) {
 
   const configs = {
     1: {
-      className: "clinical",
       eyebrow: "Clinical service lanes",
       title: "Patient care continuity",
       detail: "Live service lanes show where investigative pressure can become a care-delivery constraint.",
-      Icon: HeartPulse,
       lanes: [
-        { label: "Clinical access", value: game.continuity, Icon: HeartPulse },
-        { label: "Diagnostic services", value: game.sectorHealth, Icon: Activity },
-        { label: "Patient records", value: 100 - game.objectiveProgress, Icon: Database },
+        { label: "Clinical access", value: game.continuity },
+        { label: "Diagnostic services", value: game.sectorHealth },
+        { label: "Patient records", value: 100 - game.objectiveProgress },
       ],
     },
     2: {
-      className: "energy",
       eyebrow: "Engineering operating envelope",
       title: "Generation and control stability",
       detail: "Margins combine plant health, operating continuity and resistance to actor control.",
-      Icon: Zap,
       lanes: [
-        { label: "Generation margin", value: game.sectorHealth, Icon: Gauge },
-        { label: "Control room", value: game.continuity, Icon: Activity },
-        { label: "Remote maintenance", value: 100 - game.objectiveProgress, Icon: Zap },
+        { label: "Generation margin", value: game.sectorHealth },
+        { label: "Control room", value: game.continuity },
+        { label: "Remote maintenance", value: 100 - game.objectiveProgress },
       ],
     },
     7: {
-      className: "infocomm",
       eyebrow: "Routing domain pulse",
       title: "Network service propagation",
       detail: "Domain telemetry reflects routing control, management-plane integrity and subscriber service.",
-      Icon: Network,
       lanes: [
-        { label: "Core routing", value: 100 - game.objectiveProgress, Icon: Network },
-        { label: "Management plane", value: game.sectorHealth, Icon: Wifi },
-        { label: "Subscriber service", value: game.continuity, Icon: Radio },
+        { label: "Core routing", value: 100 - game.objectiveProgress },
+        { label: "Management plane", value: game.sectorHealth },
+        { label: "Subscriber service", value: game.continuity },
       ],
     },
   } as const;
   const config = configs[game.scenario as 1 | 2 | 7];
 
-  return <section className={`sector-operational-scene ${config.className}`} aria-label={config.title}>
-    <header>
-      <div><span className="eyebrow">{config.eyebrow}</span><strong>{config.title}</strong><p>{config.detail}</p></div>
-    </header>
-    <div className="sector-scene-lanes">
-      {config.lanes.map(lane => {
-        const value = clampReadout(lane.value);
-        const status = value > 75 ? "Stable" : value > 45 ? "Constrained" : "At risk";
-        return <div className={`sector-scene-lane ${value <= 45 ? "at-risk" : value <= 75 ? "constrained" : "stable"}`} key={lane.label}>
-          <div><strong>{lane.label}</strong><div className="sector-scene-track" aria-hidden="true"><i style={{ width: `${value}%` }} /></div><small>{status}</small></div>
-          <b>{value}</b>
-        </div>;
-      })}
+  // The scene's lanes are entries in the same log, so their figures fall in the
+  // column with the margin's and the objective's.
+  return <>
+    <div className="log-entry">
+      <span className="log-label">{config.eyebrow}</span>
+      <div className="log-body"><p><strong>{config.title}.</strong> {config.detail}</p></div>
     </div>
-  </section>;
+    {config.lanes.map(lane => {
+      const value = clampReadout(lane.value);
+      const status = value > 75 ? "Stable" : value > 45 ? "Constrained" : "At risk";
+      return <div className={`log-entry log-lane ${value <= 45 ? "at-risk" : value <= 75 ? "constrained" : "stable"}`} key={lane.label}>
+        <span className="log-label">{lane.label}</span>
+        <div className="log-body"><div className="sector-scene-track" aria-hidden="true"><i style={{ width: `${value}%` }} /></div><small>{status}</small></div>
+        <b className="log-figure">{value}</b>
+      </div>;
+    })}
+  </>;
 }
 
 export function SpecialistTransmission({ game }: { game: Game }) {

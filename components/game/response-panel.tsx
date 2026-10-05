@@ -1,7 +1,6 @@
-import { useRef, type CSSProperties } from "react";
+import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { CONTINUITY_AT_RISK } from "@/hooks/use-meter-pulse";
-import { ArrowRight } from "lucide-react";
 import { describeMeterChange, getOperationalLabel, responseOptionsFor, type Game } from "@/lib/advanced-game";
 import { EffectList } from "@/components/game/effect-list";
 
@@ -19,7 +18,11 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
   useRecoverFocus(heading, phase);
   return (
     <section className="response-panel" data-phase={phase}>
-      <div className="response-sequence" aria-label="Response sequence"><span className={game.responseChoices.length >= 0 ? "active" : ""}>1 Contain</span><span className={game.responseChoices.length >= 1 ? "active" : ""}>2 Assure</span><span className={game.responseChoices.length >= 2 ? "active" : ""}>3 Recover</span></div>
+      {/* The sequence is a line of text with the current phase marked, not a
+          stepper of three boxes; a phase already chosen says so in words. */}
+      <ol className="response-sequence" aria-label="Response sequence">
+        {(["Contain", "Assure", "Recover"] as const).map((name, index) => <li key={name} className={index < game.responseChoices.length ? "done" : index === game.responseChoices.length ? "current" : ""} aria-current={index === game.responseChoices.length ? "step" : undefined}>{name}{index < game.responseChoices.length && <small> recorded</small>}</li>)}
+      </ol>
       {/* Each phase swaps the animation on this wrapper, so the beat restarts without remounting the controls. */}
       <div className="response-stage">
         <div className="response-heading">
@@ -30,7 +33,10 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
             : previous && <p className="response-recorded"><strong>{assurance ? "Containment" : "Assurance"} recorded:</strong> {previous.title}, leaving business impact at {game.impact} and {getOperationalLabel(game).toLowerCase()} at {game.continuity}.</p>}</div>
         </div>
         <div className="response-options">
-          {options.map((option, index) => <button key={option.id} style={{ "--option-index": index } as CSSProperties} onClick={() => onChoose(option.id)}><strong>{option.title}</strong><span>{option.description}</span><small>{option.disruption} disruption · {option.confidence.toLowerCase()} confidence · {option.residual.toLowerCase()} residual risk</small><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /><ArrowRight size={17} /></button>)}
+          {/* Numbered ruled rows: the option and what it does on the left, its
+              terms and its exact effect in a column on the right. Three equal
+              cards with an arrow in the corner read as a feature grid. */}
+          {options.map((option, index) => <button key={option.id} onClick={() => onChoose(option.id)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{option.title}</strong><span>{option.description}</span></span><span className="option-effects"><span className="effect-list option-terms"><span className="effect term"><span>Disruption</span> <em>{option.disruption.toLowerCase()}</em></span><span className="effect term"><span>Confidence</span> <em>{option.confidence.toLowerCase()}</em></span><span className="effect term"><span>Residual risk</span> <em>{option.residual.toLowerCase()}</em></span></span><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /></span></button>)}
         </div>
       </div>
     </section>
@@ -50,7 +56,7 @@ function OptionEffect({ game, impact, continuity }: { game: Game; impact: number
     <span className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
       {/* The change the meter will actually show: "−22 better" at an impact of 0 promised nothing. */}
       <EffectList items={[describeMeterChange(game, "impact", after.impact - game.impact), describeMeterChange(game, "continuity", after.continuity - game.continuity)]} />
-      <small>{getOperationalLabel(game)} ends at {after.continuity}{ends && <b> · Ends the operation</b>}{atRisk && <b> · At risk</b>}</small>
+      <small>{getOperationalLabel(game)} ends at {after.continuity}{ends && <b>, which ends the operation</b>}{atRisk && <b>, at risk</b>}</small>
     </span>
   );
 }

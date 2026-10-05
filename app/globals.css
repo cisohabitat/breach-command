@@ -581,29 +581,6 @@ a {
   animation:reveal .5s ease-out;
   background:#25292e;
 }
-.lead-strip {
-  display:flex;
-  align-items:center;
-  gap:15px;
-  background:none;
-  border:0;
-  border-top:1px solid #383d45;
-  border-radius:0;
-  padding:14px 0;
-  margin:22px 0 28px;
-  color:var(--lime);
-}
-.lead-strip .eyebrow {
-  font-size:var(--type-caption);
-}
-.lead-strip p {
-  font-size:var(--type-body);
-  color:#d4d0c6;
-  margin-top:4px;
-  line-height:var(--leading-prose);
-  max-width:var(--measure-prose);
-  letter-spacing:.01em;
-}
 .procedure-section .section-heading {
   align-items:flex-start;
 }
@@ -1520,21 +1497,6 @@ a {
   .established-key {
     font-size:var(--type-caption);
   }
-  .lead-strip {
-    padding:15px;
-    gap:12px;
-    align-items:flex-start;
-    margin:18px 0 24px;
-  }
-  .lead-strip>svg {
-    margin-top:1px;
-  }
-  .lead-strip p {
-    font-size:var(--type-body);
-    line-height:var(--leading-prose);
-    max-width:var(--measure-prose);
-    letter-spacing:.01em;
-  }
   .procedure-grid {
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:10px;
@@ -1834,17 +1796,6 @@ a {
   gap:16px;
   align-items:flex-start;
 }
-.response-icon {
-  width:48px;
-  height:48px;
-  border-radius:3px;
-  display:grid;
-  place-items:center;
-  background:#ede2c912;
-  border:0;
-  color:var(--lime);
-  flex:0 0 auto;
-}
 .response-heading h2 {
   font-size:var(--type-lead);
   font-weight:500;
@@ -1884,7 +1835,7 @@ a {
   font-weight:600;
   padding-right:15px;
 }
-.response-options span {
+.response-options .option-main>span {
   font-size:var(--type-caption);
   line-height:var(--leading-base);
   color:#bab29f;
@@ -1913,12 +1864,6 @@ a {
 }
 .response-options .response-effect.ends>small,.response-options .response-effect.at-risk>small {
   color:#f0a48c;
-}
-.response-options svg {
-  position:absolute;
-  right:12px;
-  top:16px;
-  color:var(--lime);
 }
 .decision-summary {
   border:1px solid #c9bfac;
@@ -1999,10 +1944,6 @@ a {
   }
   .response-heading {
     gap:12px;
-  }
-  .response-icon {
-    width:41px;
-    height:41px;
   }
   .response-heading h2 {
     font-size:var(--type-lead);
@@ -3242,61 +3183,6 @@ html,body {
   color:var(--lime);
   font-weight:500;
 }
-.sector-board {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin:0 0 22px;
-}
-.sector-card,.objective-card {
-  border:0;
-  border-top:1px solid #383d45;
-  background:none;
-  border-radius:0;
-  padding:15px 15px 15px 0;
-}
-.objective-card {
-  border-color:#383d45;
-  background:none;
-}
-.sector-title {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  color:var(--lime);
-}
-.objective-card .sector-title {
-  color:#efaf86;
-}
-.sector-title>span {
-  min-width:0;
-  flex:1;
-}
-.sector-title small {
-  display:block;
-  font:500 var(--type-micro) var(--font-mono);
-  letter-spacing:.06em;
-  color:#868b93;
-}
-.sector-title strong {
-  display:block;
-  margin-top:4px;
-  font-size:var(--type-body);
-  color:#f6f1e4;
-}
-.sector-title>b {
-  font:500 var(--type-lead) var(--font-mono);
-}
-.sector-card>[data-slot=progress],.objective-card>[data-slot=progress] {
-  height:4px;
-  margin:12px 0;
-}
-.sector-card p,.objective-card p {
-  font-size:var(--type-caption);
-  line-height:var(--leading-base);
-  color:#bbb4a3;
-  letter-spacing:.01em;
-}
 /* Why the two meters can disagree. The divergent state is marked by a rule and a
    heading as well as by tone, never by colour alone. */
 .sector-read {
@@ -3309,47 +3195,6 @@ html,body {
 }
 .sector-read.diverged {
   border-left-color:var(--lime);
-}
-.command-feed {
-  grid-column:1/-1;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  border:0;
-  border-block:1px solid #383d44;
-  background:none;
-  border-radius:0;
-}
-.command-feed>div {
-  display:flex;
-  gap:10px;
-  padding:12px 14px;
-  align-items:flex-start;
-}
-.command-feed>div:first-child {
-  padding-left:0;
-}
-.command-feed>div+div {
-  border-left:1px solid #383d44;
-}
-.command-feed svg {
-  color:#e5d5b0;
-  margin-top:3px;
-}
-.command-feed span {
-  min-width:0;
-}
-.command-feed small {
-  display:block;
-  font:500 var(--type-micro) var(--font-mono);
-  color:#828890;
-}
-.command-feed strong {
-  display:block;
-  font-size:var(--type-body);
-  line-height:var(--leading-base);
-  color:#ccc5b4;
-  margin-top:4px;
-  font-weight:500;
 }
 .tutorial-coach {
   border:1px solid #566273;
@@ -3767,14 +3612,6 @@ html,body {
   .mission-consequences {
     grid-template-columns:1fr;
   }
-  .command-feed {
-    grid-template-columns:1fr;
-  }
-  .command-feed>div+div {
-    border-left:0;
-    border-top:1px solid #383d44;
-    padding-left:0;
-  }
 }
 @media(max-width:650px) {
   .mode-picker>div {
@@ -3787,12 +3624,6 @@ html,body {
     align-items:flex-start;
     flex-direction:column;
     gap:4px;
-  }
-  .sector-board {
-    grid-template-columns:1fr;
-  }
-  .command-feed {
-    grid-column:1;
   }
   .procedure-planner {
     grid-template-columns:1fr;
@@ -3816,12 +3647,6 @@ html,body {
   }
   .mode-picker button.active {
     grid-column:span 1;
-  }
-  .sector-title {
-    align-items:flex-start;
-  }
-  .sector-title>b {
-    font-size:var(--type-body);
   }
   .turn-effects span {
     border-radius:4px;
@@ -4540,47 +4365,6 @@ html,body {
   font:500 var(--type-micro) var(--font-mono);
   margin-top:7px;
 }
-.director-live {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:9px;
-  margin:0 0 20px;
-}
-.director-live>div {
-  position:relative;
-  overflow:hidden;
-  border:0;
-  border-top:1px solid #383d45;
-  background:none;
-  border-radius:0;
-  padding:14px 14px 14px 0;
-}
-.director-live>div:last-child {
-  border-color:#383d45;
-  background:none;
-}
-.director-live>div:after {
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background:none;
-  background-size:100% 5px;
-}
-.director-live strong {
-  display:block;
-  color:#e8e5dd;
-  font-size:var(--type-body);
-  line-height:var(--leading-compact);
-  margin:7px 0;
-}
-.director-live small {
-  display:block;
-  color:#b1aa99;
-  font-size:var(--type-caption);
-  line-height:var(--leading-base);
-  letter-spacing:.01em;
-}
 .case-theory {
   border:0;
   border-top:1px solid #424850;
@@ -4796,9 +4580,6 @@ html,body {
   }
 }
 @media(max-width:650px) {
-  .director-live {
-    grid-template-columns:1fr;
-  }
   .case-theory>div:last-child {
     display:grid;
     grid-template-columns:1fr;
@@ -4821,9 +4602,6 @@ html,body {
   }
 }
 @media(min-width:651px) and (max-width:900px) {
-  .director-live {
-    grid-template-columns:1fr 1fr;
-  }
   .case-theory button {
     min-height:44px;
   }
@@ -5013,9 +4791,6 @@ html,body {
 .workspace-shell .rules-reminder {
   grid-column:1/-1;
   margin:0;
-}
-.director-live {
-  margin-top:14px;
 }
 /* The folded pair replaces the four cards once a reading is recorded, at every
    width: the declared reading appeared twice on a wide screen, and the column ran
@@ -5637,53 +5412,6 @@ html,body {
   text-transform:uppercase;
   margin-top:2px;
 }
-.sector-situation {
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:13px;
-  align-items:center;
-  margin:15px 0;
-  border:0;
-  border-top:1px solid #383d45;
-  border-radius:0;
-  padding:14px 0;
-  background:none;
-}
-.sector-situation .situation-icon {
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  background:#ffffff0b;
-  color:var(--sector-accent);
-}
-.sector-situation strong {
-  display:block;
-  font-size:var(--type-body);
-  margin:4px 0;
-}
-.sector-situation p {
-  font-size:var(--type-body);
-  color:#bdb8ad;
-  line-height:var(--leading-prose);
-  max-width:var(--measure-prose);
-  letter-spacing:.01em;
-}
-.sector-situation>b {
-  font:500 var(--type-title) var(--font-mono);
-  color:var(--sector-accent);
-}
-.sector-situation>b small {
-  font-size:var(--type-caption);
-  color:#91969d;
-}
-.sector-situation.critical {
-  border-color:#b75e54;
-}
-.sector-situation.critical .situation-icon,.sector-situation.critical>b {
-  color:#ef8a7d;
-}
 .specialist-transmission {
   display:grid;
   grid-template-columns:1fr;
@@ -5715,29 +5443,6 @@ html,body {
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
-.response-sequence {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:6px;
-  margin-bottom:18px;
-}
-.response-sequence span {
-  min-height:34px;
-  display:grid;
-  place-items:center;
-  border:1px solid #434850;
-  border-radius:3px;
-  color:#85898f;
-  font:500 var(--type-caption) var(--font-mono);
-}
-.response-sequence span.active {
-  border-color:var(--lime);
-  background:#292e34;
-  color:#f6f1e4;
-}
-.response-panel {
-  box-shadow:0 18px 50px #0005;
-}
 @keyframes node-threat {
   from {
     box-shadow:inset 0 0 0 0 #b55e3d00;
@@ -5753,17 +5458,8 @@ html,body {
   .map-command-bar>div {
     grid-column:1/-1;
   }
-  .sector-situation {
-    grid-template-columns:1fr;
-  }
-  .sector-situation>b {
-    grid-column:1;
-  }
   .specialist-transmission {
     margin-top:10px;
-  }
-  .response-sequence span {
-    font-size:var(--type-micro);
   }
   .game-screen {
     background:none;
@@ -5841,89 +5537,6 @@ html,body {
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:0 12px;
 }
-.sector-operational-scene {
-  position:relative;
-  overflow:hidden;
-  margin:15px 0 20px;
-  border:0;
-  border-top:1px solid #383d45;
-  border-radius:0;
-  background:none;
-  padding:17px 0;
-}
-.sector-operational-scene:before {
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  opacity:.23;
-}
-.sector-operational-scene>header {
-  position:relative;
-  display:grid;
-  grid-template-columns:1fr;
-  gap:13px;
-  align-items:start;
-}
-.sector-scene-icon {
-  width:42px;
-  height:42px;
-  display:grid;
-  place-items:center;
-  border:1px solid color-mix(in srgb,var(--sector-accent) 55%,#44494f);
-  color:var(--sector-accent);
-  background:#ffffff08;
-}
-.sector-operational-scene header strong {
-  display:block;
-  font-size:var(--type-body);
-  margin:4px 0;
-}
-.sector-operational-scene header p {
-  max-width:min(760px,var(--measure-prose));
-  color:#bdb8ad;
-  font-size:var(--type-body);
-  line-height:var(--leading-prose);
-}
-.sector-scene-lanes {
-  position:relative;
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:9px;
-  margin-top:15px;
-}
-.sector-scene-lane {
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:9px;
-  align-items:center;
-  min-height:64px;
-  border:0;
-  border-top:1px solid #373c44;
-  background:none;
-  padding:10px 0;
-}
-.sector-scene-lane>span {
-  color:var(--sector-accent);
-}
-.sector-scene-lane>div {
-  min-width:0;
-}
-.sector-scene-lane strong {
-  display:block;
-  font-size:var(--type-body);
-  line-height:var(--leading-compact);
-}
-.sector-scene-lane small {
-  display:block;
-  color:#b1ab9c;
-  font-size:var(--type-caption);
-  margin-top:5px;
-}
-.sector-scene-lane>b {
-  font:500 var(--type-lead) var(--font-mono);
-  color:var(--sector-accent);
-}
 .sector-scene-track {
   height:4px;
   margin-top:7px;
@@ -5934,80 +5547,6 @@ html,body {
   display:block;
   height:100%;
   background:var(--sector-accent);
-}
-.sector-scene-lane.constrained>b,.sector-scene-lane.constrained>span {
-  color:#e4c260;
-}
-.sector-scene-lane.constrained .sector-scene-track i {
-  background:#e4c260;
-}
-.sector-scene-lane.at-risk {
-  border-color:#6f4540;
-}
-.sector-scene-lane.at-risk>b,.sector-scene-lane.at-risk>span {
-  color:#ef8a7d;
-}
-.sector-scene-lane.at-risk .sector-scene-track i {
-  background:#ef8a7d;
-}
-.sector-operational-scene.clinical {
-  background:none;
-}
-.sector-operational-scene.clinical:before {
-  background:none;
-  background-size:110px 100%,100% 22px;
-}
-.sector-operational-scene.clinical .sector-scene-icon,.sector-operational-scene.clinical .sector-scene-lane {
-  border-radius:0;
-}
-.sector-operational-scene.clinical .sector-scene-lane {
-  padding-inline:0;
-}
-.sector-operational-scene.energy {
-  background:none;
-}
-.sector-operational-scene.energy:before {
-  background:none;
-}
-.sector-operational-scene.energy .sector-scene-icon,.sector-operational-scene.energy .sector-scene-lane {
-  border-radius:3px;
-}
-.sector-operational-scene.energy .sector-scene-track {
-  height:7px;
-  background:#3d3428;
-}
-.sector-operational-scene.infocomm {
-  background:none;
-}
-.sector-operational-scene.infocomm:before {
-  background-image:none;
-  background-size:18px 18px;
-}
-.sector-operational-scene.infocomm .sector-scene-icon {
-  border-radius:50%;
-}
-.sector-operational-scene.infocomm .sector-scene-lane {
-  border-radius:3px;
-  box-shadow:none;
-}
-.sector-operational-scene.infocomm .sector-scene-track {
-  height:2px;
-  overflow:visible;
-}
-.sector-operational-scene.infocomm .sector-scene-track i {
-  position:relative;
-  box-shadow:none;
-}
-.sector-operational-scene.infocomm .sector-scene-track i:after {
-  content:"";
-  position:absolute;
-  right:-3px;
-  top:-2px;
-  width:6px;
-  height:6px;
-  border-radius:50%;
-  background:currentColor;
-  box-shadow:none;
 }
 .report-dialog {
   width:min(980px,calc(100% - 2rem))!important;
@@ -6389,7 +5928,7 @@ span.effect-list>span.effect.note>span {
   line-height:var(--leading-base);
 }
 /* Dense cluster copy resolves to the body step; compact labels to the caption step. */
-.topology-nodes strong,.evidence-cards strong,.procedure-planner strong,.procedure-planner small,.director-live strong,.director-live small,.correlation-results p strong,.correlation-results p span,.case-theory strong,.case-theory button,.set-piece-options span,.evidence-review p,.specialist-reaction p,.hypothesis-options strong,.hypothesis-options span,.map-intel,.evidence-empty p,.guide-nudge strong {
+.topology-nodes strong,.evidence-cards strong,.procedure-planner strong,.procedure-planner small,.correlation-results p strong,.correlation-results p span,.case-theory strong,.case-theory button,.set-piece-options span,.evidence-review p,.specialist-reaction p,.hypothesis-options strong,.hypothesis-options span,.map-intel,.evidence-empty p,.guide-nudge strong {
   font-size:var(--type-body);
 }
 .evidence-cards small,.backup-console small,.hypothesis-heading small,.hypothesis-options button small,.case-theory small,.map-command-bar small {
@@ -6410,12 +5949,6 @@ span.effect-list>span.effect.note>span {
     border-top:1px solid #c9bfac;
     padding:14px 0 0;
   }
-  .sector-scene-lanes {
-    grid-template-columns:1fr;
-  }
-  .sector-scene-lane {
-    min-height:64px;
-  }
 }
 @media(max-width:650px) {
   .topology-routes,.investigation-dashboard .topology-routes {
@@ -6424,16 +5957,6 @@ span.effect-list>span.effect.note>span {
   }
   .topology-routes>div {
     grid-template-columns:minmax(0,1fr) minmax(64px,.65fr) minmax(0,1fr);
-  }
-  .sector-operational-scene {
-    padding:14px 12px;
-  }
-  .sector-operational-scene>header {
-    grid-template-columns:auto 1fr;
-  }
-  .sector-operational-scene header p {
-    font-size:var(--type-caption);
-    line-height:var(--leading-prose);
   }
   .report-dialog {
     width:calc(100% - 1rem)!important;
@@ -6452,13 +5975,6 @@ span.effect-list>span.effect.note>span {
   }
   .topology-routes .route-status {
     justify-self:start;
-  }
-  .sector-operational-scene>header {
-    grid-template-columns:1fr;
-  }
-  .sector-scene-icon {
-    width:38px;
-    height:38px;
   }
 }
 /* Playability audit: explicit next actions and visible decision costs */
@@ -6489,7 +6005,7 @@ span.effect-list>span.effect.note>span {
   color:#d2cbbb;
   margin-top:5px;
 }
-.tutorial-next button,.command-next-action button {
+.tutorial-next button {
   flex:0 0 auto;
   min-height:42px;
   display:flex;
@@ -6503,36 +6019,9 @@ span.effect-list>span.effect.note>span {
   padding:9px 13px;
   font-size:var(--type-body);
 }
-.tutorial-next button:hover,.command-next-action button:hover {
+.tutorial-next button:hover {
   border-color:var(--lime);
   background:#353c46;
-}
-.command-next-action {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-  margin:-12px 0 28px;
-  padding:15px 17px;
-  border:1px solid #474e57;
-  border-radius:3px;
-  background:#171b20;
-}
-.command-next-action>div {
-  min-width:0;
-}
-.command-next-action strong {
-  display:block;
-  font-size:var(--type-body);
-  margin:5px 0;
-  color:#f6f1e4;
-}
-.command-next-action p {
-  font-size:var(--type-body);
-  color:#bdb8ad;
-  line-height:var(--leading-prose);
-  max-width:var(--measure-prose);
-  letter-spacing:.01em;
 }
 .briefing-first-move {
   display:grid;
@@ -6676,11 +6165,11 @@ span.effect-list>span.effect.note>span {
   .tutorial-steps>div:not(.current) {
     display:none;
   }
-  .tutorial-next,.command-next-action {
+  .tutorial-next {
     align-items:stretch;
     flex-direction:column;
   }
-  .tutorial-next button,.command-next-action button {
+  .tutorial-next button {
     width:100%;
   }
   .quick-start-guide {
@@ -6688,9 +6177,6 @@ span.effect-list>span.effect.note>span {
   }
   .briefing-first-move {
     padding:12px;
-  }
-  .command-next-action {
-    margin-top:-8px;
   }
 }
 /* Review pass: access and feedback repairs. */
@@ -7001,104 +6487,32 @@ still sees the meter marked as crossed once the ring is suppressed. */
 .response-stage {
   display:block;
 }
-@keyframes response-contain {
+@keyframes response-enter {
   0% {
     opacity:0;
-    transform:translateY(-8px) scale(1.01);
   }
   100% {
     opacity:1;
-    transform:none;
   }
 }
-@keyframes response-assure {
+@keyframes response-enter-again {
   0% {
     opacity:0;
-    transform:translateY(8px);
   }
   100% {
     opacity:1;
-    transform:none;
   }
 }
-@keyframes response-recover {
-  0% {
-    opacity:0;
-    transform:translateY(14px) scale(.99);
-  }
-  100% {
-    opacity:1;
-    transform:none;
-  }
-}
+/* One quiet fade per phase. A CSS animation restarts only when its name changes,
+   so the middle phase takes the second name. */
 .response-panel[data-phase=containment] .response-stage {
-  animation:response-contain .3s cubic-bezier(.16,1,.3,1) backwards;
+  animation:response-enter .25s ease-out backwards;
 }
 .response-panel[data-phase=assurance] .response-stage {
-  animation:response-assure .3s cubic-bezier(.16,1,.3,1) backwards;
+  animation:response-enter-again .25s ease-out backwards;
 }
 .response-panel[data-phase=recovery] .response-stage {
-  animation:response-recover .3s cubic-bezier(.16,1,.3,1) backwards;
-}
-@keyframes option-drop {
-  0% {
-    opacity:0;
-    transform:translateY(-10px);
-  }
-  100% {
-    opacity:1;
-    transform:none;
-  }
-}
-@keyframes option-scan {
-  0% {
-    opacity:0;
-    transform:translateX(12px);
-  }
-  100% {
-    opacity:1;
-    transform:none;
-  }
-}
-@keyframes option-rise {
-  0% {
-    opacity:0;
-    transform:translateY(12px);
-  }
-  100% {
-    opacity:1;
-    transform:none;
-  }
-}
-.response-options button {
-  animation-duration:.3s;
-  animation-timing-function:cubic-bezier(.16,1,.3,1);
-  animation-fill-mode:backwards;
-  animation-delay:calc(var(--option-index,0) * 70ms);
-}
-.response-panel[data-phase=containment] .response-options button {
-  animation-name:option-drop;
-}
-.response-panel[data-phase=assurance] .response-options button {
-  animation-name:option-scan;
-  animation-delay:calc(var(--option-index,0) * 60ms);
-}
-.response-panel[data-phase=recovery] .response-options button {
-  animation-name:option-rise;
-  animation-delay:calc(var(--option-index,0) * 80ms);
-}
-@keyframes sequence-confirm {
-  0% {
-    opacity:.4;
-    transform:scale(.94);
-  }
-  100% {
-    opacity:1;
-    transform:none;
-  }
-}
-.response-sequence span.active {
-  animation:sequence-confirm .34s cubic-bezier(.16,1,.3,1) backwards;
+  animation:response-enter .25s ease-out backwards;
 }
 /* End states: stand-down, quiet closure and drill stamp are three separate beats. */
 .resolution {
@@ -7351,7 +6765,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
     animation:none;
     opacity:0;
   }
-  .response-stage,.response-options button,.response-sequence span.active {
+  .response-stage,.response-options button {
     animation:none;
   }
   .resolution-won .end-banner,.resolution-lost .end-banner,.resolution-exercise .end-banner,.resolution-sweep,.resolution-steps li,.resolution-note {
@@ -8229,6 +7643,251 @@ in colour, and the carried plan is stated before the options. */
   }
 }
 
+/* Command's situation picture is a log: the label in the margin, the entry in
+   the body, and any figure in a right-hand column every entry shares, so the
+   margin, the objective and the service lanes read down one column. Six blocks
+   of kicker, bold title and paragraph read as a dashboard of stat cards. */
+.situation-log {
+  margin:0 0 26px;
+  border-bottom:1px solid #383d45;
+}
+.situation-log.lead-log {
+  margin:22px 0 28px;
+}
+.situation-log>.section-heading {
+  margin:30px 0 12px;
+}
+.log-entry {
+  display:grid;
+  grid-template-columns:11rem minmax(0,42rem) 5rem;
+  column-gap:20px;
+  align-items:baseline;
+  padding:13px 0;
+  border-top:1px solid #383d45;
+}
+.log-label {
+  display:grid;
+  gap:3px;
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+}
+.log-label small {
+  color:#9a968c;
+  font-size:var(--type-caption);
+}
+.log-data {
+  font-family:var(--font-mono);
+  font-size:var(--type-micro);
+  letter-spacing:.06em;
+}
+.log-body {
+  min-width:0;
+  max-width:var(--measure-prose);
+}
+.log-body p {
+  margin:0;
+  font-size:var(--type-body);
+  line-height:var(--leading-base);
+  color:#d4d0c6;
+}
+.log-body p+p {
+  margin-top:8px;
+}
+.log-body strong {
+  font-weight:500;
+  color:#f6f1e4;
+}
+.log-body>small {
+  display:block;
+  margin-top:4px;
+  font-size:var(--type-caption);
+  color:var(--text-soft);
+}
+.log-body>[data-slot=progress] {
+  height:4px;
+  margin:10px 0;
+}
+.log-body p.log-note {
+  font-size:var(--type-caption);
+  color:#bbb4a3;
+}
+.log-body .sector-read {
+  margin-bottom:8px;
+  font-size:var(--type-caption);
+  color:#bbb4a3;
+}
+.log-figure {
+  justify-self:end;
+  font:500 var(--type-lead) var(--font-mono);
+  color:#f6f1e4;
+}
+.log-figure small {
+  font-size:var(--type-micro);
+  color:#868b93;
+}
+.log-entry.adversary .log-figure {
+  color:#dab6cd;
+}
+.log-entry.sector-condition.degraded .log-figure,.log-entry.log-lane.constrained .log-figure,.log-entry.log-lane.constrained small {
+  color:#e4c260;
+}
+.log-entry.sector-condition.critical .log-figure,.log-entry.log-lane.at-risk .log-figure,.log-entry.log-lane.at-risk small {
+  color:#ff967d;
+}
+.log-entry.log-lane {
+  padding:8px 0;
+  border-top-color:#2a2e34;
+}
+.log-entry.log-lane .log-label {
+  padding-left:12px;
+}
+.log-lane .log-body {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.log-lane .sector-scene-track {
+  flex:1;
+  margin:0;
+}
+.log-lane .sector-scene-track i {
+  background:#d9cfb6;
+}
+.log-lane .log-body>small {
+  margin:0;
+  min-width:6.5em;
+}
+.log-lead {
+  max-width:var(--measure-prose);
+}
+.log-order .log-label {
+  color:var(--lime);
+  font-weight:600;
+}
+.log-link {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:40px;
+  margin-top:2px;
+  padding:0;
+  border:0;
+  background:none;
+  color:var(--lime);
+  font-size:var(--type-body);
+  text-decoration:underline;
+  text-decoration-thickness:1px;
+  text-underline-offset:4px;
+  cursor:pointer;
+}
+.log-link:hover {
+  text-decoration-thickness:2px;
+}
+.log-link:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:2px;
+}
+/* The response is a ruled sheet like the rest of Command: the sequence a line
+   of text with the current phase underlined, the options numbered rows with
+   their terms and exact effect in a column at the right. */
+.response-panel {
+  border:0;
+  border-top:1px solid #55606f;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  padding:16px 0 0;
+}
+.response-sequence {
+  display:flex;
+  flex-wrap:wrap;
+  margin:0 0 16px;
+  padding:0;
+  list-style:none;
+  font:500 var(--type-caption) var(--font-mono);
+  color:#878b91;
+}
+.response-sequence li+li::before {
+  content:"—";
+  margin:0 10px;
+  color:#5d636c;
+}
+.response-sequence li.current {
+  color:#f6f1e4;
+  text-decoration:underline;
+  text-decoration-color:var(--lime);
+  text-decoration-thickness:2px;
+  text-underline-offset:6px;
+}
+.response-sequence li.done {
+  color:#bbb4a3;
+}
+.response-sequence li small {
+  font-size:var(--type-micro);
+  color:#9a968c;
+}
+.response-options {
+  display:block;
+  margin-top:18px;
+  border-top:1px solid #434850;
+}
+.response-options button {
+  display:grid;
+  grid-template-columns:2rem minmax(0,1fr) minmax(15rem,19rem);
+  column-gap:18px;
+  align-items:start;
+  width:100%;
+  min-height:0;
+  padding:16px 8px 16px 0;
+  border:0;
+  border-bottom:1px solid #434850;
+  border-radius:0;
+  background:none;
+  animation:none;
+}
+.response-options button:hover {
+  border-color:#434850;
+  background:#1c1f24;
+}
+.response-options button:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:-2px;
+}
+.response-options .option-no {
+  padding-left:6px;
+  font:500 var(--type-body) var(--font-mono);
+  color:var(--lime);
+}
+.response-options .option-main {
+  display:grid;
+  gap:6px;
+  margin:0;
+}
+.response-options .option-main>strong {
+  padding:0;
+  font-weight:500;
+}
+.response-options .option-main>span {
+  margin:0;
+  max-width:60ch;
+}
+.response-options .option-effects {
+  display:grid;
+  gap:4px;
+  margin:0;
+}
+.response-options span.option-terms {
+  margin-top:0;
+  padding-top:0;
+  border-top:0;
+}
+span.effect-list>span.effect.term>em {
+  grid-column:2/-1;
+  text-align:right;
+  color:#d7d1c3;
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -8639,6 +8298,38 @@ in colour, and the carried plan is stated before the options. */
 }
 @media(max-width:650px) {
   /* The index wraps to two rows on a phone, so a section it jumps to stops below both. */
+  /* On a phone the log's label and figure share the first line and the entry
+     takes the full width beneath them. */
+  .log-entry {
+    grid-template-columns:minmax(0,1fr) auto;
+    column-gap:14px;
+    row-gap:4px;
+  }
+  .log-label {
+    grid-column:1;
+    grid-row:1;
+    display:flex;
+    flex-wrap:wrap;
+    gap:0 8px;
+  }
+  .log-figure {
+    grid-column:2;
+    grid-row:1;
+  }
+  .log-body {
+    grid-column:1/-1;
+    grid-row:2;
+  }
+  .log-entry.log-lane .log-label {
+    padding-left:0;
+  }
+  .response-options button {
+    grid-template-columns:1.5rem minmax(0,1fr);
+    row-gap:12px;
+  }
+  .response-options .option-effects {
+    grid-column:2;
+  }
   /* An icon column beside a heading left the text about 25 characters a line.
      On a phone the icon sits beside the kicker and the text takes the width. */
   .response-heading,.set-piece-title,.end-banner {
@@ -8653,11 +8344,7 @@ in colour, and the carried plan is stated before the options. */
   .response-heading>div>*:not(.eyebrow),.set-piece-title>div>*:not(.eyebrow),.end-banner>div:nth-child(2)>*:not(.eyebrow),.end-banner>button {
     grid-column:1/-1;
   }
-  .response-icon {
-    width:30px;
-    height:30px;
-  }
-  .response-icon svg,.set-piece-title>svg,.end-icon svg {
+  .set-piece-title>svg,.end-icon svg {
     width:18px;
     height:18px;
   }

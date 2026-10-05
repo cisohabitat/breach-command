@@ -6,7 +6,7 @@ import { ResponsePanel } from "@/components/game/response-panel";
 import { SectorBoard } from "@/components/game/sector-board";
 import { SectorSetPiece } from "@/components/game/sector-set-piece";
 import { SectorOperationalScene, SectorSituation } from "@/components/game/living-incident";
-import { attacks, getAttributionRead, getLead, stages } from "@/lib/advanced-game";
+import { attacks, getLead, stages } from "@/lib/advanced-game";
 import { campaignRoutes } from "@/lib/phase9";
 import type { GameSession } from "@/hooks/use-game-session";
 
@@ -31,8 +31,13 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       ) : game.status === "response" ? (
         <ResponsePanel game={game} onChoose={respond} />
       ) : (<>
-        <section className="lead-strip"><div><span className="eyebrow">Current intelligence</span><p>{getLead(game)}</p></div></section>
-        {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <section className="command-next-action"><div><span className="eyebrow">Next action</span><strong>Build and test a working hypothesis.</strong><p>Open Investigate to select an explanation, focus the relevant infrastructure and run one evidence procedure.</p></div><button onClick={() => setActiveWorkspace("investigate")}>Open Investigate <ArrowRight size={17} /></button></section>}
+        {/* What needs the player is an entry in the log like the rest, the order
+            marked by its rule and its link in the text. A boxed "Next action" with
+            a button on the right was the stock empty-state call to action. */}
+        <section className="situation-log lead-log" aria-label="Current intelligence">
+          <div className="log-entry"><span className="log-label">Current intelligence</span><div className="log-body"><p className="log-lead">{getLead(game)}</p></div></div>
+          {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <div className="log-entry log-order"><span className="log-label">Next action</span><div className="log-body"><p><strong>Build and test a working hypothesis.</strong> Select an explanation, focus the relevant infrastructure and run one evidence procedure.</p><button className="log-link" onClick={() => setActiveWorkspace("investigate")}>Open Investigate <ArrowRight size={15} /></button></div></div>}
+        </section>
       </>))}
 
       <section className={`attack-section ${game.status === "won" ? "resolved" : ""}`} hidden={activeWorkspace !== "command"}>
@@ -56,11 +61,16 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
         </ol>
       </section>
 
-      <section className="director-live" hidden={activeWorkspace !== "command"}><div><span className="eyebrow">{campaignRoutes[game.campaignRoute].title} route · {game.variant.title}</span><strong>{game.variant.briefing}</strong><small>{game.variant.modifier}</small></div><div><span className="eyebrow">ATTRIBUTION · {getAttributionRead(game).confidence}</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div></section>
-
-      <div hidden={activeWorkspace !== "command"}><SectorBoard game={game} /></div>
-      {activeWorkspace === "command" && <SectorSituation game={game} />}
-      {activeWorkspace === "command" && <SectorOperationalScene game={game} />}
+      <section className="situation-log" hidden={activeWorkspace !== "command"} aria-labelledby="situation-heading">
+        <div className="section-heading"><h2 id="situation-heading">Situation</h2></div>
+        <div className="log-entry">
+          <span className="log-label">Campaign route<small>{campaignRoutes[game.campaignRoute].title}</small></span>
+          <div className="log-body"><p><strong>{game.variant.title}.</strong> {game.variant.briefing}</p><small>{game.variant.modifier}</small></div>
+        </div>
+        <SectorBoard game={game} />
+        {activeWorkspace === "command" && <SectorSituation game={game} />}
+        {activeWorkspace === "command" && <SectorOperationalScene game={game} />}
+      </section>
     </>
   );
 }
