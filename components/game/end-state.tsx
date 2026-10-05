@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { ArrowRight, Copy } from "lucide-react";
 import { getLossReason, getOperationalLabel, getResultSummary, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
@@ -26,7 +25,7 @@ export function EndState({ session }: { session: GameSession }) {
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{outcome?.title}</h2>
             <p>{outcome?.detail} Impact is {game.impact} and {getOperationalLabel(game).toLowerCase()} is {game.continuity}. The captain has closed the active response.</p>
           </div>
-          <button className="primary-button" onClick={openDebrief}>Open after-action review <ArrowRight size={17} /></button>
+          <button className="primary-button" onClick={openDebrief}>Open after-action review</button>
         </div>
         <ol className="resolution-steps">
           {/* What closed the case, as lines of the record with their status in
@@ -49,7 +48,7 @@ export function EndState({ session }: { session: GameSession }) {
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{loss.title}.</h2>
             <p>{loss.detail} {loss.cause === "window" ? "" : `${game.revealed.length} of 4 stages were confirmed. `}Impact stands at {game.impact}. No stand-down was issued.</p>
           </div>
-          <button className="secondary-button" onClick={openDebrief}>Review the record <ArrowRight size={17} /></button>
+          <button className="secondary-button" onClick={openDebrief}>Review the record</button>
         </div>
         <p className="resolution-note">Unresolved stages remain open questions, not conclusions. The record is preserved for the next shift.</p>
         <ShareResult game={game} />
@@ -66,7 +65,7 @@ export function EndState({ session }: { session: GameSession }) {
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>Exercise concluded at the boundary.</h2>
             <p>{game.revealed.length} of 4 stages were identified before the controller confirmed the activity as an authorised exercise. No response phase was run, so containment and recovery are not scored; the decisions you made along the way still are. The case counts as cleared in the campaign: the investigation earned this conclusion.</p>
           </div>
-          <button className="secondary-button" onClick={openDebrief}>Review the drill <ArrowRight size={17} /></button>
+          <button className="secondary-button" onClick={openDebrief}>Review the drill</button>
         </div>
         <div className="resolution-stamp" aria-hidden="true"><span>EXERCISE</span></div>
         <ShareResult game={game} />
@@ -91,7 +90,7 @@ function ShareResult({ game }: { game: Game }) {
   };
   return (
     <div className="share-result">
-      <button className="secondary-button" onClick={copy}><Copy size={16} /> Copy result</button>
+      <button className="text-action" onClick={copy}>Copy result</button>
       <span aria-live="polite">{state.status === "copied" ? (game.seed === null ? "Result copied." : "Result and challenge code copied.") : ""}</span>
       {state.status === "manual" && <textarea readOnly aria-label="Result to copy" value={state.text} onFocus={event => event.currentTarget.select()} />}
     </div>

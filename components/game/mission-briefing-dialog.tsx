@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { gameModes, getAttributionRead, sectorSystems, specialists } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
@@ -35,7 +34,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
             </div>
             <div className="director-order"><p><span className="eyebrow">Director’s intent</span>{game.mode === "campaign" ? `${campaignRoutes[game.campaignRoute].order} ` : ""}Establish the chain, declare an objective theory and preserve the essential service.</p></div>
           </details>
-          <button className="primary-button full" onClick={() => setMissionBriefing(false)}>Assume command <ArrowRight size={18} /></button>
+          <button className="primary-button full" onClick={() => setMissionBriefing(false)}>Assume command</button>
         </>}
       </DialogContent>
     </Dialog>

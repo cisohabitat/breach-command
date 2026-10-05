@@ -8593,6 +8593,98 @@ span.effect-list>span.effect.term>em {
   outline-offset:4px;
 }
 
+/* A state is a word, not a badge. Outlined capitals in a box (OPEN, AMENDED,
+   ACT 1, PACE, FULL CREDIT, CONFIRMED on every chain row) were a component
+   library's outline badge and competed with the stamps, which mark an event:
+   the report's result and the review's grade, one stamp each, never one a row. */
+.case-stamp,.chain-sheet li.confirmed .chain-status,.adversary-state,.hypothesis-ledger>details>div b {
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  transform:none;
+}
+.chain-sheet li.confirmed .chain-status {
+  color:var(--lime);
+}
+.adversary-state.tempo-2,.adversary-state.tempo-3 {
+  background:none;
+}
+.act-number {
+  padding:0;
+  border:0;
+  border-radius:0;
+  letter-spacing:.06em;
+}
+/* What a meter just did, in words beside its status, not a floating chip with an
+   icon. At 320 px the chip sat on the status word. */
+.case-meters>div {
+  grid-template-areas:"label label" "bar value" "status delta";
+}
+.case-meters>div>.meter-delta {
+  grid-area:delta;
+  position:static;
+  justify-self:end;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  font:500 var(--type-caption) var(--font-ui);
+  white-space:nowrap;
+}
+/* Print and Copy are actions in the text, not buttons beside the next step. */
+.text-action {
+  display:inline-flex;
+  align-items:center;
+  min-height:40px;
+  padding:0;
+  border:0;
+  background:none;
+  color:inherit;
+  font-size:var(--type-caption);
+  text-decoration:underline;
+  text-decoration-thickness:1px;
+  text-underline-offset:4px;
+  cursor:pointer;
+}
+.text-action:hover {
+  text-decoration-thickness:2px;
+}
+.text-action:focus-visible {
+  outline:2px solid currentColor;
+  outline-offset:2px;
+}
+.debrief-actions {
+  grid-template-columns:auto auto;
+  justify-content:space-between;
+  align-items:center;
+}
+.debrief-actions .primary-button {
+  width:auto;
+}
+/* A switch says On or Off in words beside its track, not by position and fill
+   alone. The word is drawn, so the accessible state stays the switch's own. */
+[data-slot=switch] {
+  position:relative;
+  overflow:visible;
+  margin-left:36px;
+}
+[data-slot=switch]::before {
+  content:"Off" / "";
+  position:absolute;
+  right:calc(100% + 8px);
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--text-soft);
+  font:500 var(--type-micro) var(--font-mono);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+[data-slot=switch][data-state=checked]::before {
+  content:"On" / "";
+  color:var(--lime);
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -9041,6 +9133,18 @@ span.effect-list>span.effect.term>em {
   }
   .sector-set-piece,.command-event {
     padding-left:12px;
+  }
+  /* A phone's meters are too narrow for the status and the change side by
+     side, so for the moment it shows, the change takes the status word's place. */
+  .case-meters>div {
+    grid-template-areas:"label label" "bar value" "status status";
+  }
+  .case-meters>div>.meter-delta {
+    grid-area:status;
+    justify-self:start;
+  }
+  .case-meters>div:has(>.meter-delta)>small {
+    visibility:hidden;
   }
   /* On a phone the log's label and figure share the first line and the entry
      takes the full width beneath them. */

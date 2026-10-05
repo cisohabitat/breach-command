@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, Bot, RefreshCw, Settings2, Star } from "lucide-react";
+import { Bot, RefreshCw, Settings2, Star } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
 import { campaignRank, standingEffects } from "@/lib/campaign";
@@ -38,9 +38,9 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             and hide the strip. */}
         <section className="phone-quick-start" aria-label="Quick start">
           {savedSession ? (
-            <button className="primary-button" onClick={() => resume(savedSession)}>Resume “{scenarios[savedSession.game.scenario].title}” <ArrowRight size={18} /></button>
+            <button className="primary-button" onClick={() => resume(savedSession)}>Resume “{scenarios[savedSession.game.scenario].title}”</button>
           ) : (
-            <button className="primary-button" onClick={() => start()}>Start “{activeScenario.title}” <ArrowRight size={18} /></button>
+            <button className="primary-button" onClick={() => start()}>Start “{activeScenario.title}”</button>
           )}
           <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title} · ${namedSpecialists[specialist].name}`} · or choose the assignment below</small>
         </section>
@@ -123,10 +123,10 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             laptop the saved card sat under the sticky Begin button, which replaced
             the save without a word. */}
         {savedSession ? <>
-          <button className="primary-button start-button" onClick={() => resume(savedSession)}>Resume “{scenarios[savedSession.game.scenario].title}” <ArrowRight size={19} /></button>
+          <button className="primary-button start-button" onClick={() => resume(savedSession)}>Resume “{scenarios[savedSession.game.scenario].title}”</button>
           <button className="secondary-button begin-instead" onClick={() => start()}>Begin a new investigation instead</button>
           <p className="replace-note">Beginning a new investigation replaces the saved one.</p>
-        </> : <button className="primary-button start-button" onClick={() => start()}>Begin investigation <ArrowRight size={19} /></button>}
+        </> : <button className="primary-button start-button" onClick={() => start()}>Begin investigation</button>}
         <div className="mission-meta"><span>20–35 minutes solo</span><span>No real systems</span></div>
       </section>
       <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator.</p>

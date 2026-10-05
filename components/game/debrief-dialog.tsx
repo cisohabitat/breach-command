@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, Printer, Star } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
 import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, describeMeterChange, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
@@ -179,12 +178,12 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <section className="capability-review"><span className="eyebrow">Campaign capabilities</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : `Unlocks at ${item.at} campaign experience; you have ${campaign.xp}. ${item.detail}`}</span></div>)}</section>
             <section className="campaign-consequences"><div><span>Leadership trust</span><strong>{campaign.leadershipTrust}/100</strong></div><div><span>Readiness</span><strong>{campaign.readiness}/100</strong></div><div><span>Win streak</span><strong>{campaign.streak}</strong></div></section>
             <section className="specialist-reaction"><span className="eyebrow">Team after-action note · rapport with {namedSpecialists[game.specialist].name} {campaign.specialistBonds[game.specialist] ?? 35}/100</span><p>{specialistReaction(game.specialist, game.status !== "lost", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p></section>
-            <section className="mastery-panel"><div><span className="eyebrow">Scenario mastery</span><strong>{Array.from({ length: campaign.mastery[String(game.scenario)] ?? 0 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}{!campaign.mastery[String(game.scenario)] && "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
+            <section className="mastery-panel"><div><span className="eyebrow">Scenario mastery</span><strong>{campaign.mastery[String(game.scenario)] ? `${campaign.mastery[String(game.scenario)]} of 3` : "Not yet earned"}</strong></div><p>One star for recovery, two for a score of 74+, and three for a score of 88+.</p></section>
           </details>
           {finalEnding && <section className="campaign-finale"><div><span className="eyebrow">Final command briefing</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}
           <div className="debrief-actions">
-            <button className="secondary-button" onClick={() => window.print()}><Printer size={17} /> Print review</button>
-            <button className="primary-button" onClick={() => { const nextScenario = nextCase(campaign, scenarios.length); resetToBriefing(); setScenarioChoice(nextScenario); }}>{finalEnding ? "Return to campaign command" : "Choose next incident"} <ArrowRight size={18} /></button>
+            <button className="text-action" onClick={() => window.print()}>Print review</button>
+            <button className="primary-button" onClick={() => { const nextScenario = nextCase(campaign, scenarios.length); resetToBriefing(); setScenarioChoice(nextScenario); }}>{finalEnding ? "Return to campaign command" : "Choose next incident"}</button>
           </div>
         </>}
       </DialogContent>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { ArrowRight, Siren } from "lucide-react";
+import { Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { attacks, decisionRollShift, describeMeterChange, describePart, describeRollShift, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -167,7 +167,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               )}
             </section>}
           </div>
-          {awaitingDecision ? <p className="report-gate" role="status">Resolve the operational decision above to continue. This report stays open until the choice is recorded.</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}<ArrowRight size={17} /></button>}
+          {awaitingDecision ? <p className="report-gate" role="status">Resolve the operational decision above to continue. This report stays open until the choice is recorded.</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}</button>}
         </>}
       </DialogContent>
     </Dialog>
