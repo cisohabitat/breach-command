@@ -17,10 +17,10 @@ const sectorMoments = [
 export function SectorSituation({ game }: { game: Game }) {
   const [title, detail] = sectorMoments[game.scenario];
   const severity = game.continuity <= 45 ? "critical" : game.continuity <= 75 ? "degraded" : "stable";
-  return <div className={`log-entry sector-condition ${severity}`}>
-    <span className="log-label">Sector condition</span>
-    <div className="log-body"><p><strong>{title}.</strong> {detail}</p><small>{getOperationalLabel(game)}</small></div>
-    <b className="log-figure">{game.continuity}<small>/100</small></b>
+  return <div className={`sit-entry sector-condition ${severity}`}>
+    <span className="sit-label">Sector condition</span>
+    <div className="sit-body"><p><strong>{title}.</strong> {detail}</p><small>{getOperationalLabel(game)}</small></div>
+    <b className="sit-figure">{game.continuity}<small>/100</small></b>
   </div>;
 }
 
@@ -66,17 +66,17 @@ export function SectorOperationalScene({ game }: { game: Game }) {
   // The scene's lanes are entries in the same log, so their figures fall in the
   // column with the margin's and the objective's.
   return <>
-    <div className="log-entry">
-      <span className="log-label">{config.eyebrow}</span>
-      <div className="log-body"><p><strong>{config.title}.</strong> {config.detail}</p></div>
+    <div className="sit-entry">
+      <span className="sit-label">{config.eyebrow}</span>
+      <div className="sit-body"><p><strong>{config.title}.</strong> {config.detail}</p></div>
     </div>
     {config.lanes.map(lane => {
       const value = clampReadout(lane.value);
       const status = value > 75 ? "Stable" : value > 45 ? "Constrained" : "At risk";
-      return <div className={`log-entry log-lane ${value <= 45 ? "at-risk" : value <= 75 ? "constrained" : "stable"}`} key={lane.label}>
-        <span className="log-label">{lane.label}</span>
-        <div className="log-body"><div className="sector-scene-track" aria-hidden="true"><i style={{ width: `${value}%` }} /></div><small>{status}</small></div>
-        <b className="log-figure">{value}</b>
+      return <div className={`sit-entry sit-lane ${value <= 45 ? "at-risk" : value <= 75 ? "constrained" : "stable"}`} key={lane.label}>
+        <span className="sit-label">{lane.label}</span>
+        <div className="sit-body"><div className="sector-scene-track" aria-hidden="true"><i style={{ width: `${value}%` }} /></div><small>{status}</small></div>
+        <b className="sit-figure">{value}</b>
       </div>;
     })}
   </>;

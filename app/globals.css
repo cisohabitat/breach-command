@@ -637,7 +637,6 @@ a {
   border-color:var(--lime);
   transform:translateY(-3px);
   background:#2a3038;
-  box-shadow:0 8px 18px #0002;
 }
 /* A card lifted on hover leaves the pointer behind at its bottom edge: it
    un-hovers, drops back under the pointer and lifts again, every frame. The strip
@@ -2300,12 +2299,6 @@ a {
   background:#282c32;
   color:#f4eede;
 }
-.alignment-icon {
-  display:grid;
-  place-items:center;
-  color:var(--lime);
-  margin-top:1px;
-}
 .inline-result {
   display:flex;
   justify-content:space-between;
@@ -2786,7 +2779,6 @@ html,body {
 .map-step.confirmed .map-node {
   border-color:var(--stage-color);
   color:var(--stage-color);
-  box-shadow:0 0 20px color-mix(in srgb,var(--stage-color) 25%,transparent);
 }
 .map-step.active .map-node {
   border-color:#e8c968;
@@ -3790,7 +3782,6 @@ html,body {
 .topology-nodes button:hover,.topology-nodes button.focused {
   border-color:var(--lime);
   background:#2b3036;
-  box-shadow:0 0 0 1px #ede2c925;
 }
 .topology-nodes button.affected {
   border-color:#8c5d49;
@@ -4537,7 +4528,6 @@ html,body {
 @keyframes reveal-glow {
   0% {
     transform:scale(.97);
-    box-shadow:0 0 0 1px var(--stage-color),0 0 36px color-mix(in srgb,var(--stage-color) 55%,transparent);
   }
   100% {
     transform:scale(1);
@@ -5283,7 +5273,7 @@ html,body {
   animation:pulse 1s infinite alternate;
 }
 .topology-nodes button.affected:not(.isolated) {
-  animation:node-threat 1.8s ease-in-out infinite alternate;
+  box-shadow:inset 0 0 0 1px #b55e3d;
 }
 .topology-nodes button.monitored {
   box-shadow:inset 0 0 0 1px #4a4f57;
@@ -5406,14 +5396,6 @@ html,body {
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
-}
-@keyframes node-threat {
-  from {
-    box-shadow:inset 0 0 0 0 #b55e3d00;
-  }
-  to {
-    box-shadow:inset 0 0 20px 0 #b55e3d33;
-  }
 }
 @media(max-width:650px) {
   .map-command-bar {
@@ -6435,7 +6417,6 @@ every value it carries is also present as static text. */
   z-index:2;
   border-radius:3px;
   border:1px solid #ff967d;
-  box-shadow:0 0 0 2px #ff967d2e,0 0 20px #ff967d52;
   pointer-events:none;
   opacity:0;
   animation:meter-cross .9s cubic-bezier(.16,1,.3,1) both;
@@ -6443,9 +6424,8 @@ every value it carries is also present as static text. */
 /* Static emphasis while the crossing flag is set, so a reduced-motion player
 still sees the meter marked as crossed once the ring is suppressed. */
 .impact-meter.crossing,.continuity-meter.crossing,.objective-meter.crossing {
-  border-radius:3px;
-  background:#ff967d12;
-  box-shadow:inset 0 0 0 1px #ff967d55;
+  outline:1px solid #ff967d66;
+  outline-offset:5px;
 }
 /* Response phases: containment drops in, assurance scans across, recovery lifts. */
 .response-stage {
@@ -6498,35 +6478,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
 .resolution-won .end-banner {
   border-color:#5e6d81;
   background:#ede2c90f;
-}
-@keyframes resolution-sweep {
-  0% {
-    opacity:0;
-    transform:scaleX(.06);
-  }
-  18% {
-    opacity:1;
-  }
-  70% {
-    opacity:.6;
-  }
-  100% {
-    opacity:0;
-    transform:scaleX(1);
-  }
-}
-.resolution-sweep {
-  position:absolute;
-  left:0;
-  right:0;
-  top:-12px;
-  height:2px;
-  border-radius:2px;
-  background:var(--lime);
-  transform-origin:left center;
-  pointer-events:none;
-  opacity:0;
-  animation:resolution-sweep .9s cubic-bezier(.16,1,.3,1) both;
 }
 @keyframes resolution-step-in {
   0% {
@@ -6732,7 +6683,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
   .response-stage,.response-options button {
     animation:none;
   }
-  .resolution-won .end-banner,.resolution-lost .end-banner,.resolution-exercise .end-banner,.resolution-sweep,.resolution-steps li,.resolution-note {
+  .resolution-won .end-banner,.resolution-lost .end-banner,.resolution-exercise .end-banner,.resolution-steps li,.resolution-note {
     animation:none;
   }
   .resolution-stamp {
@@ -7621,7 +7572,7 @@ in colour, and the carried plan is stated before the options. */
 .situation-log>.section-heading {
   margin:30px 0 12px;
 }
-.log-entry {
+.sit-entry {
   display:grid;
   grid-template-columns:11rem minmax(0,42rem) 5rem;
   column-gap:20px;
@@ -7629,107 +7580,107 @@ in colour, and the carried plan is stated before the options. */
   padding:13px 0;
   border-top:1px solid #383d45;
 }
-.log-label {
+.sit-label {
   display:grid;
   gap:3px;
   color:var(--text-soft);
   font-size:var(--type-caption);
   line-height:var(--leading-base);
 }
-.log-label small {
+.sit-label small {
   color:#9a968c;
   font-size:var(--type-caption);
 }
-.log-data {
+.sit-data {
   font-family:var(--font-mono);
   font-size:var(--type-micro);
   letter-spacing:.06em;
 }
-.log-body {
+.sit-body {
   min-width:0;
   max-width:var(--measure-prose);
 }
-.log-body p {
+.sit-body p {
   margin:0;
   font-size:var(--type-body);
   line-height:var(--leading-base);
   color:#d4d0c6;
 }
-.log-body p+p {
+.sit-body p+p {
   margin-top:8px;
 }
-.log-body strong {
+.sit-body strong {
   font-weight:500;
   color:#f6f1e4;
 }
-.log-body>small {
+.sit-body>small {
   display:block;
   margin-top:4px;
   font-size:var(--type-caption);
   color:var(--text-soft);
 }
-.log-body>[data-slot=progress] {
+.sit-body>[data-slot=progress] {
   height:4px;
   margin:10px 0;
 }
-.log-body p.log-note {
+.sit-body p.sit-note {
   font-size:var(--type-caption);
   color:#bbb4a3;
 }
-.log-body .sector-read {
+.sit-body .sector-read {
   margin-bottom:8px;
   font-size:var(--type-caption);
   color:#bbb4a3;
 }
-.log-figure {
+.sit-figure {
   justify-self:end;
   font:500 var(--type-lead) var(--font-mono);
   color:#f6f1e4;
 }
-.log-figure small {
+.sit-figure small {
   font-size:var(--type-micro);
   color:#868b93;
 }
-.log-entry.adversary .log-figure {
+.sit-entry.adversary .sit-figure {
   color:#dab6cd;
 }
-.log-entry.sector-condition.degraded .log-figure,.log-entry.log-lane.constrained .log-figure,.log-entry.log-lane.constrained small {
+.sit-entry.sector-condition.degraded .sit-figure,.sit-entry.sit-lane.constrained .sit-figure,.sit-entry.sit-lane.constrained small {
   color:#e4c260;
 }
-.log-entry.sector-condition.critical .log-figure,.log-entry.log-lane.at-risk .log-figure,.log-entry.log-lane.at-risk small {
+.sit-entry.sector-condition.critical .sit-figure,.sit-entry.sit-lane.at-risk .sit-figure,.sit-entry.sit-lane.at-risk small {
   color:#ff967d;
 }
-.log-entry.log-lane {
+.sit-entry.sit-lane {
   padding:8px 0;
   border-top-color:#2a2e34;
 }
-.log-entry.log-lane .log-label {
+.sit-entry.sit-lane .sit-label {
   padding-left:12px;
 }
-.log-lane .log-body {
+.sit-lane .sit-body {
   display:flex;
   align-items:center;
   gap:12px;
 }
-.log-lane .sector-scene-track {
+.sit-lane .sector-scene-track {
   flex:1;
   margin:0;
 }
-.log-lane .sector-scene-track i {
+.sit-lane .sector-scene-track i {
   background:#d9cfb6;
 }
-.log-lane .log-body>small {
+.sit-lane .sit-body>small {
   margin:0;
   min-width:6.5em;
 }
-.log-lead {
+.sit-lead {
   max-width:var(--measure-prose);
 }
-.log-order .log-label {
+.sit-order .sit-label {
   color:var(--lime);
   font-weight:600;
 }
-.log-link {
+.sit-link {
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -7745,10 +7696,10 @@ in colour, and the carried plan is stated before the options. */
   text-underline-offset:4px;
   cursor:pointer;
 }
-.log-link:hover {
+.sit-link:hover {
   text-decoration-thickness:2px;
 }
-.log-link:focus-visible {
+.sit-link:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
@@ -8223,6 +8174,280 @@ span.effect-list>span.effect.term>em {
   box-shadow:inset 3px 0 0 var(--stage-color);
 }
 
+/* The assignment is a case file, not a pricing page: no accent stripe across
+   its top, the case numbers a line of figures with the open one underlined,
+   and the difficulty a ruled table with a mark in the margin, in place of a
+   pagination grid and three tier cards. */
+.mission-panel {
+  border-top:1px solid #3e434a;
+}
+.mission-selector button {
+  border-color:transparent;
+  border-radius:0;
+  color:#a39f95;
+}
+.mission-selector button:hover {
+  border-color:transparent;
+  color:#f6f1e4;
+}
+.mission-selector button.active {
+  border-color:transparent;
+  background:none;
+  color:#f6f1e4;
+  text-decoration:underline;
+  text-decoration-color:var(--lime);
+  text-decoration-thickness:2px;
+  text-underline-offset:7px;
+}
+.mission-selector button.completed:not(.active) {
+  border-color:transparent;
+}
+.difficulty-picker>div {
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  border-top:1px solid #3e4248;
+}
+.difficulty-picker button {
+  display:grid;
+  grid-template-columns:1.4rem auto minmax(0,1fr);
+  column-gap:10px;
+  align-items:baseline;
+  min-height:44px;
+  padding:10px 0;
+  border:0;
+  border-bottom:1px solid #2f3339;
+  border-radius:0;
+  background:none;
+}
+.difficulty-picker button::before {
+  content:"○" / "";
+  color:#868b93;
+  font-family:var(--font-mono);
+}
+.difficulty-picker button.active::before {
+  content:"●" / "";
+  color:var(--lime);
+}
+.difficulty-picker button:hover,.difficulty-picker button.active {
+  border-color:#2f3339;
+  background:none;
+}
+.difficulty-picker button:hover {
+  background:#1f2328;
+}
+.difficulty-picker strong {
+  font-size:var(--type-body);
+  font-weight:500;
+}
+.difficulty-picker small {
+  margin-top:0;
+  justify-self:end;
+  text-align:right;
+  font-size:var(--type-caption);
+}
+.start-button {
+  box-shadow:none;
+}
+
+/* The action sheet is one form: the question, the reading's fit, the roll and
+   the plan are ruled fields, the caution a rule in the margin, and the plan's
+   options radio rows with the choice said in words. Five stacked bordered boxes
+   and two grids of option cards read as a stock settings sheet. */
+.action-sheet .action-note {
+  padding:12px 0;
+  border:0;
+  border-top:1px solid #383d45;
+  border-bottom:1px solid #383d45;
+  border-radius:0;
+  background:none;
+}
+.action-sheet .alignment-notice {
+  display:block;
+  padding:4px 0 4px 14px;
+  border:0;
+  border-left:3px solid #7f8388;
+  border-radius:0;
+  background:none;
+}
+.action-sheet .alignment-notice.level-high {
+  border-left-color:var(--lime);
+}
+.action-sheet .alignment-notice.level-moderate {
+  border-left-color:#e8c968;
+}
+.carried-plan {
+  padding:4px 0 4px 12px;
+  border:0;
+  border-left:3px solid #7f8388;
+  border-radius:0;
+}
+.modifier-details>summary {
+  padding:9px 0;
+  border:0;
+  border-bottom:1px dotted #4a4f57;
+  border-radius:0;
+}
+.modifier-breakdown {
+  gap:0;
+  border:0;
+  border-radius:0;
+  background:none;
+}
+.modifier-breakdown li {
+  padding:8px 0;
+  border-bottom:1px dotted #3a3f46;
+  background:none;
+}
+.procedure-planner {
+  grid-template-columns:minmax(0,1fr);
+  gap:16px;
+}
+.procedure-planner>div>div {
+  gap:0;
+  border-top:1px solid #383d45;
+}
+.procedure-planner button {
+  display:grid;
+  grid-template-columns:1.2rem minmax(0,1fr);
+  column-gap:6px;
+  padding:10px 4px 10px 0;
+  border:0;
+  border-bottom:1px solid #383d45;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+}
+.procedure-planner button::before {
+  content:"○" / "";
+  grid-row:1/span 3;
+  color:#868b93;
+  font-family:var(--font-mono);
+}
+.procedure-planner button>* {
+  grid-column:2;
+}
+.procedure-planner button:hover {
+  background:#1f2328;
+}
+.procedure-planner button.active {
+  border-color:#383d45;
+  background:none;
+  box-shadow:none;
+}
+.procedure-planner button.active::before {
+  content:"●" / "";
+  color:var(--lime);
+}
+.procedure-planner .plan-selected {
+  float:none;
+  margin-left:8px;
+  font:400 var(--type-caption) var(--font-ui);
+  letter-spacing:0;
+  color:var(--lime);
+}
+
+/* The ending is a closing entry in the record: ruled above and below, its
+   button in the text's flow, and what closed the case set as lines with their
+   status in the margin. */
+.end-banner {
+  padding:18px 0;
+  border:0;
+  border-top:1px solid #556070;
+  border-bottom:1px solid #383d45;
+  border-radius:0;
+  background:none;
+}
+.resolution .end-banner {
+  background:none;
+}
+.resolution-steps {
+  margin:-10px 0 24px;
+  gap:0;
+}
+.resolution-steps li {
+  display:grid;
+  grid-template-columns:7.5rem minmax(0,1fr);
+  align-items:baseline;
+  gap:12px;
+  padding:7px 0;
+  border-bottom:1px dotted #3a3f46;
+}
+.resolution-steps li b {
+  color:var(--lime);
+  font:500 var(--type-micro) var(--font-mono);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+/* Business impact takes the warning colour when it is rising, not before:
+   amber beside "Contained" said warning about a meter that was not one. */
+.impact-meter strong {
+  color:#f6f1e4;
+}
+.impact-meter>[data-slot=progress]>div {
+  background:#d9cfb6;
+}
+.impact-meter small {
+  color:var(--text-soft);
+}
+.impact-meter.rising strong,.impact-meter.rising small {
+  color:#e8c968;
+}
+.impact-meter.rising>[data-slot=progress]>div {
+  background:#e8c968;
+}
+
+/* The active tab keeps its underline under the pointer too. */
+.workspace-tabs button.active:hover:not(:disabled) {
+  border-bottom-color:var(--lime);
+}
+.workspace-tabs b {
+  font-family:var(--font-ui);
+  white-space:nowrap;
+}
+/* An untested reading has spent none of its sources; a row of empty marks under
+   it read as a loading placeholder. */
+.hypothesis-standing.level-untested .standing-meter {
+  display:none;
+}
+
+/* The investigation window's scale is the same length in every case: it took
+   the width of the title above it, so 12 of 12 measured 440 px in one case and
+   480 in the next. */
+.operation-status {
+  width:430px;
+  max-width:100%;
+}
+
+/* A label that wraps and one that does not end on the same line: the label box
+   keeps its two-line height and sets its text at the bottom of it. */
+.case-meters>div>.mono {
+  display:flex;
+  align-items:flex-end;
+}
+
+/* The captain's panel labels are labels, not data: sentence case in the body
+   face. The actor model is an annotation, a rule in the margin rather than a box
+   in the panel, and the roll rule under both panels is a footnote. */
+.brief-label,.captain-label span:not(.captain-avatar) {
+  font-family:var(--font-ui);
+  letter-spacing:0;
+}
+.brief-label {
+  font-weight:600;
+}
+.adversary-read {
+  padding:2px 0 2px 14px;
+  border:0;
+  border-left:2px solid #7f8388;
+  border-radius:0;
+  background:none;
+}
+.rules-reminder {
+  font-size:var(--type-caption);
+  color:var(--text-soft);
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -8664,27 +8889,27 @@ span.effect-list>span.effect.term>em {
   }
   /* On a phone the log's label and figure share the first line and the entry
      takes the full width beneath them. */
-  .log-entry {
+  .sit-entry {
     grid-template-columns:minmax(0,1fr) auto;
     column-gap:14px;
     row-gap:4px;
   }
-  .log-label {
+  .sit-label {
     grid-column:1;
     grid-row:1;
     display:flex;
     flex-wrap:wrap;
     gap:0 8px;
   }
-  .log-figure {
+  .sit-figure {
     grid-column:2;
     grid-row:1;
   }
-  .log-body {
+  .sit-body {
     grid-column:1/-1;
     grid-row:2;
   }
-  .log-entry.log-lane .log-label {
+  .sit-entry.sit-lane .sit-label {
     padding-left:0;
   }
   .response-options button {

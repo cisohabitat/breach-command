@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ArrowRight, Check, Copy } from "lucide-react";
+import { ArrowRight, Copy } from "lucide-react";
 import { getLossReason, getOperationalLabel, getResultSummary, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
@@ -20,7 +20,6 @@ export function EndState({ session }: { session: GameSession }) {
   if (game.status === "won") {
     return (
       <section className="resolution resolution-won" data-resolution="won">
-        <span className="resolution-sweep" aria-hidden="true" />
         <div className="end-banner end-won">
           <div>
             <span className="eyebrow">Resolution · stand down</span>
@@ -30,9 +29,11 @@ export function EndState({ session }: { session: GameSession }) {
           <button className="primary-button" onClick={openDebrief}>Open after-action review <ArrowRight size={17} /></button>
         </div>
         <ol className="resolution-steps">
-          <li><Check size={15} /> Attack chain confirmed · {game.revealed.length} of 4 stages identified</li>
-          <li><Check size={15} /> Response recorded · containment, assurance and recovery</li>
-          <li><Check size={15} /> Outcome scored · grade {outcome?.grade}, {outcome?.breakdown.total}/100</li>
+          {/* What closed the case, as lines of the record with their status in
+              the margin, not a checklist of ticks. */}
+          <li><b>Confirmed</b><span>Attack chain: {game.revealed.length} of 4 stages identified.</span></li>
+          <li><b>Recorded</b><span>Response: containment, assurance and recovery.</span></li>
+          <li><b>Scored</b><span>Outcome: grade {outcome?.grade}, {outcome?.breakdown.total} of 100.</span></li>
         </ol>
         <ShareResult game={game} />
       </section>

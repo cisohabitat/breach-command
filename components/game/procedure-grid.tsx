@@ -52,6 +52,9 @@ export function ProcedureGrid({
             <p>{procedure.short}</p>
             {/* One tag, not two that read as a contradiction: the bonus still
                 applies, but the source cannot test the reading at this stage. */}
+            {/* An established source says so where the own-source tag does, under
+                the description: one sat beside it and the other below. */}
+            {established && !cooldown && <small className="alignment-label established-label">Established <span className="nowrap">· +2</span></small>}
             {aligned && !cooldown && (blind
               ? <small className="alignment-label blind">Own source <span className="nowrap">· +{OWN_SOURCE_BONUS}</span>, can&apos;t test this reading here</small>
               : <small className="alignment-label">Own source <span className="nowrap">· +{OWN_SOURCE_BONUS}</span></small>)}
@@ -59,9 +62,8 @@ export function ProcedureGrid({
             {read && !cooldown && read.spent > 0 && <small className="spent-label">CHECKED {read.spent}× · NO STAGE FOUND</small>}
             {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} ATTEMPT{read.inconclusive === 1 ? "" : "S"} FAILED · INCONCLUSIVE</small>}
             <div className="procedure-bottom">
-              {/* An ordinary source carries no label: "STANDARD" told a newcomer nothing.
-                  An established one says what it is in words, as the own-source tag does. */}
-              <span>{cooldown ? "ON COOLDOWN" : established ? <span className="established-label">Established <span className="nowrap">· +2</span></span> : null}</span>
+              {/* An ordinary source carries no label: "STANDARD" told a newcomer nothing. */}
+              <span>{cooldown ? "ON COOLDOWN" : null}</span>
             </div>
           </button>
         );

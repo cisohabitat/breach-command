@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { CheckCheck, CircleHelp, Dices } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { describeMeterChange, describePart, getDiscriminatingRead, getModifierBreakdown, procedureIntensities, procedureScopes, type ProcedureIntensity, type ProcedureScope } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -36,7 +35,6 @@ export function ActionSheet({ session }: { session: GameSession }) {
         {proc && game && <>
           <div className="action-note"><span className="eyebrow">Hypothesis check</span><p><Glossed text={proc.question} /></p></div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
-            <BrainLabel aligned={procedureAligned} />
             <span>
               {read && <strong>{read.label}. </strong>}
               {read ? read.detail : procedureAligned ? "This procedure tests your working hypothesis and earns the own-source bonus shown below." : "This procedure does not directly test your working hypothesis. It may still collect useful evidence, but earns no own-source bonus."}
@@ -62,13 +60,9 @@ export function ActionSheet({ session }: { session: GameSession }) {
             <div role="group" aria-label="Intensity"><span className="eyebrow">Intensity</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">Selected</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureIntensities[id].modifier), describeMeterChange(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && `the source rests ${procedureIntensities[id].cooldown} turn longer`]} /></button>)}</div></div>
           </div>
           <p className="muted small">Success reveals a stage only when this evidence source matches an undiscovered technique. The plan&apos;s effects above add to what every turn costs: time passes, so business impact and adversary progress usually rise and the sector meter wears down. A failed check costs more; finding a stage pushes them back.</p>
-          <button className="primary-button full" onClick={() => run(proc.id)}><Dices size={19} /> Run procedure</button>
+          <button className="primary-button full" onClick={() => run(proc.id)}>Run procedure</button>
         </>}
       </SheetContent>
     </Sheet>
   );
-}
-
-function BrainLabel({ aligned }: { aligned: boolean }) {
-  return <span aria-hidden="true" className="alignment-icon">{aligned ? <CheckCheck size={18} /> : <CircleHelp size={18} />}</span>;
 }
