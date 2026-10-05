@@ -585,10 +585,11 @@ a {
   display:flex;
   align-items:center;
   gap:15px;
-  background:#272a2e;
-  border:1px solid #3d444d;
-  border-radius:3px;
-  padding:16px 19px;
+  background:none;
+  border:0;
+  border-top:1px solid #383d45;
+  border-radius:0;
+  padding:14px 0;
   margin:22px 0 28px;
   color:var(--lime);
 }
@@ -3248,14 +3249,15 @@ html,body {
   margin:0 0 22px;
 }
 .sector-card,.objective-card {
-  border:1px solid #434850;
-  background:#191d22;
-  border-radius:3px;
-  padding:15px;
+  border:0;
+  border-top:1px solid #383d45;
+  background:none;
+  border-radius:0;
+  padding:15px 15px 15px 0;
 }
 .objective-card {
-  border-color:#5b4c42;
-  background:#231d19;
+  border-color:#383d45;
+  background:none;
 }
 .sector-title {
   display:flex;
@@ -3312,15 +3314,19 @@ html,body {
   grid-column:1/-1;
   display:grid;
   grid-template-columns:1fr 1fr;
-  border:1px solid #383d44;
-  background:#131519;
-  border-radius:3px;
+  border:0;
+  border-block:1px solid #383d44;
+  background:none;
+  border-radius:0;
 }
 .command-feed>div {
   display:flex;
   gap:10px;
   padding:12px 14px;
   align-items:flex-start;
+}
+.command-feed>div:first-child {
+  padding-left:0;
 }
 .command-feed>div+div {
   border-left:1px solid #383d44;
@@ -3426,10 +3432,10 @@ html,body {
   flex:0 0 25px;
   height:25px;
   border:1px solid #515760;
-  border-radius:50%;
+  border-radius:2px;
   display:grid;
   place-items:center;
-  font:500 var(--type-micro) monospace;
+  font:500 var(--type-micro) var(--font-mono);
 }
 .tutorial-steps .current>span {
   border-color:#e2c96f;
@@ -3692,7 +3698,7 @@ html,body {
 }
 .campaign-consequences strong {
   color:var(--lime);
-  font:500 var(--type-caption) monospace;
+  font:500 var(--type-caption) var(--font-mono);
 }
 .local-telemetry {
   border:0;
@@ -3767,6 +3773,7 @@ html,body {
   .command-feed>div+div {
     border-left:0;
     border-top:1px solid #383d44;
+    padding-left:0;
   }
 }
 @media(max-width:650px) {
@@ -4542,14 +4549,15 @@ html,body {
 .director-live>div {
   position:relative;
   overflow:hidden;
-  border:1px solid #494e56;
-  background:#1d2126;
-  border-radius:3px;
-  padding:14px;
+  border:0;
+  border-top:1px solid #383d45;
+  background:none;
+  border-radius:0;
+  padding:14px 14px 14px 0;
 }
 .director-live>div:last-child {
-  border-color:#715343;
-  background:#2b201b;
+  border-color:#383d45;
+  background:none;
 }
 .director-live>div:after {
   content:"";
@@ -5635,10 +5643,11 @@ html,body {
   gap:13px;
   align-items:center;
   margin:15px 0;
-  border:1px solid #383d45;
-  border-radius:3px;
-  padding:15px 17px;
-  background:#16191d;
+  border:0;
+  border-top:1px solid #383d45;
+  border-radius:0;
+  padding:14px 0;
+  background:none;
 }
 .sector-situation .situation-icon {
   width:42px;
@@ -5836,10 +5845,11 @@ html,body {
   position:relative;
   overflow:hidden;
   margin:15px 0 20px;
-  border:1px solid color-mix(in srgb,var(--sector-accent) 50%,#383d45);
-  border-radius:3px;
-  background:#121418;
-  padding:17px;
+  border:0;
+  border-top:1px solid #383d45;
+  border-radius:0;
+  background:none;
+  padding:17px 0;
 }
 .sector-operational-scene:before {
   content:"";
@@ -5941,7 +5951,7 @@ html,body {
   background:#ef8a7d;
 }
 .sector-operational-scene.clinical {
-  background:#16191d;
+  background:none;
 }
 .sector-operational-scene.clinical:before {
   background:none;
@@ -5954,7 +5964,7 @@ html,body {
   padding-inline:0;
 }
 .sector-operational-scene.energy {
-  background:#16191d;
+  background:none;
 }
 .sector-operational-scene.energy:before {
   background:none;
@@ -5967,7 +5977,7 @@ html,body {
   background:#3d3428;
 }
 .sector-operational-scene.infocomm {
-  background:#16191d;
+  background:none;
 }
 .sector-operational-scene.infocomm:before {
   background-image:none;
@@ -6539,7 +6549,7 @@ span.effect-list>span.effect.note>span {
   height:29px;
   display:grid;
   place-items:center;
-  border-radius:50%;
+  border-radius:2px;
   background:var(--lime);
   color:#f1ece1;
   font:600 var(--type-caption) var(--font-mono);
@@ -7367,6 +7377,15 @@ still sees the meter marked as crossed once the ring is suppressed. */
 .bot-setup-control>div {
   flex:1;
 }
+/* A switch is a square toggle on a form, not a rounded phone control: square
+   corners, a square slide and an outline that reads on both states. */
+[data-slot=switch] {
+  border-radius:2px;
+  border-color:#5b616a;
+}
+[data-slot=switch-thumb] {
+  border-radius:1px;
+}
 .bot-setup-control>[data-slot=switch] {
   flex:0 0 auto;
 }
@@ -8142,6 +8161,74 @@ in colour, and the carried plan is stated before the options. */
   font-weight:500;
 }
 
+/* The procedures are an index in the manual from tablet width up: one ruled line
+   each, the number in the margin, the title and what it collects, the state at
+   the right. Twelve bordered tiles read as a feature grid, and as a list the
+   whole set sits beside the reading on a laptop. */
+@media(min-width:651px) {
+  .investigation-dashboard .procedure-grid {
+    grid-template-columns:1fr;
+    gap:0;
+    border-top:1px solid #383d45;
+  }
+  .investigation-dashboard .procedure-card {
+    display:grid;
+    grid-template-columns:30px minmax(0,1fr) auto;
+    column-gap:12px;
+    row-gap:3px;
+    align-items:baseline;
+    min-height:0;
+    padding:11px 10px 11px 6px;
+    border:0;
+    border-bottom:1px solid #383d45;
+    border-radius:0;
+    background:none;
+  }
+  .investigation-dashboard .procedure-card:not(:disabled):hover {
+    transform:none;
+    box-shadow:none;
+    border-color:#383d45;
+    background:#1c1f24;
+  }
+  .investigation-dashboard .procedure-card.hypothesis-aligned,.investigation-dashboard .procedure-card.hypothesis-aligned:not(:disabled):hover {
+    box-shadow:inset 2px 0 0 var(--lime);
+  }
+  .investigation-dashboard .procedure-top {
+    display:contents;
+  }
+  .investigation-dashboard .procedure-code {
+    grid-column:1;
+    grid-row:1/span 2;
+  }
+  .investigation-dashboard .procedure-badge {
+    grid-column:3;
+    grid-row:1;
+    justify-self:end;
+  }
+  .investigation-dashboard .procedure-card h3 {
+    grid-column:2;
+    grid-row:1;
+  }
+  .investigation-dashboard .procedure-card p {
+    grid-column:2;
+    grid-row:2;
+    margin-top:0;
+  }
+  .investigation-dashboard .procedure-card>small {
+    grid-column:2/-1;
+    margin-top:2px;
+  }
+  .investigation-dashboard .procedure-bottom {
+    grid-column:3;
+    grid-row:2;
+    justify-self:end;
+    padding-top:0;
+  }
+  .investigation-dashboard .procedure-bottom:empty,.investigation-dashboard .procedure-bottom>span:empty {
+    display:none;
+  }
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -8381,7 +8468,7 @@ in colour, and the carried plan is stated before the options. */
   .hypothesis-board.has-reading .hypothesis-standing strong {
     padding:2px 7px;
     border:1px solid #c9bfac;
-    border-radius:999px;
+    border-radius:2px;
     font-size:var(--type-micro);
   }
   /* And the prompts above the grid say their piece in fewer lines. */
@@ -8626,6 +8713,23 @@ in colour, and the carried plan is stated before the options. */
   }
   .reference-fold[open]>summary {
     margin-bottom:12px;
+  }
+  /* On a phone the two columns stay, as cells of a ruled table rather than
+     floating cards. */
+  .investigation-dashboard .procedure-grid {
+    gap:1px;
+    background:#383d45;
+    border:1px solid #383d45;
+  }
+  .investigation-dashboard .procedure-card {
+    border:0;
+    border-radius:0;
+    background:#16191d;
+  }
+  .investigation-dashboard .procedure-card:not(:disabled):hover {
+    transform:none;
+    box-shadow:none;
+    background:#1c1f24;
   }
 }
 /* Narrower than the phone block: what still has to give way. These follow it
