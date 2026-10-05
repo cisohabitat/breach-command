@@ -51,7 +51,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
             const revealed = game.revealed.includes(attack.id);
             return (
               <li className={revealed ? "confirmed" : "pending"} key={stage.name} style={{ "--stage-color": stage.color, "--redaction": `${[72, 58, 80, 64][index]}%` } as CSSProperties}>
-                <span className="chain-no">{String(index + 1).padStart(2, "0")}</span>
+                <span className="chain-no">{String(index + 1)}</span>
                 <span className="chain-stage">{stage.name}</span>
                 {revealed ? <strong className="chain-technique">{attack.title}</strong> : <span className="chain-redacted"><span className="sr-only">Unknown technique</span></span>}
                 <span className="chain-status">{revealed ? "Confirmed" : "Awaiting evidence"}</span>

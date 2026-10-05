@@ -43,7 +43,7 @@ export function ProcedureGrid({
             <div className="procedure-top">
               {/* A procedure's number in the manual, not an icon: a glyph on every
                   card read as a feature grid, and the sector action shared a bank icon. */}
-              <span className="procedure-code">{String(index + 1).padStart(2, "0")}</span>
+              <span className="procedure-code">{String(index + 1)}</span>
               {/* The badge carries the cooldown only. The established bonus is stated
                   once, in the footer; a "+2" badge said it a second time. */}
               {cooldown > 0 && <span className="procedure-badge">{cooldown} turn{cooldown === 1 ? "" : "s"}</span>}

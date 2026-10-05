@@ -19,8 +19,9 @@ export function SectorSituation({ game }: { game: Game }) {
   const severity = game.continuity <= 45 ? "critical" : game.continuity <= 75 ? "degraded" : "stable";
   return <div className={`sit-entry sector-condition ${severity}`}>
     <span className="sit-label">Sector condition</span>
-    <div className="sit-body"><p><strong>{title}.</strong> {detail}</p><small>{getOperationalLabel(game)}</small></div>
-    <b className="sit-figure">{game.continuity}<small>/100</small></b>
+    {/* The figure is the continuity readout's, already in the top row; here the
+        condition is said in words. */}
+    <div className="sit-body"><p><strong>{title}.</strong> {detail}</p><small>{getOperationalLabel(game)} is {severity === "critical" ? "at risk" : severity}.</small></div>
   </div>;
 }
 

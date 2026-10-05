@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { Bot, RefreshCw, Settings2 } from "lucide-react";
+import { Bot, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
 import { campaignRank, standingEffects } from "@/lib/campaign";
@@ -28,7 +28,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <p className="intro">An intruder has worked through four stages somewhere in the organisation. Each turn you state what you think happened, test it against one evidence source and decide what to do with what you find. Once the whole chain is known, you lead the response.</p>
         <ol className="briefing-chain" aria-label="The four stages you are looking for">
           {stages.map((stage, index) => {
-            return <li key={stage.name} style={{ "--stage-color": stage.color } as CSSProperties}><span className="chain-index">{String(index + 1).padStart(2, "0")}</span><strong>{stage.short}</strong><small>{stageQuestions[index]}</small></li>;
+            return <li key={stage.name} style={{ "--stage-color": stage.color } as CSSProperties}><span className="chain-index">{String(index + 1)}</span><strong>{stage.short}</strong><small>{stageQuestions[index]}</small></li>;
           })}
         </ol>
         {/* On a phone the assignment panel, and the start button inside it, sit two
@@ -54,13 +54,13 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         {finalEnding && <section className="campaign-ending"><div><span className="field-label">Campaign conclusion</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
       </div>
       <section className="mission-panel">
-        <div className="panel-top"><span className="case-number">Case {String(scenarioChoice + 1).padStart(2, "0")} of {String(scenarios.length).padStart(2, "0")}</span><span className={`case-stamp ${campaign.completed.includes(scenarioChoice) ? "cleared" : ""}`}>{campaign.completed.includes(scenarioChoice) ? "Cleared" : "Open"}</span></div>
+        <div className="panel-top"><span className="case-number">Case {String(scenarioChoice + 1)} of {String(scenarios.length)}</span><span className={`case-stamp ${campaign.completed.includes(scenarioChoice) ? "cleared" : ""}`}>{campaign.completed.includes(scenarioChoice) ? "Cleared" : "Open"}</span></div>
         <div className="mission-symbol"><span>{activeScenario.sector}</span></div>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
         {previewVariant && <div className="variant-brief"><span className="case-stamp amended">Amended</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
         <div className="mission-selector" aria-label="Select incident">
-          {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery star${(campaign.mastery[String(index)] ?? 0) === 1 ? "" : "s"}` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1).padStart(2, "0")}</span>{campaign.completed.includes(index) && <small aria-hidden="true">{"|".repeat(campaign.mastery[String(index)] ?? 0)}</small>}</button>)}
+          {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery star${(campaign.mastery[String(index)] ?? 0) === 1 ? "" : "s"}` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1)}</span>{campaign.completed.includes(index) && <small aria-hidden="true">{"|".repeat(campaign.mastery[String(index)] ?? 0)}</small>}</button>)}
         </div>
         <div className="difficulty-picker">
           <span className="field-label">Difficulty</span>
@@ -72,12 +72,12 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             ? `${namedSpecialists[specialist].name} is at fatigue ${campaign.specialistFatigue[specialist]} of 6, where the specialist bonus no longer applies. Deploying someone else lets them rest.`
             : `Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty. At ${SPECIALIST_EXHAUSTED_AT} of 6 the specialist's +1 on their own sources no longer applies.`}</small></label>
           <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
-            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name}, {specialists[id].title.toLowerCase()}, fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
+            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name}, {specialists[id].title.toLowerCase()}</option>)}
           </select>
           <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}, fatigue {campaign.specialistFatigue[specialist] ?? 0} of 6. {specialists[specialist].ability} Rapport with {namedSpecialists[specialist].name} {campaign.specialistBonds[specialist] ?? 35}/100: it grows with each operation together, and the team&apos;s average shapes how the campaign ends.</p>
         </div>
         <details className="advanced-setup">
-          <summary><Settings2 size={16} /> Advanced operation settings <span>{gameModes[mode].title}</span></summary>
+          <summary>Advanced operation settings <span>{gameModes[mode].title}</span></summary>
           <div className="mode-picker">
             <span className="eyebrow">Operation mode</span>
             <div>{(Object.keys(gameModes) as GameMode[]).map(id => <button key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => setMode(id)}><strong>{gameModes[id].title}</strong><small>{gameModes[id].description}</small></button>)}</div>

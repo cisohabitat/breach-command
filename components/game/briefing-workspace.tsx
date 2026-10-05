@@ -27,7 +27,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
             { id: "impact", label: "What is at risk?" },
             { id: "constraints", label: "What limits us?" },
             { id: "assumptions", label: "What should we challenge?" },
-          ].map((item, index) => <button key={item.id} className={question === item.id ? "active" : ""} aria-pressed={question === item.id} onClick={() => setQuestion(question === item.id ? null : item.id)}><span className="q-no">Q{index + 1}</span>{item.label}</button>)}
+          ].map((item, index) => <button key={item.id} className={question === item.id ? "active" : ""} aria-pressed={question === item.id} onClick={() => setQuestion(question === item.id ? null : item.id)}>{item.label}</button>)}
         </div>
         {question && <div className="captain-answer" aria-live="polite">{answer}</div>}
         <div className="guided-inline"><label htmlFor="guided-game">{game.mode === "expert" ? "Guidance disabled in Expert" : "Guided reflection"}</label><Switch id="guided-game" checked={guided} disabled={game.mode === "expert"} onCheckedChange={setGuided} /></div>
@@ -36,14 +36,14 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
       </section>
 
       <section className="journal-panel">
-        <div className="section-heading"><h2>Incident log</h2><span className="mono muted">{String(game.turns.length).padStart(2, "0")}</span></div>
+        <div className="section-heading"><h2>Incident log</h2><span className="mono muted">{String(game.turns.length)}</span></div>
         {!game.turns.length ? (
           <div className="empty-log"><p>Investigation opened.</p><small>Hypotheses, findings and actor movements will appear here.</small></div>
         ) : (
           <div className="journal-entries">
             {[...game.turns].reverse().map(turn => (
               <button className="log-entry" key={turn.number} onClick={() => setReport(turn)}>
-                <span className={`log-number ${turn.revealed ? "found" : turn.success ? "passed" : "failed"}`}>{String(turn.number).padStart(2, "0")}</span>
+                <span className={`log-number ${turn.revealed ? "found" : turn.success ? "passed" : "failed"}`}>{String(turn.number)}</span>
                 <div><strong>{procedureById(game, turn.procedure)?.title}</strong><span>{turn.revealed ? "Stage revealed" : turn.adversaryEvent ? "Actor advanced" : turn.success ? "No new evidence" : "Action unsuccessful"}, impact {turn.impactChange >= 0 ? "+" : ""}{turn.impactChange}</span></div>
                 <span className="roll-total">{turn.total}</span>
               </button>

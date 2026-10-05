@@ -8972,6 +8972,95 @@ span.effect-list>span.effect.term>em {
   opacity:.5;
 }
 
+/* Polish after the round-8 grade. */
+/* Advanced settings are a ruled fold with a mark, not a bordered bar with an
+   icon and a tag. */
+.advanced-setup {
+  border:0;
+  border-top:1px solid #383d45;
+  border-bottom:1px solid #383d45;
+  border-radius:0;
+}
+.advanced-setup>summary {
+  padding:11px 0;
+}
+.advanced-setup>summary::before {
+  content:"+";
+  width:1.2em;
+  font-family:var(--font-mono);
+  color:var(--text-soft);
+}
+.advanced-setup[open]>summary::before {
+  content:"−";
+}
+.advanced-setup>summary span {
+  color:var(--text-soft);
+  font:400 var(--type-caption) var(--font-ui);
+}
+.advanced-setup[open]>summary {
+  background:none;
+}
+.advanced-setup>.mode-picker,.advanced-setup>.challenge-console,.advanced-setup>.setup-controls {
+  margin:14px 0;
+}
+/* The review's four plain sentences are log entries: what each is in a margin
+   column, the sentence beside it, rather than four bold run-in heads. */
+.first-read dl>div {
+  display:grid;
+  grid-template-columns:9rem minmax(0,1fr);
+  column-gap:16px;
+  padding:7px 0;
+  border-top:1px dotted #b3a993;
+}
+.first-read dt {
+  display:block;
+  margin:0;
+  color:#4a463e;
+  font-size:var(--type-caption);
+  font-weight:400;
+}
+.first-read dt::after {
+  content:none;
+}
+.first-read dd {
+  display:block;
+}
+/* An effect's figure and word sit on the last line of a name that wraps. */
+span.effect-list>span.effect>b,span.effect-list>span.effect>em {
+  align-self:last baseline;
+}
+/* The tabs' underline is as long as its word. */
+@media(min-width:651px) {
+  .workspace-tabs {
+    grid-template-columns:repeat(3,max-content);
+    column-gap:36px;
+  }
+  .workspace-tabs button {
+    padding-left:0;
+    padding-right:0;
+  }
+}
+/* An option's effects sit beside its words, not at the far edge of the column. */
+.response-options button,.set-piece-options button,.command-options button {
+  grid-template-columns:2rem minmax(0,34rem) minmax(15rem,19rem);
+  justify-content:start;
+}
+/* Headings are serif and sized by rank: the workspace above the case theory it
+   holds, the review's closing note with the other section titles. */
+.evidence-workspace .map-heading h2,.infrastructure-console .map-heading h2 {
+  font-size:var(--type-lead);
+}
+.case-theory>div:first-child strong {
+  font-size:var(--type-body);
+}
+.debrief-learning h3,.capability-review>.eyebrow {
+  font-family:var(--font-serif);
+  font-weight:500;
+}
+.campaign-route-card strong {
+  font-weight:500;
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -9438,6 +9527,9 @@ span.effect-list>span.effect.term>em {
   }
   .topology-nodes small {
     grid-column:1/-1;
+  }
+  .first-read dl>div {
+    grid-template-columns:minmax(0,1fr);
   }
   /* On a phone the log's label and figure share the first line and the entry
      takes the full width beneath them. */

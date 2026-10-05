@@ -90,7 +90,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <p className="ledger-rule">A turn scores in full when the route you predicted is the route the next unconfirmed stage actually used. It scores half when the prediction was wrong but properly tested — you spent one of that reading&rsquo;s own evidence sources, or a source marked as able to test it, and the check completed. That half is paid once per reading at each stage, and only while the record had not already ruled that reading out: declaring one again after its own sources came back empty earns nothing. A right prediction scores whatever the roll; a failed roll cannot rule a wrong one out, so it earns nothing. Only the hypothesis standing when you act is tested, so revising before you act costs nothing, and choosing one of that reading&rsquo;s own sources adds +{OWN_SOURCE_BONUS} to the roll whichever reading turns out to be right.</p>
             {ledger.map(row => (
               <div key={row.turn} className={row.matched ? "matched" : row.credit > 0 ? "half" : "missed"}>
-                <span>{String(row.turn).padStart(2, "0")}</span>
+                <span>{String(row.turn)}</span>
                 <p>
                   <strong>{row.predicted ? `Predicted: ${row.predicted}` : "No hypothesis recorded"}</strong>
                   <small>Tested against {inSentence(row.testedAgainst)}; {row.procedure} {row.discriminating ? "could have exposed it" : "could not have exposed it"}{row.bonus > 0 ? `; own source, +${row.bonus} to the roll` : ""}</small>
@@ -130,7 +130,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               <summary>Turn by turn<span>{game.turns.length} turn{game.turns.length === 1 ? "" : "s"}, {game.turns.filter(turn => turn.revealed).length} found a stage</span></summary>
             {game.turns.map(turn => (
               <div key={turn.number}>
-                <span>{String(turn.number).padStart(2, "0")}</span>
+                <span>{String(turn.number)}</span>
                 <p><strong>{procedureById(game, turn.procedure)?.title}</strong>{turn.hypothesis ? `, hypothesis: ${hypotheses.find(item => item.id === turn.hypothesis)?.title}` : ", no hypothesis recorded"}<small>{procedureScopes[turn.plan.scope].title} scope, {procedureIntensities[turn.plan.intensity].title.toLowerCase()} analysis. {turn.revealed ? `Revealed ${attacks.find(attack => attack.id === turn.revealed)?.title}.` : turn.narrative}</small></p>
               </div>
             ))}
@@ -141,9 +141,10 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               <span className="eyebrow">Your decisions</span>
               <details className="debrief-fold">
                 <summary>Every decision<span>{game.decisions.length + game.commandHistory.length + game.setPieceHistory.length + game.responseChoices.length + game.mapHistory.length} recorded, with quality and reasoning</span></summary>
-              {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.rationale}</em><EffectList className="decision-effects" items={[...([["impact", record.impactChange], ["continuity", record.continuityChange], ["sector", record.sectorChange], ["objective", record.objectiveChange]] as const).filter(([, change]) => change).map(([meter, change]) => describeMeterChange(game, meter, change)), record.tempoChange ? `adversary pace ${record.tempoChange > 0 ? "faster" : "slower"}` : "", record.impactChange || record.continuityChange || record.sectorChange || record.objectiveChange || record.tempoChange ? "" : "no meter moved"]} />{record.adaptedTo && <em>Actor adaptation: {record.adaptationReason ?? `the hidden route changed to ${attacks.find(attack => attack.id === record.adaptedTo)?.title}.`}</em>}</p>)}
-              {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Command event:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
-              {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Sector decision:</strong> {record.title}<span>Quality {record.quality}/5</span><em>{record.effect}</em></p>)}
+              {/* A reason already given for the decision above is not repeated word for word. */}
+              {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>Quality {record.quality} of 5</span>{(index === 0 || game.decisions[index - 1].rationale !== record.rationale) && <em>{record.rationale}</em>}<EffectList className="decision-effects" items={[...([["impact", record.impactChange], ["continuity", record.continuityChange], ["sector", record.sectorChange], ["objective", record.objectiveChange]] as const).filter(([, change]) => change).map(([meter, change]) => describeMeterChange(game, meter, change)), record.tempoChange ? `adversary pace ${record.tempoChange > 0 ? "faster" : "slower"}` : "", record.impactChange || record.continuityChange || record.sectorChange || record.objectiveChange || record.tempoChange ? "" : "no meter moved"]} />{record.adaptedTo && <em>Actor adaptation: {record.adaptationReason ?? `the hidden route changed to ${attacks.find(attack => attack.id === record.adaptedTo)?.title}.`}</em>}</p>)}
+              {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Command event:</strong> {record.title}<span>Quality {record.quality} of 5</span><em>{record.effect}</em></p>)}
+              {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>Sector decision:</strong> {record.title}<span>Quality {record.quality} of 5</span><em>{record.effect}</em></p>)}
               {/* Each response phase graded against the best its sector offered, so
                   a containment-and-recovery score below full says which call cost it. */}
               {(["containment", "assurance", "recovery"] as const).map((phase, index) => {
@@ -165,7 +166,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             {game.chain.map((id, index) => {
               const attack = attacks.find(item => item.id === id)!;
               const tactic = ["Initial Access", "Lateral Movement", "Persistence", "Command and Control / Exfiltration"][index];
-              return <section key={id} style={{ "--stage-color": stages[index].color } as CSSProperties}><span className="eyebrow">0{index + 1} / {stages[index].name}<span className={game.revealed.includes(id) ? "found-label" : "missed-label"}>{game.revealed.includes(id) ? "Found" : "Unresolved"}</span></span><h3>{attack.title}</h3><p>{attack.evidence}</p><small>MITRE ATT&amp;CK lens: {tactic}<br />Detectable with: {attack.detect.map(source => procedureById(game, source)?.title).join(" · ")}</small></section>;
+              return <section key={id} style={{ "--stage-color": stages[index].color } as CSSProperties}><span className="eyebrow">Stage {index + 1}: {stages[index].name}<span className={game.revealed.includes(id) ? "found-label" : "missed-label"}>{game.revealed.includes(id) ? "Found" : "Unresolved"}</span></span><h3>{attack.title}</h3><p>{attack.evidence}</p><small>MITRE ATT&amp;CK lens: {tactic}<br />Detectable with: {attack.detect.map(source => procedureById(game, source)?.title).join(" · ")}</small></section>;
             })}
           </div>
           </details>
