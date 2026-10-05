@@ -27,8 +27,8 @@ body step, four leading roles and a 66ch prose measure. Every font-size below re
   --lime:#ede2c9;
   --text-soft:#b1ab9c;
   --line:#30353b;
-  --font-mono:var(--font-data),ui-monospace,SFMono-Regular,Consolas,monospace;
-  --font-serif:var(--font-display),Georgia,"Times New Roman",serif;
+  --font-mono:var(--font-display),"Arial Narrow",sans-serif;
+  --font-serif:var(--font-display),"Arial Narrow",sans-serif;
   --font-ui:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --type-micro:.64rem;
   --type-caption:.8rem;
@@ -9059,6 +9059,11 @@ span.effect-list>span.effect>b,span.effect-list>span.effect>em {
 }
 .campaign-route-card strong {
   font-weight:500;
+}
+
+/* The form face sets figures in columns, as the mono did. */
+body {
+  font-variant-numeric:tabular-nums;
 }
 
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
