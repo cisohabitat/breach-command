@@ -63,7 +63,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
 
       <section className="situation-log" hidden={activeWorkspace !== "command"} aria-labelledby="situation-heading">
         <div className="section-heading"><h2 id="situation-heading">Situation</h2></div>
-        <div className="sit-entry">
+        <div className="sit-entry compact">
           <span className="sit-label">Campaign route<small>{campaignRoutes[game.campaignRoute].title}</small></span>
           <div className="sit-body"><p><strong>{game.variant.title}.</strong> {game.variant.briefing}</p><small>{game.variant.modifier}</small></div>
         </div>

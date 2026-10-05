@@ -7555,7 +7555,7 @@ in colour, and the carried plan is stated before the options. */
 }
 .sit-entry {
   display:grid;
-  grid-template-columns:11rem minmax(0,42rem) 5rem;
+  grid-template-columns:11rem minmax(0,1fr) 5rem;
   column-gap:20px;
   align-items:baseline;
   padding:13px 0;
@@ -8616,15 +8616,14 @@ span.effect-list>span.effect.term>em {
   border-radius:0;
   letter-spacing:.06em;
 }
-/* What a meter just did, in words beside its status, not a floating chip with an
-   icon. At 320 px the chip sat on the status word. */
-.case-meters>div {
-  grid-template-areas:"label label" "bar value" "status delta";
-}
+/* What a meter just did, in words in its status line, not a floating chip with
+   an icon: for the moment it shows, the change stands in the status word's
+   place. Beside the status it narrowed the line, and at 320 px the chip sat on
+   the status word. */
 .case-meters>div>.meter-delta {
-  grid-area:delta;
+  grid-area:status;
   position:static;
-  justify-self:end;
+  justify-self:start;
   padding:0;
   border:0;
   border-radius:0;
@@ -8633,6 +8632,9 @@ span.effect-list>span.effect.term>em {
   white-space:nowrap;
 }
 /* Print and Copy are actions in the text, not buttons beside the next step. */
+.case-meters>div:has(>.meter-delta)>small {
+  visibility:hidden;
+}
 .text-action {
   display:inline-flex;
   align-items:center;
@@ -8683,6 +8685,107 @@ span.effect-list>span.effect.term>em {
 [data-slot=switch][data-state=checked]::before {
   content:"On" / "";
   color:var(--lime);
+}
+
+/* The log has two weights: the context entries (route, attribution, the latest
+   transmission, the specialist) are compact lines; the meters' entries keep the
+   room and the large figure, whose column is the attack chain's status column,
+   so Command has one right-hand column from top to bottom. */
+.sit-entry.compact {
+  padding:9px 0;
+}
+.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
+  font-size:var(--type-caption);
+}
+.sit-entry.compact .sit-body>small {
+  display:inline;
+  margin:0 0 0 6px;
+}
+.sit-entry.compact .sit-body p {
+  display:inline;
+}
+.sit-figure {
+  font-size:var(--type-title);
+}
+/* Investigate's columns are sections on the desk, ruled at the top, not panels:
+   a bordered map of bordered tiles beside a bordered list of procedures was
+   box-in-box dashboard furniture. */
+.investigation-actions,.infrastructure-console,.evidence-workspace,.captain-panel,.workspace-shell .journal-panel {
+  padding:16px 0 0;
+  border:0;
+  border-top:1px solid #383d45;
+  border-radius:0;
+  background:none;
+}
+.workspace-shell .captain-column {
+  align-items:start;
+}
+.workspace-shell .captain-panel {
+  min-height:0;
+}
+/* Serif for any title of a section or document, whatever its level; bold sans
+   only for kickers. "Working hypothesis" and "Case theory" sat in bold sans
+   beside serif section titles. */
+#hypothesis-heading,.case-theory>div:first-child strong,.career-card strong,.campaign-act-card strong {
+  font-family:var(--font-serif);
+  font-weight:500;
+  font-size:var(--type-lead);
+  letter-spacing:0;
+}
+/* The four plain sentences are run-in heads, not four stacked mini-labels. */
+.first-read dl>div {
+  display:block;
+}
+.first-read dt {
+  display:inline;
+  margin-right:.35em;
+  color:#1d1b18;
+  font-size:var(--type-body);
+}
+.first-read dt::after {
+  content:".";
+}
+.first-read dd {
+  display:inline;
+  margin:0;
+}
+/* The campaign tally reads as the review's other tally: two columns, the figure
+   set right on a dotted rule. */
+.paper-dialog .campaign-consequences {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.paper-dialog .campaign-consequences>div {
+  align-items:baseline;
+}
+.paper-dialog .decision-summary span.decision-effects {
+  max-width:none;
+}
+/* A fold's mark sits in the summary's margin, so a long title never leaves it on
+   a line of its own. */
+.paper-dialog .debrief-fold>summary,.paper-dialog .briefing-more>summary {
+  position:relative;
+  padding-left:1.4em;
+}
+.paper-dialog .debrief-fold>summary::before,.paper-dialog .briefing-more>summary::before {
+  position:absolute;
+  left:0;
+}
+.briefing-screen {
+  align-items:start;
+}
+.career-progress {
+  height:2px;
+}
+.game-footer>span {
+  text-wrap:balance;
+}
+
+/* A cleared case's mastery is tally marks under its number, not tiny stars. */
+.mission-selector button small {
+  justify-content:center;
+  height:auto;
+  font:500 var(--type-micro)/1 var(--font-mono);
+  letter-spacing:.12em;
 }
 
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
@@ -9134,17 +9237,11 @@ span.effect-list>span.effect.term>em {
   .sector-set-piece,.command-event {
     padding-left:12px;
   }
-  /* A phone's meters are too narrow for the status and the change side by
-     side, so for the moment it shows, the change takes the status word's place. */
-  .case-meters>div {
-    grid-template-areas:"label label" "bar value" "status status";
+  .paper-dialog .campaign-consequences {
+    grid-template-columns:minmax(0,1fr);
   }
-  .case-meters>div>.meter-delta {
-    grid-area:status;
-    justify-self:start;
-  }
-  .case-meters>div:has(>.meter-delta)>small {
-    visibility:hidden;
+  .paper-dialog .debrief-fold>summary span,.paper-dialog .briefing-more>summary>span {
+    margin-left:0;
   }
   /* On a phone the log's label and figure share the first line and the entry
      takes the full width beneath them. */

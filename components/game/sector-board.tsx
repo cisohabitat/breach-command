@@ -16,7 +16,7 @@ export function SectorBoard({ game }: { game: Game }) {
   const transmission = sector.transmissions[Math.min(sector.transmissions.length - 1, Math.floor(game.turns.length / 3))];
   return (
     <>
-      <div className="sit-entry">
+      <div className="sit-entry compact">
         <span className="sit-label">Attribution<small>Confidence: {attribution.confidence === "ATTRIBUTED" ? "attributed" : attribution.confidence.toLowerCase()}</small></span>
         <div className="sit-body"><p><strong>{attribution.title}.</strong> {attribution.detail}</p></div>
       </div>
@@ -41,11 +41,11 @@ export function SectorBoard({ game }: { game: Game }) {
         </div>
         <b className="sit-figure">{game.objectiveProgress}</b>
       </div>
-      <div className="sit-entry">
+      <div className="sit-entry compact">
         <span className="sit-label">Live transmission</span>
         <div className="sit-body"><p>{transmission}</p></div>
       </div>
-      <div className="sit-entry">
+      <div className="sit-entry compact">
         <span className="sit-label">Specialist<small><span className="sit-data">{person.callsign}</span>, fatigue {game.specialistFatigue} of 6</small></span>
         <div className="sit-body"><p>{person.name}, {specialist.title}: “{person.voice}”</p></div>
       </div>
