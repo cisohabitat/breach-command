@@ -1986,27 +1986,29 @@ a {
 .continuity-meter.critical>[data-slot=progress]>div {
   background:#ff967d;
 }
-/* The working hypothesis is the case sheet on the desk: paper and ink, so the
-   reading a player keeps and revises is a document, like the report it leads to. */
+/* The working hypothesis is a section on the desk, ruled at the top like the
+   procedures beside it. As a light card it read as a theme switch rather than a
+   document: paper is kept for what the player opens. */
 .hypothesis-board {
-  --lime:#1d1b18;
-  --text-soft:#4a463e;
-  --line:#c9bfac;
+  --lime:#ede2c9;
+  --text-soft:#b1ab9c;
+  --line:#383d45;
   margin:20px 0 27px;
-  border:1px solid #d8cfbd;
-  background:#f1ece1;
-  color:#1d1b18;
-  border-radius:3px;
-  padding:18px;
+  border:0;
+  border-top:1px solid #383d45;
+  background:none;
+  color:#eeebe6;
+  border-radius:0;
+  padding:16px 0 0;
 }
 .hypothesis-board .eyebrow {
-  color:#4a463e;
+  color:#b1ab9c;
 }
 .hypothesis-board button:focus-visible,.hypothesis-board summary:focus-visible {
-  outline-color:#1d1b18;
+  outline-color:#f6f1e4;
 }
 .high-contrast .hypothesis-board {
-  --text-soft:#2f2c27;
+  --text-soft:#d7d1c3;
 }
 .hypothesis-heading {
   display:flex;
@@ -2025,12 +2027,12 @@ a {
   display:block;
   font-size:var(--type-body);
   font-weight:600;
-  color:#1d1b18;
+  color:#f6f1e4;
 }
 .hypothesis-heading small {
   display:block;
   font-size:var(--type-caption);
-  color:#4a463e;
+  color:#b1ab9c;
   margin-top:4px;
 }
 /* The adversary's pace is stamped on the sheet, like the case card's OPEN. */
@@ -2045,14 +2047,14 @@ a {
   font-size:var(--type-micro);
   font-weight:600;
   letter-spacing:.08em;
-  color:#6f5200;
+  color:#e8c968;
   white-space:nowrap;
   transform:rotate(-2deg);
 }
 .adversary-state.tempo-2,.adversary-state.tempo-3 {
-  border-color:#c9bfac;
-  color:#9e3220;
-  background:#1d1b181f;
+  border-color:#383d45;
+  color:#f0a48c;
+  background:#ffffff14;
 }
 /* Two across: the premises are sentences, and four narrow columns ran each to
    a dozen lines. Content sits at the top so the titles line up. */
@@ -2067,17 +2069,17 @@ a {
   justify-content:flex-start;
   align-items:stretch;
   gap:6px;
-  background:#e8e1d3;
-  border:1px solid #c9bfac;
+  background:#1c1f24;
+  border:1px solid #383d45;
   border-radius:3px;
   text-align:left;
-  color:#2f2c27;
+  color:#d7d1c3;
   padding:12px;
   min-height:92px;
 }
 .hypothesis-options button:hover,.hypothesis-options button.active {
   border-color:var(--lime);
-  background:#e8e1d3;
+  background:#1c1f24;
 }
 .hypothesis-options button:disabled {
   cursor:not-allowed;
@@ -2092,12 +2094,12 @@ a {
   display:block;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#4a463e;
+  color:#b1ab9c;
   margin-top:6px;
   letter-spacing:.01em;
 }
 .hypothesis-options button.active span {
-  color:#2f2c27;
+  color:#d7d1c3;
 }
 .adversary-event {
   display:flex;
@@ -2176,7 +2178,7 @@ a {
     width:100%;
   }
   .hypothesis-board {
-    padding:15px 13px;
+    padding:15px 0 0;
   }
   .hypothesis-heading {
     flex-direction:column;
@@ -2262,17 +2264,17 @@ a {
   display:block;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#2f2c27;
+  color:#d7d1c3;
   margin-top:9px;
   padding-top:8px;
-  border-top:1px solid #c9bfac;
+  border-top:1px solid #383d45;
 }
 .hypothesis-options button.active small {
-  color:#6f5200;
-  border-color:#c9bfac;
+  color:#e8c968;
+  border-color:#383d45;
 }
 .procedure-card.hypothesis-aligned {
-  box-shadow:inset 0 0 0 1px #8a8474;
+  box-shadow:inset 0 0 0 1px #868b93;
 }
 .alignment-label {
   display:block;
@@ -2518,7 +2520,7 @@ a {
     flex:1;
   }
   .procedure-card.hypothesis-aligned {
-    box-shadow:inset 0 0 0 1px #8a8474;
+    box-shadow:inset 0 0 0 1px #868b93;
   }
 }
 @media print {
@@ -3390,7 +3392,7 @@ html,body {
 .route-ruled-out {
   display:block;
   margin-top:4px;
-  color:#9e3220;
+  color:#f0a48c;
   font:normal 500 var(--type-micro) var(--font-mono);
   letter-spacing:.04em;
   text-transform:uppercase;
@@ -4740,7 +4742,7 @@ html,body {
   margin-top:11px;
   padding:12px 0 0;
   border:0;
-  border-top:1px solid #c9bfac;
+  border-top:1px solid #383d45;
   border-radius:0;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
@@ -5540,37 +5542,9 @@ html,body {
    stage, black for a check that settled something, brown for one that failed.
    The headline already says it in words, so the stamp is hidden from assistive
    technology. */
-.report-stamp {
-  display:inline-block;
-  align-self:flex-start;
-  margin-top:4px;
-  padding:3px 10px;
-  border:2px solid currentColor;
-  border-radius:2px;
-  font-family:var(--font-mono);
-  font-size:var(--type-caption);
-  font-weight:600;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:#1d1b18;
-  transform:rotate(-4deg);
-  opacity:.9;
-}
-.report-stamp.confirmed {
-  color:#b3261e;
-}
-.report-stamp.failed {
-  color:#6f5200;
-}
 @media(min-width:651px) {
   .report-dialog [data-slot=dialog-header] {
     position:relative;
-  }
-  .report-stamp {
-    position:absolute;
-    top:10px;
-    right:44px;
-    margin:0;
   }
 }
 .report-layout {
@@ -6568,21 +6542,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
 .end-exercise .end-icon {
   color:#dcc069;
 }
-.resolution-stamp {
-  position:absolute;
-  right:14px;
-  bottom:6px;
-  border:2px solid #a08c4c;
-  border-radius:4px;
-  padding:4px 9px;
-  color:#d8c168;
-  font:700 var(--type-caption) var(--font-mono);
-  letter-spacing:.18em;
-  transform-origin:right bottom;
-  pointer-events:none;
-  opacity:0;
-  animation:resolution-stamp-in .46s cubic-bezier(.16,1,.3,1) .28s both;
-}
 /* Debrief arrival: the review lands in beats rather than appearing all at once. */
 @keyframes debrief-beat {
   0% {
@@ -6625,36 +6584,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
   animation-timing-function:cubic-bezier(.33,0,.2,1);
 }
 /* The review's headline: the grade, the score and what the operation found. */
-.debrief-verdict {
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:6px 16px;
-  margin-top:12px;
-  color:var(--text-soft);
-  font-size:var(--type-caption);
-}
-.debrief-verdict b {
-  display:grid;
-  place-items:center;
-  min-width:48px;
-  height:48px;
-  padding:0 8px;
-  border:3px solid #b3261e;
-  border-radius:2px;
-  background:none;
-  color:#b3261e;
-  font:600 var(--type-title) var(--font-mono);
-  transform:rotate(-6deg);
-}
-.debrief-verdict strong {
-  color:var(--text);
-  font:600 var(--type-title) var(--font-mono);
-  margin-right:2px;
-}
-.debrief-dialog[data-outcome=lost] .debrief-verdict strong {
-  color:#9e3220;
-}
 @media(prefers-reduced-motion:reduce) {
   .meter-delta {
     animation:none;
@@ -6668,11 +6597,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
   }
   .resolution-won .end-banner,.resolution-lost .end-banner,.resolution-exercise .end-banner,.resolution-steps li,.resolution-note {
     animation:none;
-  }
-  .resolution-stamp {
-    animation:none;
-    opacity:1;
-    transform:none;
   }
   .debrief-dialog [data-slot=dialog-header],.debrief-dialog .debrief-stats,.debrief-dialog .score-card,.debrief-dialog .advanced-review {
     animation:none;
@@ -6960,7 +6884,7 @@ they want without scrolling past the other nine. */
   gap:4px 13px;
   align-items:baseline;
   padding:10px 0;
-  border-top:1px solid #c9bfac;
+  border-top:1px solid #383d45;
 }
 .hypothesis-ledger>details>div>span {
   font-family:var(--font-mono);
@@ -6994,16 +6918,16 @@ they want without scrolling past the other nine. */
   color:var(--text-soft);
 }
 .hypothesis-ledger>details>div.matched b {
-  border-color:#c9bfac;
+  border-color:#383d45;
   color:var(--lime);
 }
 .hypothesis-ledger>details>div.missed b {
-  border-color:#c9bfac;
-  color:#9e3220;
+  border-color:#383d45;
+  color:#f0a48c;
 }
 .hypothesis-ledger>details>div.half b {
-  border-color:#a9821c;
-  color:#6f5200;
+  border-color:#e4c260;
+  color:#e8c968;
 }
 @media(max-width:650px) {
   .hypothesis-ledger {
@@ -7152,26 +7076,26 @@ the player already holds, so neither narrows the answer for them. */
   width:22px;
   height:4px;
   border-radius:2px;
-  background:#e8e1d3;
+  background:#1c1f24;
 }
 .standing-meter i.spent {
   background:currentColor;
 }
 .hypothesis-standing.level-untested {
-  border-left-color:#c9bfac;
-  color:#4a463e;
+  border-left-color:#383d45;
+  color:#b1ab9c;
 }
 .hypothesis-standing.level-holding {
   border-left-color:var(--lime);
   color:var(--lime);
 }
 .hypothesis-standing.level-weakening {
-  border-left-color:#a9821c;
-  color:#6f5200;
+  border-left-color:#e4c260;
+  color:#e8c968;
 }
 .hypothesis-standing.level-unsupported {
-  border-left-color:#b8553f;
-  color:#9e3220;
+  border-left-color:#ff967d;
+  color:#f0a48c;
 }
 .hypothesis-standing strong,.hypothesis-standing .eyebrow {
   color:inherit;
@@ -7799,8 +7723,9 @@ span.effect-list>span.effect.term>em {
   padding-right:0;
 }
 .paper-dialog .first-read {
+  padding-left:0;
+  padding-right:0;
   border:0;
-  border-left:3px solid #1d1b18;
   border-radius:0;
   background:none;
 }
@@ -8004,7 +7929,7 @@ span.effect-list>span.effect.term>em {
   gap:0 10px;
   padding:12px 6px 12px 10px;
   border:0;
-  border-top:1px solid #c9bfac;
+  border-top:1px solid #383d45;
   border-radius:0;
   background:none;
 }
@@ -8018,30 +7943,30 @@ span.effect-list>span.effect.term>em {
   height:1.4rem;
   display:grid;
   place-items:center;
-  border:1px solid #8a8474;
+  border:1px solid #868b93;
   border-radius:2px;
-  color:#1d1b18;
+  color:#f6f1e4;
   font:500 var(--type-caption) var(--font-mono);
 }
 .hypothesis-options button>* {
   grid-column:2;
 }
 .hypothesis-options button:hover {
-  border-color:#c9bfac;
-  background:#ebe5d8;
+  border-color:#383d45;
+  background:#1f2328;
 }
 .hypothesis-options button.active {
-  border-color:#c9bfac;
-  background:#e8e1d3;
-  box-shadow:inset 3px 0 0 #1d1b18;
+  border-color:#383d45;
+  background:#1c1f24;
+  box-shadow:inset 3px 0 0 #f6f1e4;
 }
 .hypothesis-options button.active::before {
-  border-color:#1d1b18;
-  background:#1d1b18;
-  color:#f1ece1;
+  border-color:#f6f1e4;
+  background:#f6f1e4;
+  color:#111417;
 }
 .hypothesis-options button small {
-  border-top:1px dotted #b3a993;
+  border-top:1px dotted #4a4f57;
 }
 
 /* The plan behind a turn is a line of the report, not two tag chips. */
@@ -8052,18 +7977,18 @@ span.effect-list>span.effect.term>em {
 }
 .hypothesis-compare-options {
   gap:0;
-  border-top:1px solid #c9bfac;
+  border-top:1px solid #383d45;
 }
 .hypothesis-compare-options button {
   padding:11px 6px 11px 10px;
   border:0;
-  border-bottom:1px solid #c9bfac;
+  border-bottom:1px solid #383d45;
   border-radius:0;
 }
 .hypothesis-compare-options button.active {
-  border-color:#c9bfac;
-  background:#e8e1d3;
-  box-shadow:inset 3px 0 0 #1d1b18;
+  border-color:#383d45;
+  background:#1c1f24;
+  box-shadow:inset 3px 0 0 #f6f1e4;
 }
 .report-standing {
   border:0;
@@ -9064,6 +8989,64 @@ span.effect-list>span.effect>b,span.effect-list>span.effect>em {
 /* The form face sets figures in columns, as the mono did. */
 body {
   font-variant-numeric:tabular-nums;
+}
+
+/* A form row: cells that share their borders, the caption small in each cell's
+   top-left and the value filling it. A cell is not a card — no gap, no padding
+   of its own around a border of its own, no rounding — and its captions are not
+   numbered. The documents carry a form number in their header instead. */
+.form-row {
+  display:flex;
+  margin:14px 0 0;
+  border:1px solid #1d1b18;
+}
+.form-row>div {
+  flex:1 1 0;
+  min-width:0;
+  padding:5px 10px 7px;
+  border-left:1px solid #1d1b18;
+}
+.form-row>div:first-child {
+  flex:0 0 auto;
+  border-left:0;
+}
+.form-row dt {
+  color:#4a463e;
+  font-size:var(--type-micro);
+  font-weight:500;
+}
+.form-row dd {
+  margin:2px 0 0;
+  color:#1d1b18;
+  font:600 var(--type-body)/1.25 var(--font-serif);
+  overflow-wrap:break-word;
+}
+.form-row dd.confirmed {
+  color:#1d1b18;
+}
+.form-row dd.failed {
+  color:#9e3220;
+}
+.form-row dd.grade {
+  color:#9e3220;
+  font-size:var(--type-title);
+  line-height:1;
+}
+.report-fields {
+  margin-top:12px;
+}
+/* The three readouts are one row of form cells: they share a height, so their
+   figures sit level whatever their labels do. */
+.case-meters {
+  gap:0;
+  border:1px solid #383d45;
+}
+.case-meters>div {
+  padding:8px 12px;
+  border-left:1px solid #383d45;
+}
+.case-meters>div:first-child {
+  border-left:0;
 }
 
 /* A phone screen is 844px and the chrome above the procedure grid was taking more

@@ -67,7 +67,6 @@ export function EndState({ session }: { session: GameSession }) {
           </div>
           <button className="secondary-button" onClick={openDebrief}>Review the drill</button>
         </div>
-        <div className="resolution-stamp" aria-hidden="true"><span>EXERCISE</span></div>
         <ShareResult game={game} />
       </section>
     );

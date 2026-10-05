@@ -58,10 +58,17 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
         onCloseAutoFocus={returnFocusToAwaiting}
       >
         <DialogHeader>
-          <div className="eyebrow">Captain’s report <span className="separator">/</span> turn {report?.number}</div>
+          <div className="eyebrow">Form BC-201 <span className="separator">/</span> Captain’s report</div>
           <DialogTitle>{lostHere ? (game?.status === "exercise" ? "The operation stood down." : "The operation is lost.") : report?.revealed ? (report.windfall ? "A later stage was found." : "Evidence confirmed.") : report?.injectReveal ? "A partner disclosed a stage." : report?.success ? "The check came back empty." : "The action was unsuccessful."}</DialogTitle>
-          <DialogDescription>{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
-          {report && !lostHere && <span className={`report-stamp ${report.revealed || report.injectReveal ? "confirmed" : report.success ? "" : "failed"}`} aria-hidden="true">{report.revealed || report.injectReveal ? "Stage confirmed" : report.success ? "No stage found" : "Check failed"}</span>}
+          <DialogDescription className="sr-only">{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
+          {/* The report's header is a row of form fields, the result among them,
+              not a rotated rubber stamp: a stamp had become a stock case-file
+              ornament. */}
+          {report && game && <dl className="form-row report-fields">
+            <div><dt>Turn</dt><dd>{report.number}</dd></div>
+            <div><dt>Source</dt><dd>{procedureById(game, report.procedure)?.title}</dd></div>
+            <div><dt>Result</dt><dd className={lostHere ? "failed" : report.revealed || report.injectReveal ? "confirmed" : report.success ? "" : "failed"}>{lostHere ? (game.status === "exercise" ? "Stood down" : "Operation lost") : report.revealed || report.injectReveal ? "Stage confirmed" : report.success ? "No stage found" : "Check failed"}</dd></div>
+          </dl>}
         </DialogHeader>
         {report && game && <>
           {/* The turn that ends an operation is still reported as a turn, so its

@@ -10,7 +10,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
   return (
     <Dialog open={missionBriefing} onOpenChange={setMissionBriefing}>
       <DialogContent className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false}>
-        <DialogHeader><div className="eyebrow">Secure command briefing, case {(game?.scenario ?? 0) + 1}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">Form BC-100 <span className="separator">/</span> Mission brief, case {(game?.scenario ?? 0) + 1}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
         {game && <>
           {/* What shapes the first decisions stays open: the sector's condition,
               the specialist on hand and what is known of the operator. The rest

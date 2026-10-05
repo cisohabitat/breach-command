@@ -39,11 +39,12 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               blocks, the score sat under the fold of a laptop screen. A grade is
               only given to a completed response. */}
           {game && outcome && (
-            <p className="debrief-verdict">
-              {game.status === "won" && <b><span className="sr-only">Grade </span>{outcome.grade}</b>}
-              <span><strong>{outcome.breakdown.total}</strong>/100 final score</span>
-              <span>{game.revealed.length} of 4 stages in {game.turns.length} turn{game.turns.length === 1 ? "" : "s"}</span>
-            </p>
+            <dl className="form-row debrief-verdict">
+              {game.status === "won" && <div><dt>Grade</dt><dd className="grade">{outcome.grade}</dd></div>}
+              <div><dt>Final score</dt><dd>{outcome.breakdown.total} of 100</dd></div>
+              <div><dt>Stages</dt><dd>{game.revealed.length} of 4</dd></div>
+              <div><dt>Turns</dt><dd>{game.turns.length}</dd></div>
+            </dl>
           )}
         </DialogHeader>
         {game && outcome && <>
