@@ -12,10 +12,10 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
         <DialogHeader><div className="eyebrow">Field guide</div><DialogTitle>How an operation runs</DialogTitle><DialogDescription>A complete solo incident-response exercise with hidden information and operational consequences.</DialogDescription></DialogHeader>
         <div className="rules-content">
           <section className="quick-start-guide" aria-label="Quick start">
-            <div><span>1</span><p><strong>Form a hypothesis</strong>Open Investigate and choose the access path that best explains the intelligence.</p></div>
-            <div><span>2</span><p><strong>Test it</strong>Run a procedure marked “Own source”: one your reading predicts. Every procedure uses one turn and rolls a twenty-sided die; the roll plus its modifier must reach 10 at Training, 11 at Operational or 12 at Crisis.</p></div>
-            <div><span>3</span><p><strong>Decide</strong>When a stage is confirmed, choose a command response: observe, act, attribute, contain or notify.</p></div>
-            <div><span>4</span><p><strong>Respond</strong>Reveal all four stages, then contain, assure and recover the service.</p></div>
+            <div><span>01</span><p><strong>Form a hypothesis</strong>Open Investigate and choose the access path that best explains the intelligence.</p></div>
+            <div><span>02</span><p><strong>Test it</strong>Run a procedure marked “Own source”: one your reading predicts. Every procedure uses one turn and rolls a twenty-sided die; the roll plus its modifier must reach 10 at Training, 11 at Operational or 12 at Crisis.</p></div>
+            <div><span>03</span><p><strong>Decide</strong>When a stage is confirmed, choose a command response: observe, act, attribute, contain or notify.</p></div>
+            <div><span>04</span><p><strong>Respond</strong>Reveal all four stages, then contain, assure and recover the service.</p></div>
           </section>
           <section className="plain-language" aria-label="Plain language">
             <h3>Plain language</h3>

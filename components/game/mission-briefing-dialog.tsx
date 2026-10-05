@@ -18,9 +18,9 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
               is context, and six readouts put the button a screen and a half down
               on a phone. */}
           <div className="briefing-readouts">
-            <div><span>SECTOR CONDITION</span><strong>{sectorSystems[game.scenario].title}</strong><small>{sectorSystems[game.scenario].plain} The operation ends if it reaches zero.</small><details className="brief-rule-fold"><summary>What moves it</summary><small>{sectorSystems[game.scenario].rule}</small></details></div>
-            <div><span>DEPLOYED SPECIALIST</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
-            <div><span>ATTRIBUTION</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div>
+            <div><span>Sector condition</span><strong>{sectorSystems[game.scenario].title}</strong><small>{sectorSystems[game.scenario].plain} The operation ends if it reaches zero.</small><details className="brief-rule-fold"><summary>What moves it</summary><small>{sectorSystems[game.scenario].rule}</small></details></div>
+            <div><span>Deployed specialist</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
+            <div><span>Attribution</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div>
           </div>
           {/* Expert withholds coaching; its brief said "Your first move" all the same. */}
           {game.mode !== "expert" && <div className="briefing-first-move"><span>01</span><p><strong>Your first move</strong>Assume command, open Investigate, choose a working hypothesis and run a procedure marked “Own source”.</p></div>}

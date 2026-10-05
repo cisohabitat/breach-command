@@ -1,20 +1,4 @@
 import {
-  ChevronRight,
-  Clock3,
-  Fingerprint,
-  Globe2,
-  HardDrive,
-  KeyRound,
-  Layers,
-  Mail,
-  Network,
-  Radio,
-  Search,
-  Server,
-  Shield,
-  Landmark,
-} from "lucide-react";
-import {
   availableIn,
   getDiscriminatingRead,
   hypothesisSources,
@@ -23,9 +7,6 @@ import {
   type Game,
   OWN_SOURCE_BONUS,
 } from "@/lib/advanced-game";
-
-// The last icon belongs to the sector procedure, which is always listed last.
-const icons = [HardDrive, KeyRound, Network, Shield, Mail, Server, Layers, Globe2, Search, Fingerprint, Radio, Landmark];
 
 export function ProcedureGrid({
   game,
@@ -40,7 +21,6 @@ export function ProcedureGrid({
   return (
     <div className="procedure-grid">
       {proceduresFor(game).map((procedure, index) => {
-        const Icon = icons[index];
         const cooldown = availableIn(game, procedure.id);
         const established = game.established.includes(procedure.id);
         const aligned = routeSources.includes(procedure.id);
@@ -61,10 +41,12 @@ export function ProcedureGrid({
             aria-label={`${procedure.title}${established ? ", established, plus 2" : ""}${aligned ? ", supports current hypothesis" : ""}${aligned && blind ? ", cannot see this stage for the current hypothesis" : ""}${seesOther ? ", can also test the current hypothesis" : ""}${read && read.spent ? `, checked ${read.spent} times with no stage found` : read && read.inconclusive ? `, ${read.inconclusive} attempts failed without a result` : ""}${cooldown ? `, available in ${cooldown} turns` : ""}`}
           >
             <div className="procedure-top">
-              <span className="procedure-icon"><Icon size={20} /></span>
+              {/* A procedure's number in the manual, not an icon: a glyph on every
+                  card read as a feature grid, and the sector action shared a bank icon. */}
+              <span className="procedure-code">{String(index + 1).padStart(2, "0")}</span>
               {/* The badge carries the cooldown only. The established bonus is stated
                   once, in the footer; a "+2" badge said it a second time. */}
-              {cooldown > 0 && <span className="procedure-badge"><Clock3 size={12} /> {cooldown} turn{cooldown === 1 ? "" : "s"}</span>}
+              {cooldown > 0 && <span className="procedure-badge">{cooldown} turn{cooldown === 1 ? "" : "s"}</span>}
             </div>
             <h3>{procedure.title}</h3>
             <p>{procedure.short}</p>
@@ -80,7 +62,6 @@ export function ProcedureGrid({
               {/* An ordinary source carries no label: "STANDARD" told a newcomer nothing.
                   An established one says what it is in words, as the own-source tag does. */}
               <span>{cooldown ? "ON COOLDOWN" : established ? <span className="established-label">Established <span className="nowrap">· +2</span></span> : null}</span>
-              {!cooldown && <ChevronRight size={15} />}
             </div>
           </button>
         );

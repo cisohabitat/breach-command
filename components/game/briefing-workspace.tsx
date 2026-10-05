@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { getAdversaryRead, OWN_SOURCE_BONUS, procedureById } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -15,11 +14,11 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
   return (
     <aside className="captain-column" hidden={activeWorkspace !== "briefing"}>
       <section className="captain-panel">
-        <div className="captain-label"><div><h2>Incident Captain</h2><span>ADAPTIVE COMPUTER FACILITATOR</span></div></div>
-        <div className="brief-label">SITUATION</div>
+        <div className="captain-label"><div><h2>Incident Captain</h2><span>Adaptive computer facilitator</span></div></div>
+        <div className="brief-label">Situation</div>
         <p className="captain-brief"><Glossed text={activeScenario.brief} /></p>
         <div className="captain-divider" />
-        <div className="brief-label">ASK YOUR CAPTAIN <span>Free action</span></div>
+        <div className="brief-label">Questions for the captain <span>Free action</span></div>
         <div className="question-list">
           {[
             { id: "scope", label: "What is in scope?" },
@@ -28,7 +27,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
             { id: "impact", label: "What is at risk?" },
             { id: "constraints", label: "What limits us?" },
             { id: "assumptions", label: "What should we challenge?" },
-          ].map(item => <button key={item.id} className={question === item.id ? "active" : ""} onClick={() => setQuestion(question === item.id ? null : item.id)}>{item.label}<ArrowRight size={14} /></button>)}
+          ].map((item, index) => <button key={item.id} className={question === item.id ? "active" : ""} aria-pressed={question === item.id} onClick={() => setQuestion(question === item.id ? null : item.id)}><span className="q-no">Q{index + 1}</span>{item.label}</button>)}
         </div>
         {question && <div className="captain-answer" aria-live="polite">{answer}</div>}
         <div className="guided-inline"><label htmlFor="guided-game">{game.mode === "expert" ? "Guidance disabled in Expert" : "Guided reflection"}</label><Switch id="guided-game" checked={guided} disabled={game.mode === "expert"} onCheckedChange={setGuided} /></div>

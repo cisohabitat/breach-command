@@ -246,7 +246,7 @@ a {
 }
 .briefing-chain li {
   display:grid;
-  grid-template-columns:30px 22px 110px minmax(0,1fr);
+  grid-template-columns:30px 110px minmax(0,1fr);
   align-items:center;
   gap:10px;
   padding:12px 0 12px 12px;
@@ -257,9 +257,6 @@ a {
   font-family:var(--font-mono);
   font-size:var(--type-caption);
   color:#8c9198;
-}
-.briefing-chain svg {
-  color:var(--stage-color);
 }
 .briefing-chain strong {
   font-weight:600;
@@ -291,8 +288,12 @@ a {
   padding:1px 8px;
   transform:rotate(-3deg);
 }
+.case-stamp.amended {
+  display:inline-block;
+  margin-bottom:6px;
+}
 .case-stamp.cleared {
-  color:#b9d9a6;
+  color:#cfc9bb;
 }
 .mission-panel {
   background:#1a1d21;
@@ -683,8 +684,10 @@ a {
   align-items:center;
   margin-bottom:18px;
 }
-.procedure-icon {
-  color:#cfc7b6;
+.procedure-code {
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  color:#aeb2b8;
 }
 .procedure-badge {
   font-size:var(--type-caption);
@@ -692,9 +695,9 @@ a {
   display:flex;
   gap:5px;
   align-items:center;
-  background:#13161a;
-  padding:3px 6px;
-  border-radius:4px;
+  background:none;
+  padding:0;
+  border-radius:0;
 }
 .procedure-card h3 {
   font-size:var(--type-body);
@@ -724,7 +727,6 @@ a {
 .procedure-bottom .established-label {
   font-size:var(--type-micro);
   letter-spacing:.04em;
-  text-transform:uppercase;
 }
 .established-label .nowrap {
   white-space:nowrap;
@@ -801,34 +803,46 @@ a {
   background:#363b43;
   margin:23px 0;
 }
+/* Standing questions on a briefing memo: a ruled, numbered list, not a stack
+   of suggested-prompt chips with arrows. */
 .question-list {
   display:flex;
   flex-direction:column;
-  gap:7px;
+  gap:0;
+  border-top:1px solid #383e46;
 }
 .question-list button {
   font-size:var(--type-caption);
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:5px;
+  justify-content:flex-start;
+  gap:12px;
   text-align:left;
-  background:#262a30;
-  border:1px solid #383e46;
-  border-radius:3px;
+  background:none;
+  border:0;
+  border-bottom:1px solid #383e46;
+  border-radius:0;
   color:#d0c9b9;
-  padding:10px;
+  padding:10px 0;
   min-height:41px;
 }
 .question-list button:hover,.question-list button.active {
-  border-color:#8491a4;
   color:var(--lime);
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+.question-list .q-no {
+  min-width:24px;
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  color:#8c9198;
+  text-decoration:none;
 }
 .captain-answer {
   font-size:var(--type-body);
   margin-top:12px;
   padding:12px;
-  background:#13161a;
+  background:none;
   border-left:2px solid var(--lime);
   color:#d1cbbb;
   line-height:var(--leading-prose);
@@ -991,7 +1005,7 @@ a {
 }
 .action-note {
   padding:15px;
-  background:#111e16;
+  background:#181b20;
   border-radius:3px;
   border:1px solid #3c434c;
 }
@@ -1003,27 +1017,17 @@ a {
   letter-spacing:.01em;
 }
 .roll-preview {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  text-align:center;
-  gap:10px;
+  margin:0;
   border-top:1px solid #3b424b;
   border-bottom:1px solid #3b424b;
-  padding:20px 8px;
-  color:var(--lime);
-}
-.roll-preview>div>span {
+  padding:12px 0;
   font-family:var(--font-mono);
-  font-size:var(--type-title);
-  display:block;
-  line-height:var(--leading-tight);
+  font-size:var(--type-body);
+  color:#d7d1c3;
 }
-.roll-preview small {
-  font-size:var(--type-caption);
-  color:#b7ad97;
-  margin-top:8px;
-  display:block;
+.roll-preview b {
+  color:var(--lime);
+  font-weight:600;
 }
 .roll-dialog {
   background:#1c2026!important;
@@ -1118,7 +1122,7 @@ a {
   display:flex;
   gap:13px;
   align-items:center;
-  background:#a9821c0c;
+  background:none;
   color:var(--lime);
 }
 .discovery span {
@@ -1377,10 +1381,10 @@ a {
     font-size:var(--type-h2);
   }
   .briefing-chain li {
-    grid-template-columns:26px 20px minmax(0,1fr);
+    grid-template-columns:26px minmax(0,1fr);
   }
   .briefing-chain small {
-    grid-column:3;
+    grid-column:2;
   }
   .mission-panel {
     padding:23px;
@@ -1820,7 +1824,7 @@ a {
 .response-panel {
   margin:22px 0 30px;
   border:1px solid #55606f;
-  background:linear-gradient(135deg,#1e2227,#191c20);
+  background:#1e2227;
   border-radius:3px;
   padding:24px;
 }
@@ -2045,12 +2049,27 @@ a {
 .continuity-meter.critical>[data-slot=progress]>div {
   background:#ff967d;
 }
+/* The working hypothesis is the case sheet on the desk: paper and ink, so the
+   reading a player keeps and revises is a document, like the report it leads to. */
 .hypothesis-board {
+  --lime:#1d1b18;
+  --text-soft:#4a463e;
+  --line:#c9bfac;
   margin:20px 0 27px;
-  border:1px solid #41464e;
-  background:#191c21;
+  border:1px solid #d8cfbd;
+  background:#f1ece1;
+  color:#1d1b18;
   border-radius:3px;
   padding:18px;
+}
+.hypothesis-board .eyebrow {
+  color:#4a463e;
+}
+.hypothesis-board button:focus-visible,.hypothesis-board summary:focus-visible {
+  outline-color:#1d1b18;
+}
+.high-contrast .hypothesis-board {
+  --text-soft:#2f2c27;
 }
 .hypothesis-heading {
   display:flex;
@@ -2069,30 +2088,34 @@ a {
   display:block;
   font-size:var(--type-body);
   font-weight:600;
-  color:#eae7df;
+  color:#1d1b18;
 }
 .hypothesis-heading small {
   display:block;
   font-size:var(--type-caption);
-  color:#aea693;
+  color:#4a463e;
   margin-top:4px;
 }
+/* The adversary's pace is stamped on the sheet, like the case card's OPEN. */
 .adversary-state {
   display:flex;
   align-items:center;
   gap:6px;
-  border:1px solid #4e555f;
+  border:1.5px solid currentColor;
   border-radius:2px;
-  padding:7px 10px;
+  padding:3px 8px;
   font-family:var(--font-mono);
   font-size:var(--type-micro);
-  color:#ece1c7;
+  font-weight:600;
+  letter-spacing:.08em;
+  color:#6f5200;
   white-space:nowrap;
+  transform:rotate(-2deg);
 }
 .adversary-state.tempo-2,.adversary-state.tempo-3 {
-  border-color:#8a664c;
-  color:#e8b28d;
-  background:#3c2b211f;
+  border-color:#c9bfac;
+  color:#9e3220;
+  background:#1d1b181f;
 }
 /* Two across: the premises are sentences, and four narrow columns ran each to
    a dozen lines. Content sits at the top so the titles line up. */
@@ -2107,17 +2130,17 @@ a {
   justify-content:flex-start;
   align-items:stretch;
   gap:6px;
-  background:#22262b;
-  border:1px solid #383d45;
+  background:#e8e1d3;
+  border:1px solid #c9bfac;
   border-radius:3px;
   text-align:left;
-  color:#d2ccbe;
+  color:#2f2c27;
   padding:12px;
   min-height:92px;
 }
 .hypothesis-options button:hover,.hypothesis-options button.active {
   border-color:var(--lime);
-  background:#2c3138;
+  background:#e8e1d3;
 }
 .hypothesis-options button:disabled {
   cursor:not-allowed;
@@ -2132,12 +2155,12 @@ a {
   display:block;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#90969e;
+  color:#4a463e;
   margin-top:6px;
   letter-spacing:.01em;
 }
 .hypothesis-options button.active span {
-  color:#c7beaa;
+  color:#2f2c27;
 }
 .adversary-event {
   display:flex;
@@ -2302,17 +2325,17 @@ a {
   display:block;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#c7bfac;
+  color:#2f2c27;
   margin-top:9px;
   padding-top:8px;
-  border-top:1px solid #373c43;
+  border-top:1px solid #c9bfac;
 }
 .hypothesis-options button.active small {
-  color:#f2ebd9;
-  border-color:#505b6b;
+  color:#6f5200;
+  border-color:#c9bfac;
 }
 .procedure-card.hypothesis-aligned {
-  box-shadow:inset 0 0 0 1px #67778d;
+  box-shadow:inset 0 0 0 1px #8a8474;
 }
 .alignment-label {
   display:block;
@@ -2320,7 +2343,6 @@ a {
   font-family:var(--font-mono);
   font-size:var(--type-micro);
   letter-spacing:.04em;
-  text-transform:uppercase;
   margin-top:10px;
   line-height:var(--leading-compact);
 }
@@ -2564,7 +2586,7 @@ a {
     flex:1;
   }
   .procedure-card.hypothesis-aligned {
-    box-shadow:inset 0 0 0 1px #67778d;
+    box-shadow:inset 0 0 0 1px #8a8474;
   }
 }
 @media print {
@@ -2725,14 +2747,16 @@ html,body {
   font-size:var(--type-caption);
   margin-top:3px;
 }
+/* Experience is a field on the record, not a game counter. */
 .career-card>b {
-  font:500 var(--type-title) var(--font-mono);
-  color:var(--lime);
-  align-self:center;
+  font:500 var(--type-body) var(--font-mono);
+  color:#eeebe6;
+  align-self:start;
 }
 .career-card>b small {
   display:inline;
-  font-size:var(--type-micro);
+  font:400 var(--type-caption) var(--font-ui);
+  color:var(--text-soft);
 }
 .career-progress {
   grid-column:1/-1;
@@ -2850,7 +2874,7 @@ html,body {
 .map-link {
   position:absolute;
   height:1px;
-  background:linear-gradient(90deg,var(--stage-color),#43474d);
+  background:var(--stage-color);
   top:24px;
   left:calc(50% + 24px);
   width:calc(100% + 18px - 48px);
@@ -2885,7 +2909,7 @@ html,body {
 }
 .command-event {
   border:1px solid #987250;
-  background:linear-gradient(135deg,#33261d,#201d18);
+  background:#33261d;
   border-radius:3px;
   padding:20px;
   margin:20px 0 26px;
@@ -3044,7 +3068,7 @@ html,body {
 }
 .settings-list label>span {
   display:grid;
-  grid-template-columns:auto 1fr;
+  grid-template-columns:1fr;
   gap:2px 10px;
   align-items:center;
 }
@@ -3323,7 +3347,7 @@ html,body {
 }
 .tutorial-coach {
   border:1px solid #566273;
-  background:linear-gradient(135deg,#23272d,#191d22);
+  background:#23272d;
   border-radius:3px;
   padding:16px;
   margin-bottom:22px;
@@ -3530,7 +3554,7 @@ html,body {
   display:flex;
   gap:12px;
   border-left:2px solid var(--lime);
-  background:#a9821c0a;
+  background:none;
   padding:14px;
   color:var(--lime);
 }
@@ -3550,7 +3574,7 @@ html,body {
 .route-ruled-out {
   display:block;
   margin-top:4px;
-  color:#f0a48c;
+  color:#9e3220;
   font:normal 500 var(--type-micro) var(--font-mono);
   letter-spacing:.04em;
   text-transform:uppercase;
@@ -3671,10 +3695,11 @@ html,body {
   font:500 var(--type-caption) monospace;
 }
 .local-telemetry {
-  border:1px solid #3e4349;
-  background:#15181d;
-  border-radius:3px;
-  padding:13px;
+  border:0;
+  border-top:1px solid #3e4349;
+  background:none;
+  border-radius:0;
+  padding:14px 0 0;
 }
 .local-telemetry>div {
   display:flex;
@@ -3917,7 +3942,7 @@ html,body {
 }
 .infrastructure-console {
   border:1px solid #474c54;
-  background:linear-gradient(180deg,#1b1f25,#131519);
+  background:#1b1f25;
   border-radius:3px;
   padding:18px;
   margin:20px 0;
@@ -3949,7 +3974,7 @@ html,body {
   border-radius:3px;
   padding:12px 9px;
   text-align:left;
-  min-height:125px;
+  min-height:96px;
 }
 .topology-nodes button:after {
   content:"";
@@ -4061,10 +4086,11 @@ html,body {
   display:flex;
   gap:10px;
   align-items:flex-start;
-  border:1px dashed #464a4f;
-  padding:14px;
+  border:0;
+  border-block:1px solid #383d45;
+  padding:12px 0;
   margin-top:14px;
-  color:#92979d;
+  color:#a9a397;
 }
 .evidence-empty p {
   font-size:var(--type-caption);
@@ -4147,7 +4173,7 @@ html,body {
   display:flex;
   gap:9px;
   border-left:2px solid #9a6650;
-  background:#2b211c;
+  background:none;
   padding:11px;
   color:#e39978;
 }
@@ -4484,9 +4510,10 @@ html,body {
   letter-spacing:.01em;
 }
 .variant-brief {
-  border-left:2px solid #d5b65b;
-  background:#2b2618;
-  padding:12px 14px;
+  border:0;
+  border-block:1px solid #4a4231;
+  background:none;
+  padding:12px 0;
   margin:13px 0;
 }
 .variant-brief strong {
@@ -4516,20 +4543,20 @@ html,body {
   position:relative;
   overflow:hidden;
   border:1px solid #494e56;
-  background:linear-gradient(135deg,#1d2126,#131519);
+  background:#1d2126;
   border-radius:3px;
   padding:14px;
 }
 .director-live>div:last-child {
   border-color:#715343;
-  background:linear-gradient(135deg,#2b201b,#181713);
+  background:#2b201b;
 }
 .director-live>div:after {
   content:"";
   position:absolute;
   inset:0;
   pointer-events:none;
-  background:linear-gradient(transparent 49%,#ffffff06 50%);
+  background:none;
   background-size:100% 5px;
 }
 .director-live strong {
@@ -4574,24 +4601,42 @@ html,body {
   margin-top:2px;
   letter-spacing:.01em;
 }
+/* The five theories are a printed checklist: one ruled line each, a box to tick
+   and the question beside it. A 3 + 2 grid of cards left an empty sixth cell. */
 .case-theory>div:last-child {
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:6px;
+  grid-template-columns:1fr;
+  gap:0;
   margin-top:11px;
+  border-top:1px solid #383d45;
 }
 .case-theory button {
+  position:relative;
   min-height:40px;
-  border:1px solid #40454d;
-  background:#1b1e23;
+  border:0;
+  border-bottom:1px solid #383d45;
+  background:none;
   color:#c1baa8;
-  border-radius:4px;
-  padding:7px 10px;
+  border-radius:0;
+  padding:8px 0 8px 28px;
   font-size:var(--type-caption);
 }
-.case-theory button.active {
+.case-theory button::before {
+  content:"";
+  position:absolute;
+  left:2px;
+  top:11px;
+  width:13px;
+  height:13px;
+  border:1.5px solid #8c9198;
+  border-radius:1px;
+}
+.case-theory button.active::before {
   border-color:var(--lime);
-  background:#2d323a;
+  background:var(--lime);
+  box-shadow:inset 0 0 0 2px #111417;
+}
+.case-theory button.active {
   color:#f6f1e4;
 }
 /* Each theory carries its question in words, and the recorded one says so:
@@ -4680,10 +4725,11 @@ html,body {
   letter-spacing:.01em;
 }
 .backup-console {
-  border:1px solid #3f444c;
-  background:#14171b;
-  border-radius:3px;
-  padding:13px;
+  border:0;
+  border-top:1px solid #3e4349;
+  background:none;
+  border-radius:0;
+  padding:14px 0 0;
 }
 .backup-console>div {
   display:flex;
@@ -4908,7 +4954,7 @@ html,body {
 }
 .workspace-tabs button.active {
   border-bottom-color:var(--lime);
-  background:#1a1d21;
+  background:none;
   color:#f6f1e4;
 }
 .workspace-tabs button:disabled {
@@ -4927,15 +4973,11 @@ html,body {
   color:#a9a291;
   margin-top:2px;
 }
+/* A count is a figure in the margin, not a circled badge. */
 .workspace-tabs b {
   margin-left:auto;
-  min-width:24px;
-  height:24px;
-  border:1px solid #505761;
-  border-radius:999px;
-  display:grid;
-  place-items:center;
-  color:var(--lime);
+  align-self:flex-start;
+  color:var(--text-soft);
   font:500 var(--type-caption) var(--font-mono);
 }
 .workspace-shell {
@@ -4978,7 +5020,7 @@ html,body {
   margin-top:11px;
   padding:12px 0 0;
   border:0;
-  border-top:1px solid #40454d;
+  border-top:1px solid #c9bfac;
   border-radius:0;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
@@ -5427,48 +5469,48 @@ html,body {
 }
 .sector-theme-0 {
   --sector-accent:#e5d6b2;
-  --sector-glow:#36332c;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-1 {
-  --sector-accent:#6fc9df;
-  --sector-glow:#173b46;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-2 {
-  --sector-accent:#e3a85c;
-  --sector-glow:#4a301b;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-3 {
-  --sector-accent:#58b9d0;
-  --sector-glow:#183b46;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-4 {
-  --sector-accent:#d5b2c8;
-  --sector-glow:#45353f;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-5 {
-  --sector-accent:#77c6a2;
-  --sector-glow:#1e4035;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-6 {
-  --sector-accent:#7db5e6;
-  --sector-glow:#1d354b;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-7 {
-  --sector-accent:#60d0bd;
-  --sector-glow:#17423a;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-8 {
-  --sector-accent:#d4ba6e;
-  --sector-glow:#40361e;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .sector-theme-9 {
-  --sector-accent:#d89172;
-  --sector-glow:#462a20;
+  --sector-accent:#e5d6b2;
+  --sector-glow:#2a2d32;
 }
 .incident-flow {
   height:4px;
   margin:15px 0 2px;
-  border-radius:999px;
+  border-radius:0;
   background:#292d33;
   overflow:hidden;
 }
@@ -5476,8 +5518,8 @@ html,body {
   display:block;
   height:100%;
   border-radius:inherit;
-  background:linear-gradient(90deg,var(--sector-accent),#e39b69);
-  box-shadow:0 0 16px color-mix(in srgb,var(--sector-accent) 65%,transparent);
+  background:var(--sector-accent);
+  box-shadow:none;
   transition:width .45s ease;
   position:relative;
 }
@@ -5490,28 +5532,28 @@ html,body {
   height:10px;
   border-radius:50%;
   background:#fff;
-  box-shadow:0 0 14px var(--sector-accent);
+  box-shadow:none;
   animation:pulse 1s infinite alternate;
 }
 .topology-nodes button.affected:not(.isolated) {
   animation:node-threat 1.8s ease-in-out infinite alternate;
 }
 .topology-nodes button.monitored {
-  box-shadow:inset 0 0 0 1px #67badd55;
+  box-shadow:inset 0 0 0 1px #4a4f57;
 }
 .topology-nodes button.monitored .node-icon,.topology-nodes button.monitored em {
-  color:#72cbe4;
+  color:#e5d6b2;
 }
 .topology-nodes button.isolated {
   border-color:#d16f62;
-  background:repeating-linear-gradient(135deg,#281c1b,#281c1b 8px,#211817 8px,#211817 16px);
+  background:#211c1b;
 }
 .topology-nodes button.isolated .node-icon,.topology-nodes button.isolated em {
   color:#ef8d7e;
 }
 .topology-nodes button.restored {
   border-color:#e2d1a9;
-  background:#17271d;
+  background:#1d2024;
 }
 .topology-nodes button.restored .node-icon,.topology-nodes button.restored em {
   color:#eadec1;
@@ -5523,11 +5565,16 @@ html,body {
 .topology-routes>div.route-blocked i {
   color:#ef8d7e;
 }
+/* The selected node takes its own row and the two actions share the next, so
+   each action's cost has room to read as a column of meters. */
 .map-command-bar {
   display:grid;
-  grid-template-columns:minmax(180px,1.2fr) 1fr 1fr;
+  grid-template-columns:1fr 1fr;
   gap:8px;
   margin-top:14px;
+}
+.map-command-bar>div {
+  grid-column:1/-1;
 }
 .map-command-bar>div,.map-command-bar>button {
   min-height:66px;
@@ -5539,10 +5586,22 @@ html,body {
   text-align:left;
   display:flex;
   gap:10px;
-  align-items:center;
+  align-items:flex-start;
+}
+.map-command-bar>button>span {
+  flex:1;
+}
+.map-command-bar span.effect-list {
+  display:grid;
+  flex-direction:initial;
+}
+.map-command-bar span.effect-list em {
+  text-transform:none;
+  margin-top:0;
+  color:var(--text-soft);
 }
 .map-command-bar>div {
-  border-color:color-mix(in srgb,var(--sector-accent) 45%,#40454d);
+  border-color:#4a4f57;
 }
 .map-command-bar>button:hover:not(:disabled) {
   border-color:var(--sector-accent);
@@ -5572,14 +5631,14 @@ html,body {
 }
 .sector-situation {
   display:grid;
-  grid-template-columns:auto 1fr auto;
+  grid-template-columns:1fr auto;
   gap:13px;
   align-items:center;
   margin:15px 0;
-  border:1px solid color-mix(in srgb,var(--sector-accent) 45%,#383d45);
+  border:1px solid #383d45;
   border-radius:3px;
   padding:15px 17px;
-  background:linear-gradient(100deg,color-mix(in srgb,var(--sector-glow) 75%,#141619),#141619);
+  background:#16191d;
 }
 .sector-situation .situation-icon {
   width:42px;
@@ -5618,13 +5677,14 @@ html,body {
 }
 .specialist-transmission {
   display:grid;
-  grid-template-columns:auto 1fr;
+  grid-template-columns:1fr;
   gap:11px;
   margin:12px 0 18px;
-  padding:13px 15px;
-  border-left:3px solid var(--sector-accent);
-  background:#181b20;
-  border-radius:0 3px 3px 0;
+  padding:12px 0;
+  border:0;
+  border-block:1px solid #383d45;
+  background:none;
+  border-radius:0;
 }
 .specialist-transmission>span {
   color:var(--sector-accent);
@@ -5685,10 +5745,10 @@ html,body {
     grid-column:1/-1;
   }
   .sector-situation {
-    grid-template-columns:auto 1fr;
+    grid-template-columns:1fr;
   }
   .sector-situation>b {
-    grid-column:2;
+    grid-column:1;
   }
   .specialist-transmission {
     margin-top:10px;
@@ -5713,7 +5773,7 @@ html,body {
 .topology-routes>div {
   position:relative;
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(72px,.7fr) minmax(0,1fr);
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
   grid-template-areas:"source relation target" "status status status";
   gap:6px 9px;
   align-items:center;
@@ -5742,16 +5802,18 @@ html,body {
   line-height:var(--leading-compact);
   font-size:var(--type-caption);
 }
+/* No label breaks inside a word: the relation's column fits its longest word,
+   and a node name breaks only where one word alone cannot fit. */
 .topology-routes .route-source,.topology-routes .route-target {
   min-width:0;
   font-size:var(--type-body);
   line-height:var(--leading-compact);
-  overflow-wrap:anywhere;
+  overflow-wrap:break-word;
 }
 .topology-routes .route-relation {
   font-size:var(--type-caption);
   line-height:var(--leading-compact);
-  overflow-wrap:anywhere;
+  overflow-wrap:normal;
 }
 .topology-routes>div.route-confirmed .route-status {
   border-color:#4a5565;
@@ -5789,7 +5851,7 @@ html,body {
 .sector-operational-scene>header {
   position:relative;
   display:grid;
-  grid-template-columns:auto 1fr;
+  grid-template-columns:1fr;
   gap:13px;
   align-items:start;
 }
@@ -5822,13 +5884,14 @@ html,body {
 }
 .sector-scene-lane {
   display:grid;
-  grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-columns:minmax(0,1fr) auto;
   gap:9px;
   align-items:center;
-  min-height:76px;
-  border:1px solid #373c44;
-  background:#16191e;
-  padding:11px;
+  min-height:64px;
+  border:0;
+  border-top:1px solid #373c44;
+  background:none;
+  padding:10px 0;
 }
 .sector-scene-lane>span {
   color:var(--sector-accent);
@@ -5878,36 +5941,36 @@ html,body {
   background:#ef8a7d;
 }
 .sector-operational-scene.clinical {
-  background:linear-gradient(115deg,#102329,#131518);
+  background:#16191d;
 }
 .sector-operational-scene.clinical:before {
-  background:linear-gradient(90deg,transparent 0 48%,#69c9dd16 49% 51%,transparent 52%),linear-gradient(#69c9dd0c 1px,transparent 1px);
+  background:none;
   background-size:110px 100%,100% 22px;
 }
 .sector-operational-scene.clinical .sector-scene-icon,.sector-operational-scene.clinical .sector-scene-lane {
-  border-radius:999px;
+  border-radius:0;
 }
 .sector-operational-scene.clinical .sector-scene-lane {
-  padding-inline:15px;
+  padding-inline:0;
 }
 .sector-operational-scene.energy {
-  background:linear-gradient(135deg,#251b12,#121518);
+  background:#16191d;
 }
 .sector-operational-scene.energy:before {
-  background:repeating-linear-gradient(135deg,transparent 0 18px,#e3a85c12 18px 19px);
+  background:none;
 }
 .sector-operational-scene.energy .sector-scene-icon,.sector-operational-scene.energy .sector-scene-lane {
   border-radius:3px;
 }
 .sector-operational-scene.energy .sector-scene-track {
   height:7px;
-  background:repeating-linear-gradient(90deg,#3d3428 0 16px,#181a1c 16px 19px);
+  background:#3d3428;
 }
 .sector-operational-scene.infocomm {
-  background:radial-gradient(circle at 90% 20%,#1d514755,transparent 35%),#121418;
+  background:#16191d;
 }
 .sector-operational-scene.infocomm:before {
-  background-image:radial-gradient(circle,#60d0bd44 1px,transparent 1px);
+  background-image:none;
   background-size:18px 18px;
 }
 .sector-operational-scene.infocomm .sector-scene-icon {
@@ -5915,7 +5978,7 @@ html,body {
 }
 .sector-operational-scene.infocomm .sector-scene-lane {
   border-radius:3px;
-  box-shadow:inset 0 0 18px #60d0bd09;
+  box-shadow:none;
 }
 .sector-operational-scene.infocomm .sector-scene-track {
   height:2px;
@@ -5923,7 +5986,7 @@ html,body {
 }
 .sector-operational-scene.infocomm .sector-scene-track i {
   position:relative;
-  box-shadow:0 0 8px var(--sector-accent);
+  box-shadow:none;
 }
 .sector-operational-scene.infocomm .sector-scene-track i:after {
   content:"";
@@ -5934,7 +5997,7 @@ html,body {
   height:6px;
   border-radius:50%;
   background:currentColor;
-  box-shadow:0 0 8px var(--sector-accent);
+  box-shadow:none;
 }
 .report-dialog {
   width:min(980px,calc(100% - 2rem))!important;
@@ -6563,29 +6626,30 @@ span.effect-list>span.effect.note>span {
 .phone-quick-start {
   display:none;
 }
+/* The quick start is a numbered procedure in a manual: one column, the number
+   hanging in the margin, a rule between steps. Four boxed steps with circled
+   numerals were the most recognisable generated layout there is. */
 .quick-start-guide {
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
+  grid-template-columns:1fr;
+  gap:0;
   margin:4px 0 24px;
+  border-top:1px solid #464b53;
 }
 .quick-start-guide>div {
   display:grid;
-  grid-template-columns:auto 1fr;
+  grid-template-columns:36px 1fr;
   gap:10px;
-  border:1px solid #464b53;
-  border-radius:3px;
-  background:#16191e;
-  padding:13px;
+  border:0;
+  border-bottom:1px solid #464b53;
+  border-radius:0;
+  background:none;
+  padding:12px 0;
 }
 .quick-start-guide span {
-  width:27px;
-  height:27px;
-  display:grid;
-  place-items:center;
-  border:1px solid #5c6878;
-  border-radius:50%;
-  color:var(--lime);
+  display:block;
+  padding-top:2px;
+  color:var(--text-soft);
   font:600 var(--type-caption) var(--font-mono);
 }
 .quick-start-guide p {
@@ -6680,11 +6744,11 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
   justify-content:space-between;
   gap:12px;
   margin-bottom:14px;
-  padding:11px 14px;
-  border:1px solid #4d545d;
+  padding:4px 0 4px 12px;
+  border:0;
   border-left:3px solid var(--lime);
-  border-radius:3px;
-  background:#1e2227;
+  border-radius:0;
+  background:none;
 }
 .undo-strip .eyebrow {
   display:block;
@@ -6715,7 +6779,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
   border:1px solid #465161;
   border-left:3px solid #e8c968;
   border-radius:3px;
-  background:#26231e;
+  background:none;
   color:#e6d9a4;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
@@ -7070,7 +7134,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
   top:-12px;
   height:2px;
   border-radius:2px;
-  background:linear-gradient(90deg,transparent,var(--lime),transparent);
+  background:var(--lime);
   transform-origin:left center;
   pointer-events:none;
   opacity:0;
@@ -7148,7 +7212,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
   margin:0 0 24px;
   padding:12px 15px;
   border-left:2px solid #7c6257;
-  background:#1a1512;
+  background:none;
   color:#bda69b;
   font-size:var(--type-body);
   animation:resolution-lost-in .68s cubic-bezier(.33,0,.2,1) 120ms backwards;
@@ -7316,13 +7380,13 @@ still sees the meter marked as crossed once the ring is suppressed. */
   border:1px solid #566272;
   border-left:3px solid var(--lime);
   border-radius:3px;
-  background:linear-gradient(90deg,#2a2f37,#191d22);
+  background:#2a2f37;
   box-shadow:0 10px 28px #0002;
 }
 .bot-control.paused {
   border-color:#8b7848;
   border-left-color:#e1c66c;
-  background:linear-gradient(90deg,#352f20,#1d2023);
+  background:#352f20;
 }
 .bot-control-icon {
   width:42px;
@@ -7757,26 +7821,26 @@ the player already holds, so neither narrows the answer for them. */
   width:22px;
   height:4px;
   border-radius:2px;
-  background:#2e3237;
+  background:#e8e1d3;
 }
 .standing-meter i.spent {
   background:currentColor;
 }
 .hypothesis-standing.level-untested {
-  border-left-color:#7f8388;
-  color:#b5ae9d;
+  border-left-color:#c9bfac;
+  color:#4a463e;
 }
 .hypothesis-standing.level-holding {
   border-left-color:var(--lime);
   color:var(--lime);
 }
 .hypothesis-standing.level-weakening {
-  border-left-color:#e8c968;
-  color:#e8c968;
+  border-left-color:#a9821c;
+  color:#6f5200;
 }
 .hypothesis-standing.level-unsupported {
-  border-left-color:#ff967d;
-  color:#ff967d;
+  border-left-color:#b8553f;
+  color:#9e3220;
 }
 .hypothesis-standing strong,.hypothesis-standing .eyebrow {
   color:inherit;
@@ -7918,8 +7982,9 @@ awareness. */
   gap:8px;
 }
 .plain-language dt {
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
   font-weight:500;
-  text-transform:capitalize;
 }
 .plain-language dd {
   margin:1px 0 0;
@@ -8175,7 +8240,7 @@ in colour, and the carried plan is stated before the options. */
   .investigation-dashboard .procedure-top {
     margin-bottom:4px;
   }
-  .investigation-dashboard .procedure-card .procedure-icon {
+  .investigation-dashboard .procedure-card .procedure-code {
     display:none;
   }
   .investigation-dashboard .procedure-top {
@@ -8315,7 +8380,7 @@ in colour, and the carried plan is stated before the options. */
   /* The reading and how it is holding up read as one phrase otherwise. */
   .hypothesis-board.has-reading .hypothesis-standing strong {
     padding:2px 7px;
-    border:1px solid #40454d;
+    border:1px solid #c9bfac;
     border-radius:999px;
     font-size:var(--type-micro);
   }

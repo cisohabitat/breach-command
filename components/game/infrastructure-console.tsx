@@ -1,6 +1,7 @@
-import { ArrowUp, CircleDot, Eye, Network, ShieldAlert, Unplug } from "lucide-react";
+import { ArrowUp, Eye, Unplug } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { attacks, describeMeterChange, procedureById, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
+import { EffectList } from "@/components/game/effect-list";
 
 const reachable = (current: number, change: number) => Math.min(100, Math.max(0, current + change)) - current;
 
@@ -16,7 +17,7 @@ function costLine(game: Game, nodeId: string, action: MapAction) {
     change.continuity ? describeMeterChange(game, "continuity", reachable(game.continuity, change.continuity)) : null,
     describeMeterChange(game, "sector", reachable(game.sectorHealth, change.sector)),
     describeMeterChange(game, "objective", reachable(game.objectiveProgress, change.objective)),
-  ].filter(Boolean).join(" · ");
+  ];
 }
 
 export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
@@ -37,7 +38,6 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             const critical = node.id === topology.critical;
             const findings = game.evidence.filter(item => item.system === node.label).length;
             return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
-              <span className="node-icon">{nodePosture === "isolated" ? <Unplug size={18} /> : nodePosture === "monitored" ? <Eye size={18} /> : critical ? <ShieldAlert size={18} /> : state === "affected" ? <CircleDot size={18} /> : <Network size={18} />}</span>
               <small>{node.type}{critical ? " · CRITICAL" : ""}</small><strong>{node.label}</strong>
               {/* Selecting a node no longer hides its state: "SELECTED" in place of
                   "AFFECTED" took the warning away from the node it was about. */}
@@ -59,10 +59,10 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
         </details>
       </div>
       <div className="map-command-bar">
-        <div><span><small>SELECTED NODE</small><strong>{focused.label}</strong><em>{criticalFocus ? "CRITICAL DEPENDENCY · " : ""}{posture === "normal" ? "No active control" : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
-            roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">Map focus +1 for {focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(" · ")}</small></span></div>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? "Monitored: its bonus is waiting for your next roll" : "Already monitored: its bonus went to the roll after it was set") : posture === "isolated" ? "Isolated: nothing left to monitor here" : costLine(game, focused.id, "monitor")}</small></span></button>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>{posture === "isolated" ? "Already isolated" : costLine(game, focused.id, "isolate")}</small></span></button>
+        <div><span><small>Selected node</small><strong>{focused.label}</strong><em>{criticalFocus ? "Critical dependency · " : ""}{posture === "normal" ? "No active control" : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
+            roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">Map focus adds +1 to {focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(", ").replace(/, ([^,]*)$/, " and $1")}.</small></span></div>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? "Monitored: its bonus is waiting for your next roll" : "Already monitored: its bonus went to the roll after it was set") : posture === "isolated" ? "Isolated: nothing left to monitor here" : <EffectList className="map-cost" items={costLine(game, focused.id, "monitor")} />}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>{posture === "isolated" ? "Already isolated" : <EffectList className="map-cost" items={costLine(game, focused.id, "isolate")} />}</small></span></button>
       </div>
       {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>Back to the procedures <ArrowUp size={14} /></button>}
       <details className="map-intel-detail">

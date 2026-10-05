@@ -27,7 +27,7 @@ export function SectorBoard({ game }: { game: Game }) {
       </div>
       <div className="command-feed">
         <div><span><small>LIVE TRANSMISSION</small><strong>{transmission}</strong></span></div>
-        <div><span><small>{person.callsign} · {attribution.confidence === "ATTRIBUTED" ? "ATTRIBUTED" : `${attribution.confidence} ATTRIBUTION`} · FATIGUE {game.specialistFatigue}/6</small><strong>{person.name}, {specialist.title}: “{person.voice}”</strong></span></div>
+        <div><span><small>{person.callsign} · {attribution.confidence === "ATTRIBUTED" ? "attributed" : `${attribution.confidence.toLowerCase()} attribution`} · fatigue {game.specialistFatigue}/6</small><strong>{person.name}, {specialist.title}: “{person.voice}”</strong></span></div>
       </div>
     </section>
   );

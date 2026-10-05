@@ -1,7 +1,6 @@
 import type { CSSProperties } from "react";
 import { ArrowRight, Bot, RefreshCw, Settings2, Star } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { stageIcons } from "@/components/game/stage-icons";
 import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
 import { campaignRank, standingEffects } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
@@ -29,8 +28,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <p className="intro">An intruder has worked through four stages somewhere in the organisation. Each turn you state what you think happened, test it against one evidence source and decide what to do with what you find. Once the whole chain is known, you lead the response.</p>
         <ol className="briefing-chain" aria-label="The four stages you are looking for">
           {stages.map((stage, index) => {
-            const Icon = stageIcons[index];
-            return <li key={stage.name} style={{ "--stage-color": stage.color } as CSSProperties}><span className="chain-index">{String(index + 1).padStart(2, "0")}</span><Icon size={18} aria-hidden="true" /><strong>{stage.short}</strong><small>{stageQuestions[index]}</small></li>;
+            return <li key={stage.name} style={{ "--stage-color": stage.color } as CSSProperties}><span className="chain-index">{String(index + 1).padStart(2, "0")}</span><strong>{stage.short}</strong><small>{stageQuestions[index]}</small></li>;
           })}
         </ol>
         {/* On a phone the assignment panel, and the start button inside it, sit two
@@ -40,15 +38,15 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             and hide the strip. */}
         <section className="phone-quick-start" aria-label="Quick start">
           {savedSession ? (
-            <button className="primary-button" onClick={() => resume(savedSession)}>Resume {scenarios[savedSession.game.scenario].title} <ArrowRight size={18} /></button>
+            <button className="primary-button" onClick={() => resume(savedSession)}>Resume “{scenarios[savedSession.game.scenario].title}” <ArrowRight size={18} /></button>
           ) : (
-            <button className="primary-button" onClick={() => start()}>Start {activeScenario.title} <ArrowRight size={18} /></button>
+            <button className="primary-button" onClick={() => start()}>Start “{activeScenario.title}” <ArrowRight size={18} /></button>
           )}
           <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title} · ${namedSpecialists[specialist].name}`} · or choose the assignment below</small>
         </section>
         <section className="career-card" aria-label="Command career progression">
           <div><span className="field-label">Your command record</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents · trust {campaign.leadershipTrust} · readiness {campaign.readiness}</small><small className="standing-effects">{standingEffects(campaign).join(" ")}</small></div>
-          <b>{campaign.xp}<small> XP</small></b>
+          <b><small>Experience </small>{campaign.xp}</b>
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
         <section className="campaign-act-card"><span className="act-number">ACT {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved access{campaign.unresolvedThreads ? " — each starts later operations under more pressure" : ""}</small></div></section>
@@ -60,7 +58,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <div className="mission-symbol"><span>{activeScenario.sector}</span></div>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
-        {previewVariant && <div className="variant-brief"><span className="field-label">Incident variant</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
+        {previewVariant && <div className="variant-brief"><span className="case-stamp amended">Amended</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
         <div className="mission-selector" aria-label="Select incident">
           {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery star${(campaign.mastery[String(index)] ?? 0) === 1 ? "" : "s"}` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1).padStart(2, "0")}</span>{campaign.completed.includes(index) && <small>{Array.from({ length: campaign.mastery[String(index)] ?? 0 }).map((_, star) => <Star key={star} size={8} fill="currentColor" />)}</small>}</button>)}
         </div>
@@ -125,7 +123,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             laptop the saved card sat under the sticky Begin button, which replaced
             the save without a word. */}
         {savedSession ? <>
-          <button className="primary-button start-button" onClick={() => resume(savedSession)}>Resume {scenarios[savedSession.game.scenario].title} <ArrowRight size={19} /></button>
+          <button className="primary-button start-button" onClick={() => resume(savedSession)}>Resume “{scenarios[savedSession.game.scenario].title}” <ArrowRight size={19} /></button>
           <button className="secondary-button begin-instead" onClick={() => start()}>Begin a new investigation instead</button>
           <p className="replace-note">Beginning a new investigation replaces the saved one.</p>
         </> : <button className="primary-button start-button" onClick={() => start()}>Begin investigation <ArrowRight size={19} /></button>}

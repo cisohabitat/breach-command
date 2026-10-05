@@ -1,4 +1,4 @@
-import { Activity, Database, Gauge, HeartPulse, Network, Radio, ShieldCheck, TriangleAlert, Wifi, Zap } from "lucide-react";
+import { Activity, Database, Gauge, HeartPulse, Network, Radio, Wifi, Zap } from "lucide-react";
 import { getAttributionRead, getOperationalLabel, infrastructureTopologies, readyToCorrelate, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 
@@ -19,7 +19,6 @@ export function SectorSituation({ game }: { game: Game }) {
   const [title, detail] = sectorMoments[game.scenario];
   const severity = game.continuity <= 45 ? "critical" : game.continuity <= 75 ? "degraded" : "stable";
   return <section className={`sector-situation ${severity}`} aria-label="Live sector condition">
-    <span className="situation-icon">{severity === "stable" ? <ShieldCheck size={21} /> : severity === "degraded" ? <Activity size={21} /> : <TriangleAlert size={21} />}</span>
     <div><span className="eyebrow">Live sector condition · {getOperationalLabel(game)}</span><strong>{title}</strong><p>{detail}</p></div>
     <b>{game.continuity}<small>/100</small></b>
   </section>;
@@ -33,7 +32,7 @@ export function SectorOperationalScene({ game }: { game: Game }) {
   const configs = {
     1: {
       className: "clinical",
-      eyebrow: "CLINICAL SERVICE LANES",
+      eyebrow: "Clinical service lanes",
       title: "Patient care continuity",
       detail: "Live service lanes show where investigative pressure can become a care-delivery constraint.",
       Icon: HeartPulse,
@@ -45,7 +44,7 @@ export function SectorOperationalScene({ game }: { game: Game }) {
     },
     2: {
       className: "energy",
-      eyebrow: "ENGINEERING OPERATING ENVELOPE",
+      eyebrow: "Engineering operating envelope",
       title: "Generation and control stability",
       detail: "Margins combine plant health, operating continuity and resistance to actor control.",
       Icon: Zap,
@@ -57,7 +56,7 @@ export function SectorOperationalScene({ game }: { game: Game }) {
     },
     7: {
       className: "infocomm",
-      eyebrow: "ROUTING DOMAIN PULSE",
+      eyebrow: "Routing domain pulse",
       title: "Network service propagation",
       detail: "Domain telemetry reflects routing control, management-plane integrity and subscriber service.",
       Icon: Network,
@@ -69,20 +68,16 @@ export function SectorOperationalScene({ game }: { game: Game }) {
     },
   } as const;
   const config = configs[game.scenario as 1 | 2 | 7];
-  const SceneIcon = config.Icon;
 
   return <section className={`sector-operational-scene ${config.className}`} aria-label={config.title}>
     <header>
-      <span className="sector-scene-icon"><SceneIcon size={22} /></span>
       <div><span className="eyebrow">{config.eyebrow}</span><strong>{config.title}</strong><p>{config.detail}</p></div>
     </header>
     <div className="sector-scene-lanes">
       {config.lanes.map(lane => {
         const value = clampReadout(lane.value);
         const status = value > 75 ? "Stable" : value > 45 ? "Constrained" : "At risk";
-        const LaneIcon = lane.Icon;
         return <div className={`sector-scene-lane ${value <= 45 ? "at-risk" : value <= 75 ? "constrained" : "stable"}`} key={lane.label}>
-          <span><LaneIcon size={17} /></span>
           <div><strong>{lane.label}</strong><div className="sector-scene-track" aria-hidden="true"><i style={{ width: `${value}%` }} /></div><small>{status}</small></div>
           <b>{value}</b>
         </div>;
@@ -107,6 +102,6 @@ export function SpecialistTransmission({ game }: { game: Game }) {
           ? `The evidence picture can support a causal test. Confirm whether ${node.label} belongs in the attack path.`
           : `Focus collection on ${node.label}. ${specialist.voice}`;
   return <section className="specialist-transmission" aria-live="polite">
-    <span><Radio size={18} /></span><div><small>{specialist.callsign} · {attribution.confidence === "ATTRIBUTED" ? "ATTRIBUTED" : `${attribution.confidence} ATTRIBUTION`}</small><strong>{specialist.name}</strong><p>{advice}</p></div>
+    <div><small>{specialist.callsign} · {attribution.confidence === "ATTRIBUTED" ? "attributed" : `${attribution.confidence.toLowerCase()} attribution`}</small><strong>{specialist.name}</strong><p>{advice}</p></div>
   </section>;
 }
