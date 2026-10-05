@@ -36,7 +36,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
       </section>
 
       <section className="journal-panel">
-        <div className="section-heading"><h2>Incident log</h2><span className="mono muted">{String(game.turns.length)}</span></div>
+        <div className="section-heading"><h2>Incident log</h2><span className="muted">{game.turns.length} {game.turns.length === 1 ? "entry" : "entries"}</span></div>
         {!game.turns.length ? (
           <div className="empty-log"><p>Investigation opened.</p><small>Hypotheses, findings and actor movements will appear here.</small></div>
         ) : (

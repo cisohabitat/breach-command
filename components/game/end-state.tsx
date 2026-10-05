@@ -21,7 +21,6 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-won" data-resolution="won">
         <div className="end-banner end-won">
           <div>
-            <span className="eyebrow">Resolution: stand down</span>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{outcome?.title}</h2>
             <p>{outcome?.detail} Impact is {game.impact} and {getOperationalLabel(game).toLowerCase()} is {game.continuity}. The captain has closed the active response.</p>
           </div>
@@ -44,7 +43,6 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-lost" data-resolution="lost">
         <div className="end-banner end-lost">
           <div>
-            <span className="eyebrow">Operation closed</span>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{loss.title}.</h2>
             <p>{loss.detail} {loss.cause === "window" ? "" : `${game.revealed.length} of 4 stages were confirmed. `}Impact stands at {game.impact}. No stand-down was issued.</p>
           </div>
@@ -61,7 +59,6 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-exercise" data-resolution="exercise">
         <div className="end-banner end-exercise">
           <div>
-            <span className="eyebrow">Authorised exercise</span>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>Exercise concluded at the boundary.</h2>
             <p>{game.revealed.length} of 4 stages were identified before the controller confirmed the activity as an authorised exercise. No response phase was run, so containment and recovery are not scored; the decisions you made along the way still are. The case counts as cleared in the campaign: the investigation earned this conclusion.</p>
           </div>

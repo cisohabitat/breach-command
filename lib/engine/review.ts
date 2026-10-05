@@ -20,7 +20,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const strength = game.status === "exercise"
     ? `You confirmed ${game.revealed.length} of 4 stages in ${game.turns.length} turns before the controller stood the activity down as an authorised exercise; a natural 20 brought that card, and nothing was missed.`
     : game.revealed.length === 4
-    ? `You confirmed the whole attack chain — all four stages — in ${game.turns.length} turns.`
+    ? `You confirmed the whole attack chain, all four stages, in ${game.turns.length} turns.`
     : game.impact <= 40
       ? `You kept business impact down to ${game.impact} while the picture was still forming, which buys the team room to work.`
       : game.revealed.length
@@ -78,7 +78,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
       concept: "A wrong reading is only corrected by a completed check of a source that can see it. A failed roll, or a source that cannot see the reading, leaves it exactly as open as before.",
       next: game.mode === "expert"
         ? "Next operation, before each action, check by hand that the source can see a technique your reading could still be using at this stage."
-        : "Next operation, run a card marked as able to test the reading you hold — its own source, or one marked “Can also test this reading” — so that an empty result rules it out instead of leaving it standing.",
+        : "Next operation, run a card marked as able to test the reading you hold (its own source, or one marked “Can also test this reading”), so that an empty result rules it out instead of leaving it standing.",
     };
     return {
       strength,
@@ -117,7 +117,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   if (readyToCorrelate(game) && readyToCorrelate(recordBefore(game, game.turns.length - 1))) return {
     strength,
     gap: `You confirmed ${game.evidence.filter(item => item.supports).length} stages but never tested how any two of them relate.`,
-    concept: "Two things happening close together is not the same as one causing the other. Saying which it is — and being willing to be wrong — is the core of the work.",
+    concept: "Two things happening close together is not the same as one causing the other. Saying which it is, and being willing to be wrong, is the core of the work.",
     next: "Next operation, once two findings have confirmed stages, select them in the evidence workspace and decide whether one plausibly enabled the other before you run another procedure.",
   };
   // Empty checks of the reading's own sources are the reading being ruled out,
@@ -132,7 +132,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     strength,
     gap: `${emptySuccesses} of your successful checks produced no new stage, and ${emptyOffReading} of them used a source your reading did not predict.`,
     concept: "A check that succeeds but finds nothing has still cost a turn. Choosing where to look matters more than how hard you look.",
-    next: "Next operation, prefer a source your current reading actually predicts — the card says so before you commit — over whichever tool is available.",
+    next: "Next operation, prefer a source your current reading actually predicts over whichever tool is available; the card says so before you commit.",
   } : {
     strength,
     gap: `${emptySuccesses} of your successful checks produced no new stage, most of them from your reading's own sources.`,
@@ -197,7 +197,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
           : "Next operation, before each action, check the card can test your reading here; when none of its own sources can, revise the reading or use a card marked as able to test it."
         : game.mode === "expert"
           ? "Next operation, before a procedure, look for a bonus you can add: a monitored node, map focus on the source's system, or an established source."
-          : "Next operation, before a procedure, look for a bonus you can add — a monitored node, map focus on the source's system, an established source — and use the comparison's ruled-out marks to skip routes that are already out.",
+          : "Next operation, before a procedure, look for a bonus you can add (a monitored node, map focus on the source's system, an established source) and use the comparison's ruled-out marks to skip routes that are already out.",
     };
   }
   return {
@@ -351,7 +351,7 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
     const predicted = turn.hypothesis ? hypotheses.find(item => item.id === turn.hypothesis)!.title : null;
     const found = turn.revealed ? attacks.find(item => item.id === turn.revealed)!.title : null;
     const windfallNote = turn.windfall
-      ? ` You did expose ${found}, further along the chain — that source is shared between routes, so it was a find rather than a correct prediction.`
+      ? ` You did expose ${found}, further along the chain. That source is shared between routes, so it was a find rather than a correct prediction.`
       : "";
     const missNote: Record<TurnCredit["reason"], string> = {
       none: "",
@@ -368,7 +368,7 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
       : turn.hypothesisMatched
         ? (turn.planningBonus > 0
           ? `Correct: ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit, and the own-source bonus on the roll.${windfallNote}`
-          : `Correct about the route — ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route — but the procedure was not one of that reading's sources, so it earned no own-source bonus.${windfallNote}`)
+          : `Correct about the route: ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route, but the procedure was not one of that reading's sources, so it earned no own-source bonus.${windfallNote}`)
         : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}. ${credits[index].reason === "tested" && !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure) ? "You tested it with a source that could see it here, though not one of its own, and the check completed, which is testing it properly: half credit." : missNote[credits[index].reason]}${windfallNote}`;
     return {
       turn: turn.number,

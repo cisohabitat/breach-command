@@ -38,7 +38,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
           <summary>Findings<span>{confirmed} confirmed a stage, {game.evidence.length - confirmed} found no stage, {selected.length} selected</span></summary>
           <div className="evidence-timeline" role="group" aria-label="Evidence timeline">{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
           <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
-            <span>Turn {item.turn}</span><strong>{item.title}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{item.source} at {item.system}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? "Confirmed a stage" : "Found no stage"} · {item.confidence} CONFIDENCE</em>
+            <span>Turn {item.turn}</span><strong>{item.title}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{item.source} at {item.system}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? "Confirmed a stage" : "Found no stage"}, {item.confidence.toLowerCase()} confidence</em>
           </button>)}</div>
         </details>
         <div className="relationship-assessment" role="group" aria-label="Relationship assessment">

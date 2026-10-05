@@ -84,7 +84,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             <section className="report-summary" aria-label="Procedure result">
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
-                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{rollParts(report)}</span><strong>{report.total} <span>/ {config.threshold} needed · {report.success ? "Success" : "Failure"}</span></strong></div>
+                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{rollParts(report)}</span><strong>{report.total} <span>/ {config.threshold} needed, {report.success ? "a success" : "a failure"}</span></strong></div>
               </div>
               {/* The plan and the turn's movement are told apart: a playtest read
                   "Focused: impact unchanged" in the sheet, then a rise here, as the

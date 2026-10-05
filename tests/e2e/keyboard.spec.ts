@@ -39,7 +39,7 @@ test.describe("keyboard play", () => {
   test("focus follows the response sequence instead of dropping to the page", async ({ page }) => {
     await openWithSave(page, responsePhaseGame());
     await page.getByRole("button", { name: "Resume", exact: true }).click();
-    for (const next of ["Prove the boundary is ready for restoration.", "Restore trusted service."]) {
+    for (const next of ["Assurance gate", "Recovery decision"]) {
       const option = page.locator(".response-options > button").first();
       await option.focus();
       await page.keyboard.press("Enter");

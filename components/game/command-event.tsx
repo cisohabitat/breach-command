@@ -10,7 +10,7 @@ export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice
   const event = commandEvents[game.pendingCommand as CommandEventId];
   return (
     <section className="command-event" aria-labelledby="command-event-title">
-      <div className="command-event-heading"><div><span className="eyebrow">Command event</span><h2 id="command-event-title" ref={heading} tabIndex={-1} data-awaiting-heading>{event.title}</h2><p>{event.prompt}</p></div></div>
+      <div className="command-event-heading"><div><h2 id="command-event-title" ref={heading} tabIndex={-1} data-awaiting-heading><span className="heading-kind">Command event:</span> {event.title}</h2><p>{event.prompt}</p></div></div>
       <div className="command-options">
         {/* Numbered ruled rows with the exact effect in a column, as the response
             and the sector decision are set; two cards with corner arrows were not. */}

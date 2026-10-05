@@ -141,13 +141,6 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             <button onClick={() => setInlineReport(null)} aria-label="Dismiss quick result"><X size={18} /></button>
           </section>
         )}
-        {/* A sector decision sends the player straight back here; without a line
-            saying it was recorded, a playtest compared the meters to find out. */}
-        {sectorRecorded && (
-          <section className="undo-strip" role="status">
-            <div><span className="eyebrow">Sector decision recorded</span><strong>{sectorRecorded.title}</strong></div>
-          </section>
-        )}
         {pendingUndo && (
           <section className="undo-strip" role="status">
             <div><span className="eyebrow">Last action</span><strong>{pendingUndo.label}</strong></div>
@@ -161,6 +154,11 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
                   and on a laptop its four lines held the first card below the panel's edge. */}{game.turns.length === 0 && <p>One action per turn. A used source sits out the next {cooldownWindow(game) === 3 ? "two turns" : "three turns"}; its card counts them down.</p>}</div>
               <span className="established-key">Plan: {procedureScopes[actionScope].title.toLowerCase()} scope, {procedureIntensities[actionIntensity].title.toLowerCase()}</span>
             </div>
+            {/* A sector decision sends the player straight back here; without a line
+                saying it was recorded, a playtest compared the meters to find out.
+                It is a line under the heading, not a ruled strip above it, which
+                set the two columns' headings sixty pixels apart. */}
+            {sectorRecorded && <p className="recorded-line" role="status">Sector decision recorded: <strong>{sectorRecorded.title}</strong></p>}
             {/* One next step above the cards, not three: until a reading exists, the
                 hint that unlocks them; then the Training prompt where there is one,
                 or the Captain's prompt. Stacked, they put the first card below the

@@ -27,7 +27,7 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
   if (workspace === "investigate" && current < 0) return null;
   if (workspace === "investigate") return (
     <section className="tutorial-coach compact" aria-label="Command academy tutorial">
-            <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>Academy {current + 1}/{steps.length}</span><strong>{steps[current].title}</strong></p>
+            <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>Academy, step {current + 1} of {steps.length}</span><strong>{steps[current].title}</strong></p>
       <button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button>
     </section>
   );

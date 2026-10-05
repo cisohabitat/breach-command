@@ -26,7 +26,7 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
       {/* Each phase swaps the animation on this wrapper, so the beat restarts without remounting the controls. */}
       <div className="response-stage">
         <div className="response-heading">
-          <div><span className="eyebrow">{containment ? "Containment decision" : assurance ? "Assurance gate" : "Recovery decision"}</span><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "Stop the confirmed activity." : assurance ? "Prove the boundary is ready for restoration." : "Restore trusted service."}</h2><p>{containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p>{containment
+          <div><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "Containment decision" : assurance ? "Assurance gate" : "Recovery decision"}</h2><p><strong>{containment ? "Stop the confirmed activity." : assurance ? "Prove the boundary is ready for restoration." : "Restore trusted service."}</strong> {containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p>{containment
             ? <p className="muted small"><strong>Sector constraint:</strong> {profile.constraint}</p>
             // Each later phase opens on what the one before it did, in place of the
             // constraint already read: a playtest saw no result between choices.
@@ -56,7 +56,7 @@ function OptionEffect({ game, impact, continuity }: { game: Game; impact: number
     <span className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
       {/* The change the meter will actually show: "−22 better" at an impact of 0 promised nothing. */}
       <EffectList items={[describeMeterChange(game, "impact", after.impact - game.impact), describeMeterChange(game, "continuity", after.continuity - game.continuity)]} />
-      <small>{getOperationalLabel(game)} ends at {after.continuity}{ends && <b>, which ends the operation</b>}{atRisk && <b>, at risk</b>}</small>
+      <small>{getOperationalLabel(game)} ends at&nbsp;{after.continuity}{ends && <b>, which ends the operation</b>}{atRisk && <b>, at risk</b>}</small>
     </span>
   );
 }

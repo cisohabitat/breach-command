@@ -65,7 +65,7 @@ export function GameScreen({ session }: { session: GameSession }) {
         <div className="game-identity">
           {/* Each separator travels with the segment after it, so a breadcrumb that
               wraps on a narrow phone never ends a line on a bare "/". */}
-          <div className="eyebrow case-line">Case <span className="mono">{String(game.scenario + 1)}</span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
+          <div className="eyebrow case-line"><span>Case <span className="mono">{String(game.scenario + 1)}</span></span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
           <h1>{activeScenario.title}</h1>
           {/* The investigation window rarely decides an operation, so it reads as
               context under the title rather than competing with the three

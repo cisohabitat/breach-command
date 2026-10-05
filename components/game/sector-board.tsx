@@ -27,8 +27,11 @@ export function SectorBoard({ game }: { game: Game }) {
         <div className="sit-body">
           <p><strong>{sector.title}</strong></p>
           <Progress value={game.sectorHealth} aria-label={sector.title} />
-          <p className={`sector-read ${read.diverged ? "diverged" : ""}`}><strong>{read.headline}.</strong> {read.detail}</p>
-          <p className="sit-note">{sector.rule}</p>
+          {/* The headline stays in view; why the two meters differ and what moves
+              the margin are one tap down, open by default when they diverge. A
+              paragraph under every entry read as an interface explaining itself. */}
+          <p className={`sector-read ${read.diverged ? "diverged" : ""}`}><strong>{read.headline}.</strong></p>
+          <details className="sit-more" open={read.diverged}><summary>Why, and what moves it</summary><p className="sit-note">{read.detail}</p><p className="sit-note">{sector.rule}</p></details>
         </div>
         <b className="sit-figure">{game.sectorHealth}</b>
       </div>
