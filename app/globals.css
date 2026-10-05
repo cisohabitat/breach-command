@@ -272,11 +272,6 @@ a {
   font-weight:600;
   color:#cfc9bb;
 }
-.case-number {
-  font-family:var(--font-mono);
-  font-size:var(--type-caption);
-  color:#cfc9bb;
-}
 .case-stamp {
   font-family:var(--font-mono);
   font-size:var(--type-caption);
@@ -302,26 +297,6 @@ a {
   border-top:3px solid var(--lime);
   border-radius:3px;
   padding:30px;
-}
-.panel-top {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  font-size:var(--type-caption);
-}
-.mission-symbol {
-  display:flex;
-  gap:15px;
-  align-items:center;
-  color:var(--lime);
-  margin:36px 0 20px;
-}
-.mission-symbol>span {
-  font-family:var(--font-mono);
-  font-size:var(--type-caption);
-  letter-spacing:.11em;
-  color:#c4bdab;
 }
 .mission-panel h2 {
   font-size:var(--type-h3);
@@ -1445,9 +1420,6 @@ a {
   .mission-panel {
     padding:22px;
   }
-  .mission-symbol {
-    margin:22px 0 16px;
-  }
   .mission-panel>p {
     min-height:0;
     font-size:var(--type-body);
@@ -1610,9 +1582,6 @@ a {
   .briefing-main h1 {
     font-size:var(--type-h2);
     margin:16px 0;
-  }
-  .mission-symbol {
-    margin-top:18px;
   }
   .mission-selector {
     margin-bottom:18px;
@@ -6235,9 +6204,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
   .briefing-screen {
     padding-top:52px;
   }
-  .mission-symbol {
-    margin:18px 0 14px;
-  }
   .mission-panel>p {
     min-height:0;
     line-height:var(--leading-prose);
@@ -8720,7 +8686,7 @@ span.effect-list>span.effect.term>em {
    mono capitals on every label (the case line, the window, the meters' names,
    the chain's states, the map's tiles, the footer) were a "terminal" garnish
    applied everywhere, which is what made them read as generated. */
-.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.case-stamp,.act-number,.mission-symbol>span,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes small,.topology-nodes em,.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,.procedure-planner .plan-selected,.case-theory .plan-selected,.training-prompt .prompt-sources,.service-node small {
+.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.case-stamp,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes small,.topology-nodes em,.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,.procedure-planner .plan-selected,.case-theory .plan-selected,.training-prompt .prompt-sources,.service-node small {
   font-family:var(--font-ui);
   text-transform:none;
   letter-spacing:0;
@@ -8730,7 +8696,7 @@ span.effect-list>span.effect.term>em {
   text-transform:none;
   letter-spacing:0;
 }
-.case-line .mono,.case-number {
+.case-line .mono {
   font-family:var(--font-mono);
 }
 .case-line {
@@ -9047,6 +9013,59 @@ body {
 }
 .case-meters>div:first-child {
   border-left:0;
+}
+
+/* A form row on the desk: the same cells in the desk's rules. */
+.form-row.on-desk {
+  margin:0 0 22px;
+  border-color:#4a4f57;
+}
+.form-row.on-desk>div {
+  border-left-color:#4a4f57;
+}
+.form-row.on-desk dt {
+  color:var(--text-soft);
+}
+.form-row.on-desk dd {
+  color:#f6f1e4;
+}
+.form-row.on-desk dd.open {
+  color:#e8c968;
+}
+.slip-form {
+  margin-bottom:10px;
+  color:var(--text-soft);
+  font-weight:500;
+}
+/* On a wide screen the assignment is the page and the pitch a note beside it.
+   On a phone the order stays, with the quick start on the first screen. */
+@media(min-width:901px) {
+  .briefing-screen {
+    grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
+  }
+  .mission-panel {
+    grid-column:1;
+    grid-row:1;
+  }
+  .briefing-main {
+    grid-column:2;
+    grid-row:1;
+  }
+  .briefing-main h1 {
+    font-size:var(--type-h3);
+  }
+  .briefing-main .intro {
+    font-size:var(--type-body);
+  }
+}
+/* A button is a ruled block in the form face, square like the cells around it. */
+.primary-button,.secondary-button {
+  border-radius:0;
+  font-family:var(--font-serif);
+  letter-spacing:.01em;
+}
+.mission-meta {
+  font-family:var(--font-ui);
 }
 
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
@@ -9518,6 +9537,15 @@ body {
   }
   .first-read dl>div {
     grid-template-columns:minmax(0,1fr);
+  }
+  /* The case numbers stay one line of figures on a phone, not a pager grid. */
+  .mission-selector {
+    grid-template-columns:repeat(10,minmax(0,1fr));
+    gap:0;
+  }
+  .mission-selector button {
+    min-width:0;
+    padding:0;
   }
   /* On a phone the log's label and figure share the first line and the entry
      takes the full width beneath them. */

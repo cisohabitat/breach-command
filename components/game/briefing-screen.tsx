@@ -54,8 +54,15 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         {finalEnding && <section className="campaign-ending"><div><span className="field-label">Campaign conclusion</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
       </div>
       <section className="mission-panel">
-        <div className="panel-top"><span className="case-number">Case {String(scenarioChoice + 1)} of {String(scenarios.length)}</span><span className={`case-stamp ${campaign.completed.includes(scenarioChoice) ? "cleared" : ""}`}>{campaign.completed.includes(scenarioChoice) ? "Cleared" : "Open"}</span></div>
-        <div className="mission-symbol"><span>{activeScenario.sector}</span></div>
+        {/* The assignment is a dispatch slip: a form number, then the case as a
+            row of form cells, then what it is about. The pitch beside it is a
+            note, not a hero. */}
+        <div className="eyebrow slip-form">Form BC-001 <span className="separator">/</span> Assignment</div>
+        <dl className="form-row on-desk">
+          <div><dt>Case</dt><dd>{scenarioChoice + 1} of {scenarios.length}</dd></div>
+          <div><dt>Sector</dt><dd>{activeScenario.sector}</dd></div>
+          <div><dt>Status</dt><dd className={campaign.completed.includes(scenarioChoice) ? "" : "open"}>{campaign.completed.includes(scenarioChoice) ? "Cleared" : "Open"}</dd></div>
+        </dl>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
         {previewVariant && <div className="variant-brief"><span className="case-stamp amended">Amended</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
