@@ -59,11 +59,11 @@ export function ProcedureGrid({
               ? <small className="alignment-label blind">Own source <span className="nowrap">· +{OWN_SOURCE_BONUS}</span>, can&apos;t test this reading here</small>
               : <small className="alignment-label">Own source <span className="nowrap">· +{OWN_SOURCE_BONUS}</span></small>)}
             {seesOther && !cooldown && <small className="alignment-label other-sees">Can also test this reading</small>}
-            {read && !cooldown && read.spent > 0 && <small className="spent-label">CHECKED {read.spent}× · NO STAGE FOUND</small>}
-            {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} ATTEMPT{read.inconclusive === 1 ? "" : "S"} FAILED · INCONCLUSIVE</small>}
+            {read && !cooldown && read.spent > 0 && <small className="spent-label">Checked {read.spent}×, no stage found</small>}
+            {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} attempt{read.inconclusive === 1 ? "" : "s"} failed, inconclusive</small>}
             <div className="procedure-bottom">
               {/* An ordinary source carries no label: "STANDARD" told a newcomer nothing. */}
-              <span>{cooldown ? "ON COOLDOWN" : null}</span>
+              <span>{cooldown ? "On cooldown" : null}</span>
             </div>
           </button>
         );

@@ -45,7 +45,7 @@ export function HypothesisBoard({
           className={`adversary-state tempo-${game.adversaryTempo}`}
           title={attribution.detail}
         >
-          PACE: {getAdversaryState(game).toUpperCase()}
+          Pace: {getAdversaryState(game).toLowerCase()}
         </span>
       </div>
       {standing && standing.level !== "none" && (
@@ -75,7 +75,7 @@ export function HypothesisBoard({
           const evidenceSources = hypothesisSources(game, hypothesis.id)
             .map(id => procedureById(game, id)?.title)
             .filter(Boolean)
-            .join(" · ");
+            .join(", ");
           return (
             <button
               key={hypothesis.id}
@@ -100,7 +100,7 @@ export function HypothesisBoard({
         <div className="hypothesis-detail">
           <strong>{active.title}</strong>
           <span><Glossed text={active.premise} /></span>
-          <small>Evidence: {hypothesisSources(game, active.id).map(id => procedureById(game, id)?.title).filter(Boolean).join(" · ")}</small>
+          <small>Evidence: {hypothesisSources(game, active.id).map(id => procedureById(game, id)?.title).filter(Boolean).join(", ")}</small>
         </div>
       )}
       <details className="hypothesis-compare">
@@ -120,7 +120,7 @@ export function HypothesisBoard({
               {/* Each reading's own sources and whether they are ready, so a player
                   can see which reading they could test this turn without declaring
                   each in turn to find out. */}
-              <small className="compare-sources">Sources: {hypothesisSources(game, hypothesis.id).map(id => `${procedureById(game, id)?.title ?? id}${availableIn(game, id) ? ` (back in ${availableIn(game, id)})` : ""}`).join(" · ")}</small>
+              <small className="compare-sources">Sources: {hypothesisSources(game, hypothesis.id).map(id => `${procedureById(game, id)?.title ?? id}${availableIn(game, id) ? ` (back in ${availableIn(game, id)})` : ""}`).join(", ")}</small>
             </button>
           ))}
         </div>

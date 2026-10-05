@@ -10,7 +10,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
   return (
     <Dialog open={missionBriefing} onOpenChange={setMissionBriefing}>
       <DialogContent className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false}>
-        <DialogHeader><div className="eyebrow">Secure command briefing · case {String((game?.scenario ?? 0) + 1).padStart(2, "0")}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">Secure command briefing, case {String((game?.scenario ?? 0) + 1).padStart(2, "0")}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
         {game && <>
           {/* What shapes the first decisions stays open: the sector's condition,
               the specialist on hand and what is known of the operator. The rest
@@ -24,13 +24,13 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
           {/* Expert withholds coaching; its brief said "Your first move" all the same. */}
           {game.mode !== "expert" && <div className="briefing-first-move"><span>01</span><p><strong>Your first move</strong>Assume command, open Investigate, choose a working hypothesis and run a procedure marked “Own source”.</p></div>}
           <details className="briefing-more">
-            <summary>Operation context<span>{gameModes[game.mode].title}{game.mode === "campaign" ? ` · ${campaignRoutes[game.campaignRoute].title}` : ""} · {game.variant.title}</span></summary>
+            <summary>Operation context<span>{gameModes[game.mode].title}{game.mode === "campaign" ? `, ${campaignRoutes[game.campaignRoute].title}` : ""}, {game.variant.title}</span></summary>
             <div className="briefing-readouts">
               <div><span>MODE</span><strong>{gameModes[game.mode].title}</strong><small>{gameModes[game.mode].description}</small></div>
               {/* Only a campaign operation runs under the campaign's route; an Expert
                   brief named one that was not in effect. */}
-              {game.mode === "campaign" && <div><span>CAMPAIGN ROUTE</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>}
-              <div><span>INCIDENT VARIANT</span><strong>{game.variant.title}</strong><small>{game.variant.briefing}</small></div>
+              {game.mode === "campaign" && <div><span>Campaign route</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>}
+              <div><span>Incident variant</span><strong>{game.variant.title}</strong><small>{game.variant.briefing}</small></div>
             </div>
             <div className="director-order"><p><span className="eyebrow">Director’s intent</span>{game.mode === "campaign" ? `${campaignRoutes[game.campaignRoute].order} ` : ""}Establish the chain, declare an objective theory and preserve the essential service.</p></div>
           </details>

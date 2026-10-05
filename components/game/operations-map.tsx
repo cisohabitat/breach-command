@@ -26,7 +26,7 @@ export function OperationsMap({ game }: { game: Game }) {
           );
         })}
       </div>
-      <div className="service-node"><Database size={17} /><span><small>PROTECTED SERVICE</small><strong>{getOperationalLabel(game)}</strong></span><b>{game.continuity}</b></div>
+      <div className="service-node"><Database size={17} /><span><small>Protected service</small><strong>{getOperationalLabel(game)}</strong></span><b>{game.continuity}</b></div>
     </section>
   );
 }

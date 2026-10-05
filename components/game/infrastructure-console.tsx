@@ -28,7 +28,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
   const criticalFocus = focused.id === topology.critical;
   return (
     <section className="infrastructure-console" aria-label="Interactive infrastructure map" tabIndex={-1}>
-      <div className="map-heading"><div><span className="eyebrow">Live infrastructure command</span><h2>{topology.title}</h2></div><span className="focus-instruction">{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} left</span></div>
+      <div className="map-heading"><div><h2>{topology.title}</h2></div><span className="focus-instruction">{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} left</span></div>
       <div className="incident-flow" aria-hidden="true"><span style={{ width: `${Math.max(8, activeStage / 4 * 100)}%` }} /></div>
       <div className="topology-shell">
         <div className="topology-nodes">
@@ -38,22 +38,22 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             const critical = node.id === topology.critical;
             const findings = game.evidence.filter(item => item.system === node.label).length;
             return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
-              <small>{node.type}{critical ? " · CRITICAL" : ""}</small><strong>{node.label}</strong>
+              <small>{node.type}{critical ? ", critical" : ""}</small><strong>{node.label}</strong>
               {/* Selecting a node no longer hides its state: "SELECTED" in place of
                   "AFFECTED" took the warning away from the node it was about. */}
-              <em>{game.focusedNode === node.id ? "SELECTED · " : ""}{nodePosture === "isolated" ? "ISOLATED" : nodePosture === "monitored" ? "MONITORED" : nodePosture === "restored" ? "RESTORED" : findings ? `${findings} COLLECTED HERE` : state.toUpperCase()}</em>
+              <em>{game.focusedNode === node.id ? "Selected, " : ""}{nodePosture === "isolated" ? "isolated" : nodePosture === "monitored" ? "monitored" : nodePosture === "restored" ? "restored" : findings ? `${findings} collected here` : state}</em>
             </button>;
           })}
         </div>
         <details className="topology-detail">
-          <summary>Trust relationships<span>{topology.edges.length} paths · {topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length} blocked</span></summary>
+          <summary>Trust relationships<span>{topology.edges.length} paths, {topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length} blocked</span></summary>
           <div className="topology-routes" role="group" aria-label="Trust relationships">{topology.edges.map((edge, index) => {
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
           return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>
             <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
             <b className="route-relation">{edge.label}</b>
             <span className="route-target">{topology.nodes.find(node => node.id === edge.to)?.label}</span>
-            <i className="route-status">{isolated ? "BLOCKED" : index < Math.max(0, activeStage - 1) ? "CONFIRMED" : index === Math.max(0, activeStage - 1) ? "SUSPECTED" : "UNASSESSED"}</i>
+            <i className="route-status">{isolated ? "Blocked" : index < Math.max(0, activeStage - 1) ? "Confirmed" : index === Math.max(0, activeStage - 1) ? "Suspected" : "Unassessed"}</i>
           </div>;
         })}</div>
         </details>
@@ -67,7 +67,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
       {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>Back to the procedures <ArrowUp size={14} /></button>}
       <details className="map-intel-detail">
         <summary>Dependency and control notes<span>{game.revealed.length ? `${game.revealed.length} technique${game.revealed.length === 1 ? "" : "s"} confirmed` : "no techniques confirmed"}</span></summary>
-        <p className="map-intel">Critical dependency: {topology.criticalRule} Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(" · ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
+        <p className="map-intel">Critical dependency: {topology.criticalRule} Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(", ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
       </details>
     </section>
   );

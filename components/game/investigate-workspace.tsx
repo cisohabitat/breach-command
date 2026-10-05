@@ -94,7 +94,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
           ? <> <details className="prompt-why"><summary>Why</summary>{trainingPrompt.detail}</details></>
           : <> {trainingPrompt.detail}</>}
         {trainingPrompt.clue && <b className="prompt-clue">What the team is seeing: <Glossed text={trainingPrompt.clue} /></b>}
-        {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(" · ")}</b>}
+        {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(", ")}</b>}
         {(trainingPrompt.step === "theory" || trainingPrompt.step === "correlate") && evidenceButton}
         {trainingPrompt.step === "test" && mapAside}
       </span>
@@ -124,7 +124,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         )}
       </div>
       <details className="investigation-context reference-fold" open={!phone || referenceOpen} onToggle={event => phone && setReferenceOpen(event.currentTarget.open)}>
-        <summary>Map, evidence and what is known<span>{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} · {game.evidence.length ? `${game.evidence.filter(item => item.supports).length} of ${game.evidence.length} findings confirmed a stage` : "no findings yet"} · {game.correlations.length} compared</span></summary>
+        <summary>Map, evidence and what is known<span>{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"}, {game.evidence.length ? `${game.evidence.filter(item => item.supports).length} of ${game.evidence.length} findings confirmed a stage` : "no findings yet"}, {game.correlations.length} compared</span></summary>
         {!game.pendingCommand && !game.pendingSetPiece && <KnownFacts game={game} />}
         <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
         <SpecialistTransmission game={game} />
@@ -134,8 +134,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {inlineReport && (
           <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
             <div>
-              <span className="eyebrow">Turn {inlineReport.number} · quick result</span>
-              <strong>{inlineReport.success ? "Procedure succeeded" : "Procedure unsuccessful"} · {inlineReport.total}</strong>
+              <span className="eyebrow">Turn {inlineReport.number}, quick result</span>
+              <strong>{inlineReport.success ? "Procedure succeeded" : "Procedure unsuccessful"}, total {inlineReport.total}</strong>
               <p>{inlineReport.narrative}</p>
             </div>
             <button onClick={() => setInlineReport(null)} aria-label="Dismiss quick result"><X size={18} /></button>

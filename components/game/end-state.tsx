@@ -21,7 +21,7 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-won" data-resolution="won">
         <div className="end-banner end-won">
           <div>
-            <span className="eyebrow">Resolution · stand down</span>
+            <span className="eyebrow">Resolution: stand down</span>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{outcome?.title}</h2>
             <p>{outcome?.detail} Impact is {game.impact} and {getOperationalLabel(game).toLowerCase()} is {game.continuity}. The captain has closed the active response.</p>
           </div>

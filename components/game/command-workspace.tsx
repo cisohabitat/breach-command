@@ -41,7 +41,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       </>))}
 
       <section className={`attack-section ${game.status === "won" ? "resolved" : ""}`} hidden={activeWorkspace !== "command"}>
-        <div className="section-heading"><h2>Attack chain</h2><span className="mono muted">{game.revealed.length} / 4 REVEALED</span></div>
+        <div className="section-heading"><h2>Attack chain</h2><span className="muted">{game.revealed.length} of 4 revealed</span></div>
         {/* The chain as an evidence sheet: what is confirmed is typed in, what is
             not is redacted. Four equal cards with coloured tops and a centred icon
             read as a feature grid. */}

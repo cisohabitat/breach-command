@@ -44,7 +44,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
             {[...game.turns].reverse().map(turn => (
               <button className="log-entry" key={turn.number} onClick={() => setReport(turn)}>
                 <span className={`log-number ${turn.revealed ? "found" : turn.success ? "passed" : "failed"}`}>{String(turn.number).padStart(2, "0")}</span>
-                <div><strong>{procedureById(game, turn.procedure)?.title}</strong><span>{turn.revealed ? "Stage revealed" : turn.adversaryEvent ? "Actor advanced" : turn.success ? "No new evidence" : "Action unsuccessful"} · Impact {turn.impactChange >= 0 ? "+" : ""}{turn.impactChange}</span></div>
+                <div><strong>{procedureById(game, turn.procedure)?.title}</strong><span>{turn.revealed ? "Stage revealed" : turn.adversaryEvent ? "Actor advanced" : turn.success ? "No new evidence" : "Action unsuccessful"}, impact {turn.impactChange >= 0 ? "+" : ""}{turn.impactChange}</span></div>
                 <span className="roll-total">{turn.total}</span>
               </button>
             ))}

@@ -21,11 +21,11 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
   // both. Without them a player could only guess, and timing was all they had.
   const placement = (supports: string | null) => {
     const attack = supports ? attacks.find(item => item.id === supports) : null;
-    return attack ? `${stages[attack.stage].name} · ${hypotheses.find(item => item.id === attack.vector)!.title.toLowerCase()} route` : null;
+    return attack ? `${stages[attack.stage].name}, ${hypotheses.find(item => item.id === attack.vector)!.title.toLowerCase()} route` : null;
   };
   return (
     <section className="evidence-workspace" aria-label="Evidence correlation workspace" tabIndex={-1}>
-      <div className="map-heading"><div><span className="eyebrow">Evidence workspace</span><h2>Build the causal picture</h2></div><span className="focus-instruction">{game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"} tested</span></div>
+      <div className="map-heading"><div><h2>Evidence workspace</h2></div><span className="focus-instruction">{game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"} tested</span></div>
       <div className="case-theory">
         <div><span><strong>Case theory</strong><small>Declare intent, then test it against causal evidence. {objective.confidence === "LOW" ? "The objective can be assessed once two stages are confirmed." : `Current assessment: ${objectiveTheory[game.objective].title.toLowerCase()}, ${objective.confidence.toLowerCase()} confidence.`}</small></span></div>
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">Recorded</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
@@ -35,10 +35,10 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
           {/* A finding is not a stage. A check that succeeds without exposing one is
               kept because it still narrows the search, so the count has to say which
               kind each is or a beginner reads every row as a technique they found. */}
-          <summary>Findings<span>{confirmed} confirmed a stage · {game.evidence.length - confirmed} found no stage · {selected.length} selected</span></summary>
+          <summary>Findings<span>{confirmed} confirmed a stage, {game.evidence.length - confirmed} found no stage, {selected.length} selected</span></summary>
           <div className="evidence-timeline" role="group" aria-label="Evidence timeline">{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
           <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
-            <span>Turn {item.turn}</span><strong>{item.title}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{item.system} · {item.source}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? "CONFIRMED A STAGE" : "FOUND NO STAGE"} · {item.confidence} CONFIDENCE</em>
+            <span>Turn {item.turn}</span><strong>{item.title}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{item.source} at {item.system}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? "Confirmed a stage" : "Found no stage"} · {item.confidence} CONFIDENCE</em>
           </button>)}</div>
         </details>
         <div className="relationship-assessment" role="group" aria-label="Relationship assessment">

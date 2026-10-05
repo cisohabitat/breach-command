@@ -121,7 +121,7 @@ a {
   background:#ede2c9;
   color:#111417;
 }
-.mono,.game-identity .eyebrow,.procedure-badge,.procedure-bottom,.captain-label span,.brief-label,.game-footer,.mission-meta {
+.mono,.procedure-badge,.captain-label span,.brief-label,.mission-meta {
   font-family:var(--font-mono);
 }
 .muted {
@@ -139,10 +139,11 @@ a {
   gap:9px;
   color:var(--lime);
 }
-/* The case breadcrumb is data, a file reference, and stays in capitals and mono. */
+/* The case line is a file reference in words; only its number is set in mono. */
 .game-identity .eyebrow {
+  font-family:var(--font-ui);
   font-weight:500;
-  letter-spacing:.1em;
+  letter-spacing:0;
 }
 .separator {
   opacity:.45;
@@ -2443,6 +2444,7 @@ a {
 .paper-dialog .timeline>details>div {
   display:grid;
   grid-template-columns:30px 1fr;
+  align-items:baseline;
   gap:10px;
   padding:10px 0;
   border-top:1px solid #c9bfac;
@@ -4298,7 +4300,7 @@ html,body {
 .variant-brief small {
   display:block;
   color:#d8c77e;
-  font:500 var(--type-micro) var(--font-mono);
+  font:400 var(--type-caption) var(--font-ui);
   margin-top:7px;
 }
 .case-theory {
@@ -8788,6 +8790,71 @@ span.effect-list>span.effect.term>em {
   letter-spacing:.12em;
 }
 
+/* Mono is for figures and identifiers — rolls, counts, case and turn numbers,
+   a callsign — and words are set in the body face in sentence case. Tracked
+   mono capitals on every label (the case line, the window, the meters' names,
+   the chain's states, the map's tiles, the footer) were a "terminal" garnish
+   applied everywhere, which is what made them read as generated. */
+.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.case-stamp,.act-number,.mission-symbol>span,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes small,.topology-nodes em,.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,.procedure-planner .plan-selected,.case-theory .plan-selected,.training-prompt .prompt-sources,.service-node small {
+  font-family:var(--font-ui);
+  text-transform:none;
+  letter-spacing:0;
+}
+[data-slot=switch]::before {
+  font-family:var(--font-ui);
+  text-transform:none;
+  letter-spacing:0;
+}
+.case-line .mono,.case-number {
+  font-family:var(--font-mono);
+}
+.case-line {
+  font-weight:500;
+  color:var(--text-soft);
+}
+.case-meters>div>.mono {
+  font-size:var(--type-caption);
+}
+.operation-status>.mono,.sector-margin-line .mono {
+  font-size:var(--type-caption);
+}
+.chain-status,.resolution-steps li b {
+  font-size:var(--type-caption);
+}
+
+/* A heading that took focus programmatically shows its ring to keyboard users
+   only, and a light one: a heavy white box around a title on every decision read
+   as a defect. */
+[data-awaiting-heading]:focus:not(:focus-visible) {
+  outline:none;
+}
+[data-awaiting-heading]:focus-visible {
+  outline:1px solid currentColor;
+  outline-offset:6px;
+}
+/* A fold's mark is centred on its title's first line. */
+.paper-dialog .debrief-fold>summary::before,.paper-dialog .briefing-more>summary::before {
+  top:10px;
+  line-height:inherit;
+}
+/* The dash between phases is outside the current phase's underline. */
+.response-sequence li+li::before {
+  display:inline-block;
+}
+/* The ending's action sits under its sentence, not mid-row. */
+.end-banner {
+  flex-direction:column;
+  align-items:flex-start;
+}
+/* A meter's bar runs the width of its entry, so it reaches toward its figure;
+   only the prose keeps the reading measure. */
+.sit-body {
+  max-width:none;
+}
+.sit-body p,.sit-body>small {
+  max-width:var(--measure-prose);
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -8936,6 +9003,9 @@ span.effect-list>span.effect.term>em {
   }
   .hypothesis-standing .reading-for,.sector-margin-line .margin-prefix {
     display:none;
+  }
+  .sector-margin-line .margin-word {
+    text-transform:capitalize;
   }
   .sector-margin-line {
     display:block;

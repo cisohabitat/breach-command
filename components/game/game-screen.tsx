@@ -65,13 +65,13 @@ export function GameScreen({ session }: { session: GameSession }) {
         <div className="game-identity">
           {/* Each separator travels with the segment after it, so a breadcrumb that
               wraps on a narrow phone never ends a line on a bare "/". */}
-          <div className="eyebrow">CASE {String(game.scenario + 1).padStart(2, "0")}{[activeScenario.sector, config.title.toUpperCase(), gameModes[game.mode].title.toUpperCase()].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
+          <div className="eyebrow case-line">Case <span className="mono">{String(game.scenario + 1).padStart(2, "0")}</span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
           <h1>{activeScenario.title}</h1>
           {/* The investigation window rarely decides an operation, so it reads as
               context under the title rather than competing with the three
               pressures that do. */}
           <div className="operation-status">
-            <span className="mono">{game.status === "response" ? "RESPONSE PHASE" : ended ? "FINAL STATUS" : "INVESTIGATION WINDOW"}</span>
+            <span className="mono">{game.status === "response" ? "Response phase" : ended ? "Final status" : "Investigation window"}</span>
             <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> of {getTurnLimit(game)} turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : lossStatus[getLossReason(game).cause]}</span>
             <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Investigation window remaining" />
           </div>
@@ -79,11 +79,11 @@ export function GameScreen({ session }: { session: GameSession }) {
               readouts, and a Crisis playtest lost to it having never seen it:
               it lived on Command's board until the alert at 35. It stays in
               view here, in the readout's own name. */}
-          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono"><span className="margin-prefix">SECTOR </span>MARGIN</span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
+          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono"><span className="margin-prefix">Sector </span><span className="margin-word">margin</span></span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
         </div>
         <div className="case-meters" ref={meters}>
           <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : game.impact >= 40 ? "rising" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>
-            <span className="mono">BUSINESS IMPACT</span><strong>{game.impact}</strong>
+            <span className="mono">Business impact</span><strong>{game.impact}</strong>
             <Progress value={game.impact} aria-label="Business impact" />
             <small>{game.impact < 40 ? "Contained" : game.impact < IMPACT_CRITICAL ? "Rising" : "Critical"}</small>
             {meterPulse?.impactCritical && <span key={`impact-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
@@ -94,7 +94,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             )}
           </div>
           <div className={`continuity-meter ${game.continuity <= CONTINUITY_AT_RISK ? "critical" : ""} ${meterPulse?.continuityAtRisk ? "crossing" : ""}`}>
-            <span className="mono">{getOperationalLabel(game).toUpperCase()}</span><strong>{game.continuity}</strong>
+            <span className="mono">{getOperationalLabel(game)}</span><strong>{game.continuity}</strong>
             <Progress value={game.continuity} aria-label={getOperationalLabel(game)} />
             <small>{game.continuity > 75 ? "Stable" : game.continuity > CONTINUITY_AT_RISK ? "Degraded" : "At risk"}</small>
             {meterPulse?.continuityAtRisk && <span key={`continuity-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
@@ -105,11 +105,11 @@ export function GameScreen({ session }: { session: GameSession }) {
             )}
           </div>
           <div className={`objective-meter ${game.objectiveProgress >= OBJECTIVE_IMMINENT ? "critical" : ""} ${meterPulse?.objectiveImminent ? "crossing" : ""}`}>
-            <span className="mono">ADVERSARY PROGRESS</span><strong>{game.objectiveProgress}</strong>
+            <span className="mono">Adversary progress</span><strong>{game.objectiveProgress}</strong>
             <Progress value={game.objectiveProgress} aria-label="Adversary progress" />
             {/* The caption carries the pace as well, so "PACE: PRESSING HARD" beside a low
                 number reads as one picture: little done so far, rising fast. */}
-            <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? ` · pace ${getAdversaryState(game).toLowerCase()}` : ""}</small>
+            <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? `, pace ${getAdversaryState(game).toLowerCase()}` : ""}</small>
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
@@ -149,7 +149,7 @@ export function GameScreen({ session }: { session: GameSession }) {
         <BriefingWorkspace session={session} />
       </div>
 
-      <footer className="game-footer"><span>BREACH COMMAND <span className="separator">/</span> SINGLE-PLAYER TABLETOP</span><button onClick={() => setRules(true)}>Rules &amp; attribution <CircleHelp size={14} /></button></footer>
+      <footer className="game-footer"><span><span className="nowrap">Breach Command</span> <span className="separator">/</span> <span className="nowrap">Single-player tabletop</span></span><button onClick={() => setRules(true)}>Rules &amp; attribution <CircleHelp size={14} /></button></footer>
     </main>
   );
 }

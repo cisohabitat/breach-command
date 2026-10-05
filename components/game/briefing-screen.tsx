@@ -23,7 +23,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
   return (
     <main className="briefing-screen" id="main-content">
       <div className="briefing-main">
-        <p className="desk-line">Incident desk · single-player exercise</p>
+        <p className="desk-line">Incident desk, single-player exercise</p>
         <h1>You have the incident.</h1>
         <p className="intro">An intruder has worked through four stages somewhere in the organisation. Each turn you state what you think happened, test it against one evidence source and decide what to do with what you find. Once the whole chain is known, you lead the response.</p>
         <ol className="briefing-chain" aria-label="The four stages you are looking for">
@@ -42,15 +42,15 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           ) : (
             <button className="primary-button" onClick={() => start()}>Start “{activeScenario.title}”</button>
           )}
-          <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title} · ${namedSpecialists[specialist].name}`} · or choose the assignment below</small>
+          <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title}, ${namedSpecialists[specialist].name}`}, or choose the assignment below</small>
         </section>
         <section className="career-card" aria-label="Command career progression">
-          <div><span className="field-label">Your command record</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents · trust {campaign.leadershipTrust} · readiness {campaign.readiness}</small><small className="standing-effects">{standingEffects(campaign).join(" ")}</small></div>
+          <div><span className="field-label">Your command record</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents, trust {campaign.leadershipTrust}, readiness {campaign.readiness}</small><small className="standing-effects">{standingEffects(campaign).join(" ")}</small></div>
           <b><small>Experience </small>{campaign.xp}</b>
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
         <section className="campaign-act-card"><span className="act-number">ACT {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved access{campaign.unresolvedThreads ? " — each starts later operations under more pressure" : ""}</small></div></section>
-        <section className="campaign-route-card"><div><span className="field-label">Campaign route · {currentRoute.title}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
+        <section className="campaign-route-card"><div><span className="field-label">Campaign route: {currentRoute.title}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
         {finalEnding && <section className="campaign-ending"><div><span className="field-label">Campaign conclusion</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
       </div>
       <section className="mission-panel">
@@ -72,9 +72,9 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             ? `${namedSpecialists[specialist].name} is at fatigue ${campaign.specialistFatigue[specialist]} of 6, where the specialist bonus no longer applies. Deploying someone else lets them rest.`
             : `Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty. At ${SPECIALIST_EXHAUSTED_AT} of 6 the specialist's +1 on their own sources no longer applies.`}</small></label>
           <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
-            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{specialists[id].title} · {namedSpecialists[id].name} · fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
+            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name}, {specialists[id].title.toLowerCase()}, fatigue {campaign.specialistFatigue[id] ?? 0}/6</option>)}
           </select>
-          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong> · {specialists[specialist].title}, {specialists[specialist].role}, fatigue {campaign.specialistFatigue[specialist] ?? 0} of 6. {specialists[specialist].ability} Rapport with {namedSpecialists[specialist].name} {campaign.specialistBonds[specialist] ?? 35}/100: it grows with each operation together, and the team&apos;s average shapes how the campaign ends.</p>
+          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}, fatigue {campaign.specialistFatigue[specialist] ?? 0} of 6. {specialists[specialist].ability} Rapport with {namedSpecialists[specialist].name} {campaign.specialistBonds[specialist] ?? 35}/100: it grows with each operation together, and the team&apos;s average shapes how the campaign ends.</p>
         </div>
         <details className="advanced-setup">
           <summary><Settings2 size={16} /> Advanced operation settings <span>{gameModes[mode].title}</span></summary>
@@ -112,7 +112,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </details>
         {savedSession && (
           <section className="resume-card">
-            <div><span><strong>Investigation saved</strong><small>{scenarios[savedSession.game.scenario].title} · Turn {savedSession.game.turns.length} · {savedSession.game.impact} impact</small></span></div>
+            <div><span><strong>Investigation saved</strong><small>{scenarios[savedSession.game.scenario].title}, turn {savedSession.game.turns.length}, impact {savedSession.game.impact}</small></span></div>
             <div className="resume-actions">
               <button onClick={() => resume(savedSession)}>Resume</button>
               <button onClick={clearStoredSession}>Discard</button>
