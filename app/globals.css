@@ -8027,7 +8027,7 @@ span.effect-list>span.effect.term>em {
 }
 .hypothesis-options button::before {
   counter-increment:premise;
-  content:counter(premise,upper-alpha);
+  content:counter(premise,upper-alpha) / "";
   grid-column:1;
   grid-row:1/span 4;
   justify-self:start;
