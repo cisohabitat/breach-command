@@ -36,7 +36,7 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
           {/* Numbered ruled rows: the option and what it does on the left, its
               terms and its exact effect in a column on the right. Three equal
               cards with an arrow in the corner read as a feature grid. */}
-          {options.map((option, index) => <button key={option.id} onClick={() => onChoose(option.id)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{option.title}</strong><span>{option.description}</span></span><span className="option-effects"><span className="effect-list option-terms"><span className="effect term"><span>Disruption</span> <em>{option.disruption.toLowerCase()}</em></span><span className="effect term"><span>Confidence</span> <em>{option.confidence.toLowerCase()}</em></span><span className="effect term"><span>Residual risk</span> <em>{option.residual.toLowerCase()}</em></span></span><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /></span></button>)}
+          {options.map((option, index) => <button key={option.id} onClick={() => onChoose(option.id)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{option.title}</strong><span>{option.description}</span><span className="option-terms-line">{option.disruption} disruption, {option.confidence.toLowerCase()} confidence, {option.residual.toLowerCase()} residual risk.</span></span><span className="option-effects"><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /></span></button>)}
         </div>
       </div>
     </section>

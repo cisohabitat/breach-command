@@ -8855,6 +8855,123 @@ span.effect-list>span.effect.term>em {
   max-width:var(--measure-prose);
 }
 
+/* Structure, after the label system: */
+/* The review states its score once, in the stamped header; the breakdown below
+   it is the tally, without a second hero number. */
+.score-card {
+  grid-template-columns:minmax(0,1fr);
+}
+/* Tabs are one line, the count read inline after the name. A name over a
+   subtitle with a count in the corner was a product's navigation. */
+.workspace-tabs button {
+  min-height:48px;
+  justify-content:flex-start;
+  align-items:baseline;
+  padding-top:12px;
+}
+.workspace-tabs b {
+  margin-left:0;
+  align-self:baseline;
+  font-weight:400;
+}
+/* A stage is marked by its number in its colour, not by a coloured rule down
+   the row: the same left bar marked callouts, the sector decision and the
+   command event, and on the stages it stopped meaning anything. */
+.chain-sheet li,.briefing-chain li {
+  border-left:0;
+  padding-left:0;
+}
+.chain-no,.briefing-chain .chain-index {
+  color:var(--stage-color);
+  font-weight:600;
+}
+.paper-dialog .debrief-chain section {
+  padding-left:0;
+  box-shadow:none;
+}
+.paper-dialog .debrief-chain .eyebrow::before {
+  content:"";
+  flex:0 0 auto;
+  width:8px;
+  height:8px;
+  background:var(--stage-color);
+}
+/* An option's terms are one line under its title; the right-hand column holds
+   only what the option does to the meters. */
+.option-terms-line {
+  color:#d7d1c3;
+}
+/* The map's systems are ruled rows — zone, name, state — like the chain above
+   them, not a grid of bordered tiles. */
+.topology-nodes {
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  border-top:1px solid #383d45;
+}
+.topology-nodes button {
+  display:grid;
+  grid-template-columns:minmax(6rem,9rem) minmax(0,1fr) auto;
+  align-items:baseline;
+  column-gap:14px;
+  min-height:44px;
+  padding:10px 8px 10px 10px;
+  border:0;
+  border-bottom:1px solid #383d45;
+  border-radius:0;
+  background:none;
+}
+.topology-nodes button:hover,.topology-nodes button.focused {
+  border-color:#383d45;
+  background:#1c1f24;
+}
+.topology-nodes button.focused {
+  box-shadow:inset 3px 0 0 var(--lime);
+}
+.topology-nodes button.affected,.topology-nodes button.exposed {
+  border-color:#383d45;
+}
+.topology-nodes small,.topology-nodes em {
+  margin:0;
+}
+.topology-nodes button.affected em {
+  color:#f0a48c;
+}
+.topology-nodes button.exposed em {
+  color:#e9c867;
+}
+/* One heading system: any heading is serif, including a fold's title, the
+   declared reading and the readings' names; bold sans is for kickers only. */
+.debrief-fold>summary,.standing-reading,.hypothesis-options strong,.variant-brief strong {
+  font-family:var(--font-serif);
+  font-weight:500;
+}
+.variant-brief strong {
+  color:#f6f1e4;
+}
+.debrief-fold>summary span {
+  font-family:var(--font-ui);
+}
+
+.topology-routes b,.response-sequence {
+  font-family:var(--font-ui);
+  text-transform:none;
+  letter-spacing:0;
+}
+.topology-routes b {
+  font-size:var(--type-caption);
+  font-style:italic;
+}
+
+/* A cooling source is dimmed in its words, not filled: on a phone the whole
+   cell turned grey where the table's rules showed through its opacity. */
+.investigation-dashboard .procedure-grid .procedure-card.cooling {
+  opacity:1;
+  background:var(--background);
+}
+.investigation-dashboard .procedure-grid .procedure-card.cooling>* {
+  opacity:.5;
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -9095,10 +9212,10 @@ span.effect-list>span.effect.term>em {
   }
   /* The reading and how it is holding up read as one phrase otherwise. */
   .hypothesis-board.has-reading .hypothesis-standing strong {
-    padding:2px 7px;
-    border:1px solid #c9bfac;
-    border-radius:2px;
-    font-size:var(--type-micro);
+    padding:0;
+    border:0;
+    font-size:var(--type-caption);
+    font-style:italic;
   }
   /* And the prompts above the grid say their piece in fewer lines. */
   .procedure-section .section-heading {
@@ -9313,6 +9430,15 @@ span.effect-list>span.effect.term>em {
   .paper-dialog .debrief-fold>summary span,.paper-dialog .briefing-more>summary>span {
     margin-left:0;
   }
+  .investigation-dashboard .procedure-grid .procedure-card {
+    background:var(--background);
+  }
+  .topology-nodes button {
+    grid-template-columns:minmax(0,1fr) auto;
+  }
+  .topology-nodes small {
+    grid-column:1/-1;
+  }
   /* On a phone the log's label and figure share the first line and the entry
      takes the full width beneath them. */
   .sit-entry {
@@ -9451,12 +9577,10 @@ span.effect-list>span.effect.term>em {
      longest sector names still wrap, at a separator. */
   .game-identity .eyebrow {
     column-gap:5px;
-    letter-spacing:.04em;
   }
   /* One line for the window, as on wider phones: it wrapped to two at 320. */
   .operation-status>.mono {
-    font-size:9px;
-    letter-spacing:0;
+    font-size:var(--type-micro);
   }
   .topbar {
     min-height:60px;

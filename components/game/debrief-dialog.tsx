@@ -79,7 +79,6 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <div><strong>{game.continuity}</strong><span>{getOperationalLabel(game)}</span></div>
           </div>
           <section className="score-card" id="debrief-score">
-            <div className="score-total"><span>Final score</span><strong>{outcome.breakdown.total}<small>/100</small></strong></div>
             <div className="score-breakdown">
               {getScoreRows(game).map(row => <div key={row.label}><span>{row.label}</span><strong>{game.status === "exercise" && row.label === "Containment & recovery" ? "Not scored" : `${row.value}/${row.maximum}`}</strong><small>{row.rule}</small></div>)}
             </div>

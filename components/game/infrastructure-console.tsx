@@ -38,7 +38,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             const critical = node.id === topology.critical;
             const findings = game.evidence.filter(item => item.system === node.label).length;
             return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
-              <small>{node.type}{critical ? ", critical" : ""}</small><strong>{node.label}</strong>
+              <small>{node.type.charAt(0) + node.type.slice(1).toLowerCase()}{critical ? ", critical" : ""}</small><strong>{node.label}</strong>
               {/* Selecting a node no longer hides its state: "SELECTED" in place of
                   "AFFECTED" took the warning away from the node it was about. */}
               <em>{game.focusedNode === node.id ? "Selected, " : ""}{nodePosture === "isolated" ? "isolated" : nodePosture === "monitored" ? "monitored" : nodePosture === "restored" ? "restored" : findings ? `${findings} collected here` : state}</em>
@@ -51,7 +51,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
           return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>
             <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
-            <b className="route-relation">{edge.label}</b>
+            <b className="route-relation">{edge.label.toLowerCase()}</b>
             <span className="route-target">{topology.nodes.find(node => node.id === edge.to)?.label}</span>
             <i className="route-status">{isolated ? "Blocked" : index < Math.max(0, activeStage - 1) ? "Confirmed" : index === Math.max(0, activeStage - 1) ? "Suspected" : "Unassessed"}</i>
           </div>;
