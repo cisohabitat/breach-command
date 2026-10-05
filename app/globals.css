@@ -592,12 +592,7 @@ a {
 }
 .established-key {
   font-size:var(--type-caption);
-  white-space:nowrap;
-  color:var(--lime);
-  background:#ede2c90a;
-  border:1px solid #424c5a;
-  border-radius:4px;
-  padding:4px 8px;
+  color:var(--text-soft);
 }
 .guide-nudge {
   display:flex;
@@ -2137,7 +2132,7 @@ a {
   display:block;
   font-style:normal;
   font-size:var(--type-caption);
-  color:#9e3220;
+  color:#2f2c27;
   margin-top:4px;
 }
 .counterfactuals {
@@ -2481,7 +2476,7 @@ a {
   margin-top:4px;
 }
 .decision-summary p em+em {
-  color:#6f5200;
+  color:#4a463e;
 }
 .debrief-actions {
   display:grid;
@@ -3340,19 +3335,6 @@ html,body {
   color:#aca593;
   margin-top:3px;
 }
-.turn-effects {
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-}
-.turn-effects span {
-  border:1px solid #c9bfac;
-  background:#e8e1d3;
-  color:#2f2c27;
-  border-radius:2px;
-  padding:5px 9px;
-  font:500 var(--type-micro) var(--font-mono);
-}
 .cinematic-briefing {
   background:#e8e1d3!important;
 }
@@ -3648,9 +3630,6 @@ html,body {
   .mode-picker button.active {
     grid-column:span 1;
   }
-  .turn-effects span {
-    border-radius:4px;
-  }
 }
 /* Phase 8: connected campaign and evidence command */
 .campaign-act-card,.campaign-ending {
@@ -3807,18 +3786,6 @@ html,body {
   padding:12px 9px;
   text-align:left;
   min-height:96px;
-}
-.topology-nodes button:after {
-  content:"";
-  position:absolute;
-  top:35px;
-  right:-9px;
-  width:9px;
-  height:1px;
-  background:#555a60;
-}
-.topology-nodes button:last-child:after {
-  display:none;
 }
 .topology-nodes button:hover,.topology-nodes button.focused {
   border-color:var(--lime);
@@ -4147,7 +4114,7 @@ html,body {
 .mastery-panel p {
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#6f5200;
+  color:#4a463e;
   max-width:330px;
 }
 .advanced-review {
@@ -4186,9 +4153,6 @@ html,body {
   }
   .topology-nodes button {
     min-height:105px;
-  }
-  .topology-nodes button:after {
-    display:none;
   }
   .topology-nodes button:last-child {
     grid-column:1/-1;
@@ -5100,7 +5064,7 @@ html,body {
   color:#e4c15f;
 }
 /* Compact operational labels sit on the caption step; card and option titles on the body step. */
-.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards span,.evidence-cards small,.evidence-cards em,.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small,.turn-effects span {
+.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards span,.evidence-cards small,.evidence-cards em,.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small {
   font-size:var(--type-caption);
 }
 .topology-nodes strong,.evidence-cards strong,.case-theory strong,.procedure-planner strong,.procedure-planner small {
@@ -7888,6 +7852,377 @@ span.effect-list>span.effect.term>em {
   color:#d7d1c3;
 }
 
+/* Inside a paper document a section is a running head and a hairline, never a
+   fill and a border: a box holding a fold that was itself a box, inside the
+   paper, was the strongest remaining template tell. */
+.paper-dialog .score-card,.paper-dialog .hypothesis-ledger,.paper-dialog .timeline,.paper-dialog .decision-summary,.paper-dialog .counterfactuals,.paper-dialog .evidence-review,.paper-dialog .capability-review,.paper-dialog .specialist-reaction,.paper-dialog .mastery-panel,.paper-dialog .campaign-change,.paper-dialog .campaign-finale,.paper-dialog .debrief-learning {
+  border:0;
+  border-top:1px solid #c9bfac;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  padding-left:0;
+  padding-right:0;
+}
+.paper-dialog .first-read {
+  border:0;
+  border-left:3px solid #1d1b18;
+  border-radius:0;
+  background:none;
+}
+.paper-dialog .score-total {
+  border-right-color:#c9bfac;
+}
+/* A fold is a ruled line that says what it holds and opens with a mark, not a
+   bordered button. */
+.paper-dialog .debrief-fold>summary {
+  min-height:44px;
+  padding:10px 0;
+  border:0;
+  border-top:1px dotted #b3a993;
+  border-bottom:1px dotted #b3a993;
+  border-radius:0;
+  background:none;
+}
+.paper-dialog .debrief-fold>summary::before {
+  content:"+";
+  width:1.2em;
+  font-family:var(--font-mono);
+  font-weight:500;
+}
+.paper-dialog .debrief-fold[open]>summary::before {
+  content:"−";
+}
+.paper-dialog .debrief-fold>summary::-webkit-details-marker {
+  display:none;
+}
+.paper-dialog .debrief-fold>summary {
+  justify-content:flex-start;
+}
+.paper-dialog .debrief-fold>summary span {
+  margin-left:auto;
+}
+/* The counts are a tally: the label on the left, the figure set right in mono,
+   one ruled line each. A big number over a small caption, repeated in a grid,
+   is the stat-tile pattern whether or not the tiles have borders. */
+.paper-dialog .debrief-stats,.paper-dialog .advanced-review {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  column-gap:28px;
+  row-gap:0;
+  padding:0;
+  border-block:0;
+}
+.paper-dialog .debrief-stats>div,.paper-dialog .advanced-review>div {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  column-gap:12px;
+  align-items:baseline;
+  padding:8px 0;
+  border:0;
+  border-bottom:1px dotted #b3a993;
+  border-radius:0;
+  background:none;
+}
+.paper-dialog .debrief-stats span,.paper-dialog .advanced-review span {
+  grid-column:1;
+  grid-row:1;
+  margin:0;
+  color:#4a463e;
+  font-size:var(--type-caption);
+}
+.paper-dialog .debrief-stats strong,.paper-dialog .advanced-review strong {
+  grid-column:2;
+  grid-row:1;
+  color:#1d1b18;
+  font:500 var(--type-body) var(--font-mono);
+}
+/* The three outcomes are columns divided by a rule, not three tinted cards. */
+.paper-dialog .mission-consequences {
+  gap:0;
+  margin-top:14px;
+  border-top:1px solid #c9bfac;
+}
+.paper-dialog .mission-consequences>div {
+  padding:12px 16px 4px;
+  border:0;
+  border-radius:0;
+  background:none;
+}
+.paper-dialog .mission-consequences>div:first-child {
+  padding-left:0;
+}
+.paper-dialog .mission-consequences>div+div {
+  border-left:1px solid #c9bfac;
+}
+.paper-dialog .mission-consequences .intent-link strong {
+  display:inline;
+  margin:0;
+  font-size:inherit;
+}
+.paper-dialog .campaign-consequences>div {
+  border:0;
+  border-bottom:1px dotted #b3a993;
+  border-radius:0;
+  background:none;
+}
+/* The section index is a line of contents: words with an underline on hover,
+   not a row of bordered buttons. Its band is opaque to the dialog's top edge,
+   because the dialog's padding sits above its sticky edge. */
+.paper-dialog .debrief-index {
+  gap:0 18px;
+  padding:6px 0;
+  box-shadow:0 -30px 0 #f1ece1;
+  border-bottom:1px solid #c9bfac;
+}
+.paper-dialog .debrief-index button {
+  min-height:40px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  color:#1d1b18;
+  font-size:var(--type-caption);
+  text-decoration:underline;
+  text-decoration-color:#b3a993;
+  text-underline-offset:4px;
+}
+.paper-dialog .debrief-index button:hover {
+  border:0;
+  color:#1d1b18;
+  text-decoration-color:#1d1b18;
+}
+
+/* The brief's readouts are a definition list, the term in the margin and the
+   entry beside it, not three cards in the paper. */
+.paper-dialog .briefing-readouts {
+  display:block;
+  border-top:1px solid #c9bfac;
+}
+.paper-dialog .briefing-readouts>div {
+  display:grid;
+  grid-template-columns:10rem minmax(0,1fr);
+  column-gap:18px;
+  padding:11px 0;
+  border:0;
+  border-bottom:1px solid #c9bfac;
+  border-radius:0;
+  background:none;
+}
+.paper-dialog .briefing-readouts>div>span {
+  grid-column:1;
+  grid-row:1/span 3;
+  color:#4a463e;
+  font:400 var(--type-caption) var(--font-ui);
+}
+.paper-dialog .briefing-readouts>div>:not(span) {
+  grid-column:2;
+}
+.paper-dialog .briefing-readouts strong {
+  margin:0 0 3px;
+}
+.paper-dialog .briefing-first-move {
+  border:0;
+  border-left:3px solid #1d1b18;
+  border-radius:0;
+  background:none;
+  padding:4px 0 4px 14px;
+}
+.paper-dialog .briefing-first-move>span {
+  width:auto;
+  height:auto;
+  display:block;
+  background:none;
+  color:#1d1b18;
+  font-weight:500;
+}
+.paper-dialog .briefing-more>summary {
+  justify-content:flex-start;
+  border:0;
+  border-top:1px dotted #b3a993;
+  border-bottom:1px dotted #b3a993;
+  border-radius:0;
+  padding:11px 0;
+}
+.paper-dialog .briefing-more>summary::before {
+  content:"+";
+  width:1.2em;
+  font-family:var(--font-mono);
+}
+.paper-dialog .briefing-more[open]>summary::before {
+  content:"−";
+}
+.paper-dialog .briefing-more>summary>span {
+  margin-left:auto;
+}
+/* The four readings are lettered entries on the case sheet, one ruled line each,
+   the declared one marked by its letter set in a filled box as well as by the
+   rule beside it. Four bordered cards inside the paper were a card in a card. */
+.hypothesis-options {
+  counter-reset:premise;
+  gap:0 26px;
+}
+.hypothesis-options button {
+  display:grid;
+  grid-template-columns:1.6rem minmax(0,1fr);
+  column-gap:10px;
+  align-content:start;
+  gap:0 10px;
+  padding:12px 6px 12px 10px;
+  border:0;
+  border-top:1px solid #c9bfac;
+  border-radius:0;
+  background:none;
+}
+.hypothesis-options button::before {
+  counter-increment:premise;
+  content:counter(premise,upper-alpha);
+  grid-column:1;
+  grid-row:1/span 4;
+  justify-self:start;
+  width:1.4rem;
+  height:1.4rem;
+  display:grid;
+  place-items:center;
+  border:1px solid #8a8474;
+  border-radius:2px;
+  color:#1d1b18;
+  font:500 var(--type-caption) var(--font-mono);
+}
+.hypothesis-options button>* {
+  grid-column:2;
+}
+.hypothesis-options button:hover {
+  border-color:#c9bfac;
+  background:#ebe5d8;
+}
+.hypothesis-options button.active {
+  border-color:#c9bfac;
+  background:#e8e1d3;
+  box-shadow:inset 3px 0 0 #1d1b18;
+}
+.hypothesis-options button.active::before {
+  border-color:#1d1b18;
+  background:#1d1b18;
+  color:#f1ece1;
+}
+.hypothesis-options button small {
+  border-top:1px dotted #b3a993;
+}
+
+/* The plan behind a turn is a line of the report, not two tag chips. */
+.turn-plan {
+  margin:10px 0 0;
+  color:#4a463e;
+  font-size:var(--type-caption);
+}
+.hypothesis-compare-options {
+  gap:0;
+  border-top:1px solid #c9bfac;
+}
+.hypothesis-compare-options button {
+  padding:11px 6px 11px 10px;
+  border:0;
+  border-bottom:1px solid #c9bfac;
+  border-radius:0;
+}
+.hypothesis-compare-options button.active {
+  border-color:#c9bfac;
+  background:#e8e1d3;
+  box-shadow:inset 3px 0 0 #1d1b18;
+}
+.report-standing {
+  border:0;
+  border-left:3px solid #c9bfac;
+  border-radius:0;
+}
+
+/* The map's controls are ruled like the rest of the desk: the selected node a
+   line under a rule, Monitor and Isolate two columns divided by one rule, a
+   relationship's state a word in mono at the right, and each fold a ruled line
+   with a mark, not a bordered bar. */
+.map-command-bar {
+  gap:0;
+  border-top:1px solid #383d45;
+  border-bottom:1px solid #383d45;
+}
+.map-command-bar>div,.map-command-bar>button {
+  min-height:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  padding:12px 12px 12px 0;
+}
+.map-command-bar>div {
+  border-bottom:1px solid #383d45;
+}
+.map-command-bar>button+button {
+  padding-left:14px;
+  border-left:1px solid #383d45;
+}
+.map-command-bar>button:hover:not(:disabled) {
+  background:#1c1f24;
+}
+.map-command-bar>button:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:-2px;
+}
+.map-command-bar em {
+  text-transform:none;
+  font-family:var(--font-ui);
+}
+.topology-routes .route-status {
+  padding:0;
+  border:0;
+  border-radius:0;
+  font:500 var(--type-micro) var(--font-mono);
+  letter-spacing:.06em;
+}
+.topology-detail>summary,.map-intel-detail>summary,.evidence-detail>summary,.known-facts>summary {
+  padding:9px 0;
+  border:0;
+  border-top:1px solid #383d45;
+  border-bottom:1px solid #383d45;
+  border-radius:0;
+}
+.topology-detail>summary:hover,.map-intel-detail>summary:hover,.evidence-detail>summary:hover,.known-facts>summary:hover {
+  border-color:#383d45;
+  background:#1c1f24;
+}
+
+/* What is known ends before the map begins, rather than running into its edge. */
+.known-facts {
+  margin-bottom:18px;
+}
+.paper-dialog .debrief-stats {
+  border-top:0;
+}
+
+.paper-dialog .campaign-consequences {
+  gap:0 28px;
+}
+.paper-dialog .campaign-consequences>div {
+  padding:8px 0;
+}
+.paper-dialog .decision-summary span.decision-effects {
+  display:grid;
+  float:none;
+  max-width:34rem;
+  margin-top:6px;
+  border-top-color:#d8cfbd;
+}
+/* The chain at the end of the review is one ruled entry a stage, its colour a
+   rule in the margin, not four cards with coloured tops. */
+.paper-dialog .debrief-chain {
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+}
+.paper-dialog .debrief-chain section {
+  padding:12px 0 12px 14px;
+  border-top:1px solid #c9bfac;
+  box-shadow:inset 3px 0 0 var(--stage-color);
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -8298,6 +8633,35 @@ span.effect-list>span.effect.term>em {
 }
 @media(max-width:650px) {
   /* The index wraps to two rows on a phone, so a section it jumps to stops below both. */
+  .paper-dialog .debrief-stats,.paper-dialog .advanced-review {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .paper-dialog .mission-consequences>div,.paper-dialog .mission-consequences>div:first-child {
+    padding:12px 0 4px;
+  }
+  .paper-dialog .mission-consequences>div+div {
+    border-left:0;
+    border-top:1px solid #c9bfac;
+  }
+  .paper-dialog .debrief-index {
+    gap:0 14px;
+    box-shadow:0 -24px 0 #f1ece1;
+  }
+  .paper-dialog .debrief-index button {
+    min-height:44px;
+    padding:0;
+  }
+  .paper-dialog .briefing-readouts>div {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .paper-dialog .briefing-readouts>div>span,.paper-dialog .briefing-readouts>div>:not(span) {
+    grid-column:1;
+    grid-row:auto;
+  }
+  .paper-dialog .debrief-fold>summary span,.paper-dialog .briefing-more>summary>span {
+    flex-basis:100%;
+    margin-left:1.2em;
+  }
   /* On a phone the log's label and figure share the first line and the entry
      takes the full width beneath them. */
   .log-entry {

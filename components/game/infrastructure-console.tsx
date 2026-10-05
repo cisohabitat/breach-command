@@ -1,4 +1,4 @@
-import { ArrowUp, Eye, Unplug } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { attacks, describeMeterChange, procedureById, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
 import { EffectList } from "@/components/game/effect-list";
@@ -61,8 +61,8 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
       <div className="map-command-bar">
         <div><span><small>Selected node</small><strong>{focused.label}</strong><em>{criticalFocus ? "Critical dependency · " : ""}{posture === "normal" ? "No active control" : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
             roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">Map focus adds +1 to {focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(", ").replace(/, ([^,]*)$/, " and $1")}.</small></span></div>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><Eye size={16} /><span><strong>Monitor</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? "Monitored: its bonus is waiting for your next roll" : "Already monitored: its bonus went to the roll after it was set") : posture === "isolated" ? "Isolated: nothing left to monitor here" : <EffectList className="map-cost" items={costLine(game, focused.id, "monitor")} />}</small></span></button>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><Unplug size={16} /><span><strong>Isolate</strong><small>{posture === "isolated" ? "Already isolated" : <EffectList className="map-cost" items={costLine(game, focused.id, "isolate")} />}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><span><strong>Monitor</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? "Monitored: its bonus is waiting for your next roll" : "Already monitored: its bonus went to the roll after it was set") : posture === "isolated" ? "Isolated: nothing left to monitor here" : <EffectList className="map-cost" items={costLine(game, focused.id, "monitor")} />}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><span><strong>Isolate</strong><small>{posture === "isolated" ? "Already isolated" : <EffectList className="map-cost" items={costLine(game, focused.id, "isolate")} />}</small></span></button>
       </div>
       {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>Back to the procedures <ArrowUp size={14} /></button>}
       <details className="map-intel-detail">

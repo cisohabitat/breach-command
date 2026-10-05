@@ -82,7 +82,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               {/* The plan and the turn's movement are told apart: a playtest read
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
                   game going back on its word. The reason says what moved them. */}
-              <div className="turn-effects"><span>{procedureScopes[report.plan.scope].title} scope</span><span>{procedureIntensities[report.plan.intensity].title} analysis</span></div>
+              <p className="turn-plan">Plan: {procedureScopes[report.plan.scope].title.toLowerCase()} scope, {procedureIntensities[report.plan.intensity].title.toLowerCase()} analysis.</p>
               <div className="turn-movement"><b>This turn</b><EffectList items={[describeMeterChange(game, "impact", report.impactChange), describeMeterChange(game, "continuity", report.continuityChange), describeMeterChange(game, "sector", report.sectorChange), describeMeterChange(game, "objective", report.objectiveChange)]} /><p>{report.revealed
                 ? "Finding the stage slowed the adversary's gain, though the turn still gave it time."
                 : report.success

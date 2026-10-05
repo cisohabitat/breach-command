@@ -159,7 +159,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             <div className="section-heading">
               <div><h2>Investigation procedures</h2>{/* The rule is read once; after the first turn the cards' countdowns carry it,
                   and on a laptop its four lines held the first card below the panel's edge. */}{game.turns.length === 0 && <p>One action per turn. A used source sits out the next {cooldownWindow(game) === 3 ? "two turns" : "three turns"}; its card counts them down.</p>}</div>
-              <span className="established-key">{procedureScopes[actionScope].title} · {procedureIntensities[actionIntensity].title}</span>
+              <span className="established-key">Plan: {procedureScopes[actionScope].title.toLowerCase()} scope, {procedureIntensities[actionIntensity].title.toLowerCase()}</span>
             </div>
             {/* One next step above the cards, not three: until a reading exists, the
                 hint that unlocks them; then the Training prompt where there is one,
