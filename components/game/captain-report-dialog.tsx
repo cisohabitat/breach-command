@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { ArrowDown, ArrowRight, BrainCircuit, Eye, MessagesSquare, Shield, Siren } from "lucide-react";
+import { ArrowRight, Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { attacks, decisionRollShift, describeMeterChange, describePart, describeRollShift, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -110,7 +110,9 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 <div key={item.stage} className="decision-recorded" role="status">
                   <span className="eyebrow">Response recorded</span>
                   <strong>{item.title}</strong>
-                  <p>{item.effect} {describeMeterChange(game, "impact", item.impactChange)} · {describeMeterChange(game, "continuity", item.continuityChange)} · {describeMeterChange(game, "sector", item.sectorChange)} · {describeMeterChange(game, "objective", item.objectiveChange)}{report.number === game.turns.length && game.nextModifierSource?.includes("Evidence decision") ? ` · next roll ${game.nextModifier < 0 ? "−" : "+"}${Math.abs(game.nextModifier)}${game.nextModifierSource.includes(";") ? " with what was already carried" : ""}` : ""}. How well it fitted the moment is judged in the review.</p>
+                  <p>{item.effect}</p>
+                  <EffectList items={[describeMeterChange(game, "impact", item.impactChange), describeMeterChange(game, "continuity", item.continuityChange), describeMeterChange(game, "sector", item.sectorChange), describeMeterChange(game, "objective", item.objectiveChange), report.number === game.turns.length && game.nextModifierSource?.includes("Evidence decision") && `next roll ${game.nextModifier < 0 ? "−" : "+"}${Math.abs(game.nextModifier)}${game.nextModifierSource.includes(";") ? " with what was already carried" : ""}`]} />
+                  <p>How well it fitted the moment is judged in the review.</p>
                 </div>
               ))}
               {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">Situation escalates</span><p>{report.adversaryEvent}</p></div></div>}
@@ -136,10 +138,8 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                       {/* In the options' own words: "Watch" and "Act" here beside
                           buttons titled "Trace" and "Revoke" read as two lists. */}
                       <ul>
-                        {decision.options.map(option => {
-                          const Icon = option.id === "observe" ? Eye : option.id === "act" ? Siren : option.id === "attribute" ? BrainCircuit : option.id === "contain" ? Shield : MessagesSquare;
-                          return <li key={option.id}><Icon size={15} aria-hidden="true" /><span><b>{option.title}</b> {primerTrade[option.id]}</span></li>;
-                        })}
+                        {/* Keyed to the options' letters, as the four readings are lettered. */}
+                        {decision.options.map((option, index) => <li key={option.id}><b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b><span><b>{option.title}</b> {primerTrade[option.id]}</span></li>)}
                       </ul>
                       <p>No single answer is right. The review judges each against the pressure at the time: with business impact at 55 or more, or the actor&apos;s pace at Accelerating or Pressing hard, acting or containing fits; below that, watching or attributing is affordable.</p>
                     </details>
@@ -150,11 +150,15 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                     <p className="decision-pressure">Pressure now: business impact {game.impact}; adversary progress {game.objectiveProgress}, growing at a pace of “{getAdversaryState(game).toLowerCase()}” each turn. {game.impact >= 55 || game.adversaryTempo >= 2 ? `That is high, because ${game.impact >= 55 ? `business impact is ${game.impact}` : "the pace is fast"}: ${optionTitle(decision.options, "act")} fits best, with ${optionTitle(decision.options, "contain")} close behind.` : `That is low: ${optionTitle(decision.options, "observe")} or ${optionTitle(decision.options, "attribute")} is affordable.`}</p>
                   )}
                   <div ref={optionList}>
-                    {decision.options.map(option => (
+                    {/* Lettered ruled entries on the report, like the readings: the
+                        letter in the margin, what the response does, its three
+                        signals one a line, and its exact effect. Tinted cards with an
+                        icon each were cards inside the paper. */}
+                    {decision.options.map((option, index) => (
                       <button key={option.id} onClick={() => decide(option.id)}>
-                        {option.id === "observe" ? <Eye size={20} /> : option.id === "act" ? <Siren size={20} /> : option.id === "attribute" ? <BrainCircuit size={20} /> : option.id === "contain" ? <Shield size={20} /> : <MessagesSquare size={20} />}
+                        <b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b>
                         <strong>{option.title}</strong>
-                        <span>{option.description}<br /><b>{option.evidence}</b> · {option.risk} · {option.service}<EffectList className="decision-effect" items={previewDecision(game, option.id) ?? []} /></span>
+                        <span>{option.description}<span className="option-signals"><span>{option.evidence}</span><span>{option.risk}</span><span>{option.service}</span></span><EffectList className="decision-effect" items={previewDecision(game, option.id) ?? []} /></span>
                       </button>
                     ))}
                   </div>
@@ -236,5 +240,5 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
     const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     last?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "nearest" });
   };
-  return <button type="button" className="options-below" onClick={reveal}><span>{hidden === 1 ? "One more response below" : `${hidden} more responses below`} <ArrowDown size={15} /></span></button>;
+  return <button type="button" className="options-below" onClick={reveal}><span>{hidden === 1 ? "One more response below" : `${hidden} more responses below`}</span></button>;
 }

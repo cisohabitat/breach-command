@@ -2887,27 +2887,16 @@ html,body {
 .command-options strong {
   font-size:var(--type-body);
 }
-.command-options span {
+.command-options .option-main>span {
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#baa99d;
-  grid-column:1/-1;
+  color:#bbb4a3;
   letter-spacing:.01em;
-}
-.command-options small {
-  font:500 var(--type-micro) var(--font-mono);
-  color:#e4b58f;
-  grid-column:1/-1;
 }
 /* The cost is read in the body face, as sector decisions and response options
    state theirs; in micro monospace it read as a footnote. */
 .command-options .command-effect {
   margin-top:3px;
-}
-.command-options svg {
-  grid-column:2;
-  grid-row:1;
-  color:#efbb91;
 }
 .adversary-read {
   margin-top:18px;
@@ -4034,23 +4023,15 @@ html,body {
   border-color:#f0ae65;
   background:#3a281c;
 }
-.set-piece-options button>svg {
-  position:absolute;
-  right:13px;
-  top:14px;
-  color:#f0ae65;
-}
 .set-piece-options strong {
   display:block;
   font-size:var(--type-body);
 }
-.set-piece-options span {
+.set-piece-options .option-main>span {
   display:block;
-  flex:1;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#c3b3a4;
-  margin:7px 0;
+  color:#bbb4a3;
 }
 /* The cost is what the decision turns on, so it reads in the body face at the
    response options' size, not as a ten-pixel footnote. */
@@ -8448,6 +8429,170 @@ span.effect-list>span.effect.term>em {
   color:var(--text-soft);
 }
 
+/* The sector decision and the command event are set as the response phase is:
+   a section ruled in the margin, its options numbered rows with their exact
+   effect in a column at the right. A tinted alert box holding cards with an
+   arrow in the corner was the stock "choose an option" grid. The sector crisis
+   keeps amber on its rule, because it is a warning; the command event does not. */
+.sector-set-piece,.command-event {
+  margin:22px 0 28px;
+  padding:2px 0 0 18px;
+  border:0;
+  border-left:3px solid #e8c968;
+  border-radius:0;
+  background:none;
+}
+.command-event {
+  border-left-color:#7f8388;
+}
+.set-piece-title,.command-event-heading {
+  display:block;
+  color:inherit;
+}
+.set-piece-title h2,.command-event-heading h2 {
+  color:#f6f1e4;
+}
+.set-piece-title p,.command-event-heading p {
+  color:#c9c3b6;
+}
+.set-piece-options,.command-options {
+  display:block;
+  margin-top:16px;
+  border-top:1px solid #434850;
+}
+.set-piece-options button,.command-options button {
+  display:grid;
+  grid-template-columns:2rem minmax(0,1fr) minmax(15rem,19rem);
+  column-gap:18px;
+  align-items:start;
+  width:100%;
+  min-height:0;
+  padding:14px 8px 14px 0;
+  border:0;
+  border-bottom:1px solid #434850;
+  border-radius:0;
+  background:none;
+  color:#e5e2d9;
+  text-align:left;
+}
+.set-piece-options button:hover,.command-options button:hover {
+  border-color:#434850;
+  background:#1c1f24;
+}
+.set-piece-options button:focus-visible,.command-options button:focus-visible {
+  outline:2px solid var(--lime);
+  outline-offset:-2px;
+}
+.set-piece-options .option-no,.command-options .option-no {
+  padding-left:6px;
+  font:500 var(--type-body) var(--font-mono);
+  color:var(--lime);
+}
+.set-piece-options .option-main,.command-options .option-main {
+  display:grid;
+  gap:6px;
+  margin:0;
+}
+.set-piece-options .option-main>strong,.command-options .option-main>strong {
+  font-weight:500;
+}
+.set-piece-options .option-effects,.command-options .option-effects {
+  display:grid;
+  margin:0;
+}
+.set-piece-options span.effect-list,.command-options span.effect-list {
+  margin-top:0;
+  padding-top:0;
+  border-top:0;
+}
+.option-signals {
+  display:grid;
+  gap:1px;
+}
+.command-options .option-signals>span {
+  color:#d7d1c3;
+  font-size:var(--type-caption);
+}
+/* On the report the five responses are lettered entries like the readings: the
+   letter in a box in the margin, the signals one a line. The primer is keyed to
+   the same letters. */
+.report-dialog .evidence-decision>div {
+  gap:0;
+  border-top:1px solid #c9bfac;
+}
+.evidence-decision button {
+  grid-template-columns:1.6rem minmax(0,1fr);
+  column-gap:10px;
+  min-height:0;
+  padding:12px 6px 12px 0;
+  border:0;
+  border-bottom:1px solid #c9bfac;
+  border-radius:0;
+  background:none;
+}
+.evidence-decision button:hover {
+  border-color:#c9bfac;
+  background:#ebe5d8;
+}
+.option-letter {
+  width:1.4rem;
+  height:1.4rem;
+  display:grid;
+  place-items:center;
+  border:1px solid #8a8474;
+  border-radius:2px;
+  color:#1d1b18;
+  font:500 var(--type-caption) var(--font-mono);
+}
+.evidence-decision button>.option-letter {
+  grid-row:1/span 2;
+}
+.evidence-decision button>strong,.evidence-decision button>span {
+  grid-column:2;
+}
+.evidence-decision .option-signals {
+  margin:6px 0 0;
+}
+.evidence-decision .option-signals>span {
+  margin:0;
+  color:#4a463e;
+}
+.evidence-decision .option-signals>span:first-child {
+  color:#1d1b18;
+  font-weight:600;
+}
+.decision-primer li .option-letter {
+  width:1.2rem;
+  height:1.2rem;
+  font-size:var(--type-micro);
+}
+.report-dialog .evidence-decision .options-below>span {
+  min-height:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+.decision-recorded {
+  padding:2px 0 2px 14px;
+  border:0;
+  border-left:3px solid #1d1b18;
+  border-radius:0;
+  background:none;
+}
+
+/* A heading that takes focus when the control above it is replaced draws its
+   ring around its own words, with room, not across the column. */
+[data-awaiting-heading] {
+  width:fit-content;
+  max-width:100%;
+}
+[data-awaiting-heading]:focus {
+  outline-offset:4px;
+}
+
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same
@@ -8886,6 +9031,16 @@ span.effect-list>span.effect.term>em {
   .paper-dialog .debrief-fold>summary span,.paper-dialog .briefing-more>summary>span {
     flex-basis:100%;
     margin-left:1.2em;
+  }
+  .set-piece-options button,.command-options button {
+    grid-template-columns:1.5rem minmax(0,1fr);
+    row-gap:12px;
+  }
+  .set-piece-options .option-effects,.command-options .option-effects {
+    grid-column:2;
+  }
+  .sector-set-piece,.command-event {
+    padding-left:12px;
   }
   /* On a phone the log's label and figure share the first line and the entry
      takes the full width beneath them. */
