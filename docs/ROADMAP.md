@@ -362,6 +362,35 @@ Size: XL (ten or more sessions; authored content is the long pole).
 Depends on Phase 0's counters (to know what players reach) and Phase 2
 (so the new depth is met by players who get past the first operation).
 
+Status, 9 October 2026. Authored: command events 3 to 18, each signal's
+words checked against its numbers (four of the original eight signals did
+not match and were corrected); injects 9 to 20, eight good, eight bad and
+four neutral, the three new neutral cards trades that a critical roll never
+reaches; adversary profiles 5 to 8 (Grey Lantern, Hollow Choir and Ember
+Shift punish an unused map, an uncompared pair of findings and a stretched
+service, and the review names each profile's habit and counterplay); a
+second crisis for every sector, met by the odd incident variants; variants 5
+to 7 a case, the first three never moving; the campaign's story (a
+director's briefing per act, a development at the act's midpoint keyed to
+the route, an ending that states the command's own record) and three beats
+a specialist keyed to rapport. `CHALLENGE_VERSION` is 6 and `SESSION_VERSION`
+17, with a save from 17 in the corpus.
+
+Repetition audit (`pnpm repetition`, 3,000 campaigns, 43,348 operations): a
+campaign now remembers its recent events, injects and crises. Within an act,
+a command event repeats in 8.4 per cent of campaigns (92 without the memory),
+an inject in 12.7 (77) and a sector crisis in 60 (85). Not met at 5 per
+cent: every crisis repeat is a third or later attempt at a case the Bot
+Commander kept losing, which two crises a sector cannot avoid, and an act of
+four cases plus replays draws about as many events and injects as exist.
+Balance on the same seeds, 1,000 operations a scenario: 76.0 / 67.8 / 49.6
+against 74.7 / 66.6 / 49.8 before, within three points everywhere.
+
+Not done: the two new sectors, which change the campaign's length, every
+per-scenario table and the endings, and want the practitioner's review of
+the techniques first; and the practitioner's sign-off on every new event,
+crisis and inject, which no agent can give.
+
 ## Phase 5: replayability and mastery
 
 Goal: a player who has cleared the campaign has reasons to come back, and

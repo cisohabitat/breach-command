@@ -1,7 +1,7 @@
 // Every change to an operation. Each takes a Game and returns a new one.
 import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "../game.ts";
 import { objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
-import { infrastructureTopologies, sectorSetPieces, seededRoll } from "../phase8.ts";
+import { type SetPieceId, infrastructureTopologies, seededRoll, setPieceById, setPieceFor } from "../phase8.ts";
 import { objectiveTheory } from "../phase9.ts";
 import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguageFor, decisionTitles, injects, scenarioProfiles, inSentence } from "./content.ts";
 import { type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type Inject, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice } from "./types.ts";
@@ -27,6 +27,12 @@ function carriedSource(before: number, beforeSource: string | null, after: numbe
   return sum === after ? `${listed}; ${source} ${signed(change)}, together` : `${listed}; ${source} ${signed(change)}: ${signed(sum)}, capped at`;
 }
 
+// Cards the campaign drew lately go to the bottom of the deck, keeping the
+// shuffled order within each part.
+function recentLast(deck: number[], idOf: (index: number) => string, recent: string[]) {
+  return [...deck.filter(index => !recent.includes(idOf(index))), ...deck.filter(index => recent.includes(idOf(index)))];
+}
+
 export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max), setup: GameSetup = {}): Game {
   if (!Number.isInteger(scenario) || !scenarios[scenario]) throw new Error("Unknown incident");
   if (!difficulties[difficulty]) throw new Error("Unknown difficulty");
@@ -41,6 +47,10 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   // threads, opening tempo.
   const threads = mode === "campaign" ? Math.min(5, Math.max(0, setup.unresolvedThreads ?? 0)) : 0;
   const turnLimit = Math.max(5, difficulties[difficulty].maxTurns - (mode === "ironman" ? 1 : 0) + (campaignReadiness >= 75 ? 1 : 0) - (mode === "campaign" && campaignReadiness < 30 ? 1 : 0));
+  // A campaign remembers the events and injects of its last few operations so
+  // an act does not meet the same beat twice. A reproducible operation ignores
+  // it: the same code has to play the same incident on any device.
+  const remembered = setup.seed == null ? { commands: setup.recentCommands ?? [], injects: setup.recentInjects ?? [], crises: setup.recentCrises ?? [] } : { commands: [], injects: [], crises: [] };
   const variant = setup.variant ?? { id: `${scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 };
   const campaignRoute = setup.campaignRoute ?? "common-ground";
   const routeImpact = mode === "campaign" && campaignRoute === "breakwater" ? -4 : 0;
@@ -59,7 +69,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     failures: 0,
     nextModifier: 0,
     nextModifierSource: null,
-    injectDeck: shuffle(injects.map((_, i) => i), random),
+    injectDeck: recentLast(shuffle(injects.map((_, i) => i), random), index => injects[index].id, remembered.injects),
     status: "playing",
     impact: clamp(startingImpact),
     continuity: clamp(startingContinuity),
@@ -75,6 +85,8 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     adversaryMemory: { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
     pendingCommand: null,
     commandHistory: [],
+    recentCommands: remembered.commands.filter((id): id is CommandEventId => id in commandEvents),
+    recentCrises: remembered.crises.filter((id): id is SetPieceId => /^sector-\d+(-b)?$/.test(id)),
     mode,
     turnLimit,
     specialist,
@@ -179,6 +191,8 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     hypothesisHistory: [...game.hypothesisHistory],
     adversaryMemory: { ...game.adversaryMemory, procedureCounts: { ...game.adversaryMemory.procedureCounts } },
     commandHistory: [...game.commandHistory],
+    recentCommands: [...game.recentCommands],
+    recentCrises: [...game.recentCrises],
     evidence: [...game.evidence],
     correlations: [...game.correlations],
     setPieceHistory: [...game.setPieceHistory],
@@ -278,7 +292,11 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   // is a conclusion the investigation has earned, not a punishment. Excluding it
   // here is what dropped the exercise ending from six per cent of operations to
   // one when the valence rule first went in.
+  // The neutral cards that are trades sit outside both: a 20 reaches the
+  // stand-down, and a trade's cost on a 20 or its gift on a 1 would contradict
+  // the roll.
   const wanted = raw === 20 ? ["good", "neutral"] : raw === 1 ? ["bad"] : null;
+  const reaches = (item: number) => wanted!.includes(injects[item].valence) && (injects[item].valence !== "neutral" || injects[item].effect === "end");
   // The deck stays shuffled and each card is still drawn once; a critical roll
   // reaches past cards of the wrong valence rather than reshuffling. If none of
   // the wanted kind is left, a critical roll draws nothing rather than take the
@@ -287,7 +305,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   // stand-down: it ended a newcomer's operation twice in two games at the climax,
   // under a banner saying the investigation had earned it after three misses.
   // The stand-down is reached on a natural 20, where "earned" is true.
-  const position = !reason || !g.injectDeck.length ? -1 : wanted ? g.injectDeck.findIndex(item => wanted.includes(injects[item].valence)) : g.injectDeck.findIndex(item => injects[item].effect !== "end");
+  const position = !reason || !g.injectDeck.length ? -1 : wanted ? g.injectDeck.findIndex(reaches) : g.injectDeck.findIndex(item => injects[item].effect !== "end");
   if (reason && position >= 0) {
     const index = g.injectDeck.splice(position, 1)[0];
     inject = { ...injects[index], reason };
@@ -298,6 +316,16 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       g.nextModifier = carryModifier(before, shift);
       g.nextModifierSource = carriedSource(before, g.nextModifierSource, g.nextModifier, `Inject: ${inject.title}`, shift);
       if (inject.effect === "penalty") impactChange += 6;
+    }
+    if (inject.effect === "adjust") {
+      if (inject.shift) {
+        const before = g.nextModifier;
+        g.nextModifier = carryModifier(before, inject.shift);
+        g.nextModifierSource = carriedSource(before, g.nextModifierSource, g.nextModifier, `Inject: ${inject.title}`, inject.shift);
+      }
+      impactChange += inject.impact ?? 0;
+      continuityChange += inject.continuity ?? 0;
+      g.adversaryTempo = Math.max(0, Math.min(3, g.adversaryTempo + (inject.tempo ?? 0)));
     }
     if (inject.effect === "pressure") impactChange += 8;
     if (inject.effect === "relief") impactChange -= 8;
@@ -386,6 +414,9 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.adversaryProfile === "broker" && plan.scope === "enterprise") sectorSpecific -= 2;
   if (g.adversaryProfile === "ledger" && (!g.caseTheory || plan.intensity === "rapid")) objectiveSpecific += 3;
   if (g.adversaryProfile === "sentinel" && !revealed) sectorSpecific -= 2;
+  if (g.adversaryProfile === "lantern" && number >= 3 && !g.mapHistory.length) objectiveSpecific += 3;
+  if (g.adversaryProfile === "choir" && g.revealed.length >= 2 && !g.correlations.length) objectiveSpecific += 3;
+  if (g.adversaryProfile === "ember" && g.continuity < 60) impactChange += 3;
   if (plan.intensity === "exhaustive") continuityChange -= sector.exhaustiveContinuity;
   const scopeSector = plan.scope === "enterprise" ? -sector.enterpriseBias : -sector.focusedBias;
   // Training erodes the sector margin a point a turn more slowly. With the
@@ -404,7 +435,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (breached(g)) settle(g, "lost");
   else if (exerciseEnd) settle(g, "exercise");
   else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");
-  else if (!g.pendingDecision && number === 2 && g.revealed.length < 4) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
+  else if (!g.pendingDecision && number === 2 && g.revealed.length < 4) g.pendingSetPiece = setPieceFor(g.scenario, g.variant.id, g.recentCrises).id;
   else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {
     // Events fire every third turn, and with three of them the index stepped by
     // the deck's own length: most operations met the same event every time. An
@@ -412,8 +443,11 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     const ids = Object.keys(commandEvents) as CommandEventId[];
     const start = (g.scenario + number + g.adversaryTempo) % ids.length;
     const order = ids.map((_, index) => ids[(start + index) % ids.length]);
+    // Then one the campaign has not met lately, and among those it has, the
+    // longest ago.
     const met = new Set(g.commandHistory.map(record => record.event));
-    g.pendingCommand = order.find(id => !met.has(id)) ?? order[0];
+    const rank = (id: CommandEventId) => met.has(id) ? 1000 : g.recentCommands.includes(id) ? 100 + g.recentCommands.indexOf(id) : 0;
+    g.pendingCommand = [...order].sort((a, b) => rank(a) - rank(b))[0];
   }
   return g;
 }
@@ -563,7 +597,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
   if (breached(g)) settle(g, "lost");
   else if (g.pendingDecision) return g;
   else if (g.revealed.length === 4) g.status = "response";
-  else if (g.turns.length === 2 && !g.setPieceHistory.length) g.pendingSetPiece = sectorSetPieces[g.scenario].id;
+  else if (g.turns.length === 2 && !g.setPieceHistory.length) g.pendingSetPiece = setPieceFor(g.scenario, g.variant.id, g.recentCrises).id;
   return g;
 }
 
@@ -597,7 +631,7 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
 
 export function resolveSetPiece(game: Game, choice: SetPieceChoice): Game {
   if (game.status !== "playing" || !game.pendingSetPiece) throw new Error("No sector decision is pending.");
-  const event = sectorSetPieces[game.scenario];
+  const event = setPieceById(game.pendingSetPiece, game.scenario);
   const option = event[choice];
   const g: Game = { ...game, setPieceHistory: [...game.setPieceHistory] };
   g.impact = clamp(g.impact + option.impact);

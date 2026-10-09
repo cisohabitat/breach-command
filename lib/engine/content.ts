@@ -16,6 +16,22 @@ export const injects = [
   { id: "noise", valence: "bad", title: "An alert flood", text: "Unrelated alerts reduce analyst attention and delay decisions.", effect: "penalty", effectLabel: "The next action is harder and pressure rises." },
   { id: "operations", valence: "good", title: "Operations stabilises service", text: "A workaround buys the investigation team time.", effect: "relief", effectLabel: "Business pressure falls." },
   { id: "exercise", valence: "neutral", title: "Authorised exercise confirmed", text: "The controller confirms that the activity belongs to an authorised test.", effect: "end", effectLabel: "Exercise ends." },
+  // Appended, never inserted: a saved deck holds indices into this table. An
+  // "adjust" card states its own numbers — the next roll, business impact,
+  // service continuity and the adversary's pace — and its label says what they
+  // do. A neutral card is a trade, good and bad at once, so a critical roll
+  // never reaches one: it is drawn only by a run of failed rolls.
+  { id: "logs", valence: "good", title: "Retention extended", text: "The storage team extends log retention before older records roll off.", effect: "restore", effectLabel: "One cooling-down procedure becomes available." },
+  { id: "workaround", valence: "good", title: "A manual workaround holds", text: "Staff run part of the service by hand while the systems are checked.", effect: "adjust", shift: 0, impact: 0, continuity: 6, tempo: 0, effectLabel: "The service recovers some ground." },
+  { id: "blocked", valence: "good", title: "Provider blocks an address", text: "An upstream provider blocks an address the intruder was using to reach the network.", effect: "adjust", shift: 0, impact: 0, continuity: 0, tempo: -1, effectLabel: "The adversary's pace slows." },
+  { id: "outage", valence: "bad", title: "An unrelated outage", text: "A failed storage array takes part of the service down and pulls engineers away.", effect: "adjust", shift: 0, impact: 0, continuity: -6, tempo: 0, effectLabel: "The service loses ground." },
+  { id: "rumour", valence: "bad", title: "A rumour spreads", text: "A staff post about “the hack” is shared outside the organisation.", effect: "pressure", effectLabel: "Business pressure rises." },
+  { id: "tipped", valence: "bad", title: "The intruder notices", text: "Collection traffic touched something the intruder was watching.", effect: "adjust", shift: 0, impact: 0, continuity: 0, tempo: 1, effectLabel: "The adversary's pace quickens." },
+  { id: "absent", valence: "bad", title: "A key engineer is off sick", text: "The engineer who knows the core system best is unavailable today.", effect: "adjust", shift: -2, impact: 0, continuity: 0, tempo: 0, effectLabel: "The next action is harder." },
+  { id: "update", valence: "bad", title: "An update breaks a collector", text: "An overnight update stops a collection agent reporting, and the fix takes engineers off the service.", effect: "adjust", shift: -1, impact: 0, continuity: -3, tempo: 0, effectLabel: "The next action is harder and the service loses ground." },
+  { id: "audit", valence: "neutral", title: "Internal audit sits in", text: "An auditor joins the room: a second pair of eyes, and more questions to answer.", effect: "adjust", shift: 1, impact: 4, continuity: 0, tempo: 0, effectLabel: "The next action is easier; business pressure rises." },
+  { id: "quiet", valence: "neutral", title: "The intruder goes quiet", text: "Activity stops for an hour. The adversary is moving more slowly, and there is less to see.", effect: "adjust", shift: -1, impact: 0, continuity: 0, tempo: -1, effectLabel: "The adversary's pace slows; the next action is harder." },
+  { id: "overtime", valence: "neutral", title: "Overtime approved", text: "Analysts stay late on the case, and the service desk runs short.", effect: "adjust", shift: 2, impact: 0, continuity: -4, tempo: 0, effectLabel: "The next action is easier; the service loses ground." },
 ];
 
 export const adversaryProfiles = {
@@ -64,26 +80,150 @@ export const adversaryProfiles = {
     unverifiedSignal: "Low-volume discovery activity suggests mapping, but its intended use remains unclear.",
     signature: "Dependency mapping", counterplay: "Protect sector health while testing operational dependencies.",
   },
+  // Three more, each punishing a habit the game already teaches against: an
+  // unused infrastructure map, an untested pair of findings, and a service left
+  // stretched. Each counterplay is something the player can see and do.
+  lantern: {
+    title: "Grey Lantern",
+    description: "Settles into systems nobody is watching and waits for them to stay unwatched.",
+    preferredVectors: ["endpoint", "cloud", "identity", "application"] as HypothesisId[],
+    cadence: 3,
+    pressure: 1,
+    unverifiedSignal: "An old maintenance account signed in overnight. It may be a scheduled job, or someone using it.",
+    signature: "Unwatched ground", counterplay: "Use the infrastructure map early: monitor or isolate a system before the third turn.",
+  },
+  choir: {
+    title: "Hollow Choir",
+    description: "Spreads its activity across systems so that each finding looks unrelated to the last.",
+    preferredVectors: ["application", "endpoint", "cloud", "identity"] as HypothesisId[],
+    cadence: 3,
+    pressure: 2,
+    unverifiedSignal: "Two alerts on separate systems arrived minutes apart. They may be one actor or two unrelated faults.",
+    signature: "Scattered trail", counterplay: "Compare confirmed findings as soon as two stand; an untested pair is what it relies on.",
+  },
+  ember: {
+    title: "Ember Shift",
+    description: "Times its moves to service strain, when responders are busiest and least watchful.",
+    preferredVectors: ["identity", "endpoint", "application", "cloud"] as HypothesisId[],
+    cadence: 2,
+    pressure: 2,
+    unverifiedSignal: "A surge of service-desk tickets coincides with the activity. It may be cover, or coincidence.",
+    signature: "Cover of strain", counterplay: "Keep service continuity above 60; below it, the strain covers the actor's moves.",
+  },
 } as const;
 
 export const commandEvents = {
   scope: {
     title: "Scope is expanding",
     prompt: "A connected service reports related activity. Decide how broadly the team should investigate.",
-    a: { title: "Expand the evidence boundary", description: "Bring the connected service into the investigation now.", signal: "Wider scope, little added pressure · Next roll harder", modifier: -1, impact: 2, continuity: 0, tempo: 0, quality: 4 },
+    a: { title: "Expand the evidence boundary", description: "Bring the connected service into the investigation now.", signal: "Wider scope, added pressure · Next roll harder", modifier: -1, impact: 2, continuity: 0, tempo: 0, quality: 4 },
     b: { title: "Hold the current boundary", description: "Keep the team focused until the link is confirmed.", signal: "Next roll easier · More pressure, faster adversary", modifier: 1, impact: 5, continuity: 0, tempo: 1, quality: 3 },
   },
   leadership: {
     title: "Leadership needs a recommendation",
     prompt: "Executives need a clear position before the next operational decision.",
     a: { title: "Brief confirmed facts and uncertainty", description: "State what is known, what is assumed and what decision is approaching.", signal: "Pressure falls · No analytical shortcut", modifier: 0, impact: -5, continuity: 0, tempo: 0, quality: 5 },
-    b: { title: "Delay until the picture is complete", description: "Preserve analyst time and wait for stronger attribution.", signal: "No interruption · Pressure rises", modifier: 1, impact: 7, continuity: 0, tempo: 1, quality: 2 },
+    b: { title: "Delay until the picture is complete", description: "Preserve analyst time and wait for stronger attribution.", signal: "Next roll easier · Pressure rises, faster adversary", modifier: 1, impact: 7, continuity: 0, tempo: 1, quality: 2 },
   },
   capacity: {
     title: "Specialist capacity is limited",
     prompt: "One specialist team can be surged into the incident, but routine operations will lose support.",
     a: { title: "Surge specialist support", description: "Accelerate the next evidence action and accept operational strain.", signal: "Analytical advantage · Service cost", modifier: 2, impact: 0, continuity: -5, tempo: 0, quality: 4 },
-    b: { title: "Preserve operational coverage", description: "Keep routine services supported and continue with the current team.", signal: "Continuity protected · Actor retains tempo", modifier: 0, impact: 3, continuity: 2, tempo: 1, quality: 3 },
+    b: { title: "Preserve operational coverage", description: "Keep routine services supported and continue with the current team.", signal: "Continuity protected · Pressure rises, faster adversary", modifier: 0, impact: 3, continuity: 2, tempo: 1, quality: 3 },
+  },
+  // Nine more, so a campaign act does not meet the same interruption twice. Each
+  // is a call a response lead really makes in the middle of an investigation,
+  // and each signal names only what its numbers do.
+  counsel: {
+    title: "Counsel asks to direct the collection",
+    prompt: "Legal counsel wants evidence gathered under their direction so findings stay privileged if the incident reaches court.",
+    a: { title: "Route collection through counsel", description: "Findings are documented for counsel first, which slows the next check but steadies the organisation.", signal: "Next roll harder · Pressure falls", modifier: -1, impact: -3, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Collect now and brief counsel after", description: "Keep the investigation moving and accept that some findings may be harder to defend later.", signal: "Pressure rises", modifier: 0, impact: 4, continuity: 0, tempo: 0, quality: 3 },
+  },
+  supplier: {
+    title: "A supplier offers remote help",
+    prompt: "The vendor of an affected system offers an engineer on a remote session today. Their access would be one more way in.",
+    a: { title: "Accept a supervised session", description: "The engineer knows the system and speeds the next check, but a new remote path is open while they work.", signal: "Next roll easier · Faster adversary", modifier: 1, impact: 0, continuity: 0, tempo: 1, quality: 3 },
+    b: { title: "Decline and work with the team you have", description: "No new access while the intruder is inside, at the cost of a slower, more anxious organisation.", signal: "Pressure rises", modifier: 0, impact: 3, continuity: 0, tempo: 0, quality: 4 },
+  },
+  regulator: {
+    title: "A regulator asks whether to expect a notice",
+    prompt: "The sector regulator has heard about the disruption and asks whether a formal notification is coming.",
+    a: { title: "File an early factual notice", description: "Say what is known and what is not. The regulator is reassured; drafting it costs analyst time.", signal: "Pressure falls · Next roll harder", modifier: -1, impact: -4, continuity: 0, tempo: 0, quality: 5 },
+    b: { title: "Wait until the scope is confirmed", description: "Keep the analysts on the investigation and answer the regulator later.", signal: "Pressure rises", modifier: 0, impact: 6, continuity: 0, tempo: 0, quality: 2 },
+  },
+  shift: {
+    title: "The night shift is exhausted",
+    prompt: "The analysts who have worked the incident since it began have been awake for twenty hours.",
+    a: { title: "Hand over to a fresh shift", description: "A rested team makes fewer mistakes, but the handover loses some of what the first team knew.", signal: "Next roll harder · Pressure falls", modifier: -1, impact: -2, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Push on with the current shift", description: "They know the incident best; tired people also miss things and lose the room's confidence.", signal: "Next roll easier · Pressure rises", modifier: 1, impact: 3, continuity: 0, tempo: 0, quality: 2 },
+  },
+  media: {
+    title: "A journalist has heard about the outage",
+    prompt: "A reporter is asking whether the disruption is a cyber attack and plans to publish within the hour.",
+    a: { title: "Issue a short holding statement", description: "Confirm an incident is being handled without detail. Staff are pulled onto customer questions.", signal: "Pressure falls · Service cost", modifier: 0, impact: -4, continuity: -2, tempo: 0, quality: 4 },
+    b: { title: "Decline to comment", description: "Nothing is said that might be wrong, and the story runs without the organisation's account.", signal: "Pressure rises", modifier: 0, impact: 5, continuity: 0, tempo: 0, quality: 2 },
+  },
+  backups: {
+    title: "Backups may be reachable from the intrusion",
+    prompt: "The backup servers share credentials with systems the intruder may control. If they are wiped, recovery gets much harder.",
+    a: { title: "Take the backups offline now", description: "Protects the recovery point, and stops the jobs that keep some services running.", signal: "Service cost · Pressure falls", modifier: 0, impact: -3, continuity: -4, tempo: 0, quality: 5 },
+    b: { title: "Leave them online and watch them", description: "Every access to the backups becomes evidence, and the intruder keeps a target.", signal: "Next roll easier · Faster adversary · Pressure rises", modifier: 1, impact: 2, continuity: 0, tempo: 1, quality: 3 },
+  },
+  approach: {
+    title: "Someone was asked for their sign-in code",
+    prompt: "A member of staff reports a call from “the help desk” asking for the code on their phone. They did not give it.",
+    a: { title: "Treat it as part of the incident", description: "Trace the call and the account it targeted; the intruder may be trying another way in.", signal: "Next roll easier · Pressure rises", modifier: 1, impact: 2, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Log it for the security awareness team", description: "Keep the investigation on the evidence already in hand.", signal: "Faster adversary", modifier: 0, impact: 0, continuity: 0, tempo: 1, quality: 2 },
+  },
+  change: {
+    title: "A scheduled change is due tonight",
+    prompt: "A planned upgrade to an affected system is booked for tonight. Postponing it disappoints the service owner.",
+    a: { title: "Freeze all changes", description: "Systems stay as they are while evidence is collected, and the upgrade's improvements wait.", signal: "Next roll easier · Service cost", modifier: 1, impact: 0, continuity: -3, tempo: 0, quality: 4 },
+    b: { title: "Let the change go ahead", description: "The service gets its upgrade; the systems under investigation change underneath the team.", signal: "Continuity protected · Next roll harder", modifier: -1, impact: 0, continuity: 2, tempo: 0, quality: 2 },
+  },
+  forensics: {
+    title: "An outside forensics team can start in an hour",
+    prompt: "A retained incident-response firm has a team free now. Bringing them in is expensive and visible.",
+    a: { title: "Engage the outside team", description: "Experienced hands for the next check; the cost and the extra people raise the temperature.", signal: "Next roll easier · Pressure rises", modifier: 2, impact: 3, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Keep the investigation in house", description: "No cost and no new faces, and the team works at the pace it has.", signal: "Faster adversary", modifier: 0, impact: 0, continuity: 0, tempo: 1, quality: 3 },
+  },
+  // Six more, so an act of four cases and a replay meets a beat it has not met.
+  insurer: {
+    title: "The insurer wants its own responders",
+    prompt: "The cyber insurer will cover the response only if its approved firm takes part.",
+    a: { title: "Bring in the insurer's firm", description: "The cost is covered and the board is reassured; the handover slows the next check.", signal: "Next roll harder · Pressure falls", modifier: -1, impact: -4, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Keep the current team and inform the insurer", description: "No handover, and a dispute about the bill that the board will hear about.", signal: "Pressure rises", modifier: 0, impact: 3, continuity: 0, tempo: 0, quality: 3 },
+  },
+  phished: {
+    title: "A member of staff reports a suspicious page",
+    prompt: "Someone in finance says they typed their password into a page that looked wrong, last week.",
+    a: { title: "Reset their account and trace its use", description: "Their sign-ins become evidence, and they lose access for the afternoon.", signal: "Next roll easier · Service cost", modifier: 1, impact: 0, continuity: -2, tempo: 0, quality: 5 },
+    b: { title: "Note it and carry on", description: "The investigation keeps its course, and an account that may be in use stays open.", signal: "Faster adversary", modifier: 0, impact: 0, continuity: 0, tempo: 1, quality: 2 },
+  },
+  claim: {
+    title: "Someone claims responsibility",
+    prompt: "A message to the press office claims responsibility for the incident and names one of your systems.",
+    a: { title: "Check the named system", description: "It may be a lead or a distraction; either way the press office has questions now.", signal: "Next roll easier · Pressure rises", modifier: 1, impact: 3, continuity: 0, tempo: 0, quality: 3 },
+    b: { title: "Pass it to the police and keep to the evidence", description: "The message is handled properly, and the team does not chase it.", signal: "Pressure falls · Faster adversary", modifier: 0, impact: -2, continuity: 0, tempo: 1, quality: 4 },
+  },
+  segment: {
+    title: "The network team can cut a segment",
+    prompt: "The affected part of the network can be cut off from the rest within the hour.",
+    a: { title: "Cut the segment now", description: "Whatever is inside it is stranded, and so are the people who work there.", signal: "Service cost · Pressure falls", modifier: 0, impact: -3, continuity: -5, tempo: 0, quality: 4 },
+    b: { title: "Leave it connected and watch it", description: "Every connection becomes evidence, and the intruder keeps its route out.", signal: "Next roll easier · Faster adversary", modifier: 1, impact: 0, continuity: 0, tempo: 1, quality: 3 },
+  },
+  storage: {
+    title: "Log storage is nearly full",
+    prompt: "The log store will start overwriting its oldest records tonight.",
+    a: { title: "Buy emergency storage", description: "The records are kept, and finance wants to know why the budget moved.", signal: "Next roll easier · Pressure rises", modifier: 1, impact: 2, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Let the oldest records roll off", description: "No cost, and the start of the incident may go with them.", signal: "Next roll harder", modifier: -1, impact: 0, continuity: 0, tempo: 0, quality: 2 },
+  },
+  customer: {
+    title: "A major customer asks for a call",
+    prompt: "Your largest customer wants to hear directly what is happening and whether they are affected.",
+    a: { title: "Brief them now", description: "The customer is steadier for it, and the call takes the lead analyst for an hour.", signal: "Next roll harder · Pressure falls", modifier: -1, impact: -3, continuity: 0, tempo: 0, quality: 4 },
+    b: { title: "Send a written update", description: "The team keeps working, and the customer reads a short note as a brush-off.", signal: "Pressure rises", modifier: 0, impact: 3, continuity: 0, tempo: 0, quality: 3 },
   },
 } as const;
 
@@ -352,16 +492,16 @@ export const decisionTitles: Record<DecisionChoice, keyof DecisionLanguage> = { 
 export const decisionText: Record<DecisionChoice, keyof DecisionLanguage> = { observe: "observe", act: "act", attribute: "attribute", contain: "contain", notify: "notify" };
 
 export const scenarioProfiles: AdversaryProfileId[][] = [
-  ["ghost", "broker", "sentinel"],
-  ["ghost", "raider", "sentinel"],
-  ["broker", "ghost", "sentinel"],
-  ["raider", "broker", "ledger"],
-  ["ghost", "raider", "broker"],
-  ["broker", "ghost", "sentinel"],
-  ["ghost", "broker", "ledger"],
-  ["raider", "broker", "sentinel"],
-  ["broker", "raider", "sentinel"],
-  ["ledger", "ghost", "broker"],
+  ["ghost", "broker", "sentinel", "choir"],
+  ["ghost", "raider", "sentinel", "ember"],
+  ["broker", "ghost", "sentinel", "lantern"],
+  ["raider", "broker", "ledger", "ember"],
+  ["ghost", "raider", "broker", "lantern"],
+  ["broker", "ghost", "sentinel", "choir"],
+  ["ghost", "broker", "ledger", "choir"],
+  ["raider", "broker", "sentinel", "lantern"],
+  ["broker", "raider", "sentinel", "ember"],
+  ["ledger", "ghost", "broker", "choir"],
 ];
 
 // The interface uses the field's own vocabulary, which is right for the subject

@@ -131,6 +131,11 @@ export type Game = {
   adversaryMemory: AdversaryMemory;
   pendingCommand: CommandEventId | null;
   commandHistory: CommandRecord[];
+  // Command events this campaign met in its last few operations, oldest first,
+  // so the next operation reaches for one it has not seen (session version 17).
+  recentCommands: CommandEventId[];
+  // Sector crises met lately, so a replayed case meets its other one.
+  recentCrises: SetPieceId[];
   mode: GameMode;
   turnLimit: number;
   specialist: SpecialistId;
@@ -174,6 +179,10 @@ export type GameSetup = {
   campaignRoute?: CampaignRouteId;
   variant?: IncidentVariant;
   seed?: number | null;
+  // What the campaign met recently; ignored for a reproducible operation.
+  recentCommands?: string[];
+  recentInjects?: string[];
+  recentCrises?: string[];
 };
 
 export type ResponsePhase = "containment" | "assurance" | "recovery";

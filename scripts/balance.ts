@@ -31,6 +31,7 @@ function apply(game: Game, action: BotAction): Game {
 
 const percent = (count: number, total: number) => `${(100 * count / total).toFixed(1)}%`;
 const rows = [];
+const byProfile: Record<string, Record<string, { won: number; total: number }>> = {};
 for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) {
   const tally = { won: 0, lost: 0, exercise: 0, score: 0, hypothesis: 0, reasons: {} as Record<string, number> };
   let total = 0;
@@ -44,6 +45,9 @@ for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) 
         game = apply(game, action);
       }
       total++;
+      const cell = ((byProfile[game.adversaryProfile] ??= {})[difficulty] ??= { won: 0, total: 0 });
+      cell.total++;
+      if (game.status === "won") cell.won++;
       if (game.status === "won" || game.status === "lost" || game.status === "exercise") tally[game.status]++;
       if (game.status === "lost") {
         const reason = getLossReason(game).title;
@@ -67,3 +71,6 @@ for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) 
 }
 console.log(`Campaign tier ${campaignTier}, ${perScenario} operations per scenario and difficulty`);
 console.table(rows);
+// A profile's own rate mixes in the scenarios that draw it, so read it against
+// the difficulty's overall rate, not against another profile's.
+console.table(Object.fromEntries(Object.entries(byProfile).map(([profile, cells]) => [profile, Object.fromEntries(Object.entries(cells).map(([difficulty, cell]) => [difficulty, `${percent(cell.won, cell.total)} of ${cell.total}`]))])));

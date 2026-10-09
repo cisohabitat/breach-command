@@ -53,6 +53,14 @@ engine and its content tables, which the assignment screen imports through the
 session hook. Splitting the engine from the slip is the next step, and the
 budget falls when it lands.
 
+The second content batch (Phase 4: eighteen command events, twenty injects,
+eight adversary profiles, a second crisis per sector, seven variants per case,
+the campaign's story and the specialists' arcs) added about 33 KB of decoded
+script to the first load, all of it authored tables the engine imports: 821,317 B
+initial and 1,035,243 B in all. The budgets moved to 850,000 B and 1,060,000 B
+with it, and that content is the first thing the engine split should take off
+the assignment screen.
+
 Lighthouse 12, mobile profile, assignment screen, two runs:
 
 | Category | Before | After |

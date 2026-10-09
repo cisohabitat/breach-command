@@ -138,7 +138,7 @@ export const namedSpecialists: Record<SpecialistId, { name: string; callsign: st
   communications: { name: "Marcus Bell", callsign: "SIGNAL", voice: "I will keep decisions clear, factual and timely." },
 };
 
-export type SetPieceId = `sector-${number}`;
+export type SetPieceId = `sector-${number}` | `sector-${number}-b`;
 export type SetPieceOption = { title: string; detail: string; impact: number; continuity: number; sector: number; objective: number; quality: number };
 // Every sector decision carries a graduated middle measure alongside the decisive
 // and the permissive one. A real incident rarely offers only "stop it" or "carry
@@ -160,6 +160,39 @@ export const sectorSetPieces: SectorSetPiece[] = [
   { id: "sector-9", title: "Clearing cut-off", prompt: "Several unusual approvals must be accepted, delayed or rejected before settlement.", a: { title: "Hold high-risk transactions", detail: "Protect clearing integrity while legitimate settlement is reviewed.", impact: -7, continuity: -4, sector: 7, objective: -9, quality: 5 }, b: { title: "Clear and investigate later", detail: "Meet the deadline while accepting possible fraudulent settlement.", impact: 7, continuity: 4, sector: -8, objective: 10, quality: 1 }, c: { title: "Require out-of-band approval above a lowered threshold", detail: "Settlement continues, with anything above a reduced limit confirmed on a second channel.", impact: -3, continuity: -1, sector: 4, objective: -5, quality: 5 } },
 ];
 
+// A second crisis per sector, drawn by the incident variant, so the fourth
+// variant of a case is not the same crisis as the first. Each keeps the shape
+// the first set has: a decisive measure, a permissive one, and a narrow one that
+// keeps the service running and still costs something.
+const op = (title: string, detail: string, impact: number, continuity: number, sector: number, objective: number, quality: number): SetPieceOption => ({ title, detail, impact, continuity, sector, objective, quality });
+export const secondSetPieces: SectorSetPiece[] = [
+  { id: "sector-0-b", title: "Board pack mail run", prompt: "The mail team can hold every external message for scanning before the board pack goes out tonight.", a: op("Hold all external mail for scanning", "Every outside message waits for the scanner, and the board pack goes out late.", -6, -5, 5, -6, 5), b: op("Keep mail flowing", "Deliver as normal and review the mail logs afterwards.", 4, 3, -4, 6, 2), c: op("Hold mail to finance and executives only", "The people the evidence points at wait for scanning; everyone else receives mail as normal.", -2, -1, 3, -3, 5) },
+  { id: "sector-1-b", title: "Medication cabinet link", prompt: "The ward medication cabinets sync with a system the intruder may have touched. Night rounds start within the hour.", a: op("Run the cabinets offline", "Nurses dispense from local records and paper charts until the link is checked.", -5, -7, 5, -6, 5), b: op("Keep the cabinets synced", "Rounds run normally while the link carries whatever it carries.", 5, 3, -6, 7, 2), c: op("Pharmacist check on controlled drugs", "The link stays up, and a pharmacist confirms every controlled-drug release by phone.", -2, -2, 3, -3, 5) },
+  { id: "sector-2-b", title: "Plant data export", prompt: "Plant data leaves for the corporate network every fifteen minutes, across the boundary under investigation.", a: op("Stop the export", "Corporate reports go blind while the boundary is checked; operators still see the plant.", -4, -5, 6, -7, 5), b: op("Keep exporting", "Trading and planning keep their numbers, and the path stays open.", 3, 3, -5, 6, 2), c: op("Send it through a one-way gateway", "Data still leaves the plant, and nothing can come back along the same path.", -2, -1, 3, -4, 5) },
+  { id: "sector-3-b", title: "Crane software update", prompt: "The crane supplier wants to push a scheduled update tonight through its remote channel.", a: op("Close the channel and postpone", "No remote changes to the cranes until the channel is cleared; a known fault stays unfixed.", -4, -4, 5, -6, 5), b: op("Let the update run", "The cranes get their fix through a channel nobody has cleared.", 4, 3, -6, 7, 2), c: op("Install it on site, one crane first", "An engineer brings the update in person on checked media and installs it on one crane before the rest.", -1, -2, 3, -3, 5) },
+  { id: "sector-4-b", title: "Customer key rotation", prompt: "Customers ask whether to change their access keys. Forcing it breaks every integration that has not been updated.", a: op("Force new keys for every customer", "All keys change tonight; integrations break until customers update them.", -6, -7, 5, -7, 4), b: op("Advise, enforce nothing", "Customers choose, and most will wait.", 3, 3, -4, 5, 2), c: op("Force new keys where use looks unusual", "Only keys signed in from outside their normal pattern change; the rest are left to their owners.", -3, -2, 3, -4, 5) },
+  { id: "sector-5-b", title: "Shared certificate", prompt: "The intruder may hold a copy of a certificate many customers trust. Replacing it means every client must load the new one.", a: op("Revoke and replace it now", "The old certificate stops working tonight, along with every client that has not updated.", -5, -6, 6, -7, 5), b: op("Keep the current certificate", "Nothing breaks, and a possibly copied certificate stays trusted.", 4, 2, -6, 7, 2), c: op("Replace it with a day's overlap", "Both certificates work for a day while clients move over, and the old one is watched closely.", -2, -1, 3, -3, 4) },
+  { id: "sector-6-b", title: "Weekly payment run", prompt: "The weekly benefit payment run is due, and the case system that feeds it is under investigation.", a: op("Delay the payment run", "No payments go until the records are checked, and claimants wait.", -4, -7, 6, -7, 4), b: op("Pay as normal", "Claimants are paid on time from records nobody has checked.", 4, 3, -6, 7, 2), c: op("Pay, holding recently changed accounts", "Most payments go on time; accounts whose bank details changed this week wait for a check.", -2, -2, 4, -4, 5) },
+  { id: "sector-7-b", title: "Number transfers", prompt: "The intruder may be able to move customers' phone numbers to another network, and with them their sign-in codes.", a: op("Suspend number transfers", "No customer can move their number for a day, and the regulator is told why.", -5, -5, 6, -7, 5), b: op("Keep transfers open", "Customers move numbers as normal while the route is traced.", 4, 2, -6, 7, 2), c: op("Call back before every transfer", "Transfers continue, and each request is confirmed with the customer on their registered number.", -2, -2, 3, -4, 5) },
+  { id: "sector-8-b", title: "Chemical dosing values", prompt: "Dosing values were changed overnight. They are within safe limits, and nobody on shift remembers changing them.", a: op("Restore the signed-off values and lock them", "Operators put back the last approved values and block remote changes.", -5, -4, 7, -6, 5), b: op("Leave the values and watch", "The plant runs as it is while the change is traced.", 3, 3, -7, 6, 2), c: op("Restore the values, keep remote access", "The approved values return; remote changes stay possible, and each one raises an alarm.", -3, -1, 4, -3, 5) },
+  { id: "sector-9-b", title: "Treasury payment file", prompt: "Treasury's end-of-day payment file arrived with a changed list of payees, approved by the usual approver.", a: op("Reject the file", "Nothing in the file pays out; treasury resubmits after checking, past the cut-off.", -6, -5, 7, -8, 5), b: op("Release the file", "Payments go on time to a payee list nobody has checked.", 6, 3, -8, 9, 1), c: op("Release, holding the new payees", "Known payees are paid on time; new ones wait for a call back to treasury.", -3, -1, 4, -4, 5) },
+];
+
+export const allSetPieces = [...sectorSetPieces, ...secondSetPieces];
+
+// Variant 0 is the standard picture every non-campaign operation plays; odd
+// variants meet the sector's second crisis. A case the campaign replays after a
+// loss meets whichever crisis it did not meet last time.
+export function setPieceFor(scenario: number, variantId: string, recent: readonly string[] = []): SectorSetPiece {
+  const index = Number(variantId.split("-")[1] ?? 0);
+  const [drawn, other] = index % 2 === 1 ? [secondSetPieces[scenario], sectorSetPieces[scenario]] : [sectorSetPieces[scenario], secondSetPieces[scenario]];
+  return recent.includes(drawn.id) && !recent.includes(other.id) ? other : drawn;
+}
+
+export function setPieceById(id: SetPieceId, scenario: number): SectorSetPiece {
+  return allSetPieces.find(piece => piece.id === id) ?? sectorSetPieces[scenario];
+}
+
 export type ChallengeSetup = { scenario: number; difficulty: Difficulty; mode: GameMode; specialist: SpecialistId; seed: number };
 const difficultyIds: Difficulty[] = ["training", "operational", "crisis"];
 const modeIds: GameMode[] = ["campaign", "daily", "ironman", "escalation", "expert"];
@@ -170,7 +203,7 @@ const specialistIds: SpecialistId[] = ["hunter", "forensics", "identity", "ot", 
 // techniques themselves or the seeded draws change: an older code would
 // otherwise decode cleanly and quietly play a different incident. Version 1
 // codes were written as "BC-…" before the version was part of the code.
-export const CHALLENGE_VERSION = 5;
+export const CHALLENGE_VERSION = 6;
 const checksumOf = (text: string) => [...text].reduce((sum, char) => (sum + char.charCodeAt(0)) % 97, 0);
 
 export function encodeChallenge(setup: ChallengeSetup) {

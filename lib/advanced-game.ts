@@ -3,7 +3,7 @@
 // that change an operation and the after-action review.
 import { attacks, procedures, sectorProcedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, type Difficulty, type HypothesisId } from "./game.ts";
 import { adversaryObjectives, gameModes, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type GameMode, type ProcedureIntensity, type ProcedurePlan, type ProcedureScope, type SpecialistId } from "./command-systems.ts";
-import { infrastructureTopologies, sectorSetPieces } from "./phase8.ts";
+import { infrastructureTopologies, sectorSetPieces, setPieceById } from "./phase8.ts";
 
 export {
   attacks,
@@ -17,7 +17,7 @@ export {
   attackVector,
 };
 export type { Difficulty, HypothesisId };
-export { adversaryObjectives, gameModes, infrastructureTopologies, procedureIntensities, procedureScopes, sectorSetPieces, sectorSystems, specialists };
+export { adversaryObjectives, gameModes, infrastructureTopologies, procedureIntensities, procedureScopes, sectorSetPieces, sectorSystems, setPieceById, specialists };
 export type { AdversaryObjectiveId, GameMode, ProcedureIntensity, ProcedurePlan, ProcedureScope, SpecialistId };
 export { adversaryProfiles, commandEvents, decisionChoices, glossaryParts, inSentence, plainLanguage, responseOptions, responseProfiles } from "./engine/content.ts";
 export type { AdversaryMemory, AdversaryProfileId, BeginnerReview, CommandEventId, CommandRecord, CorrelationRecord, DecisionChoice, DecisionOption, DecisionRecord, DiscriminatingRead, EvidenceItem, Game, GameSetup, GameStatus, GuidanceLevel, HypothesisLedgerRow, HypothesisStanding, KnownFacts, LossCause, MapAction, MapActionRecord, ModifierPart, NodePosture, ReadingOdds, ResponseOption, ResponsePhase, ResponseProfile, ScoreBreakdown, SectorRead, SetPieceChoice, SetPieceRecord, TrainingPrompt, Turn } from "./engine/types.ts";

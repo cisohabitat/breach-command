@@ -106,3 +106,20 @@ test("offers the next uncleared case and says what an operation changed", () => 
   assert.ok(lines.some(line=>/offered again/.test(line)),"and the lost case is said to come back");
   assert.match(routeReason({completed:[0,1,2],commandPosture:{observe:0,act:8},leadershipTrust:53}),/act \(8\) more than to watch \(0\)/,"the route says why");
 });
+
+test("the campaign tells its story: a director's briefing per act, a development keyed to route, and an ending in the record's numbers", async () => {
+  const { campaignStory } = await import("../lib/campaign.ts");
+  const { specialistArc, ARC_THRESHOLDS } = await import("../lib/phase9.ts");
+  const briefings = new Set([0, 3, 7].map(done => campaignStory({ ...defaultCampaign, completed: Array.from({ length: done }, (_, i) => i) }, "common-ground").briefing));
+  assert.equal(briefings.size, 3, "each act opens with its own briefing");
+  assert.equal(campaignStory({ ...defaultCampaign, completed: [0] }, "watchtower").development, null, "the development waits for the act's midpoint");
+  const developments = new Set(["watchtower", "breakwater", "common-ground", "convergence"].map(route => campaignStory({ ...defaultCampaign, completed: [0, 1, 2, 3, 4] }, route).development));
+  assert.equal(developments.size, 4, "and differs by route");
+  const ending = campaignEnding({ ...defaultCampaign, completed: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], operations: 13, commandPosture: { observe: 9, act: 4 }, unresolvedThreads: 2 })!;
+  assert.match(ending.detail, /ten cases cleared in 13 operations, 9 evidence decisions to watch and 4 to act, 2 unresolved access/);
+  for (const id of ["hunter", "forensics", "identity", "ot", "continuity", "communications"] as const) {
+    assert.equal(specialistArc(id, ARC_THRESHOLDS[0] - 1), null, "no arc before rapport is earned");
+    const beats = ARC_THRESHOLDS.map(threshold => specialistArc(id, threshold));
+    assert.equal(new Set(beats).size, 3, `${id} has a request, a disagreement and a change of role`);
+  }
+});

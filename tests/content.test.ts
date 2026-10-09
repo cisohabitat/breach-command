@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {newGame,resolveDecision,getDecisionOptions,attacks,hypotheses,procedures,responseProfiles,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
-import {sectorSetPieces} from "../lib/phase8.ts";
+import {allSetPieces, secondSetPieces, sectorSetPieces, setPieceFor} from "../lib/phase8.ts";
 import {hypothesisSources, proceduresFor, sectorProcedures} from "../lib/advanced-game.ts";
 import {adversaryObjectives} from "../lib/command-systems.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
@@ -146,7 +146,7 @@ test("offers a graduated measure in every sector decision", () => {
   // sector decision carries a narrow middle measure, and it earns its place by
   // costing effort rather than by dominating: it protects less than the decisive
   // option and concedes less than the permissive one.
-  for (const piece of sectorSetPieces) {
+  for (const piece of allSetPieces) {
     const { a, b, c } = piece;
     assert.ok(c.title && c.detail.length > 30, `${piece.id} states what the middle measure actually does`);
     assert.equal(new Set([a.title, b.title, c.title]).size, 3, `${piece.id} offers three distinct measures`);
@@ -212,4 +212,116 @@ test("makes each evidence decision a call in the sector's own terms", () => {
   effects.forEach((effect, scenario) => assert.equal(effect.act, -sectorSystems[scenario].containmentCost, `scenario ${scenario}: acting costs the sector's isolation cost`));
   assert.ok(new Set(effects.map(effect => effect.act)).size >= 3, "acting costs the sector margin differently across sectors");
   assert.ok(new Set(effects.map(effect => effect.observe)).size >= 3, "watching costs the sector margin differently across sectors");
+});
+
+test("a command event's signal names what its numbers do, and nothing they do not", async () => {
+  // AGENTS.md: a signal word names what the numbers do, never a benefit with no
+  // number behind it. Each phrase is read against the option's own numbers, and
+  // each number that moves something has a phrase saying so.
+  const { commandEvents } = await import("../lib/advanced-game.ts");
+  const ids = Object.keys(commandEvents);
+  assert.ok(ids.length >= 12, "a campaign act can run without repeating an interruption");
+  for (const [id, event] of Object.entries(commandEvents)) {
+    for (const choice of ["a", "b"] as const) {
+      const option = event[choice] as { signal: string; modifier: number; impact: number; continuity: number; tempo: number; quality: number };
+      const parts = option.signal.split(" · ");
+      const said = (pattern: RegExp) => parts.some(part => pattern.test(part));
+      const where = `${id}.${choice} ("${option.signal}")`;
+      if (said(/harder/i)) assert.ok(option.modifier < 0, `${where}: "harder" needs a negative modifier`);
+      if (said(/easier|analytical advantage/i)) assert.ok(option.modifier > 0, `${where}: "easier" needs a positive modifier`);
+      if (said(/pressure falls/i)) assert.ok(option.impact < 0, `${where}: "pressure falls" needs impact to fall`);
+      if (said(/pressure rises|more pressure|added pressure/i)) assert.ok(option.impact > 0, `${where}: rising pressure needs impact to rise`);
+      if (said(/service cost/i)) assert.ok(option.continuity < 0, `${where}: a service cost needs continuity to fall`);
+      if (said(/continuity protected/i)) assert.ok(option.continuity > 0, `${where}: protected continuity needs it to rise`);
+      if (said(/faster adversary|retains tempo/i)) assert.ok(option.tempo > 0, `${where}: a faster adversary needs tempo`);
+      if (option.modifier < 0) assert.ok(said(/harder/i), `${where}: a harder next roll is said`);
+      if (option.modifier > 0) assert.ok(said(/easier|analytical advantage/i), `${where}: an easier next roll is said`);
+      if (option.impact > 0) assert.ok(said(/pressure rises|more pressure|added pressure/i), `${where}: rising pressure is said`);
+      if (option.impact < 0) assert.ok(said(/pressure falls/i), `${where}: falling pressure is said`);
+      if (option.continuity < 0) assert.ok(said(/service cost/i), `${where}: a service cost is said`);
+      if (option.continuity > 0) assert.ok(said(/continuity protected/i), `${where}: protected continuity is said`);
+      if (option.tempo > 0) assert.ok(said(/faster adversary|retains tempo/i), `${where}: a faster adversary is said`);
+      assert.ok(option.quality >= 1 && option.quality <= 5, `${where}: quality is graded 1 to 5`);
+    }
+  }
+});
+
+test("the inject deck is deep enough that a critical roll is not predictable, and every card says what it does", async () => {
+  const { injects } = await import("../lib/engine/content.ts");
+  const { newGame, playTurn } = await import("../lib/advanced-game.ts");
+  assert.ok(injects.length >= 20);
+  assert.equal(new Set(injects.map(card => card.id)).size, injects.length, "inject ids are unique");
+  for (const valence of ["good", "bad", "neutral"]) assert.ok(injects.filter(card => card.valence === valence).length >= 4, `at least four ${valence} cards`);
+  assert.equal(injects.filter(card => card.effect === "end").length, 1, "one authorised stand-down");
+  // The first nine are the deck a saved operation already holds indices into.
+  assert.deepEqual(injects.slice(0, 9).map(card => card.id), ["expert", "delay", "restored", "partner", "press", "backup", "noise", "operations", "exercise"]);
+  for (const card of injects.filter(item => item.effect === "adjust")) {
+    const label = card.effectLabel;
+    const { shift = 0, impact = 0, continuity = 0, tempo = 0 } = card as { shift?: number; impact?: number; continuity?: number; tempo?: number };
+    assert.ok(shift || impact || continuity || tempo, `${card.id} changes something`);
+    assert.equal(/next action is easier/.test(label), shift > 0, `${card.id}: an easier next action is said exactly when it is`);
+    assert.equal(/next action is harder/.test(label), shift < 0, `${card.id}: a harder next action`);
+    assert.equal(/pressure rises/.test(label), impact > 0, `${card.id}: rising pressure`);
+    assert.equal(/service loses ground/.test(label), continuity < 0, `${card.id}: a service cost`);
+    assert.equal(/service recovers/.test(label), continuity > 0, `${card.id}: a service recovery`);
+    assert.equal(/pace quickens/.test(label), tempo > 0, `${card.id}: a faster adversary`);
+    assert.equal(/pace slows/.test(label), tempo < 0, `${card.id}: a slower adversary`);
+    const good = shift > 0 || impact < 0 || continuity > 0 || tempo < 0;
+    const bad = shift < 0 || impact > 0 || continuity < 0 || tempo > 0;
+    assert.equal(card.valence, good && bad ? "neutral" : good ? "good" : "bad", `${card.id}'s valence agrees with its numbers`);
+  }
+  // A critical roll reaches past a trade: it is drawn only on a run of failures.
+  const trades = injects.map((card, index) => ({ card, index })).filter(({ card }) => card.valence === "neutral" && card.effect !== "end").map(({ index }) => index);
+  const base = () => { const g = newGame(0, "operational", () => 0); g.chain = ["phish", "spray", "task", "https"]; g.established = []; return g; };
+  assert.equal(playTurn({ ...base(), injectDeck: [...trades] }, "email", 20).turns[0].inject, null, "a natural 20 does not draw a trade");
+  assert.equal(playTurn({ ...base(), injectDeck: [...trades] }, "email", 1).turns[0].inject, null, "nor does a natural 1");
+  const workaround = injects.findIndex(card => card.id === "workaround");
+  const before = { ...base(), continuity: 50 };
+  const after = playTurn({ ...before, injectDeck: [workaround] }, "email", 20);
+  const control = playTurn({ ...before, injectDeck: [] }, "email", 20);
+  assert.equal(after.continuity - control.continuity, 6, "an adjust card moves the meter it names");
+});
+
+test("every adversary profile is drawn somewhere, has a mechanic of its own and a counterplay the review can name", async () => {
+  const { adversaryProfiles, scenarioProfiles } = await import("../lib/engine/content.ts");
+  const { readFileSync } = await import("node:fs");
+  const transitions = readFileSync(new URL("../lib/engine/transitions.ts", import.meta.url), "utf8");
+  const ids = Object.keys(adversaryProfiles);
+  assert.ok(ids.length >= 8);
+  assert.equal(new Set(Object.values(adversaryProfiles).map(profile => profile.title)).size, ids.length, "titles are distinct");
+  for (const id of ids) {
+    const profile = adversaryProfiles[id as keyof typeof adversaryProfiles];
+    assert.ok(scenarioProfiles.some(list => list.includes(id as never)), `${id} is drawn by some scenario`);
+    assert.ok(transitions.includes(`g.adversaryProfile === "${id}"`), `${id} has a signature mechanic`);
+    assert.ok(profile.signature && profile.counterplay.endsWith("."), `${id} names its habit and what counters it`);
+    assert.equal(new Set(profile.preferredVectors).size, 4, `${id} orders all four routes`);
+  }
+});
+
+test("each sector has a second crisis, met by the odd incident variants", () => {
+  assert.equal(sectorSetPieces.length, scenarios.length);
+  assert.equal(secondSetPieces.length, scenarios.length);
+  assert.equal(new Set(allSetPieces.map(piece => piece.id)).size, allSetPieces.length, "set piece ids are unique");
+  for (let scenario = 0; scenario < scenarios.length; scenario++) {
+    assert.notEqual(secondSetPieces[scenario].title, sectorSetPieces[scenario].title);
+    assert.equal(setPieceFor(scenario, `${scenario}-0`).id, `sector-${scenario}`, "the standard picture meets the first crisis");
+    assert.equal(setPieceFor(scenario, `${scenario}-3`).id, `sector-${scenario}-b`, "an odd variant meets the second");
+    const g = newGame(scenario, "operational", () => 0, { variant: { id: `${scenario}-1`, title: "t", briefing: "b", modifier: "m", impact: 0, continuity: 0, objective: 0 } });
+    assert.equal(g.variant.id, `${scenario}-1`);
+  }
+});
+
+test("each case has seven incident variants, and a seed that met one of the first three still does", async () => {
+  const { incidentVariant } = await import("../lib/phase9.ts");
+  for (let scenario = 0; scenario < scenarios.length; scenario++) {
+    const seen = new Map<string, string>();
+    for (let seed = 0; seed < 400; seed++) {
+      const variant = incidentVariant(scenario, "common-ground", seed);
+      seen.set(variant.id, variant.title);
+      const old = (seed + scenario) % 5;
+      if (old < 3) assert.equal(variant.id, `${scenario}-${old}`, "the first three stay where they were");
+    }
+    assert.equal(seen.size, 7, `scenario ${scenario} reaches all seven variants`);
+    assert.equal(new Set(seen.values()).size, 7, "with distinct titles");
+  }
 });

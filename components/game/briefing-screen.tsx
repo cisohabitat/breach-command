@@ -12,7 +12,7 @@ const stageQuestions = ["How they got in", "Where they went, and as whom", "How 
 
 export function BriefingScreen({ session }: { session: GameSession }) {
   const {
-    campaign, currentAct, currentRoute, finalEnding,
+    campaign, currentAct, currentStory, currentRoute, finalEnding,
     scenarioChoice, setScenarioChoice, activeScenario, previewVariant,
     difficulty, setDifficulty, specialist, setSpecialist, mode, setMode,
     challengeCode, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed,
@@ -61,7 +61,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <b><small>Experience </small>{campaign.xp}</b>
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
-        <section className="campaign-act-card"><span className="act-number">Act {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p><small>{campaign.unresolvedThreads} unresolved access{campaign.unresolvedThreads ? " — each starts later operations under more pressure" : ""}</small></div></section>
+        <section className="campaign-act-card"><span className="act-number">Act {currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p>{!finalEnding && <p className="act-briefing">Director: {currentStory.briefing}</p>}{!finalEnding && currentStory.development && <p className="act-briefing">Since then: {currentStory.development}</p>}<small>{campaign.unresolvedThreads} unresolved access{campaign.unresolvedThreads ? " — each starts later operations under more pressure" : ""}</small></div></section>
         <section className="campaign-route-card"><div><span className="field-label">Campaign route: {currentRoute.title}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
         {finalEnding && <section className="campaign-ending"><div><span className="field-label">Campaign conclusion</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
       </div>

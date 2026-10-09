@@ -10,7 +10,7 @@ import { EffectList } from "@/components/game/effect-list";
 // The business impact an inject added to the turn's movement, so a protected
 // failed check beside "Business impact +16 worse" says where the rest came from.
 function injectImpact(report: Game["turns"][number]) {
-  return report.inject?.effect === "penalty" ? 6 : report.inject?.effect === "pressure" ? 8 : report.inject?.effect === "relief" ? -8 : 0;
+  return report.inject?.effect === "penalty" ? 6 : report.inject?.effect === "pressure" ? 8 : report.inject?.effect === "relief" ? -8 : report.inject?.effect === "adjust" ? report.inject.impact ?? 0 : 0;
 }
 
 // The pressure line names the options as their buttons do: "acting fits best"

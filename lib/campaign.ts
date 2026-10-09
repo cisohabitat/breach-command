@@ -17,9 +17,14 @@ export type CampaignState = {
   actorSightings: Record<string, number>;
   specialistBonds: Record<string, number>;
   routeHistory: string[];
+  // The command events and injects met in recent operations, oldest first, so
+  // the next operation reaches for beats the campaign has not seen lately.
+  recentCommands: string[];
+  recentInjects: string[];
+  recentCrises: string[];
 };
 
-export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {}, specialistBonds: {}, routeHistory: [] };
+export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {}, specialistBonds: {}, routeHistory: [], recentCommands: [], recentInjects: [], recentCrises: [] };
 
 // Whether stored text is a campaign record at all. parseCampaign defaults every
 // missing field and falls back to a new campaign on anything unreadable, so this
@@ -32,6 +37,12 @@ export function campaignReadable(raw: string): boolean {
     return false;
   }
 }
+
+const RECENT_COMMANDS = 15;
+const RECENT_INJECTS = 16;
+const RECENT_CRISES = 10;
+// Newest last, each id once.
+const remember = (list: string[], met: string[], keep: number) => [...list.filter(id => !met.includes(id)), ...met.filter((id, index) => met.indexOf(id) === index)].slice(-keep);
 
 export function parseCampaign(raw: string | null): CampaignState {
   if (!raw) return defaultCampaign;
@@ -52,6 +63,9 @@ export function parseCampaign(raw: string | null): CampaignState {
       actorSightings: value.actorSightings && typeof value.actorSightings === "object" ? value.actorSightings : {},
       specialistBonds: value.specialistBonds && typeof value.specialistBonds === "object" ? value.specialistBonds : {},
       routeHistory: Array.isArray(value.routeHistory) ? value.routeHistory.filter(item => typeof item === "string").slice(-12) : [],
+      recentCommands: Array.isArray(value.recentCommands) ? value.recentCommands.filter(item => typeof item === "string").slice(-RECENT_COMMANDS) : [],
+      recentInjects: Array.isArray(value.recentInjects) ? value.recentInjects.filter(item => typeof item === "string").slice(-RECENT_INJECTS) : [],
+      recentCrises: Array.isArray(value.recentCrises) ? value.recentCrises.filter(item => typeof item === "string").slice(-RECENT_CRISES) : [],
     };
   } catch {
     return defaultCampaign;
@@ -129,12 +143,40 @@ export function campaignAct(completed: number) {
   return { number: 1, title: "First contact", detail: "Establish the pattern behind a series of apparently isolated compromises." };
 }
 
+// What the director says at the start of each act, and the development that
+// arrives half-way through it, keyed to the route the command's own choices put
+// the campaign on. The acts were thresholds with a title; this is the story
+// they mark.
+const actBriefings: Record<number, string> = {
+  1: "Three organisations have reported intrusions this month that look unrelated. Take each one on its own evidence and tell me whether they are.",
+  2: "The same trust paths keep appearing. Stop treating these as separate incidents and find what connects them.",
+  3: "This is one campaign. Close what is open, and tell me plainly what we still cannot see.",
+};
+const actMidpoints: Record<number, number> = { 1: 2, 2: 5, 3: 8 };
+const routeDevelopments: Record<string, string> = {
+  watchtower: "The access you chose to watch has started to talk: a second organisation's records show the same accounts.",
+  breakwater: "The routes you closed are being tried again from new addresses. Someone is testing what is left.",
+  "common-ground": "Two partners you briefed have found matching activity and shared it with you first.",
+  convergence: "Every open thread now points at the same small set of suppliers and accounts.",
+};
+
+export function campaignStory(state: CampaignState, route: string) {
+  const act = campaignAct(state.completed.length);
+  return {
+    briefing: actBriefings[act.number],
+    development: state.completed.length >= actMidpoints[act.number] ? routeDevelopments[route] ?? null : null,
+  };
+}
+
 export function campaignEnding(state: CampaignState) {
   if (state.completed.length < 10) return null;
   const bonds = Object.values(state.specialistBonds);
   const cohesion = bonds.length ? Math.round(bonds.reduce((sum, value) => sum + value, 0) / bonds.length) : 35;
   const finalRoute = state.routeHistory.at(-1) ?? "common-ground";
-  const coda = ` Final doctrine: ${finalRoute.replace("-", " ")}. Team cohesion: ${cohesion}/100.`;
+  // The ending names what this command did, in the record's own numbers.
+  const { observe, act } = state.commandPosture;
+  const record = ` The record: ten cases cleared in ${state.operations} operation${state.operations === 1 ? "" : "s"}, ${observe} evidence decision${observe === 1 ? "" : "s"} to watch and ${act} to act, ${state.unresolvedThreads ? `${state.unresolvedThreads} unresolved access` : "no access left unresolved"}.`;
+  const coda = `${record} Final doctrine: ${finalRoute.replace("-", " ")}. Team cohesion: ${cohesion}/100.`;
   if (state.leadershipTrust >= 75 && state.readiness >= 75 && state.unresolvedThreads <= 1) return { title: "Collective resilience", detail: "The campaign closes with trusted coordination, strong service continuity and no material unresolved access." + coda };
   if (state.unresolvedThreads >= 4) return { title: "The quiet foothold", detail: "Services survived, but unresolved access leaves the strategic picture uncertain and forces a sustained hunt." + coda };
   if (state.leadershipTrust < 40) return { title: "Operational victory, fractured trust", detail: "The technical campaign was contained, but delayed or unclear decisions weakened collective confidence." + coda };
@@ -198,5 +240,8 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     actorSightings,
     specialistBonds,
     routeHistory: [...current.routeHistory, game.campaignRoute].slice(-12),
+    recentCommands: remember(current.recentCommands ?? [], game.commandHistory.map(record => record.event), RECENT_COMMANDS),
+    recentInjects: remember(current.recentInjects ?? [], game.turns.flatMap(turn => turn.inject ? [turn.inject.id] : []), RECENT_INJECTS),
+    recentCrises: remember(current.recentCrises ?? [], game.setPieceHistory.map(record => record.event), RECENT_CRISES),
   };
 }

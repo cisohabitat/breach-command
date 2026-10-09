@@ -48,7 +48,7 @@ import {
   procedureById,
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, sessionFromNewerBuild, PARKED_SESSION_KEY, SESSION_KEY, type SavedSession } from "@/lib/session";
-import { campaignAct, campaignChanges, campaignEnding, campaignReadable, campaignTier, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { campaignAct, campaignChanges, campaignEnding, campaignStory, campaignReadable, campaignTier, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
@@ -152,6 +152,7 @@ export function useGameSession() {
   const currentAct = campaignAct(campaign.completed.length);
   const currentRouteId = routeForCampaign(campaign);
   const currentRoute = campaignRoutes[currentRouteId];
+  const currentStory = campaignStory(campaign, currentRouteId);
   const previewSeed = seedFor(mode).seed;
   const previewVariant = previewSeed === null ? null : incidentVariant(scenarioChoice, currentRouteId, previewSeed);
   const finalEnding = campaignEnding(campaign);
@@ -188,7 +189,7 @@ export function useGameSession() {
     const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
     const route = routeForCampaign(campaign);
     const automated = botEnabled;
-    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, seed), seed: reproducible ? seed : null });
+    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, seed), seed: reproducible ? seed : null, recentCommands: campaign.recentCommands, recentInjects: campaign.recentInjects, recentCrises: campaign.recentCrises });
     spendChallenge();
     setGame(next);
     // A new operation starts on the default plan; Exhaustive carried over from
@@ -805,6 +806,7 @@ export function useGameSession() {
     activeHypothesis,
     procedureAligned,
     currentAct,
+    currentStory,
     currentRouteId,
     currentRoute,
     previewVariant,

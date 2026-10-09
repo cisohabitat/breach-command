@@ -1,4 +1,4 @@
-import { attacks, scenarios, difficulties, infrastructureTopologies, adversaryProfiles, adversaryObjectives, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
+import { attacks, scenarios, difficulties, infrastructureTopologies, adversaryProfiles, adversaryObjectives, commandEvents, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
 import type { NodePosture } from "./advanced-game";
 
 export const SESSION_KEY = "breach-command.session";
@@ -6,7 +6,7 @@ export const SESSION_KEY = "breach-command.session";
 // newer build's operation outlives an older bundle served offline. A build that
 // can read it moves it back and offers it for resume.
 export const PARKED_SESSION_KEY = "breach-command.session.parked";
-export const SESSION_VERSION = 16;
+export const SESSION_VERSION = 17;
 
 export type SavedSession = {
   version: number;
@@ -105,6 +105,9 @@ export function parseSession(raw: string): SavedSession | null {
       established: Array.isArray(game.established) ? game.established : [],
       lastUsed: game.lastUsed && typeof game.lastUsed === "object" ? game.lastUsed : {},
       injectDeck: Array.isArray(game.injectDeck) ? game.injectDeck : [],
+      // Version 17 remembers the campaign's recent command events; older saves met none.
+      recentCommands: Array.isArray(game.recentCommands) ? game.recentCommands.filter((id: unknown) => typeof id === "string" && id in commandEvents) : [],
+      recentCrises: Array.isArray(game.recentCrises) ? game.recentCrises.filter((id: unknown) => typeof id === "string" && /^sector-\d+(-b)?$/.test(id)) : [],
       responseChoices,
       seed: typeof game.seed === "number" && Number.isFinite(game.seed) ? game.seed : null,
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],

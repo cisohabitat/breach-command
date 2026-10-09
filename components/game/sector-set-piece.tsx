@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { describeMeterChange, sectorSetPieces, type Game, type SetPieceChoice } from "@/lib/advanced-game";
+import { describeMeterChange, setPieceById, type Game, type SetPieceChoice } from "@/lib/advanced-game";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { EffectList } from "@/components/game/effect-list";
 
@@ -11,7 +11,7 @@ export function SectorSetPiece({ game, onChoose }: { game: Game; onChoose: (choi
   const heading = useRef<HTMLHeadingElement>(null);
   useRecoverFocus(heading, game.pendingSetPiece);
   if (!game.pendingSetPiece) return null;
-  const event = sectorSetPieces[game.scenario];
+  const event = setPieceById(game.pendingSetPiece, game.scenario);
   // Numbered ruled rows like the response phase, the warning a rule in the margin
   // of the section: a tinted alert box holding three cards with corner arrows was
   // the stock "choose an option" grid.

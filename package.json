@@ -20,7 +20,8 @@
     "test:responsive:headed": "playwright test tests/e2e/responsive-game.spec.ts --headed",
     "test:responsive:install": "playwright install chromium",
     "start": "next start",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vinext"
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vinext",
+    "repetition": "node scripts/repetition.ts"
   },
   "dependencies": {
     "class-variance-authority": "0.7.1",

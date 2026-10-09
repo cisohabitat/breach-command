@@ -1,4 +1,4 @@
-import { SECTOR_ALERT_AT, attacks, availableIn, commandEvents, getHypothesisStanding, getMapActionEffect, getSectorAlert, sectorSystems, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, sectorSetPieces, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
+import { SECTOR_ALERT_AT, attacks, availableIn, commandEvents, getHypothesisStanding, getMapActionEffect, getSectorAlert, sectorSystems, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, setPieceById, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
 
 export type BotAction =
   | { type: "decision"; choice: DecisionChoice; reason: string }
@@ -38,7 +38,7 @@ function chooseCommand(game: Game): BotAction {
 }
 
 function chooseSetPiece(game: Game): BotAction {
-  const event = sectorSetPieces[game.scenario];
+  const event = setPieceById(game.pendingSetPiece!, game.scenario);
   const utility = (choice: SetPieceChoice) => {
     const option = event[choice];
     const continuityWeight = game.continuity <= 55 ? 3 : 1;

@@ -3197,6 +3197,9 @@ html,body {
   margin-top:4px;
   letter-spacing:.01em;
 }
+.campaign-act-card .act-briefing {
+  color:var(--foreground);
+}
 .campaign-act-card small {
   display:block;
   font-size:var(--type-micro);
@@ -3866,6 +3869,9 @@ html,body {
   background:#e8e1d3;
   border-radius:3px;
   padding:15px;
+}
+.specialist-reaction .specialist-arc {
+  font-style:normal;
 }
 .specialist-reaction p {
   margin-top:8px;
@@ -8693,12 +8699,6 @@ span.effect-list>span.effect.pace.worse>em {
   color:#b1ab9c;
   font-size:var(--type-micro);
 }
-/* A phone screen is 844px and the chrome above the procedure grid was taking more
-   than half of it, so the grid a player touches every turn sat below the fold.
-   These rules come last on purpose: several earlier blocks set the same
-   properties for wider screens, and cascade order is what settles it. */
-@media(max-width:650px) {
-  /* A phone screen is 844px and the chrome above the procedure grid was taking
 /* Where a returning player left off, as a line of the record. */
 .last-operation {
   margin:18px 0 0;
@@ -8733,6 +8733,12 @@ span.effect-list>span.effect.pace.worse>em {
   font-size:var(--type-caption);
   max-width:var(--measure-prose);
 }
+/* A phone screen is 844px and the chrome above the procedure grid was taking more
+   than half of it, so the grid a player touches every turn sat below the fold.
+   These rules come last on purpose: several earlier blocks set the same
+   properties for wider screens, and cascade order is what settles it. */
+@media(max-width:650px) {
+  /* A phone screen is 844px and the chrome above the procedure grid was taking
      more than half of it. The three deciding readouts still share the top row and
      still say their state in words; they lose the stacked layout, and the
      investigation window — which rarely ends an operation — loses its bar. */
