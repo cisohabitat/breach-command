@@ -1,4 +1,7 @@
-export type FeedbackCue = "open" | "success" | "failure" | "warning" | "decision" | "complete";
+// One voice per event class: opening, a check that completed, a find (a stage
+// confirmed), a failed check, a warning, a decision, and the two endings. A find
+// once shared the empty check's voice, and a lost operation the escalation's.
+export type FeedbackCue = "open" | "success" | "find" | "failure" | "warning" | "decision" | "complete" | "lost";
 
 /**
  * The audio layer is dependency-free and asset-free.
@@ -33,7 +36,7 @@ export type FeedbackCue = "open" | "success" | "failure" | "warning" | "decision
  *
  *   // Turn result: identity audit, natural 14 + 3 = 17 against a threshold of 11.
  *   playFeedback(
- *     result.adversaryEvent ? "warning" : result.success ? "success" : "failure",
+ *     result.adversaryEvent ? "warning" : result.revealed ? "find" : result.success ? "success" : "failure",
  *     soundEnabled,
  *     hapticsEnabled,
  *     {
@@ -444,6 +447,8 @@ const cueProfiles: Record<FeedbackCue, CueProfile> = {
   warning: { notes: [260, 260, 220], spacing: 0.11, noteLength: 0.16, basePeak: 0.16, severity: 0.82, margin: 0.12 },
   decision: { notes: [330, 440], spacing: 0.1, noteLength: 0.15, basePeak: 0.16, severity: 0.3, margin: 0.5 },
   complete: { notes: [392, 523, 659, 784], spacing: 0.11, noteLength: 0.18, basePeak: 0.17, severity: 0.15, margin: 0.9 },
+  find: { notes: [523, 784], spacing: 0.12, noteLength: 0.22, basePeak: 0.18, severity: 0.18, margin: 0.82 },
+  lost: { notes: [330, 262, 196], spacing: 0.16, noteLength: 0.26, basePeak: 0.16, severity: 0.9, margin: 0.05 },
 };
 
 // Call-local rolling state. It is the "context" the frozen public signature
@@ -482,7 +487,7 @@ function playFeedbackCue(cue: FeedbackCue, sound: boolean, haptics: boolean, con
   const mod = context ? contextModulation(context, cue) : null;
 
   if (haptics && typeof navigator !== "undefined" && "vibrate" in navigator) {
-    const pattern = mod?.haptics ?? (cue === "warning" ? [35, 45, 70] : cue === "failure" ? [70, 35, 70] : [30]);
+    const pattern = mod?.haptics ?? (cue === "warning" ? [35, 45, 70] : cue === "failure" ? [70, 35, 70] : cue === "lost" ? [80, 40, 80, 40, 120] : cue === "find" ? [30, 30, 30] : [30]);
     navigator.vibrate(pattern);
   }
   if (!sound || typeof window === "undefined") return;
@@ -490,7 +495,7 @@ function playFeedbackCue(cue: FeedbackCue, sound: boolean, haptics: boolean, con
   if (!bus) return;
 
   const profile = cueProfiles[cue];
-  const negative = cue === "warning" || cue === "failure";
+  const negative = cue === "warning" || cue === "failure" || cue === "lost";
   sequence += 1;
   if (negative) {
     stress = clamp(stress + 0.34, 0, 1);

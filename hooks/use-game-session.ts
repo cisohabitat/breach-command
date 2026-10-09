@@ -294,7 +294,7 @@ export function useGameSession() {
       setPendingUndo(null);
       setRolling(false);
       setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}. Adversary progress is ${next.objectiveProgress}.`);
-      playFeedback(result.adversaryEvent ? "warning" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
+      playFeedback(next.status === "lost" ? "lost" : result.adversaryEvent ? "warning" : result.revealed ? "find" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
         procedure: result.procedure,
         success: result.success,
         roll: result.raw,
@@ -357,7 +357,7 @@ export function useGameSession() {
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
-    playFeedback(next.status === "won" ? "complete" : next.status === "lost" ? "warning" : "decision", soundEnabled, hapticsEnabled);
+    playFeedback(next.status === "won" ? "complete" : next.status === "lost" ? "lost" : "decision", soundEnabled, hapticsEnabled);
     setAnnouncement(next.status === "won" ? "Response complete. The incident is standing down. The after-action review is ready when you are."
       : next.status === "lost" ? `The operation is lost. ${getLossReason(next).title}. The after-action review is ready when you are.`
       : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");

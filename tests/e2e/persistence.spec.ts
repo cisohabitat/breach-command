@@ -42,7 +42,7 @@ test.describe("local persistence", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     });
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Game settings" }).click();
     const toggle = page.getByRole("switch").first();
     await expect(toggle).toBeVisible();
@@ -51,7 +51,7 @@ test.describe("local persistence", () => {
     const after = await toggle.getAttribute("aria-checked");
     expect(after).not.toEqual(before);
 
-    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.reload({ waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Game settings" }).click();
     await expect(page.getByRole("switch").first()).toHaveAttribute("aria-checked", after ?? "false");
   });

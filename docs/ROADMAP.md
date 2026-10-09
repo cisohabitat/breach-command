@@ -307,6 +307,24 @@ Size: L (six to eight sessions, plus the designer's time). Depends on
 Phase 0's review; should follow Phase 1 so the stylesheet is consolidated
 before it is restyled.
 
+Status, 9 October 2026. The parts that need no designer are done:
+`docs/design/ART-DIRECTION.md` records every current decision with its
+reason and lists what is open, as the brief the designer starts from. The
+type system has two faces and three weights: bold is 600 everywhere and the
+700 face is no longer shipped, which took each screen's count of distinct
+text styles from 16, 20 and 21 to 15, 17 and 18, and
+`tests/e2e/type-styles.spec.ts` holds those counts as a ratchet. Motion is
+one vocabulary of two easings and six durations in `:root`, used by every
+animation, and four keyframes nothing used (two of them glows) are gone.
+Sound has one voice per event class, with a find and a loss voiced apart from
+an empty check and an escalation. Visual baselines are re-recorded after the
+pass.
+
+Open, and the designer's: the art direction itself, the sector artefact and
+the recognition test, the landing page's pitch column, the remaining title
+and label weights, a commissioned sound palette, and the second
+design-literate review on real devices.
+
 ## Phase 4: content depth
 
 Goal: a campaign of ten operations never repeats a beat, and every sector

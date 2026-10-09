@@ -10,7 +10,6 @@ const form = localFont({
     { path: "./fonts/plex-sans-cond-400.woff2", weight: "400" },
     { path: "./fonts/plex-sans-cond-500.woff2", weight: "500" },
     { path: "./fonts/plex-sans-cond-600.woff2", weight: "600" },
-    { path: "./fonts/plex-sans-cond-700.woff2", weight: "700" },
   ],
   variable: "--font-display",
   display: "swap",
