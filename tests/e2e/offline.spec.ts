@@ -9,7 +9,12 @@ import { expect, test } from "@playwright/test";
 // test's build into the next; this one is about the worker, so it allows it.
 test.use({ serviceWorkers: "allow" });
 
-test("a single visit is enough to play offline", async ({ page, context }) => {
+test("a single visit is enough to play offline", async ({ page, context, browserName }) => {
+  // Playwright's WebKit on Linux fails the offline reload inside the browser
+  // ("WebKit encountered an internal error") before the worker can answer, so
+  // the result says nothing about Safari. Offline play on a real iPhone is a
+  // manual check in docs/ROADMAP.md, Phase 1.
+  test.skip(browserName === "webkit", "Playwright's WebKit cannot reload offline through a service worker");
   await page.goto("/", { waitUntil: "networkidle" });
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
   const cached = await page.evaluate(async () => {

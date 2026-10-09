@@ -116,13 +116,21 @@ test.describe("keyboard play", () => {
     await expect(map).toBeFocused();
   });
 
-  test("copy result puts a spoiler-free summary on the clipboard", async ({ page, context }) => {
-    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  test("copy result puts a spoiler-free summary on the clipboard", async ({ page, context, browserName }) => {
+    // Only Chromium lets a test grant clipboard access and read it back. In
+    // WebKit and Firefox the action must still answer: copied, or the text shown
+    // to copy by hand.
+    const readable = browserName === "chromium";
+    if (readable) await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     const game = responsePhaseGame();
     await openWithSave(page, game);
     await page.getByRole("button", { name: "Resume", exact: true }).click();
     for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
     await page.getByRole("button", { name: /Copy result/ }).click();
+    if (!readable) {
+      await expect(page.locator(".share-result")).toContainText(/copied|The quiet intrusion/);
+      return;
+    }
     await expect(page.locator(".share-result")).toContainText("copied");
     const text = await page.evaluate(() => navigator.clipboard.readText());
     expect(text).toContain("The quiet intrusion");

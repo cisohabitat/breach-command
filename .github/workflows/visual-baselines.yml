@@ -1,0 +1,61 @@
+# Visual baselines are recorded where they are checked. Text anti-aliasing on a
+# GitHub runner differs from a developer's container by about one per cent of a
+# phone screen's pixels, which is enough to fail a strict comparison. Run this by
+# hand after a deliberate visual change: it records every baseline on a runner
+# and pushes them to the ci/visual-baselines branch, to be reviewed image by
+# image and brought into the change that caused them.
+name: Record visual baselines
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    name: Record visual baselines
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/cache/restore@v6
+        with:
+          path: .sites-runtime/pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v6
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Chromium system dependencies
+        if: steps.browsers.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      - run: pnpm build
+      - name: Record
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: |
+          pnpm start -p 3000 > next-start.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf http://localhost:3000 > /dev/null && break
+            sleep 1
+          done
+          pnpm exec playwright test tests/e2e/visual.spec.ts --update-snapshots=all
+      - name: Push to ci/visual-baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci/visual-baselines
+          git add tests/e2e/visual.spec.ts-snapshots
+          git commit -m "Record visual baselines on a runner from ${GITHUB_SHA::7}" || echo "No baseline changed"
+          git push -f origin ci/visual-baselines
