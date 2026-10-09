@@ -109,3 +109,9 @@ contentful paint and time to interactive: both are the cost of hydrating
 Lighthouse needs a fresh page, so it measures the assignment screen only;
 the Playwright budget covers an operation in progress by seeding a saved
 session first.
+
+Phases 5 to 7 (the personal record, the replay, the share card, the
+facilitator sheet and the message catalogue) brought all script by the time
+play starts, warmed parts included, to 1,060,546 B, 546 B over its budget;
+the first load stayed under 850,000 B because the drawing code and the
+dialogs load on demand. The all-script budget moved to 1,080,000 B.

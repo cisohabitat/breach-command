@@ -77,6 +77,8 @@ The settings panel can export a portable backup containing campaign progress and
 
 Daily Operation always plays the day's seed, and Weekly Operation the week's, unless a loaded code says otherwise, and challenge codes use their own, allowing the same configuration to be replayed or shared. Scenario mastery awards one star for a successful recovery, two for a score of 74 or above, and three for a score of 88 or above. Past that, each case has a mastery ladder of five rungs shown on its slip: won at Crisis, won without revising, won in half the window, won with a tired specialist, and won in Expert.
 
+Accessibility is recorded criterion by criterion against WCAG 2.2 AA in `docs/accessibility.md`, with the tests that show each. The stylesheet is written in logical properties so a right-to-left locale needs only a catalogue, and interface strings are moving into the message catalogue in `lib/i18n/`; open the game with `?locale=en-XA` to see the catalogued strings accented and a third longer.
+
 For a training room, `/educators` is the educator pack: a session plan, what each difficulty teaches, three sets of debrief questions and the vocabulary in plain words, linked from the field guide. The review prints a facilitator sheet for the trainer, with the whole hidden chain, each stage's MITRE ATT&CK technique, the turn ledger, the decisions and the questions that fit the outcome; every technique in the game maps to its nearest ATT&CK technique, shown in the review once the operation is over.
 
 Every operation played to an end goes into a personal record on the device (`lib/ledger.ts`): the case, difficulty, mode, outcome, score, hypothesis accuracy and challenge code. The landing page shows hypothesis accuracy over the last ten operations against the ten before, and the record downloads as a CSV and travels in the backup. The ending's **Save image** draws the result on the device as a PNG in the case-file style, from the same counts as Copy result, never a technique. A reproducible operation's review offers to replay it with the Bot Commander, on the same seed, variant and route, as a practice run that records nothing.
@@ -144,6 +146,7 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `lib/feedback.ts` | Audio and haptic feedback, loaded on first use through `lib/feedback-lazy.ts` |
 | `components/game/fault-boundary.tsx` | Keeps a render fault inside its workspace or dialog, with a copyable diagnostic |
 | `lib/telemetry.ts` | Device-local balance counters |
+| `lib/i18n/` | The message catalogue: English as the source of truth, `Intl` plurals and numbers, and the pseudo-locale `en-XA` (`?locale=en-XA`) for testing longer strings |
 | `lib/educators.ts` | The debrief question sets and what each difficulty teaches, for the educator pack at `/educators` and the facilitator sheet |
 | `lib/ledger.ts` | The personal record of every operation, its trend and CSV export |
 | `lib/share-image.ts` | The result image, drawn on a canvas on the device and loaded only when asked for |

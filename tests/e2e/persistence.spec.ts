@@ -190,6 +190,7 @@ test.describe("replayability records", () => {
     await page.evaluate(() => { localStorage.removeItem("breach-command.ledger"); localStorage.setItem("breach-command.campaign", JSON.stringify({ completed: [] })); });
     await page.getByRole("textbox", { name: "Progress backup" }).fill(text);
     await page.getByRole("button", { name: "Restore backup" }).click();
+    await page.getByRole("button", { name: "Replace this device’s progress" }).click();
     expect(JSON.parse(await page.evaluate(() => localStorage.getItem("breach-command.ledger") ?? "[]"))).toHaveLength(2);
     expect(JSON.parse(await page.evaluate(() => localStorage.getItem("breach-command.campaign") ?? "{}")).ladder["0"]).toEqual(["crisis", "expert"]);
   });

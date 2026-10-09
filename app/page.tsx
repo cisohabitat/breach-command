@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookOpen, RotateCcw, Settings2, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import { useMessages } from "@/hooks/use-messages";
 import { BriefingScreen } from "@/components/game/briefing-screen";
 import { FaultBoundary } from "@/components/game/fault-boundary";
 import { useGameSession } from "@/hooks/use-game-session";
@@ -52,6 +53,7 @@ function useOpened(open: boolean) {
 
 export default function Home() {
   const session = useGameSession();
+  const { t } = useMessages();
   const { game, ended, highContrast, announcement, criticalAnnouncement, storageNotice, rolling, setRules, setSettings, setNewConfirm, setStorageNotice, resetToBriefing } = session;
   const show = {
     actionSheet: useOpened(!!session.selected),
@@ -70,9 +72,31 @@ export default function Home() {
     else window.setTimeout(warm, 1500);
   }, []);
 
+  // A dialog's focus trap moves focus without scrolling when Tab wraps from its
+  // last control to its first, which left the focused control off screen in a
+  // long report or review (WCAG 2.4.11). Scrolling to the nearest edge does
+  // nothing when it is already in view, and scroll padding keeps it clear of a
+  // pinned foot.
+  // Only focus that follows Tab is revealed: a dialog's own initial focus keeps
+  // its opening scroll, or the review opened part-way down its first page.
+  useEffect(() => {
+    let tabbedAt = 0;
+    const key = (event: KeyboardEvent) => { if (event.key === "Tab") tabbedAt = Date.now(); };
+    const reveal = (event: FocusEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (Date.now() - tabbedAt < 400 && target?.closest?.("[role=dialog]")) target.scrollIntoView({ block: "nearest", inline: "nearest" });
+    };
+    document.addEventListener("keydown", key, true);
+    document.addEventListener("focusin", reveal);
+    return () => {
+      document.removeEventListener("keydown", key, true);
+      document.removeEventListener("focusin", reveal);
+    };
+  }, []);
+
   return (
     <div className={`app-shell ${highContrast ? "high-contrast" : ""}`}>
-      <a className="skip-link" href="#main-content">Skip to main content</a>
+      <a className="skip-link" href="#main-content">{t("shell.skip")}</a>
       <div className="sr-only" aria-live="polite" aria-atomic="true">{announcement}</div>
       <div className="sr-only" aria-live="assertive" aria-atomic="true">{criticalAnnouncement}</div>
       {storageNotice && (
@@ -81,17 +105,17 @@ export default function Home() {
               heading claimed an unreadable save and a reset campaign for all of them. */}
           <strong>Saved data</strong>
           <span>{storageNotice}</span>
-          <button onClick={() => setStorageNotice("")} aria-label="Dismiss storage notice"><X size={16} /></button>
+          <button onClick={() => setStorageNotice("")} aria-label={t("shell.dismissStorage")}><X size={16} /></button>
         </div>
       )}
       <header className="topbar">
-        <Link href="/" className="brand" aria-label="Breach Command home">
-          <span className="brand-name">Breach Command</span><span className="brand-light">Incident desk</span>
+        <Link href="/" className="brand" aria-label={t("shell.home")}>
+          <span className="brand-name">Breach Command</span><span className="brand-light">{t("shell.desk")}</span>
         </Link>
         <div className="top-actions">
-          <button className="quiet-button" onClick={() => setRules(true)} aria-label="Field guide"><BookOpen size={17} /><span>Field guide</span></button>
-          <button className="quiet-button" onClick={() => setSettings(true)} aria-label="Game settings"><Settings2 size={17} /><span>Settings</span></button>
-          {game && <button className="quiet-button" disabled={rolling} onClick={() => ended ? resetToBriefing() : setNewConfirm(true)} aria-label="New incident"><RotateCcw size={16} /><span>New incident</span></button>}
+          <button className="quiet-button" onClick={() => setRules(true)} aria-label={t("shell.fieldGuide")}><BookOpen size={17} /><span>{t("shell.fieldGuide")}</span></button>
+          <button className="quiet-button" onClick={() => setSettings(true)} aria-label={t("shell.settingsLabel")}><Settings2 size={17} /><span>{t("shell.settings")}</span></button>
+          {game && <button className="quiet-button" disabled={rolling} onClick={() => ended ? resetToBriefing() : setNewConfirm(true)} aria-label={t("shell.newIncident")}><RotateCcw size={16} /><span>{t("shell.newIncident")}</span></button>}
         </div>
       </header>
 

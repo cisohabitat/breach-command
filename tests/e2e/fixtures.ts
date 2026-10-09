@@ -76,7 +76,7 @@ export function mapOfferGame(): Game {
   return game;
 }
 
-export async function openWithSave(page: Page, game: Game | null, guided = false, preferences: Record<string, boolean> | null = null) {
+export async function openWithSave(page: Page, game: Game | null, guided = false, preferences: Record<string, boolean> | null = null, path = "/") {
   await page.addInitScript(([key, value, prefs]) => {
     try {
       localStorage.clear();
@@ -85,7 +85,7 @@ export async function openWithSave(page: Page, game: Game | null, guided = false
       if (prefs) localStorage.setItem("breach-command.preferences", prefs);
     } catch {}
   }, [SESSION_KEY, game ? serialiseSession(game, guided, false) : "", preferences ? JSON.stringify(preferences) : ""] as const);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto(path, { waitUntil: "domcontentloaded" });
   await expect(page.locator(".briefing-screen")).toBeVisible();
   // The page is prerendered, so its key handlers exist only once it has hydrated.
   await page.waitForLoadState("networkidle");

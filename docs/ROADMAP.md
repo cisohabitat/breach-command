@@ -568,6 +568,28 @@ Exit criteria:
 Size: L (six sessions; the catalogue refactor is most of it). Depends on
 Phase 4's content being stable.
 
+Status, 9 October 2026. Met: the WCAG 2.2 AA checklist is in
+`docs/accessibility.md`, each criterion marked met (with the test or feature),
+met by design to confirm, not applicable, or open. Target size (2.5.8) and
+focus not obscured (2.4.11) are tested on the main surfaces at 390 and
+1280 px (`tests/e2e/wcag.spec.ts`), which found two real failures, both
+fixed: Tab wrapping to a dialog's first control left it off screen, and a
+report option sat under the pinned "more responses" strip. The pass also
+added a confirmation to restoring a backup (3.3.4) and stopped the map's
+active stage pulsing forever (2.2.2). The hidden-objective check the roadmap
+asked to keep is now a browser test of every text, name and live region.
+Right-to-left readiness: 183 declarations became logical properties
+(`scripts/logical-css.py`), pixel-identical in English across all 32
+seeded screens, and `tests/stylesheet.test.ts` keeps them so. The catalogue
+architecture is in place (`lib/i18n/`, `Intl` plurals and numbers), with the
+shell, tabs, window and ending migrated and a pseudo-locale a third longer
+that holds every layout at 320 to 1280 px (`tests/e2e/locale.spec.ts`).
+
+Not met: the screen-reader (VoiceOver, NVDA) and keyboard-only playthroughs;
+a first real locale, which needs a translator and reviewer; and "no string
+outside the catalogue", where 441 strings remain in components, held as a
+ceiling by `tests/i18n.test.ts`, plus the engine's prose.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

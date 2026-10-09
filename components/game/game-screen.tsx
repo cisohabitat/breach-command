@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CircleHelp, TriangleAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useMessages } from "@/hooks/use-messages";
 import { TutorialCoach } from "@/components/game/tutorial-coach";
 import { CommandWorkspace } from "@/components/game/command-workspace";
 import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
@@ -22,6 +23,7 @@ const lossStatus: Record<LossCause, string> = {
 };
 
 export function GameScreen({ session }: { session: GameSession }) {
+  const { t } = useMessages();
   const {
     game, activeScenario, config, ended, activeWorkspace, setActiveWorkspace,
     tutorial, dismissTutorial, setRules, meterPulse,
@@ -73,8 +75,8 @@ export function GameScreen({ session }: { session: GameSession }) {
               pressures that do. */}
           <div className="operation-status">
             <span className="mono">{game.status === "response" ? "Response phase" : ended ? "Final status" : "Investigation window"}</span>
-            <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> of {getTurnLimit(game)} turns remaining</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : lossStatus[getLossReason(game).cause]}</span>
-            <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label="Investigation window remaining" />
+            <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> {t("window.remaining", { limit: getTurnLimit(game) })}</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : lossStatus[getLossReason(game).cause]}</span>
+            <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label={t("window.label")} />
           </div>
           {/* The sector's own margin ends an operation at zero like the three
               readouts, and a Crisis playtest lost to it having never seen it:
@@ -127,9 +129,9 @@ export function GameScreen({ session }: { session: GameSession }) {
       <BotControl session={session} />
 
       <nav className="workspace-tabs" aria-label="Command workspace" ref={tabs}>
-        <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><span><strong>Command</strong></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Decision waiting</b>}</button>
-        <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><span><strong>Investigate</strong></span><b>{game.revealed.length} of 4 stages</b></button>
-        <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><span><strong>Briefing</strong></span><b>{game.turns.length} turn{game.turns.length === 1 ? "" : "s"}</b></button>
+        <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><span><strong>{t("tabs.command")}</strong></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>{t("tabs.decisionWaiting")}</b>}</button>
+        <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><span><strong>{t("tabs.investigate")}</strong></span><b>{t("tabs.stages", { found: game.revealed.length })}</b></button>
+        <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><span><strong>{t("tabs.briefing")}</strong></span><b>{t("tabs.turns", { count: game.turns.length })}</b></button>
         {/* A copy for sighted players who have scrolled past the readouts; the
             readouts themselves stay the accessible source. */}
         <div className={`pinned-readouts ${metersAway ? "shown" : ""}`} aria-hidden="true">

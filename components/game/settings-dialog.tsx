@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { FileUp, GraduationCap, Maximize2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -11,6 +11,8 @@ export function SettingsDialog({ session }: { session: GameSession }) {
     hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled, telemetry, clearLocalRecord,
     exportProgress, importProgress, backupInput, setBackupInput, backupMessage, restartTutorial,
   } = session;
+  // Restoring replaces progress, so it asks once more and says what it replaces (WCAG 3.3.4).
+  const [confirmRestore, setConfirmRestore] = useState(false);
   const content = useRef<HTMLDivElement>(null);
 
   return (
@@ -31,7 +33,9 @@ export function SettingsDialog({ session }: { session: GameSession }) {
           <label htmlFor="shortcut-setting"><span><b>Keyboard shortcuts</b><small>F opens the field guide, M mutes, G toggles guided reflection. Turn off if you use speech input.</small></span><Switch id="shortcut-setting" checked={shortcutsEnabled} onCheckedChange={setShortcutsEnabled} /></label>
         </div>
         <section className="local-telemetry"><div><span><b>Local balance record</b><small>Stored only on this device. No gameplay data is transmitted.</small></span></div><p><strong>{telemetry.operationsStarted}</strong> starts <strong>{telemetry.operationsFinished}</strong> completed <strong>{telemetry.wins}</strong> wins <strong>{telemetry.losses}</strong> losses <strong>{telemetry.exercises}</strong> exercises <strong>{telemetry.turns}</strong> turns <strong>{telemetry.revisions}</strong> revisions</p><ul className="first-session" aria-label="First operation on this device">{describeFirstSession(telemetry).map(line => <li key={line}>{line}</li>)}</ul><button onClick={clearLocalRecord}>Clear local record</button></section>
-        <section className="backup-console"><div><span><b>Portable local backup</b><small>Copy campaign progress and the current non-Ironman operation between devices.</small></span><button className="text-action" onClick={exportProgress}>Export</button></div><textarea aria-label="Progress backup" value={backupInput} onChange={event => setBackupInput(event.target.value)} placeholder="Export a backup, or paste one here to restore it." /><button className="secondary-button full" onClick={importProgress} disabled={!backupInput.trim()}><FileUp size={16} /> Restore backup</button>{backupMessage && <p aria-live="polite">{backupMessage}</p>}</section>
+        <section className="backup-console"><div><span><b>Portable local backup</b><small>Copy campaign progress and the current non-Ironman operation between devices.</small></span><button className="text-action" onClick={exportProgress}>Export</button></div><textarea aria-label="Progress backup" value={backupInput} onChange={event => { setBackupInput(event.target.value); setConfirmRestore(false); }} placeholder="Export a backup, or paste one here to restore it." />{confirmRestore
+          ? <div className="restore-confirm" role="group" aria-label="Confirm restore"><p>Restoring replaces this device’s campaign, record and any saved operation with the backup’s. It cannot be undone; export first to keep what is here.</p><button className="secondary-button full" onClick={() => { setConfirmRestore(false); importProgress(); }}><FileUp size={16} /> Replace this device’s progress</button><button className="text-action" onClick={() => setConfirmRestore(false)}>Cancel</button></div>
+          : <button className="secondary-button full" onClick={() => setConfirmRestore(true)} disabled={!backupInput.trim()}><FileUp size={16} /> Restore backup</button>}{backupMessage && <p aria-live="polite">{backupMessage}</p>}</section>
         <button className="secondary-button full" onClick={restartTutorial}><GraduationCap size={17} /> Restart command tutorial</button>
         <button className="secondary-button full" onClick={() => { const action = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); Promise.resolve(action).catch(() => {}); }}><Maximize2 size={17} /> Toggle full screen</button>
       </DialogContent>
