@@ -7,9 +7,12 @@ import { openWithSave, pendingDecisionGame, responsePhaseGame, twoStagesGame } f
 // widths the layout sweep checks. Most of what visual reviews found (an
 // effects column stranded mid-row, three figures at three heights, two rules
 // twenty pixels apart) was a regression a diff would have caught before merge.
-// Baselines are Chromium on Linux; update them with
-// `pnpm test:visual --update-snapshots` after a deliberate visual change and
-// review every changed image before committing it.
+// Baselines are Chromium on a GitHub runner, recorded by the "Record visual
+// baselines" workflow after a deliberate visual change and reviewed image by
+// image before they are brought in. A developer's machine renders text with
+// slightly different anti-aliasing (about one per cent of a phone screen), so
+// outside CI the comparison allows three per cent: enough for glyph edges, not
+// for a moved column or a missing rule.
 const widths = [[320, 720], [390, 844], [820, 1180], [1280, 800]] as const;
 
 // The incident variant previewed on the assignment is drawn fresh on each
@@ -22,7 +25,7 @@ async function resume(page: Page) {
 }
 
 async function snap(page: Page, name: string) {
-  await expect(page).toHaveScreenshot(name, { mask: masked(page), animations: "disabled", caret: "hide", maxDiffPixelRatio: 0.01 });
+  await expect(page).toHaveScreenshot(name, { mask: masked(page), animations: "disabled", caret: "hide", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
 }
 
 test.describe("visual baselines", () => {
