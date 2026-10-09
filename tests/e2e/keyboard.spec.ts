@@ -75,9 +75,10 @@ test.describe("keyboard play", () => {
     await expect(page.getByRole("dialog"), "with shortcuts off, F does nothing").toHaveCount(0);
   });
 
-  test("typing in the specialist select is not a shortcut", async ({ page }) => {
+  test("typing in a text field is not a shortcut", async ({ page }) => {
     await openWithSave(page, null);
-    await page.locator(".specialist-picker select").focus();
+    await page.locator(".advanced-setup > summary").click();
+    await page.getByRole("textbox", { name: "Challenge code" }).focus();
     await page.keyboard.press("f");
     await page.waitForTimeout(300);
     await expect(page.getByRole("dialog")).toHaveCount(0);

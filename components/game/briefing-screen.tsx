@@ -65,7 +65,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </dl>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
-        {previewVariant && <div className="variant-brief"><span className="case-stamp amended">Amended</span><strong>{previewVariant.title}</strong><p>{previewVariant.briefing}</p><small>{previewVariant.modifier}</small></div>}
+        {previewVariant && <div className="variant-brief"><p className="variant-line"><span className="variant-label">Amended:</span> <strong>{previewVariant.title}.</strong> <small>{previewVariant.modifier}</small></p><p>{previewVariant.briefing}</p></div>}
         <div className="mission-selector" aria-label="Select incident">
           {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery star${(campaign.mastery[String(index)] ?? 0) === 1 ? "" : "s"}` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1)}</span>{campaign.completed.includes(index) && <small aria-hidden="true">{"|".repeat(campaign.mastery[String(index)] ?? 0)}</small>}</button>)}
         </div>
@@ -75,13 +75,16 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <p>{difficulties[difficulty].description}</p>
         </div>
         <div className="specialist-picker">
-          <label htmlFor="specialist"><span className="field-label">Specialist on call</span><small id="specialist-fatigue">{(campaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
+          {/* A ruled list with a radio mark, set as the difficulty is: a boxed
+              select with the platform's chevron was the one stock control left
+              on the slip. */}
+          <div className="specialist-head"><span className="field-label">Specialist on call</span><small id="specialist-fatigue">{(campaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
             ? `${namedSpecialists[specialist].name} is at fatigue ${campaign.specialistFatigue[specialist]} of 6, where the specialist bonus no longer applies. Deploying someone else lets them rest.`
-            : `Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty. At ${SPECIALIST_EXHAUSTED_AT} of 6 the specialist's +1 on their own sources no longer applies.`}</small></label>
-          <select id="specialist" aria-label="Deploy specialist" aria-describedby="specialist-fatigue" value={specialist} onChange={event => setSpecialist(event.target.value as SpecialistId)}>
-            {(Object.keys(specialists) as SpecialistId[]).map(id => <option key={id} value={id}>{namedSpecialists[id].name}, {specialists[id].title.toLowerCase()}</option>)}
-          </select>
-          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}, fatigue {campaign.specialistFatigue[specialist] ?? 0} of 6. {specialists[specialist].ability} Rapport with {namedSpecialists[specialist].name} {campaign.specialistBonds[specialist] ?? 35}/100: it grows with each operation together, and the team&apos;s average shapes how the campaign ends.</p>
+            : `Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty. At ${SPECIALIST_EXHAUSTED_AT} of 6 the specialist's +1 on their own sources no longer applies.`}</small></div>
+          <div className="difficulty-picker specialist-roster">
+            <div role="group" aria-label="Deploy specialist" aria-describedby="specialist-fatigue">{(Object.keys(specialists) as SpecialistId[]).map(id => <button key={id} className={specialist === id ? "active" : ""} aria-pressed={specialist === id} onClick={() => setSpecialist(id)}><strong>{namedSpecialists[id].name}</strong><small>{specialists[id].title}, fatigue {campaign.specialistFatigue[id] ?? 0} of 6</small></button>)}</div>
+          </div>
+          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}, fatigue {campaign.specialistFatigue[specialist] ?? 0} of 6. {specialists[specialist].ability} Rapport with {namedSpecialists[specialist].name} {campaign.specialistBonds[specialist] ?? 35} of 100: it grows with each operation together, and the team&apos;s average shapes how the campaign ends.</p>
         </div>
         <details className="advanced-setup">
           <summary>Advanced operation settings <span>{gameModes[mode].title}</span></summary>

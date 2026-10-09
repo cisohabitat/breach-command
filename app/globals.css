@@ -3093,34 +3093,23 @@ html,body {
   padding:17px 0;
   border-bottom:1px solid #3e4248;
 }
-.specialist-picker label {
+.specialist-picker label,.specialist-head {
   display:flex;
   flex-direction:column;
   align-items:flex-start;
   gap:4px;
   margin-bottom:9px;
 }
-.specialist-picker label small {
+.specialist-picker label small,.specialist-head small {
   color:#92979f;
   font-size:var(--type-caption);
 }
-.specialist-picker select {
-  width:100%;
-  text-overflow:ellipsis;
-  min-height:46px;
-  border:1px solid #51565e;
-  background:#171a1f;
-  color:#f6f1e4;
-  border-radius:3px;
-  padding:9px 12px;
-  font-size:var(--type-body);
-}
 .specialist-picker p {
-  font-size:var(--type-body)!important;
+  font-size:var(--type-caption)!important;
   min-height:0!important;
   color:#beb49e!important;
   margin-top:9px;
-  line-height:var(--leading-prose);
+  line-height:var(--leading-base);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
@@ -6184,7 +6173,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
     gap:6px;
     margin:18px 0 20px;
   }
-  .variant-brief p {
+  .variant-brief p:not(.variant-line) {
     display:none;
   }
 }
@@ -6332,7 +6321,7 @@ every value it carries is also present as static text. */
 }
 .meter-crossing {
   position:absolute;
-  inset:3px;
+  inset:-4px;
   z-index:2;
   border-radius:3px;
   border:1px solid #ff967d;
@@ -6344,7 +6333,7 @@ every value it carries is also present as static text. */
 still sees the meter marked as crossed once the ring is suppressed. */
 .impact-meter.crossing,.continuity-meter.crossing,.objective-meter.crossing {
   outline:1px solid #ff967d;
-  outline-offset:-4px;
+  outline-offset:4px;
 }
 /* Response phases: containment drops in, assurance scans across, recovery lifts. */
 .response-stage {
@@ -9003,17 +8992,19 @@ body {
 .report-fields {
   margin-top:12px;
 }
-/* The three readouts are one row of form cells: they share a height, so their
-   figures sit level whatever their labels do. */
+/* The three readouts are one ruled line of figures: a rule above and a
+   hairline below, the three set apart by space alone. Boxed as three cells
+   with a label, a bar, a big figure and a status each, they read as a
+   dashboard's stat row. They still share their rows, so the figures sit
+   level whatever their labels do. */
 .case-meters {
-  gap:0;
-  border:1px solid #383d45;
+  gap:0 28px;
+  border:0;
+  border-top:1px solid #6b717a;
+  border-bottom:1px solid #383d45;
 }
 .case-meters>div {
-  padding:8px 12px;
-  border-left:1px solid #383d45;
-}
-.case-meters>div:first-child {
+  padding:9px 0 8px;
   border-left:0;
 }
 
@@ -9032,7 +9023,7 @@ body {
   color:#f6f1e4;
 }
 .form-row.on-desk dd.open {
-  color:#e8c968;
+  color:#f6f1e4;
 }
 .slip-form {
   margin-bottom:10px;
@@ -9259,17 +9250,6 @@ body {
   font-size:1.08em;
   line-height:1;
 }
-/* The specialist select is square like every other control, its caret drawn
-   by two rules rather than the platform's rounded chevron. */
-.specialist-picker select {
-  appearance:none;
-  border-radius:2px;
-  padding-right:36px;
-  background-image:linear-gradient(45deg,transparent 50%,#d7d1c3 50%),linear-gradient(135deg,#d7d1c3 50%,transparent 50%);
-  background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;
-  background-size:5px 5px,5px 5px;
-  background-repeat:no-repeat;
-}
 .recorded-line {
   margin:0 0 10px;
   color:var(--text-soft);
@@ -9278,6 +9258,127 @@ body {
 .recorded-line strong {
   color:#f6f1e4;
   font-weight:600;
+}
+/* Bug pass after round 12. */
+/* The incident variant is one run-in line, not a stamped block of three: it
+   held the difficulty under the sticky start on a laptop. Amber is for
+   warnings, and an amended briefing is not one. */
+.variant-brief {
+  border-color:#3e434a;
+  padding:10px 0;
+  margin:12px 0;
+}
+.variant-brief .variant-line {
+  color:#beb49e!important;
+  font-size:var(--type-caption)!important;
+}
+.variant-brief .variant-line strong {
+  display:inline;
+  margin:0;
+  color:#f6f1e4;
+  font-size:inherit;
+}
+.variant-label {
+  color:var(--text-soft);
+}
+.variant-brief .variant-line small {
+  display:inline;
+  margin:0;
+  color:inherit;
+}
+.variant-brief .variant-line+p {
+  margin-top:4px;
+}
+/* The adversary's pace is a warning only when it presses. */
+.adversary-state {
+  color:var(--text-soft);
+}
+/* The adversary's pace in a list of effects is a step, set as the value. */
+span.effect-list>span.effect.pace>em {
+  grid-column:2/-1;
+  text-align:right;
+  color:#d7d1c3;
+}
+span.effect-list>span.effect.pace.worse>em {
+  color:#f0a48c;
+}
+.paper-dialog span.effect-list>span.effect.pace>em {
+  color:#1d1b18;
+}
+.paper-dialog span.effect-list>span.effect.pace.worse>em {
+  color:#9e3220;
+}
+/* On the report the responses are not an annotation: the left rule ran on past
+   the last visible one into the strip at the report's foot. */
+.report-dialog .evidence-decision {
+  border-left:0;
+  padding-left:0;
+}
+/* Mastery is a figure in ink beside its note, not a gold reward. */
+.paper-dialog .mastery-panel {
+  align-items:baseline;
+  border:0;
+  border-top:1px solid #c9bfac;
+  border-radius:0;
+  background:none;
+  padding:12px 0;
+}
+.paper-dialog .mastery-panel strong {
+  color:#1d1b18;
+}
+/* The other calls are ruled entries at the review's text size. */
+.paper-dialog .counterfactuals p {
+  margin:0;
+  padding:8px 0;
+  border-top:1px solid #d8cfbd;
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+  letter-spacing:0;
+}
+/* A recorded decision's effects follow its heading without a second rule. */
+.paper-dialog .decision-summary span.effect-list {
+  border-top:0;
+}
+/* The plan reads on its own line under the procedures' heading rather than
+   wrapping beside it. */
+.procedure-section>.section-heading {
+  flex-wrap:wrap;
+}
+.procedure-section .established-key {
+  flex-basis:100%;
+}
+/* A button's label is set at its left edge everywhere, as on the slip: some
+   were centred and some were not. */
+.primary-button,.secondary-button {
+  justify-content:flex-start;
+  text-align:left;
+}
+/* The review's stage swatch is set on the swatch itself: the section's inline
+   stage colour is the desk's pastel and outranks a custom property set here. */
+.paper-dialog .debrief-chain section:nth-child(1) .eyebrow::before {
+  background:#9e3220;
+}
+.paper-dialog .debrief-chain section:nth-child(2) .eyebrow::before {
+  background:#6f5200;
+}
+.paper-dialog .debrief-chain section:nth-child(3) .eyebrow::before {
+  background:#6e3657;
+}
+.paper-dialog .debrief-chain section:nth-child(4) .eyebrow::before {
+  background:#1f5a85;
+}
+/* The roster's caption reads under the name when the row is narrow, rather
+   than wrapping at the right edge. */
+@media(max-width:650px) {
+  .specialist-roster button {
+    grid-template-columns:1.4rem minmax(0,1fr);
+    row-gap:1px;
+  }
+  .specialist-roster small {
+    grid-column:2;
+    justify-self:start;
+    text-align:left;
+  }
 }
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
@@ -9310,7 +9411,7 @@ body {
   }
   .case-meters {
     grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:6px;
+    gap:0 14px;
   }
   .objective-meter {
     grid-column:auto;
@@ -9324,7 +9425,7 @@ body {
     grid-template-areas:"label label" "bar value" "status status";
     align-items:center;
     gap:2px 6px;
-    padding:8px;
+    padding:8px 0;
   }
   .case-meters>div>.mono {
     grid-area:label;
@@ -9462,6 +9563,16 @@ body {
   }
   .hypothesis-board.has-reading .hypothesis-standing .standing-meter {
     display:none;
+  }
+  /* On the bar the stage and the reading are one phrase in one face: a bold
+     label beside a larger condensed title sat on two baselines. */
+  .hypothesis-board.has-reading .hypothesis-standing>.eyebrow {
+    display:inline;
+  }
+  .hypothesis-board.has-reading .hypothesis-standing .standing-reading {
+    font-family:var(--font-ui);
+    font-size:var(--type-caption);
+    font-weight:600;
   }
   .hypothesis-board.has-reading .hypothesis-detail {
     display:none;
@@ -9671,10 +9782,15 @@ body {
   }
   .case-meters {
     display:grid;
-    grid-template-columns:repeat(3,138px);
-    width:auto;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    column-gap:16px;
+    width:460px;
     max-width:none;
-    flex:0 1 auto;
+    flex:0 0 auto;
+  }
+  .case-meters>div {
+    width:auto;
+    min-width:0;
   }
 }
 /* Beside the reading, the reference column is narrow below 1195 px, and three map
