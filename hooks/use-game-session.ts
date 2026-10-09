@@ -699,7 +699,7 @@ export function useGameSession() {
       if (!storageWritable()) setStorageNotice("This browser is not allowing saved data, so progress from this visit will not be kept.");
       else if (stored !== null && !campaignReadable(stored)) setStorageNotice("Campaign progress on this device could not be read, so a new campaign has started.");
     }, 0);
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register(`/sw.js?v=${process.env.NEXT_PUBLIC_APP_VERSION ?? "0"}-${process.env.NEXT_PUBLIC_BUILD_ID ?? "local"}`).catch(() => {});
     return () => clearTimeout(loadTimer);
   }, []);
 

@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   checks:
-    name: Engine suite, lint, types and build
+    name: Engine suite, balance, lint, types and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -34,6 +34,10 @@ jobs:
           restore-keys: pnpm-store-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      # Fixed seeds: the figures repeat exactly until a rule or content change
+      # moves them, and a move of more than three points fails here by name.
+      - name: Balance and repetition
+        run: pnpm balance:check
       - run: pnpm lint
       - run: pnpm exec tsc --noEmit
       - run: pnpm build

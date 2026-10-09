@@ -5,6 +5,7 @@ import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialist
 import { campaignRank, standingEffects } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
 import { describeWhen } from "@/lib/last-operation";
+import { useMessages } from "@/hooks/use-messages";
 import { hypothesisTrend, ledgerCsv } from "@/lib/ledger";
 import { ladderRungs } from "@/lib/campaign";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -13,6 +14,7 @@ import type { GameSession } from "@/hooks/use-game-session";
 const stageQuestions = ["How they got in", "Where they went, and as whom", "How they stay", "What leaves, and how"];
 
 export function BriefingScreen({ session }: { session: GameSession }) {
+  const { t } = useMessages();
   const {
     campaign, currentAct, currentStory, currentRoute, finalEnding,
     scenarioChoice, setScenarioChoice, activeScenario, previewVariant,
@@ -178,7 +180,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </> : <button className="primary-button start-button" onClick={() => start()}>Begin investigation</button>}
         <div className="mission-meta"><span>20–35 minutes solo</span><span>No real systems</span></div>
       </section>
-      <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator.</p>
+      <p className="adaptation-note">An unofficial solo adaptation inspired by <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">Backdoors &amp; Breaches</a>. Original scenarios and card text. Rule-based computer facilitator. <span className="nowrap build-version">{t("footer.version", { version: process.env.NEXT_PUBLIC_APP_VERSION ?? "", build: process.env.NEXT_PUBLIC_BUILD_ID ?? "" })}</span></p>
     </main>
   );
 }

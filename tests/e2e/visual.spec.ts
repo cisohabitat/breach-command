@@ -17,7 +17,8 @@ const widths = [[320, 720], [390, 844], [820, 1180], [1280, 800]] as const;
 
 // The incident variant previewed on the assignment is drawn fresh on each
 // load, so its line is masked rather than allowed to fail every run.
-const masked = (page: Page) => [page.locator(".variant-brief")];
+// The build line changes with every commit.
+const masked = (page: Page) => [page.locator(".variant-brief"), page.locator(".build-version")];
 
 async function resume(page: Page) {
   await page.getByRole("button", { name: "Resume", exact: true }).click();

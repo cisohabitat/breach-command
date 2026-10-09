@@ -1,6 +1,6 @@
 {
   "name": "breach-command",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -21,7 +21,10 @@
     "test:responsive:install": "playwright install chromium",
     "start": "next start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vinext",
-    "repetition": "node scripts/repetition.ts"
+    "repetition": "node scripts/repetition.ts",
+    "validate:content": "node --test tests/content.test.ts tests/glossary.test.ts tests/drafts.test.ts",
+    "balance:check": "node scripts/balance-check.ts",
+    "new-scenario": "node scripts/new-scenario.ts"
   },
   "dependencies": {
     "class-variance-authority": "0.7.1",

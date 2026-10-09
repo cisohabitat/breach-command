@@ -632,6 +632,25 @@ Exit criteria:
 Size: M (three to four sessions). Depends on Phase 0 and Phase 1; parts of
 it (the CI matrix) should land as soon as Phase 0 produces them.
 
+Status, 9 October 2026. Built: every pull request and push runs the engine
+suite, the save corpus, `pnpm balance:check` (600 seeded operations per
+difficulty and 300 seeded campaigns, failing by name when a figure moves
+more than three points), the browser suites with the visual baselines and the
+performance budgets in Chromium, and the layout, input, storage, offline and
+share suites in WebKit and Firefox, with the failure evidence kept as an
+artifact; Vercel's preview is the pull request's pixels. Version 0.9.0 is in
+`package.json`, the footer and the diagnostics, with `CHANGELOG.md` kept by
+hand and a release workflow that tags each new version once Verify passes on
+`main`; the service worker's cache is named for each deploy. Content tooling:
+`pnpm validate:content` in under two seconds and `pnpm new-scenario`, whose
+draft the tests reject until all of its TODOs are written (228 in a fresh
+draft). Copy diagnostics in Settings, the release and rollback procedure in
+`docs/RELEASING.md`, and monthly grouped framework updates.
+
+Not yet met, and only time can meet them: three consecutive releases shipped
+through the procedure, and a new scenario scaffolded and made to pass in one
+session, which needs an author.
+
 ## Cross-cutting rules
 
 - **Measure before and after.** Every phase names its instrument. A change

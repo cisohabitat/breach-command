@@ -1,4 +1,7 @@
-const CACHE = "breach-command-v107";
+// The cache is named for the release and build the page registered this worker
+// with (/sw.js?v=<version>-<build>), so every deploy gets a cache of its own and
+// the old one is deleted on activation. It was a number bumped by hand.
+const CACHE = `breach-command-${new URL(self.location.href).searchParams.get("v") || "dev"}`;
 const CORE = ["/", "/manifest.webmanifest", "/favicon.svg"];
 
 // The page's own scripts and styles are cached on install, read from the page

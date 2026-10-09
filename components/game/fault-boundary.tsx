@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
+import { recordLastError } from "@/lib/diagnostics";
 
 // A fault in one part of the game stays in that part. Before, a render error in
 // the review or a workspace took the whole page to the last-resort error
@@ -27,6 +28,7 @@ export class FaultBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error) {
     console.error(`Breach Command: ${this.props.name} stopped.`, error);
+    recordLastError(this.props.name, error);
   }
 
   private reset = () => {

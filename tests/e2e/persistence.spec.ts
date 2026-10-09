@@ -195,3 +195,24 @@ test.describe("replayability records", () => {
     expect(JSON.parse(await page.evaluate(() => localStorage.getItem("breach-command.campaign") ?? "{}")).ladder["0"]).toEqual(["crisis", "expert"]);
   });
 });
+
+test.describe("diagnostics", () => {
+  test("Copy diagnostics names the build and storage, and nothing the player stored", async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.clear();
+        localStorage.setItem("breach-command.tutorial-complete", "true");
+        localStorage.setItem("breach-command.campaign", JSON.stringify({ completed: [0, 1], xp: 120, bestScores: { "0": 88 } }));
+      } catch {}
+    });
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Game settings" }).click();
+    await page.getByRole("button", { name: "Copy diagnostics" }).click();
+    const text = await page.getByRole("textbox", { name: "Diagnostics" }).inputValue();
+    expect(text).toMatch(/^Breach Command diagnostics\nVersion: \d+\.\d+\.\d+, build \S+/);
+    expect(text).toContain("Storage: writable");
+    expect(text).toMatch(/campaign \d+ B/);
+    expect(text).not.toContain("bestScores");
+    expect(text).not.toContain("88");
+  });
+});

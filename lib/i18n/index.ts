@@ -17,7 +17,7 @@ const accents: Record<string, string> = { a: "á", e: "é", i: "î", o: "ö", u:
 export function pseudo(text: string) {
   // Placeholders stay as they are; everything else is accented and padded.
   const accented = text.split(/(\{[a-zA-Z]+\})/).map(part => /^\{[a-zA-Z]+\}$/.test(part) ? part : [...part].map(char => accents[char] ?? char).join("")).join("");
-  const pad = "·".repeat(Math.max(1, Math.round(text.replace(/\{[a-zA-Z]+\}/g, "").length / 3)));
+  const pad = "·".repeat(Math.max(1, Math.round(text.length / 3)));
   return `[${accented}${pad}]`;
 }
 

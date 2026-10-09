@@ -38,3 +38,18 @@ export function storageWritable(): boolean {
   removeStored(probe);
   return true;
 }
+
+// The game's own keys and the size of each value, for the diagnostics a player
+// can copy into a report. Values are never read out, only measured.
+export function storedSizes(prefix = "breach-command."): Record<string, number> {
+  try {
+    const sizes: Record<string, number> = {};
+    for (let index = 0; index < localStorage.length; index++) {
+      const key = localStorage.key(index);
+      if (key?.startsWith(prefix)) sizes[key] = (localStorage.getItem(key) ?? "").length;
+    }
+    return sizes;
+  } catch {
+    return {};
+  }
+}

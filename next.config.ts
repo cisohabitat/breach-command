@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import packageJson from "./package.json" with { type: "json" };
 
 // The game is a static, single-origin client application with no backend and no
 // third-party requests, so these headers cost nothing and close the ordinary
@@ -13,7 +14,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // The commit a build came from, shown in a fault's diagnostic so a report can
   // be matched to the code that produced it.
-  env: { NEXT_PUBLIC_BUILD_ID: (process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "local").slice(0, 7) },
+  // The version comes from package.json and is shown in the footer and Settings;
+  // together they name the service worker's cache, so every deploy gets its own.
+  env: {
+    NEXT_PUBLIC_BUILD_ID: (process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "local").slice(0, 7),
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

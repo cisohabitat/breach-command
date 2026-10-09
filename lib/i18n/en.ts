@@ -29,6 +29,12 @@ export const en = {
   "ending.imageSaved": "Result image saved.",
   "ending.imageFailed": "This browser could not draw the image. Copy result works instead.",
   "ending.resultLabel": "Result to copy",
+  "settings.diagnostics": "Diagnostics",
+  "settings.diagnosticsNote": "The build, browser and storage state for a bug report. Nothing personal; the game sends nothing.",
+  "settings.copyDiagnostics": "Copy diagnostics",
+  "settings.diagnosticsCopied": "Diagnostics copied.",
+  "settings.diagnosticsManual": "Copy the text above into your report.",
+  "footer.version": "Version {version}, build {build}.",
 } as const;
 
 export type Catalogue = typeof en;

@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Switch } from "@/components/ui/switch";
 import type { GameSession } from "@/hooks/use-game-session";
 import { describeFirstSession } from "@/lib/telemetry";
+import { collectDiagnostics } from "@/lib/diagnostics";
+import { useMessages } from "@/hooks/use-messages";
 
 export function SettingsDialog({ session }: { session: GameSession }) {
   const {
@@ -13,6 +15,15 @@ export function SettingsDialog({ session }: { session: GameSession }) {
   } = session;
   // Restoring replaces progress, so it asks once more and says what it replaces (WCAG 3.3.4).
   const [confirmRestore, setConfirmRestore] = useState(false);
+  const { t } = useMessages();
+  const [diagnostics, setDiagnostics] = useState("");
+  const [diagnosticsMessage, setDiagnosticsMessage] = useState("");
+  const copyDiagnostics = () => {
+    const text = collectDiagnostics();
+    setDiagnostics(text);
+    if (!navigator.clipboard?.writeText) return setDiagnosticsMessage(t("settings.diagnosticsManual"));
+    navigator.clipboard.writeText(text).then(() => setDiagnosticsMessage(t("settings.diagnosticsCopied")), () => setDiagnosticsMessage(t("settings.diagnosticsManual")));
+  };
   const content = useRef<HTMLDivElement>(null);
 
   return (
@@ -36,6 +47,9 @@ export function SettingsDialog({ session }: { session: GameSession }) {
         <section className="backup-console"><div><span><b>Portable local backup</b><small>Copy campaign progress and the current non-Ironman operation between devices.</small></span><button className="text-action" onClick={exportProgress}>Export</button></div><textarea aria-label="Progress backup" value={backupInput} onChange={event => { setBackupInput(event.target.value); setConfirmRestore(false); }} placeholder="Export a backup, or paste one here to restore it." />{confirmRestore
           ? <div className="restore-confirm" role="group" aria-label="Confirm restore"><p>Restoring replaces this device’s campaign, record and any saved operation with the backup’s. It cannot be undone; export first to keep what is here.</p><button className="secondary-button full" onClick={() => { setConfirmRestore(false); importProgress(); }}><FileUp size={16} /> Replace this device’s progress</button><button className="text-action" onClick={() => setConfirmRestore(false)}>Cancel</button></div>
           : <button className="secondary-button full" onClick={() => setConfirmRestore(true)} disabled={!backupInput.trim()}><FileUp size={16} /> Restore backup</button>}{backupMessage && <p aria-live="polite">{backupMessage}</p>}</section>
+        {/* For a bug report: the build, the browser and the storage state, shown
+            before it is copied, with nothing personal and nothing played. */}
+        <section className="backup-console diagnostics-console"><div><span><b>{t("settings.diagnostics")}</b><small>{t("settings.diagnosticsNote")}</small></span><button className="text-action" onClick={copyDiagnostics}>{t("settings.copyDiagnostics")}</button></div>{diagnostics && <textarea readOnly aria-label={t("settings.diagnostics")} value={diagnostics} onFocus={event => event.currentTarget.select()} />}{diagnosticsMessage && <p aria-live="polite">{diagnosticsMessage}</p>}</section>
         <button className="secondary-button full" onClick={restartTutorial}><GraduationCap size={17} /> Restart command tutorial</button>
         <button className="secondary-button full" onClick={() => { const action = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); Promise.resolve(action).catch(() => {}); }}><Maximize2 size={17} /> Toggle full screen</button>
       </DialogContent>

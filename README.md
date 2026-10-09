@@ -117,6 +117,8 @@ pnpm exec tsc --noEmit
 pnpm build
 ```
 
+`pnpm balance:check` is the smoke version CI runs: 600 seeded operations per difficulty and 300 campaigns, failing by name if a figure moves more than three points from `scripts/balance-expected.json`. `pnpm validate:content` runs the content tests alone for authors, and `pnpm new-scenario <slug>` scaffolds a new sector's tables (`docs/CONTENT.md`). Releases follow `docs/RELEASING.md`: the version in `package.json`, an entry in `CHANGELOG.md`, and a tag once Verify passes on `main`.
+
 Measure balance before and after a rule change. `pnpm balance` has the Bot Commander play 3,000 seeded operations per difficulty from visible evidence alone and reports win, loss and exercise rates, average score and hypothesis accuracy, and what ended each lost operation. The seeds are fixed, so two runs play the same incidents; `pnpm balance 300 2` measures a command at campaign tier 2. It also prints each adversary profile's win rate. `pnpm repetition` plays simulated ten-case campaigns through `recordCampaignResult` and reports how often a command event, inject or sector crisis repeats within an act; `pnpm repetition 1000 forget` plays without the campaign's memory of recent beats.
 
 `pnpm test` runs the engine suites under `node --test` — one file per concern, so a failure reports rather than stopping the run — with deterministic rule checks and 1,290 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover. `pnpm test:a11y` runs an axe audit over the assignment screen at every supported width and over the field guide, settings and command surfaces at a phone width; the narrow widths matter because the topbar hides its button labels below 431 px.
@@ -146,6 +148,7 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `lib/feedback.ts` | Audio and haptic feedback, loaded on first use through `lib/feedback-lazy.ts` |
 | `components/game/fault-boundary.tsx` | Keeps a render fault inside its workspace or dialog, with a copyable diagnostic |
 | `lib/telemetry.ts` | Device-local balance counters |
+| `lib/diagnostics.ts` | Copy diagnostics in Settings: build, browser and storage state for a bug report, nothing personal |
 | `lib/i18n/` | The message catalogue: English as the source of truth, `Intl` plurals and numbers, and the pseudo-locale `en-XA` (`?locale=en-XA`) for testing longer strings |
 | `lib/educators.ts` | The debrief question sets and what each difficulty teaches, for the educator pack at `/educators` and the facilitator sheet |
 | `lib/ledger.ts` | The personal record of every operation, its trend and CSV export |

@@ -74,7 +74,7 @@ export const sectorSystems: SectorSystem[] = [
   { title: "Clearing-window integrity", unit: "CLEARING INTEGRITY", rule: "Integrity erodes with delay and failure: adversary tempo counts double and every failed procedure costs more close to settlement.", plain: "Whether payments can still be settled correctly before the clearing window closes.", baseLoss: 6, tempoWeight: 2, revealRelief: 3, failureCost: 3, exposureBias: 0, boundaryRelief: 0, lateBias: 0, enterpriseBias: 0, focusedBias: 0, enterpriseObjective: 0, commsRecovery: 0, exhaustiveContinuity: 0, containmentCost: 2, monitoringRecovery: 1, transmissions: ["Fraud operations identifies several unusual approvals.", "The clearing cut-off is approaching."] },
 ];
 
-const objectiveRotation: AdversaryObjectiveId[][] = [
+export const objectiveRotation: AdversaryObjectiveId[][] = [
   ["espionage", "exfiltration"], ["disruption", "espionage"], ["preposition", "disruption"], ["exfiltration", "disruption"], ["exfiltration", "espionage"],
   ["preposition", "espionage"], ["disruption", "espionage"], ["disruption", "preposition"], ["preposition", "disruption"], ["fraud", "exfiltration"],
 ];
