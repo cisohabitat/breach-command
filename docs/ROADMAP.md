@@ -109,6 +109,17 @@ Exit criteria:
 
 Size: M (three to four sessions). No dependencies.
 
+Status, 9 October 2026: the instruments an agent can build are in place.
+The protocol and its results template are in `docs/playtests/`; the local
+record keeps the first operation's times and revisions, shows them in
+Settings and travels in the backup; 32 visual baselines (eight screens at
+320, 390, 820 and 1280) and the performance budgets run in CI; WebKit and
+Firefox run the responsive, keyboard, persistence and offline suites in
+their own CI job; Lighthouse's first reading is 94 / 100 / 100 / 100
+(`docs/perf-budgets.md`); the designer's brief is in `docs/reviews/`.
+Open, because they need people: the first playtest round and the design
+review.
+
 ## Phase 1: foundation
 
 Goal: the game behaves identically in every supported browser, loads fast

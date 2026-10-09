@@ -101,6 +101,9 @@ pnpm test:responsive:install # first run only; or set PLAYWRIGHT_CHROMIUM_EXECUT
 pnpm test:responsive
 pnpm test:a11y
 pnpm test:persistence
+pnpm test:visual       # pixel baselines; --update-snapshots after a deliberate change
+pnpm test:performance  # script, style and paint budgets on a throttled phone
+pnpm test:browsers     # adds WebKit and Firefox where installed
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm build

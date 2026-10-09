@@ -48,7 +48,7 @@ import {
 import { parseSession, serialiseSession, sessionFromNewerBuild, PARKED_SESSION_KEY, SESSION_KEY, type SavedSession } from "@/lib/session";
 import { campaignAct, campaignChanges, campaignEnding, campaignReadable, campaignTier, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
-import { clearTelemetry, readTelemetry, recordTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
+import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
@@ -335,6 +335,12 @@ export function useGameSession() {
     const next = setHypothesis(current, id);
     setGame(next);
     setPendingUndo(null);
+    // A revision is a change from a reading already held, the step the first
+    // session is measured on; declaring the first reading is not one.
+    if (current.hypothesis && current.hypothesis !== id && !botRunRef.current) {
+      recordTelemetry("revision");
+      setTelemetry(readTelemetry());
+    }
     setAnnouncement(`Working hypothesis set to ${hypotheses.find(item => item.id === id)?.title}.`);
   }
 
@@ -429,14 +435,14 @@ export function useGameSession() {
   }
 
   function exportProgress() {
-    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, session: game && game.mode !== "ironman" && !botRun ? serialiseSession(game, guided, fastResolve) : null });
+    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), session: game && game.mode !== "ironman" && !botRun ? serialiseSession(game, guided, fastResolve) : null });
     setBackupInput(payload);
     navigator.clipboard?.writeText(payload).then(() => setBackupMessage("Backup copied to the clipboard."), () => setBackupMessage("Backup prepared. Copy the text below."));
   }
 
   function importProgress() {
     try {
-      const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null };
+      const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null; telemetry?: unknown };
       if (payload.format !== "breach-command-backup") throw new Error("format");
       // A backup without a readable campaign would otherwise restore the empty
       // default over the player's progress and call that a restore.
@@ -449,6 +455,13 @@ export function useGameSession() {
       setCampaign(nextCampaign);
       campaignRef.current = nextCampaign;
       const storedCampaign = writeStored(CAMPAIGN_KEY, JSON.stringify(nextCampaign));
+      // The local record travels with the backup so a tester's device can be
+      // read back; an older backup without one leaves this device's record alone.
+      if (payload.telemetry && typeof payload.telemetry === "object") {
+        const restoredTelemetry = parseTelemetry(payload.telemetry);
+        writeTelemetry(restoredTelemetry);
+        setTelemetry(restoredTelemetry);
+      }
       if (restoredSession) {
         writeStored(SESSION_KEY, serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
         setSavedSession(restoredSession);

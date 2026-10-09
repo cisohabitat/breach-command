@@ -9380,6 +9380,15 @@ span.effect-list>span.effect.pace.worse>em {
     text-align:left;
   }
 }
+/* The first operation on this device, in sentences under the counts. */
+.local-telemetry .first-session {
+  margin:8px 0 0;
+  padding:0;
+  list-style:none;
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+}
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
    These rules come last on purpose: several earlier blocks set the same

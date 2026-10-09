@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {newGame,attacks,procedures,sectorProcedures,scenarios,infrastructureTopologies} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,sessionFromNewerBuild,SESSION_VERSION} from "../lib/session.ts";
-import {clearTelemetry,emptyTelemetry,readTelemetry,recordTelemetry} from "../lib/telemetry.ts";
+import {clearTelemetry,describeFirstSession,emptyTelemetry,formatElapsed,parseTelemetry,readTelemetry,recordTelemetry} from "../lib/telemetry.ts";
 
 
 test("refuses a save that no playthrough could produce", () => {
@@ -79,4 +79,41 @@ test("keeps the local balance record honest", () => {
   // With no storage at all the record stays empty rather than accumulating on a shared default.
   recordTelemetry("start",{scenario:1});recordTelemetry("start",{scenario:1});
   assert.deepEqual(readTelemetry(),emptyTelemetry());
+});
+
+test("records the first operation on a device once, and reads back what it can trust", () => {
+  // The newcomer playtest protocol reads these back against a tester's notes, so
+  // they describe the first operation only and survive an edited backup.
+  const store=new Map<string,string>();
+  (globalThis as {localStorage?:unknown}).localStorage={getItem:(key:string)=>store.get(key)??null,setItem:(key:string,value:string)=>void store.set(key,value),removeItem:(key:string)=>void store.delete(key)};
+  try{
+    assert.deepEqual(describeFirstSession(readTelemetry()),["No operation has been started on this device yet."]);
+    recordTelemetry("turn",{procedure:"identity",now:500});
+    assert.equal(readTelemetry().firstSession.firstProcedureAt,null,"a procedure before any start is not the first session's");
+    recordTelemetry("start",{scenario:0,now:1_000});
+    recordTelemetry("turn",{procedure:"identity",now:81_000});
+    recordTelemetry("revision",{now:141_000});
+    recordTelemetry("loss",{now:601_000});
+    recordTelemetry("start",{scenario:1,now:700_000});
+    recordTelemetry("turn",{procedure:"network",now:701_000});
+    recordTelemetry("revision",{now:702_000});
+    recordTelemetry("win",{now:900_000});
+    const record=readTelemetry();
+    assert.deepEqual(record.firstSession,{startedAt:1_000,firstProcedureAt:81_000,firstRevisionAt:141_000,endedAt:601_000,outcome:"loss"},"the first operation's times are set once and never moved");
+    assert.equal(record.revisions,2);
+    assert.deepEqual(describeFirstSession(record),[
+      "First procedure ran 1 min 20 s after the first operation began.",
+      "First revision of a reading came 2 min 20 s in.",
+      "The first operation ended 10 min in, lost.",
+    ]);
+  }finally{
+    delete (globalThis as {localStorage?:unknown}).localStorage;
+  }
+  assert.equal(formatElapsed(45_000),"45 s");
+  assert.equal(formatElapsed(7_500_000),"2 h 5 min");
+  const edited=parseTelemetry({wins:"many",losses:-3,turns:4.7,procedures:{identity:2,bogus:"x"},firstSession:{startedAt:"yesterday",outcome:"draw"}});
+  assert.deepEqual([edited.wins,edited.losses,edited.turns],[0,0,4],"an edited count falls back rather than carrying through");
+  assert.deepEqual(edited.procedures,{identity:2});
+  assert.deepEqual(edited.firstSession,{startedAt:null,firstProcedureAt:null,firstRevisionAt:null,endedAt:null,outcome:null});
+  assert.deepEqual(parseTelemetry(["not","a","record"]),emptyTelemetry());
 });

@@ -71,7 +71,7 @@ jobs:
         run: pnpm exec playwright install-deps chromium
       - run: pnpm build
       # The suites run against the production build, which is what Vercel serves.
-      - name: Accessibility, persistence, keyboard and responsive suites
+      - name: Accessibility, persistence, keyboard, responsive, visual and performance suites
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
         run: |
@@ -86,6 +86,58 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-results
+          path: |
+            test-results/
+            next-start.log
+          retention-days: 14
+
+  # WebKit (Safari's engine) and Firefox run the suites that exercise layout,
+  # input, storage and the offline cache. A phone is a primary target, and iOS
+  # browsers are all WebKit; before this job nothing ran outside Chromium.
+  other-browsers:
+    name: WebKit and Firefox
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/cache/restore@v6
+        with:
+          path: .sites-runtime/pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v6
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-webkit-firefox-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install WebKit and Firefox
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps webkit firefox
+      - name: Install WebKit and Firefox system dependencies
+        if: steps.browsers.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps webkit firefox
+      - run: pnpm build
+      - name: Responsive, keyboard, persistence and offline suites
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          PLAYWRIGHT_ALL_BROWSERS: "1"
+        run: |
+          pnpm start -p 3000 > next-start.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf http://localhost:3000 > /dev/null && break
+            sleep 1
+          done
+          pnpm exec playwright test --project=webkit --project=firefox
+      - name: Keep the failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-results-other-browsers
           path: |
             test-results/
             next-start.log

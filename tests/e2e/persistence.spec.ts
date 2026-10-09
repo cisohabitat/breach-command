@@ -127,4 +127,25 @@ test.describe("local persistence", () => {
     await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
     expect(await page.evaluate(key => localStorage.getItem(key), PARKED_SESSION_KEY), "it leaves the parking slot").toBeNull();
   });
+  test("the first operation's record survives a reload and travels in the backup", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
+    await page.addInitScript(() => {
+      try {
+        if (localStorage.getItem("breach-command.seeded")) return;
+        localStorage.clear();
+        localStorage.setItem("breach-command.tutorial-complete", "true");
+        localStorage.setItem("breach-command.balance", JSON.stringify({ operationsStarted: 1, turns: 3, revisions: 1, firstSession: { startedAt: 1000, firstProcedureAt: 81000, firstRevisionAt: 141000, endedAt: null, outcome: null } }));
+        localStorage.setItem("breach-command.seeded", "1");
+      } catch {}
+    });
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Game settings" }).click();
+    const record = page.getByRole("list", { name: "First operation on this device" });
+    await expect(record).toContainText("First procedure ran 1 min 20 s after the first operation began.");
+    await expect(record).toContainText("The first operation has not ended.");
+    await page.getByRole("button", { name: "Export" }).click();
+    const backup = JSON.parse(await page.getByRole("textbox", { name: "Progress backup" }).inputValue());
+    expect(backup.telemetry.firstSession.firstProcedureAt).toBe(81000);
+  });
 });
