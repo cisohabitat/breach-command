@@ -5,6 +5,7 @@ import { TutorialCoach } from "@/components/game/tutorial-coach";
 import { CommandWorkspace } from "@/components/game/command-workspace";
 import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
 import { BriefingWorkspace } from "@/components/game/briefing-workspace";
+import { FaultBoundary } from "@/components/game/fault-boundary";
 import { BotControl } from "@/components/game/bot-control";
 import { gameModes, getAdversaryState, getLossReason, getOperationalLabel, getSectorAlert, getTurnLimit, SECTOR_ALERT_AT, sectorSystems, type LossCause } from "@/lib/advanced-game";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
@@ -142,11 +143,11 @@ export function GameScreen({ session }: { session: GameSession }) {
       <div className="game-layout workspace-shell" ref={shell}>
         <div className="table-area" hidden={activeWorkspace === "briefing"}>
           {activeWorkspace !== "briefing" && tutorial && game.status === "playing" && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <TutorialCoach game={game} workspace={activeWorkspace} onNavigate={() => setActiveWorkspace("investigate")} onDismiss={dismissTutorial} />}
-          <CommandWorkspace session={session} />
-          {activeWorkspace === "investigate" && game.status === "playing" && <InvestigateWorkspace session={session} />}
+          <FaultBoundary name="Command workspace"><CommandWorkspace session={session} /></FaultBoundary>
+          {activeWorkspace === "investigate" && game.status === "playing" && <FaultBoundary name="Investigate workspace"><InvestigateWorkspace session={session} /></FaultBoundary>}
         </div>
 
-        <BriefingWorkspace session={session} />
+        <FaultBoundary name="Briefing workspace"><BriefingWorkspace session={session} /></FaultBoundary>
       </div>
 
       <footer className="game-footer"><span><span className="nowrap">Breach Command</span> <span className="separator">/</span> <span className="nowrap">Single-player tabletop</span></span><button onClick={() => setRules(true)}>Rules &amp; attribution <CircleHelp size={14} /></button></footer>

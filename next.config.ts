@@ -11,6 +11,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // The commit a build came from, shown in a fault's diagnostic so a report can
+  // be matched to the code that produced it.
+  env: { NEXT_PUBLIC_BUILD_ID: (process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "local").slice(0, 7) },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -7,15 +7,20 @@ import { openWithSave, twoStagesGame } from "./fixtures";
 // when the budget was set (docs/perf-budgets.md), so the build can only get
 // heavier or slower by changing this file on purpose. Chromium only: the
 // paint timings come from its Performance APIs.
-type Measure = { scriptBytes: number; styleBytes: number; fcp: number; lcp: number; cls: number };
+// Initial script is what the HTML references, parsed before the page answers;
+// the rest is warmed when the browser is idle and counts only toward the total.
+type Measure = { initialScriptBytes: number; scriptBytes: number; styleBytes: number; fcp: number; lcp: number; cls: number };
 
 async function measure(page: Page, open: () => Promise<void>): Promise<Measure> {
   const sizes = { script: 0, style: 0 };
+  const byUrl = new Map<string, number>();
   page.on("response", async response => {
     const type = response.request().resourceType();
     if (type !== "script" && type !== "stylesheet") return;
     const body = await response.body().catch(() => null);
-    if (body) sizes[type === "script" ? "script" : "style"] += body.length;
+    if (!body) return;
+    sizes[type === "script" ? "script" : "style"] += body.length;
+    byUrl.set(new URL(response.url()).pathname, body.length);
   });
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 150, downloadThroughput: 1_600_000 / 8, uploadThroughput: 750_000 / 8 });
@@ -34,11 +39,14 @@ async function measure(page: Page, open: () => Promise<void>): Promise<Measure> 
     const w = window as unknown as { __vitals: { lcp: number; cls: number } };
     return { fcp: paint ? paint.startTime : 0, lcp: w.__vitals.lcp, cls: w.__vitals.cls };
   });
-  return { scriptBytes: sizes.script, styleBytes: sizes.style, ...vitals };
+  const html = await (await page.request.get("/")).text();
+  const initial = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+\.js/g) ?? [])];
+  const initialScriptBytes = initial.reduce((sum, path) => sum + (byUrl.get(path) ?? 0), 0);
+  return { initialScriptBytes, scriptBytes: sizes.script, styleBytes: sizes.style, ...vitals };
 }
 
 function report(label: string, value: Measure) {
-  console.log(`${label}: script ${value.scriptBytes} B (${(value.scriptBytes / 1024).toFixed(0)} KB), style ${value.styleBytes} B (${(value.styleBytes / 1024).toFixed(0)} KB), FCP ${value.fcp.toFixed(0)} ms, LCP ${value.lcp.toFixed(0)} ms, CLS ${value.cls.toFixed(3)}`);
+  console.log(`${label}: initial script ${value.initialScriptBytes} B (${(value.initialScriptBytes / 1024).toFixed(0)} KB), all script ${value.scriptBytes} B (${(value.scriptBytes / 1024).toFixed(0)} KB), style ${value.styleBytes} B (${(value.styleBytes / 1024).toFixed(0)} KB), FCP ${value.fcp.toFixed(0)} ms, LCP ${value.lcp.toFixed(0)} ms, CLS ${value.cls.toFixed(3)}`);
 }
 
 test.describe("performance budgets", () => {
@@ -48,7 +56,8 @@ test.describe("performance budgets", () => {
   test("the assignment screen", async ({ page }) => {
     const value = await measure(page, () => openWithSave(page, null));
     report("assignment", value);
-    expect(value.scriptBytes, "decoded script shipped on first load").toBeLessThanOrEqual(budgets.assignment.scriptBytes);
+    expect(value.initialScriptBytes, "decoded script the page needs before it answers").toBeLessThanOrEqual(budgets.assignment.initialScriptBytes);
+    expect(value.scriptBytes, "decoded script including what is warmed when idle").toBeLessThanOrEqual(budgets.assignment.scriptBytes);
     expect(value.styleBytes, "decoded style shipped on first load").toBeLessThanOrEqual(budgets.assignment.styleBytes);
     expect(value.lcp, "largest contentful paint on a throttled phone").toBeLessThanOrEqual(budgets.assignment.lcp);
     expect(value.cls, "cumulative layout shift").toBeLessThanOrEqual(budgets.assignment.cls);
@@ -60,7 +69,7 @@ test.describe("performance budgets", () => {
       await page.getByRole("button", { name: "Resume", exact: true }).click();
     });
     report("operation", value);
-    expect(value.scriptBytes, "decoded script shipped by the time play starts").toBeLessThanOrEqual(budgets.operation.scriptBytes);
+    expect(value.scriptBytes, "decoded script by the time play starts, warmed parts included").toBeLessThanOrEqual(budgets.operation.scriptBytes);
     expect(value.cls, "cumulative layout shift").toBeLessThanOrEqual(budgets.operation.cls);
   });
 });

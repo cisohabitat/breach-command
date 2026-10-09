@@ -1,0 +1,205 @@
+{
+ "version": 15,
+ "savedAt": "2026-10-09T11:44:05.147Z",
+ "game": {
+  "scenario": 2,
+  "difficulty": "operational",
+  "chain": [
+   "vendor",
+   "delegation",
+   "timer",
+   "beacon"
+  ],
+  "revealed": [
+   "delegation"
+  ],
+  "established": [
+   "identity",
+   "network",
+   "firewall",
+   "email"
+  ],
+  "lastUsed": {
+   "identity": 1,
+   "network": 2
+  },
+  "turns": [
+   {
+    "number": 1,
+    "procedure": "identity",
+    "raw": 15,
+    "modifier": 3,
+    "planningBonus": 1,
+    "total": 18,
+    "success": true,
+    "revealed": "delegation",
+    "narrative": "Directory configuration and server access show an unapproved delegation relationship being exercised. Found by identity audit with collection focused on Maintenance gateway.",
+    "inject": null,
+    "injectReveal": null,
+    "impactChange": 1,
+    "continuityChange": 0,
+    "adversaryEvent": null,
+    "hypothesis": "identity",
+    "plan": {
+     "scope": "focused",
+     "intensity": "balanced"
+    },
+    "specialistBonus": 0,
+    "sectorChange": -1,
+    "objectiveChange": 1,
+    "hypothesisTarget": "vendor",
+    "hypothesisMatched": false,
+    "discriminating": false,
+    "windfall": true
+   },
+   {
+    "number": 2,
+    "procedure": "network",
+    "raw": 3,
+    "modifier": 6,
+    "planningBonus": 0,
+    "total": 9,
+    "success": false,
+    "revealed": null,
+    "narrative": "The action did not produce reliable evidence. A failed check settles nothing about the working hypothesis either way; the team reorients.",
+    "inject": null,
+    "injectReveal": null,
+    "impactChange": 10,
+    "continuityChange": -1,
+    "adversaryEvent": null,
+    "hypothesis": "cloud",
+    "plan": {
+     "scope": "focused",
+     "intensity": "balanced"
+    },
+    "specialistBonus": 1,
+    "sectorChange": -9,
+    "objectiveChange": 17,
+    "hypothesisTarget": "vendor",
+    "hypothesisMatched": false,
+    "discriminating": true,
+    "windfall": false
+   }
+  ],
+  "failures": 1,
+  "nextModifier": 0,
+  "nextModifierSource": null,
+  "injectDeck": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   0
+  ],
+  "status": "playing",
+  "impact": 42,
+  "continuity": 99,
+  "pendingDecision": null,
+  "decisions": [
+   {
+    "stage": "delegation",
+    "choice": "observe",
+    "title": "Map lateral access",
+    "effect": "Evidence improved while attacker opportunity increased.",
+    "counterfactual": "Segment the movement path would have reduced immediate exposure but sacrificed telemetry.",
+    "adaptedFrom": null,
+    "adaptedTo": null,
+    "adaptationReason": null,
+    "quality": 5,
+    "rationale": "Observation was proportionate while impact and adversary tempo remained manageable.",
+    "impactChange": 9,
+    "continuityChange": 0,
+    "tempoChange": 1,
+    "sectorChange": 0,
+    "objectiveChange": 6
+   }
+  ],
+  "responseChoices": [],
+  "responseScore": 0,
+  "hypothesis": "cloud",
+  "hypothesisHistory": [
+   {
+    "turn": 1,
+    "id": "identity"
+   },
+   {
+    "turn": 2,
+    "id": "cloud"
+   }
+  ],
+  "adversaryTempo": 3,
+  "adversaryEvent": null,
+  "adversaryProfile": "broker",
+  "adversaryMemory": {
+   "procedureCounts": {
+    "identity": 1,
+    "network": 1
+   },
+   "observeChoices": 1,
+   "actChoices": 0,
+   "hypothesisChanges": 1
+  },
+  "pendingCommand": null,
+  "commandHistory": [],
+  "mode": "campaign",
+  "turnLimit": 11,
+  "specialist": "hunter",
+  "specialistFatigue": 1,
+  "sectorHealth": 90,
+  "sectorHistory": [
+   99,
+   90
+  ],
+  "objective": "preposition",
+  "objectiveProgress": 29,
+  "campaignTier": 0,
+  "focusedNode": "gateway",
+  "evidence": [
+   {
+    "id": "E1-identity",
+    "turn": 1,
+    "title": "Delegation path abuse evidence",
+    "source": "Identity audit",
+    "system": "Maintenance gateway",
+    "confidence": "HIGH",
+    "supports": "delegation",
+    "detail": "Directory configuration and server access show an unapproved delegation relationship being exercised."
+   }
+  ],
+  "correlations": [],
+  "pendingSetPiece": "sector-2",
+  "setPieceHistory": [],
+  "campaignDoctrine": "balanced",
+  "campaignRoute": "common-ground",
+  "variant": {
+   "id": "2-0",
+   "title": "Standard operating picture",
+   "briefing": "The incident opens without an additional campaign complication.",
+   "modifier": "No starting modifier.",
+   "impact": 0,
+   "continuity": 0,
+   "objective": 0
+  },
+  "caseTheory": null,
+  "caseTheoryHistory": [],
+  "nodePosture": {
+   "supplier": "normal",
+   "gateway": "normal",
+   "jump": "normal",
+   "patch": "normal",
+   "engineering": "normal",
+   "historian": "normal",
+   "config": "normal"
+  },
+  "mapActionsRemaining": 3,
+  "graceRemaining": 0,
+  "mapHistory": [],
+  "seed": null
+ },
+ "guided": true,
+ "fastResolve": false
+}

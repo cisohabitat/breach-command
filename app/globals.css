@@ -124,9 +124,6 @@ a {
 .mono,.procedure-badge,.captain-label span,.brief-label,.mission-meta {
   font-family:var(--font-mono);
 }
-.muted {
-  color:var(--text-soft);
-}
 .small {
   font-size:var(--type-body);
 }
@@ -183,7 +180,6 @@ a {
   }
 }
 .brand-light {
-  font-family:var(--font-mono);
   font-size:var(--type-caption);
   font-weight:400;
   color:#b3ad9f;
@@ -216,10 +212,8 @@ a {
   display:grid;
   grid-template-columns:1.15fr 1fr;
   gap:52px 70px;
-  align-items:center;
 }
 .desk-line {
-  font-family:var(--font-mono);
   font-size:var(--type-caption);
   color:var(--text-soft);
   border-bottom:1px solid var(--line);
@@ -252,12 +246,10 @@ a {
   gap:10px;
   padding:12px 0 12px 12px;
   border-bottom:1px solid var(--line);
-  border-left:2px solid var(--stage-color);
 }
 .briefing-chain .chain-index {
   font-family:var(--font-mono);
   font-size:var(--type-caption);
-  color:#8c9198;
 }
 .briefing-chain strong {
   font-weight:600;
@@ -272,29 +264,9 @@ a {
   font-weight:600;
   color:#cfc9bb;
 }
-.case-stamp {
-  font-family:var(--font-mono);
-  font-size:var(--type-caption);
-  font-weight:600;
-  text-transform:uppercase;
-  letter-spacing:.1em;
-  color:#e4c15f;
-  border:1.5px solid currentColor;
-  border-radius:2px;
-  padding:1px 8px;
-  transform:rotate(-3deg);
-}
-.case-stamp.amended {
-  display:inline-block;
-  margin-bottom:6px;
-}
-.case-stamp.cleared {
-  color:#cfc9bb;
-}
 .mission-panel {
   background:#1a1d21;
   border:1px solid #3e434a;
-  border-top:3px solid var(--lime);
   border-radius:3px;
   padding:30px;
 }
@@ -310,7 +282,6 @@ a {
   line-height:var(--leading-prose);
 }
 .mission-selector {
-  display:flex;
   gap:8px;
   margin:22px 0 28px;
 }
@@ -318,19 +289,9 @@ a {
   flex:1;
   border:1px solid #434850;
   background:transparent;
-  color:#bcb7aa;
   min-height:42px;
-  border-radius:2px;
   font-family:var(--font-mono);
   font-size:var(--type-body);
-}
-.mission-selector button:hover {
-  border-color:var(--lime);
-}
-.mission-selector button.active {
-  background:var(--lime);
-  color:#1e1d19;
-  border-color:var(--lime);
 }
 .guided-control {
   display:flex;
@@ -354,10 +315,8 @@ a {
 .primary-button {
   display:flex;
   align-items:center;
-  justify-content:center;
   gap:12px;
   min-height:48px;
-  border-radius:3px;
   padding:12px 22px;
   border:1px solid var(--lime);
   background:var(--lime);
@@ -417,7 +376,6 @@ a {
   justify-content:space-between;
   align-items:center;
   gap:30px;
-  margin-bottom:32px;
 }
 /* The sector margin once it is low enough to end the operation within a few
    turns: a full-width line under the readouts, in words and an icon as well as
@@ -490,8 +448,6 @@ a {
 .chain-sheet {
   list-style:none;
   margin:0;
-  padding:0;
-  border-top:1px solid var(--line);
 }
 .chain-sheet li {
   display:grid;
@@ -501,12 +457,10 @@ a {
   min-height:52px;
   padding:10px 0 10px 12px;
   border-bottom:1px solid var(--line);
-  border-left:2px solid var(--stage-color);
 }
 .chain-no {
   font-family:var(--font-mono);
   font-size:var(--type-caption);
-  color:#8c9198;
 }
 .chain-stage {
   color:var(--text-soft);
@@ -526,18 +480,7 @@ a {
 }
 .chain-status {
   justify-self:end;
-  font-family:var(--font-mono);
-  font-size:var(--type-caption);
-  letter-spacing:.08em;
-  text-transform:uppercase;
   color:#8c9198;
-}
-.chain-sheet li.confirmed .chain-status {
-  padding:1px 8px;
-  border:1.5px solid currentColor;
-  border-radius:2px;
-  color:var(--lime);
-  transform:rotate(-3deg);
 }
 @media(max-width:650px) {
   .chain-sheet li {
@@ -549,9 +492,6 @@ a {
     grid-row:2;
   }
 }
-.concealed h3 {
-  color:#8a8f96;
-}
 .revealed {
   border-color:var(--stage-color);
   animation:reveal .5s ease-out;
@@ -562,7 +502,6 @@ a {
 }
 .section-heading p {
   font-size:var(--type-caption);
-  color:var(--text-soft);
   margin-top:7px;
   line-height:var(--leading-base);
 }
@@ -584,7 +523,6 @@ a {
 /* The icon sits on the first line, not the middle of a note that runs to several. */
 .guide-nudge svg {
   flex-shrink:0;
-  margin-top:5px;
   margin-top:calc((1lh - 15px) / 2);
   color:var(--lime);
 }
@@ -653,8 +591,6 @@ a {
   line-height:var(--leading-compact);
 }
 .procedure-card p {
-  font-size:var(--type-caption);
-  color:#b8b1a1;
   margin-top:7px;
   line-height:var(--leading-base);
   flex:1;
@@ -665,7 +601,6 @@ a {
   align-items:center;
   padding-top:15px;
   font-size:var(--type-caption);
-  letter-spacing:.04em;
   color:#858c95;
 }
 .established .procedure-bottom {
@@ -692,12 +627,6 @@ a {
   gap:22px;
   min-width:0;
 }
-.captain-panel {
-  border:1px solid #393d43;
-  background:#1d1f23;
-  border-radius:3px;
-  padding:21px;
-}
 .captain-label {
   display:flex;
   gap:13px;
@@ -708,27 +637,8 @@ a {
   font-size:var(--type-body);
   font-weight:500;
 }
-.captain-label span:not(.captain-avatar) {
-  font-size:var(--type-caption);
-  letter-spacing:.02em;
-  color:#aaa08a;
-  margin-top:5px;
-  display:block;
-}
-.captain-avatar {
-  width:42px;
-  height:42px;
-  border:1px solid #505863;
-  border-radius:3px;
-  display:grid;
-  place-items:center;
-  color:var(--lime);
-  background:#2b3038;
-}
 .brief-label {
   font-size:var(--type-caption);
-  letter-spacing:.075em;
-  color:#b1aa9b;
   margin-bottom:10px;
   display:flex;
   justify-content:space-between;
@@ -760,7 +670,6 @@ a {
   border-top:1px solid #383e46;
 }
 .question-list button {
-  font-size:var(--type-caption);
   display:flex;
   align-items:center;
   justify-content:flex-start;
@@ -778,13 +687,6 @@ a {
   color:var(--lime);
   text-decoration:underline;
   text-underline-offset:3px;
-}
-.question-list .q-no {
-  min-width:24px;
-  font-family:var(--font-mono);
-  font-size:var(--type-caption);
-  color:#8c9198;
-  text-decoration:none;
 }
 .captain-answer {
   font-size:var(--type-body);
@@ -805,8 +707,6 @@ a {
   display:flex;
   align-items:center;
   gap:7px;
-  font-size:var(--type-caption);
-  color:#beb7a6;
 }
 .journal-panel {
   padding:0 3px;
@@ -887,8 +787,6 @@ a {
   display:flex;
   align-items:flex-start;
   gap:10px;
-  color:#8d949f;
-  font-size:var(--type-body);
   line-height:var(--leading-prose);
 }
 .rules-reminder svg {
@@ -904,7 +802,6 @@ a {
   gap:20px;
   color:#878e97;
   font-size:var(--type-caption);
-  letter-spacing:.04em;
 }
 .game-footer button {
   display:flex;
@@ -1163,11 +1060,6 @@ a {
   display:flex;
   gap:14px;
   flex-wrap:wrap;
-  align-items:center;
-  background:#ede2c90d;
-  border:1px solid #556070;
-  border-radius:3px;
-  padding:22px;
   margin:24px 0;
 }
 .end-banner>div:nth-child(2) {
@@ -1187,9 +1079,6 @@ a {
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
-}
-.end-icon {
-  color:var(--lime);
 }
 .end-banner .primary-button {
   font-size:var(--type-body);
@@ -1211,7 +1100,6 @@ a {
 .debrief-stats span {
   display:block;
   font-size:var(--type-caption);
-  color:#4a463e;
 }
 .debrief-chain {
   display:grid;
@@ -1261,7 +1149,6 @@ a {
 }
 .debrief-learning h3 {
   font-size:var(--type-lead);
-  font-weight:500;
   color:var(--lime);
 }
 .debrief-learning p {
@@ -1312,10 +1199,7 @@ a {
   .procedure-grid {
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
-  .captain-panel {
-    padding:17px;
-  }
-  .top-actions {
+    .top-actions {
     gap:16px;
   }
 }
@@ -1357,10 +1241,7 @@ a {
   .procedure-grid {
     grid-template-columns:repeat(3,minmax(0,1fr));
   }
-  .captain-panel {
-    padding:23px;
-  }
-  .game-heading h1 {
+    .game-heading h1 {
     font-size:clamp(var(--type-h3),3vw,var(--type-h2));
   }
   .topbar {
@@ -1398,15 +1279,9 @@ a {
   .briefing-screen {
     display:flex;
     flex-direction:column;
-    align-items:stretch;
     padding:34px 22px 22px;
-    gap:30px;
-  }
-  .briefing-main h1 {
-    font-size:clamp(var(--type-title),8vw,var(--type-h2));
-    margin:20px 0 14px;
-  }
-  .intro {
+}
+    .intro {
     font-size:var(--type-body);
     line-height:var(--leading-prose);
   }
@@ -1438,10 +1313,8 @@ a {
   }
   .game-heading {
     align-items:flex-start;
-    gap:15px;
     flex-direction:column;
-    margin-bottom:26px;
-  }
+}
   .game-heading h1 {
     font-size:clamp(var(--type-h3),3vw,var(--type-h2));
   }
@@ -1458,10 +1331,7 @@ a {
   .section-heading p {
     font-size:var(--type-caption);
   }
-  .procedure-section .section-heading {
-    flex-wrap:wrap;
-  }
-  .established-key {
+    .established-key {
     font-size:var(--type-caption);
   }
   .procedure-grid {
@@ -1478,17 +1348,11 @@ a {
   .procedure-card h3 {
     font-size:var(--type-body);
   }
-  .procedure-card p {
+    .procedure-bottom {
     font-size:var(--type-caption);
-  }
-  .procedure-bottom {
-    font-size:var(--type-caption);
-    letter-spacing:0;
-  }
+}
   .guide-nudge {
     align-items:flex-start;
-    font-size:var(--type-body);
-    line-height:var(--leading-prose);
     max-width:var(--measure-prose);
     letter-spacing:.01em;
   }
@@ -1500,17 +1364,11 @@ a {
     gap:25px;
     margin-top:6px;
   }
-  .captain-panel {
-    padding:22px;
-  }
-  .captain-brief {
+    .captain-brief {
     font-size:var(--type-body);
     line-height:var(--leading-prose);
   }
-  .question-list button {
-    font-size:var(--type-body);
-  }
-  .journal-entries {
+    .journal-entries {
     max-height:none;
   }
   .log-entry strong {
@@ -1557,10 +1415,7 @@ a {
   .debrief-stats span {
     font-size:var(--type-caption);
   }
-  .end-banner {
-    padding:20px;
-  }
-  .end-banner .primary-button {
+    .end-banner .primary-button {
     width:100%;
   }
   .found-label,.missed-label {
@@ -1609,33 +1464,20 @@ a {
 }
 .difficulty-picker>div {
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:7px;
 }
 .difficulty-picker button {
-  background:transparent;
-  border:1px solid #40454d;
-  border-radius:2px;
   color:#cac3b2;
   text-align:left;
-  padding:10px;
-  min-height:62px;
 }
 .difficulty-picker button:hover,.difficulty-picker button.active {
-  border-color:#e5d6b2;
-  background:#2c3137;
   color:#f6f1e4;
 }
 .difficulty-picker strong {
   display:block;
-  font-size:var(--type-caption);
-  font-weight:600;
 }
 .difficulty-picker small {
   display:block;
-  font-size:var(--type-micro);
   color:#9197a0;
-  margin-top:5px;
 }
 .difficulty-picker button.active small {
   color:#ebe0c4;
@@ -1646,26 +1488,16 @@ a {
   margin-top:9px;
   color:#b1a996!important;
 }
-.case-meters {
-  display:flex;
-  align-items:flex-end;
-  gap:16px;
-}
 .impact-meter {
-  width:150px;
   display:grid;
-  grid-template-columns:1fr auto;
   gap:5px 8px;
   align-items:center;
 }
 .impact-meter .mono {
-  font-size:var(--type-micro);
   color:#aba28c;
 }
 .impact-meter strong {
   font-family:var(--font-mono);
-  color:#e8c968;
-  font-size:var(--type-lead);
 }
 /* The three readouts are a ledger line with a ruler under each number: ticks
    every ten points over the fill, so the level reads against a scale rather
@@ -1679,16 +1511,9 @@ a {
 }
 .impact-meter>[data-slot=progress] {
   grid-column:1/-1;
-  height:5px;
-  background:#332f24;
-}
-.impact-meter>[data-slot=progress]>div {
-  background:#e8c968;
 }
 .impact-meter small {
   grid-column:1/-1;
-  font-size:var(--type-micro);
-  color:#b5aa75;
 }
 .impact-meter.critical strong,.impact-meter.critical small {
   color:#ff967d;
@@ -1716,19 +1541,8 @@ a {
 .evidence-decision button {
   position:relative;
   display:grid;
-  grid-template-columns:auto 1fr;
-  column-gap:10px;
   text-align:left;
-  background:#e8e1d3;
-  border:1px solid #c9bfac;
-  border-radius:3px;
   color:#1d1b18;
-  padding:14px;
-  min-height:104px;
-}
-.evidence-decision button:hover {
-  border-color:var(--lime);
-  background:#e8e1d3;
 }
 .evidence-decision button svg {
   grid-row:1/3;
@@ -1746,10 +1560,6 @@ a {
 }
 .response-panel {
   margin:22px 0 30px;
-  border:1px solid #55606f;
-  background:#1e2227;
-  border-radius:3px;
-  padding:24px;
 }
 .response-heading {
   display:flex;
@@ -1770,25 +1580,14 @@ a {
   letter-spacing:.01em;
 }
 .response-options {
-  display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:10px;
-  margin-top:20px;
 }
 .response-options button {
-  display:flex;
   flex-direction:column;
   text-align:left;
   position:relative;
-  border:1px solid #434850;
-  background:#22262c;
-  border-radius:3px;
   color:#e5e2d9;
-  padding:17px;
-  min-height:155px;
-}
-.response-options button:hover {
-  border-color:var(--lime);
 }
 .response-options strong {
   font-size:var(--type-body);
@@ -1799,12 +1598,10 @@ a {
   font-size:var(--type-caption);
   line-height:var(--leading-base);
   color:#bab29f;
-  margin:8px 0;
   flex:1;
   letter-spacing:.01em;
 }
 .response-options small {
-  font-size:var(--type-micro);
   color:#ece1c6;
   letter-spacing:.01em;
 }
@@ -1854,58 +1651,28 @@ a {
 @media(max-width:850px) {
   .case-meters {
     width:100%;
-    align-items:stretch;
-  }
+}
   .game-heading .case-meters {
     align-self:stretch;
   }
-  .impact-meter {
-    width:145px;
-  }
-  .response-options {
+    .response-options {
     grid-template-columns:1fr;
   }
-  .response-options button {
-    min-height:115px;
-  }
-  .difficulty-picker button {
-    padding:9px 7px;
-  }
-}
+    }
 @media(max-width:650px) {
   .case-meters {
     flex-direction:column;
   }
-  .impact-meter {
-    width:100%;
-    grid-template-columns:1fr auto;
-  }
-  .evidence-decision>div {
+    .evidence-decision>div {
     grid-template-columns:1fr;
   }
-  .difficulty-picker>div {
-    grid-template-columns:1fr;
-  }
-  .difficulty-picker button {
-    min-height:54px;
-    display:flex;
-    align-items:center;
+    .difficulty-picker button {
     justify-content:space-between;
   }
-  .difficulty-picker small {
-    margin-top:0;
-    text-align:right;
-  }
-  .difficulty-picker button {
+    .difficulty-picker button {
     gap:12px;
   }
-  .response-panel {
-    padding:19px 16px;
-  }
-  .response-heading {
-    gap:12px;
-  }
-  .response-heading h2 {
+      .response-heading h2 {
     font-size:var(--type-lead);
   }
   .decision-summary p span {
@@ -1916,34 +1683,25 @@ a {
 }
 /* Adaptive investigation layer */
 .continuity-meter {
-  width:175px;
   display:grid;
-  grid-template-columns:1fr auto;
   gap:5px 8px;
   align-items:center;
 }
 .continuity-meter .mono {
-  font-size:var(--type-micro);
   color:#aba28c;
-  white-space:nowrap;
 }
 .continuity-meter strong {
   font-family:var(--font-mono);
   color:var(--lime);
-  font-size:var(--type-lead);
 }
 .continuity-meter>[data-slot=progress] {
   grid-column:1/-1;
-  height:5px;
-  background:#282c31;
 }
 .continuity-meter>[data-slot=progress]>div {
   background:var(--lime);
 }
 .continuity-meter small {
   grid-column:1/-1;
-  font-size:var(--type-micro);
-  color:#b6ab92;
 }
 .continuity-meter.critical strong,.continuity-meter.critical small {
   color:#ff967d;
@@ -1996,7 +1754,6 @@ a {
 }
 .hypothesis-heading small {
   display:block;
-  font-size:var(--type-caption);
   color:#b1ab9c;
   margin-top:4px;
 }
@@ -2005,59 +1762,37 @@ a {
   display:flex;
   align-items:center;
   gap:6px;
-  border:1.5px solid currentColor;
-  border-radius:2px;
-  padding:3px 8px;
-  font-family:var(--font-mono);
   font-size:var(--type-micro);
   font-weight:600;
-  letter-spacing:.08em;
-  color:#e8c968;
   white-space:nowrap;
-  transform:rotate(-2deg);
 }
 .adversary-state.tempo-2,.adversary-state.tempo-3 {
   border-color:#383d45;
   color:#f0a48c;
-  background:#ffffff14;
 }
 /* Two across: the premises are sentences, and four narrow columns ran each to
    a dozen lines. Content sits at the top so the titles line up. */
 .hypothesis-options {
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  gap:8px;
 }
 .hypothesis-options button {
-  display:flex;
   flex-direction:column;
   justify-content:flex-start;
   align-items:stretch;
-  gap:6px;
-  background:#1c1f24;
-  border:1px solid #383d45;
-  border-radius:3px;
   text-align:left;
   color:#d7d1c3;
-  padding:12px;
   min-height:92px;
-}
-.hypothesis-options button:hover,.hypothesis-options button.active {
-  border-color:var(--lime);
-  background:#1c1f24;
 }
 .hypothesis-options button:disabled {
   cursor:not-allowed;
 }
 .hypothesis-options strong {
   display:block;
-  font-size:var(--type-body);
   line-height:var(--leading-compact);
-  font-weight:600;
 }
 .hypothesis-options span {
   display:block;
-  font-size:var(--type-caption);
   line-height:var(--leading-base);
   color:#b1ab9c;
   margin-top:6px;
@@ -2128,10 +1863,7 @@ a {
   }
 }
 @media(max-width:850px) {
-  .continuity-meter {
-    width:150px;
-  }
-  .hypothesis-heading {
+    .hypothesis-heading {
     align-items:flex-start;
   }
   .adversary-state {
@@ -2139,19 +1871,13 @@ a {
   }
 }
 @media(max-width:650px) {
-  .impact-meter,.continuity-meter,.objective-meter {
-    width:100%;
-  }
-  .hypothesis-board {
+    .hypothesis-board {
     padding:15px 0 0;
   }
   .hypothesis-heading {
     flex-direction:column;
   }
-  .hypothesis-options {
-    grid-template-columns:1fr;
-  }
-  .hypothesis-options button {
+    .hypothesis-options button {
     min-height:72px;
   }
   .adversary-state {
@@ -2227,12 +1953,10 @@ a {
 }
 .hypothesis-options button small {
   display:block;
-  font-size:var(--type-caption);
   line-height:var(--leading-base);
   color:#d7d1c3;
   margin-top:9px;
   padding-top:8px;
-  border-top:1px solid #383d45;
 }
 .hypothesis-options button.active small {
   color:#e8c968;
@@ -2244,9 +1968,7 @@ a {
 .alignment-label {
   display:block;
   color:var(--lime);
-  font-family:var(--font-mono);
   font-size:var(--type-micro);
-  letter-spacing:.04em;
   margin-top:10px;
   line-height:var(--leading-compact);
 }
@@ -2308,33 +2030,11 @@ a {
 }
 .score-card {
   display:grid;
-  grid-template-columns:150px 1fr;
   gap:18px;
   border:1px solid #c9bfac;
   background:#e8e1d3;
   border-radius:3px;
   padding:18px;
-}
-.score-total {
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  border-right:1px solid #c9bfac;
-}
-.score-total span {
-  font:500 var(--type-caption) var(--font-mono);
-  color:#4a463e;
-  letter-spacing:.08em;
-}
-.score-total strong {
-  display:block;
-  font:500 var(--type-h2) var(--font-mono);
-  color:var(--lime);
-  margin-top:5px;
-}
-.score-total small {
-  font-size:var(--type-body);
-  color:#4a463e;
 }
 .score-breakdown {
   display:grid;
@@ -2403,9 +2103,6 @@ a {
   margin-top:4px;
 }
 .paper-dialog .timeline {
-  border:1px solid #c9bfac;
-  background:#e8e1d3;
-  border-radius:3px;
   padding:17px;
 }
 .paper-dialog .timeline>details>div {
@@ -2442,22 +2139,17 @@ a {
 }
 .debrief-actions {
   display:grid;
-  grid-template-columns:auto 1fr;
   gap:10px;
-}
-.debrief-actions .primary-button {
-  width:100%;
 }
 .secondary-button {
   display:flex;
   align-items:center;
-  justify-content:center;
   gap:8px;
 }
 .impact-meter .mono,.impact-meter small,.continuity-meter .mono,.continuity-meter small,.objective-meter .mono,.objective-meter small,.difficulty-picker small,.response-options small {
   font-size:var(--type-caption);
 }
-.procedure-card p,.captain-label span:not(.captain-avatar),.brief-label,.guided-inline label,.rules-reminder {
+.procedure-card p,.brief-label,.guided-inline label,.rules-reminder {
   color:#c3bba7;
 }
 .debrief-stats span {
@@ -2467,21 +2159,10 @@ a {
   color:#bcb7ac;
 }
 @media(max-width:650px) {
-  .score-card {
+      .score-breakdown {
     grid-template-columns:1fr;
   }
-  .score-total {
-    border-right:0;
-    border-bottom:1px solid #c9bfac;
-    padding-bottom:12px;
-  }
-  .score-breakdown {
-    grid-template-columns:1fr;
-  }
-  .debrief-actions {
-    grid-template-columns:1fr;
-  }
-  .resume-actions button {
+    .resume-actions button {
     flex:1;
   }
   .procedure-card.hypothesis-aligned {
@@ -2636,8 +2317,6 @@ html,body {
 }
 .career-card strong {
   display:block;
-  font-size:var(--type-body);
-  font-weight:600;
   margin-top:7px;
 }
 .career-card small {
@@ -2659,7 +2338,6 @@ html,body {
 }
 .career-progress {
   grid-column:1/-1;
-  height:4px;
   background:#2b2f34;
   margin-top:10px;
   overflow:hidden;
@@ -2676,7 +2354,6 @@ html,body {
   flex-wrap:wrap;
 }
 .mission-selector button.completed:not(.active) {
-  border-color:#66707f;
   color:#f4eedf;
   position:relative;
 }
@@ -2758,8 +2435,6 @@ html,body {
   display:block;
   color:#858a91;
   font-size:var(--type-micro);
-  text-transform:uppercase;
-  letter-spacing:.06em;
 }
 .map-step strong {
   display:block;
@@ -2805,53 +2480,27 @@ html,body {
 .service-node>b {
   font:500 var(--type-lead) var(--font-mono);
 }
-.command-event {
-  border:1px solid #987250;
-  background:#33261d;
-  border-radius:3px;
-  padding:20px;
-  margin:20px 0 26px;
-}
 .command-event-heading {
-  display:flex;
   align-items:flex-start;
   gap:14px;
-  color:#efbb91;
 }
 .command-event-heading h2 {
   font-size:var(--type-lead);
   font-weight:500;
-  color:#f0ddcf;
   margin:5px 0;
 }
 .command-event-heading p {
   font-size:var(--type-body);
-  color:#cbb9aa;
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
 .command-options {
-  display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
-  margin-top:17px;
 }
 .command-options button {
-  display:grid;
-  grid-template-columns:1fr auto;
-  text-align:left;
   gap:5px 10px;
-  border:1px solid #6b5140;
-  background:#2a211c;
-  color:#eadcd2;
-  border-radius:3px;
-  padding:15px;
-  min-height:125px;
-}
-.command-options button:hover {
-  border-color:#efbb91;
-  background:#382920;
 }
 .command-options strong {
   font-size:var(--type-body);
@@ -2869,10 +2518,6 @@ html,body {
 }
 .adversary-read {
   margin-top:18px;
-  padding:13px;
-  border:1px solid #444a53;
-  background:#16181c;
-  border-radius:3px;
 }
 .adversary-read p {
   font-size:var(--type-caption);
@@ -2882,7 +2527,6 @@ html,body {
 }
 .advanced-review {
   display:grid;
-  grid-template-columns:repeat(4,1fr);
   gap:9px;
 }
 .advanced-review>div {
@@ -2983,10 +2627,7 @@ html,body {
   outline-width:3px;
 }
 @media(max-width:850px) {
-  .advanced-review {
-    grid-template-columns:1fr 1fr;
-  }
-  .map-path {
+    .map-path {
     gap:10px;
   }
   .map-link {
@@ -3013,20 +2654,11 @@ html,body {
   .command-options {
     grid-template-columns:1fr;
   }
-  .command-options button {
-    min-height:108px;
-  }
-  .advanced-review {
-    grid-template-columns:1fr 1fr;
-  }
-  .capability-review>div {
+      .capability-review>div {
     grid-template-columns:1fr;
     gap:3px;
   }
-  .mission-selector {
-    grid-template-columns:repeat(5,1fr);
   }
-}
 @media(max-width:430px) {
   .map-heading {
     flex-direction:column;
@@ -3034,10 +2666,7 @@ html,body {
   .map-tempo {
     align-self:flex-start;
   }
-  .advanced-review {
-    grid-template-columns:1fr;
-  }
-  .career-card {
+    .career-card {
     grid-template-columns:1fr auto;
   }
   .mission-selector button {
@@ -3227,21 +2856,16 @@ html,body {
 }
 .tutorial-steps p strong {
   display:block;
-  font-size:var(--type-body);
   line-height:var(--leading-compact);
 }
 .tutorial-steps p small {
   display:block;
-  font-size:var(--type-micro);
   line-height:var(--leading-compact);
   color:#b1a997;
   margin-top:4px;
-  letter-spacing:.01em;
 }
 .procedure-planner {
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:13px;
 }
 .procedure-planner>div>.eyebrow {
   display:block;
@@ -3249,27 +2873,16 @@ html,body {
 }
 .procedure-planner>div>div {
   display:grid;
-  gap:6px;
 }
 .procedure-planner button {
-  border:1px solid #41464d;
-  background:#1a1e23;
   color:#ccc6b7;
-  border-radius:3px;
-  padding:9px 11px;
   text-align:left;
-}
-.procedure-planner button.active {
-  border-color:var(--lime);
-  background:#2b3038;
 }
 .procedure-planner strong {
   display:block;
-  font-size:var(--type-caption);
 }
 .procedure-planner small {
   display:block;
-  font-size:var(--type-caption);
   line-height:var(--leading-compact);
   color:#aca593;
   margin-top:3px;
@@ -3279,7 +2892,6 @@ html,body {
 }
 .briefing-readouts {
   display:grid;
-  grid-template-columns:repeat(3,1fr);
   gap:8px;
 }
 .briefing-readouts>div {
@@ -3301,7 +2913,6 @@ html,body {
 .briefing-readouts small {
   display:block;
   color:#4a463e;
-  font-size:var(--type-caption);
   line-height:var(--leading-base);
   letter-spacing:.01em;
 }
@@ -3348,8 +2959,6 @@ html,body {
   margin-top:4px;
   color:#f0a48c;
   font:normal 500 var(--type-micro) var(--font-mono);
-  letter-spacing:.04em;
-  text-transform:uppercase;
 }
 /* Where a confirmed finding sits: its stage and its route. */
 .evidence-cards .evidence-placement {
@@ -3407,8 +3016,6 @@ html,body {
 }
 .briefing-more>summary span {
   color:var(--text-soft);
-  font-family:var(--font-mono);
-  font-size:var(--type-micro);
 }
 .briefing-more>summary:focus-visible {
   outline:2px solid var(--lime);
@@ -3524,10 +3131,7 @@ html,body {
   .mode-picker>div {
     grid-template-columns:repeat(3,1fr);
   }
-  .briefing-readouts {
-    grid-template-columns:1fr;
-  }
-  .tutorial-steps {
+    .tutorial-steps {
     grid-template-columns:1fr 1fr;
   }
   .mission-consequences {
@@ -3546,16 +3150,10 @@ html,body {
     flex-direction:column;
     gap:4px;
   }
-  .procedure-planner {
+    .tutorial-steps {
     grid-template-columns:1fr;
   }
-  .tutorial-steps {
-    grid-template-columns:1fr;
-  }
-  .briefing-readouts {
-    grid-template-columns:1fr;
-  }
-  .campaign-consequences {
+    .campaign-consequences {
     grid-template-columns:1fr;
   }
   .cinematic-briefing {
@@ -3585,10 +3183,7 @@ html,body {
 }
 .act-number {
   flex:0 0 auto;
-  border:1px solid var(--lime);
   color:var(--lime);
-  padding:6px 8px;
-  border-radius:4px;
   font:500 var(--type-caption) var(--font-mono);
 }
 .campaign-act-card strong,.campaign-ending strong {
@@ -3629,7 +3224,6 @@ html,body {
 .mission-selector button small {
   display:flex;
   color:var(--lime);
-  height:8px;
 }
 .challenge-console {
   border:1px solid #41464e;
@@ -3691,10 +3285,6 @@ html,body {
   letter-spacing:.01em;
 }
 .infrastructure-console {
-  border:1px solid #474c54;
-  background:#1b1f25;
-  border-radius:3px;
-  padding:18px;
   margin:20px 0;
 }
 .focus-instruction {
@@ -3712,49 +3302,21 @@ html,body {
 }
 .topology-nodes {
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(132px,1fr));
-  gap:8px;
 }
 .topology-nodes button {
   min-width:0;
   position:relative;
-  border:1px solid #40454d;
-  background:#181b1f;
   color:#c7c1b3;
-  border-radius:3px;
-  padding:12px 9px;
   text-align:left;
-  min-height:96px;
-}
-.topology-nodes button:hover,.topology-nodes button.focused {
-  border-color:var(--lime);
-  background:#2b3036;
-}
-.topology-nodes button.affected {
-  border-color:#8c5d49;
-}
-.topology-nodes button.exposed {
-  border-color:#b99d4d;
-}
-.node-icon {
-  color:#8c939d;
-}
-.affected .node-icon {
-  color:#ec9877;
-}
-.exposed .node-icon {
-  color:#e9c867;
 }
 .topology-nodes small {
   display:block;
   font:var(--type-caption) var(--font-mono);
   color:var(--text-soft);
-  margin:9px 0 5px;
   line-height:var(--leading-compact);
 }
 .topology-nodes strong {
   display:block;
-  font-size:var(--type-caption);
   line-height:var(--leading-compact);
   /* "Managemen t edge": a node name never breaks inside a word. */
   overflow-wrap:normal;
@@ -3781,16 +3343,9 @@ html,body {
   border-top:1px solid #373c44;
   background:none;
   border-radius:0;
-  padding:7px 0;
 }
 .topology-routes>div {
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  gap:7px;
-  align-items:center;
-  padding:8px 0;
   border-bottom:1px solid #2c3137;
-  font-size:var(--type-micro);
 }
 .topology-routes>div:last-child {
   border-bottom:0;
@@ -3806,17 +3361,12 @@ html,body {
   border-top:1px solid #373c44;
   margin-top:14px;
   padding-top:12px;
-  font-size:var(--type-caption);
   color:#b2ab99;
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
 .evidence-workspace {
-  border:1px solid #484c52;
-  background:#181b1e;
-  border-radius:3px;
-  padding:18px;
   margin:20px 0;
 }
 .evidence-empty {
@@ -3830,7 +3380,6 @@ html,body {
   color:#a9a397;
 }
 .evidence-empty p {
-  font-size:var(--type-caption);
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
@@ -3861,13 +3410,11 @@ html,body {
 }
 .evidence-cards strong {
   display:block;
-  font-size:var(--type-caption);
   line-height:var(--leading-compact);
   margin:7px 0;
 }
 .evidence-cards small {
   display:block;
-  font-size:var(--type-micro);
   line-height:var(--leading-compact);
   color:#a9a292;
 }
@@ -3921,65 +3468,38 @@ html,body {
 }
 .correlation-results p strong {
   display:block;
-  font-size:var(--type-caption);
 }
 .correlation-results p span {
   display:block;
-  font-size:var(--type-caption);
   line-height:var(--leading-base);
   color:#beb7a5;
   margin-top:3px;
 }
-.sector-set-piece {
-  border:1px solid #c28b4d;
-  background:#302317;
-  border-radius:3px;
-  padding:20px;
-  margin:21px 0;
-}
 .set-piece-title {
-  display:flex;
   gap:13px;
-  color:#f0ae65;
 }
 .set-piece-title h2 {
-  color:#f1e0cf;
   font-size:var(--type-lead);
   margin:5px 0;
 }
 .set-piece-title p {
-  color:#cbb8a4;
   font-size:var(--type-body);
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
 .set-piece-options {
-  display:grid;
   /* Three measures now: decisive, narrow and permissive. Auto-fit keeps them on
      one row where there is room and wraps rather than leaving a ragged pair. */
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:9px;
-  margin-top:15px;
 }
 .set-piece-options button {
   position:relative;
   /* A button centres its content vertically, so a title above a shorter
      description started lower than its neighbours'. */
-  display:flex;
   flex-direction:column;
   justify-content:flex-start;
-  border:1px solid #785b3e;
-  background:#2a2018;
-  color:#eddfd2;
-  border-radius:3px;
-  padding:14px 38px 14px 14px;
-  text-align:left;
-  min-height:120px;
-}
-.set-piece-options button:hover {
-  border-color:#f0ae65;
-  background:#3a281c;
 }
 .set-piece-options strong {
   display:block;
@@ -4019,7 +3539,6 @@ html,body {
   letter-spacing:.01em;
 }
 .evidence-review p {
-  font-size:var(--type-caption);
   color:#2f2c27;
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
@@ -4075,31 +3594,16 @@ html,body {
     row-gap:4px;
     overflow-wrap:anywhere;
   }
-  .infrastructure-console,.evidence-workspace {
-    padding:14px 11px;
-  }
-  .topology-nodes {
-    grid-template-columns:1fr 1fr;
-  }
-  .topology-nodes button {
-    min-height:105px;
-  }
-  .topology-nodes button:last-child {
+        .topology-nodes button:last-child {
     grid-column:1/-1;
   }
-  .topology-routes {
-    grid-template-columns:1fr;
-  }
-  .evidence-cards {
+    .evidence-cards {
     grid-template-columns:1fr;
   }
   .set-piece-options {
     grid-template-columns:1fr;
   }
-  .set-piece-options button {
-    min-height:105px;
-  }
-  .advanced-review {
+    .advanced-review {
     grid-template-columns:1fr 1fr;
   }
   .mastery-panel {
@@ -4111,10 +3615,7 @@ html,body {
   }
 }
 @media(max-width:360px) {
-  .topology-nodes {
-    grid-template-columns:1fr;
-  }
-  .topology-nodes button:last-child {
+    .topology-nodes button:last-child {
     grid-column:auto;
   }
   .challenge-load {
@@ -4144,22 +3645,15 @@ html,body {
     overflow-wrap:anywhere;
   }
   .case-meters {
-    display:grid;
     grid-template-columns:minmax(180px,1.2fr) repeat(2,minmax(140px,1fr));
     width:100%;
     max-width:680px;
-    gap:12px;
-    align-items:end;
     justify-content:start;
   }
   .impact-meter,.continuity-meter,.objective-meter {
-    width:auto;
     min-width:0;
   }
-  .topology-nodes button {
-    min-height:132px;
-  }
-  .wide-dialog {
+    .wide-dialog {
     width:min(820px,calc(100% - 3rem))!important;
   }
 }
@@ -4239,12 +3733,9 @@ html,body {
   border:0;
   border-block:1px solid #4a4231;
   background:none;
-  padding:12px 0;
-  margin:13px 0;
 }
 .variant-brief strong {
   display:block;
-  color:#f0dc9c;
   font-size:var(--type-body);
   margin:5px 0;
 }
@@ -4278,11 +3769,9 @@ html,body {
   flex-direction:column;
 }
 .case-theory strong {
-  font-size:var(--type-body);
   color:#e6e2d9;
 }
 .case-theory small {
-  font-size:var(--type-micro);
   color:#a79f8d;
   margin-top:2px;
   letter-spacing:.01em;
@@ -4305,7 +3794,6 @@ html,body {
   color:#c1baa8;
   border-radius:0;
   padding:8px 0 8px 28px;
-  font-size:var(--type-caption);
 }
 .case-theory button::before {
   content:"";
@@ -4340,7 +3828,6 @@ html,body {
 .case-theory .plan-selected {
   margin-left:8px;
   font:600 var(--type-micro) var(--font-mono);
-  letter-spacing:.08em;
   color:var(--lime);
 }
 .case-theory button:disabled {
@@ -4383,7 +3870,6 @@ html,body {
 .specialist-reaction p {
   margin-top:8px;
   color:#2f2c27;
-  font-size:var(--type-body);
   font-style:italic;
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
@@ -4431,7 +3917,6 @@ html,body {
   font-size:var(--type-body);
 }
 .backup-console small {
-  font-size:var(--type-caption);
   color:#a9a18f;
   line-height:var(--leading-compact);
   margin-top:3px;
@@ -4504,16 +3989,13 @@ html,body {
 }
 /* Phase 10: command-loop compression and evidence-led deduction */
 .advanced-setup {
-  border:1px solid #41464e;
   background:transparent;
-  border-radius:2px;
   margin:14px 0 20px;
   overflow:hidden;
 }
 .advanced-setup>summary {
   list-style:none;
   min-height:48px;
-  padding:11px 13px;
   display:flex;
   align-items:center;
   gap:9px;
@@ -4529,15 +4011,9 @@ html,body {
 }
 .advanced-setup>summary span {
   margin-left:auto;
-  color:var(--lime);
-  font:500 var(--type-caption) var(--font-mono);
 }
 .advanced-setup[open]>summary {
   border-bottom:1px solid #383d45;
-  background:#1c2026;
-}
-.advanced-setup>.mode-picker,.advanced-setup>.challenge-console,.advanced-setup>.setup-controls {
-  margin:14px;
 }
 .advanced-setup .guided-control:last-child {
   padding-bottom:4px;
@@ -4547,8 +4023,6 @@ html,body {
 }
 .case-meters {
   display:flex;
-  gap:18px;
-  align-items:end;
 }
 .impact-meter,.continuity-meter,.objective-meter {
   width:155px;
@@ -4610,14 +4084,11 @@ html,body {
   /* Opaque: text scrolling under a translucent bar read through it. */
   background:#111417;
   border:0;
-  border-bottom:1px solid #383d44;
   border-radius:0;
   backdrop-filter:blur(14px);
 }
 .workspace-tabs button {
-  min-height:58px;
   display:flex;
-  align-items:center;
   gap:10px;
   border:0;
   border-bottom:3px solid transparent;
@@ -4654,8 +4125,6 @@ html,body {
 }
 /* A count is a figure in the margin, not a circled badge. */
 .workspace-tabs b {
-  margin-left:auto;
-  align-self:flex-start;
   color:var(--text-soft);
   font:500 var(--type-caption) var(--font-mono);
 }
@@ -4671,15 +4140,6 @@ html,body {
   display:grid;
   grid-template-columns:minmax(0,1.5fr) minmax(290px,1fr);
   gap:20px;
-}
-.workspace-shell .captain-panel {
-  min-height:420px;
-}
-.workspace-shell .journal-panel {
-  border:1px solid #393d43;
-  background:#181a1d;
-  border-radius:3px;
-  padding:21px;
 }
 .workspace-shell .rules-reminder {
   grid-column:1/-1;
@@ -4763,8 +4223,6 @@ html,body {
 }
 .hypothesis-compare>summary span {
   color:var(--text-soft);
-  font-family:var(--font-mono);
-  font-size:var(--type-micro);
 }
 .hypothesis-compare dl {
   margin:9px 0 0;
@@ -4787,24 +4245,17 @@ html,body {
 }
 .hypothesis-compare-options {
   display:grid;
-  gap:8px;
   margin-top:9px;
 }
 .hypothesis-compare-options button {
   display:grid;
   gap:4px;
   min-height:44px;
-  padding:11px 12px;
   text-align:left;
-  border:1px solid var(--line);
-  border-radius:3px;
   background:transparent;
   color:var(--text);
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-}
-.hypothesis-compare-options button.active {
-  border-color:var(--lime);
 }
 .hypothesis-compare-options button span {
   color:var(--text-soft);
@@ -4819,9 +4270,6 @@ html,body {
 .report-standing {
   margin-top:12px;
   padding:12px 13px;
-  border:1px solid var(--line);
-  border-left:3px solid #c9bfac;
-  border-radius:3px;
 }
 .report-standing strong {
   display:block;
@@ -4890,12 +4338,6 @@ html,body {
    a sticky panel of their own, and on a laptop that panel showed two to four of
    twelve cards: two playtests picked from what they could see and missed the
    stronger sources below its edge. */
-.investigation-actions {
-  border:1px solid #383d44;
-  background:#14161a;
-  border-radius:3px;
-  padding:17px;
-}
 .investigation-actions .inline-result {
   margin-top:0;
 }
@@ -4967,9 +4409,7 @@ html,body {
   color:#f1dc91;
 }
 .topology-routes>div {
-  position:relative;
   padding-right:72px;
-  min-height:48px;
 }
 .topology-routes>div i {
   position:absolute;
@@ -4996,12 +4436,6 @@ html,body {
 .topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards span,.evidence-cards small,.evidence-cards em,.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small {
   font-size:var(--type-caption);
 }
-.topology-nodes strong,.evidence-cards strong,.case-theory strong,.procedure-planner strong,.procedure-planner small {
-  font-size:var(--type-caption);
-}
-.map-intel,.evidence-empty p,.correlation-results p span {
-  font-size:var(--type-caption);
-}
 .question-list button,.guided-inline label {
   font-size:var(--type-body);
 }
@@ -5012,11 +4446,7 @@ html,body {
   .workspace-tabs small {
     display:none;
   }
-  .workspace-tabs button {
-    min-height:52px;
-    justify-content:center;
-  }
-  .workspace-tabs button>span {
+    .workspace-tabs button>span {
     display:block;
   }
   .workspace-tabs button b {
@@ -5052,8 +4482,7 @@ html,body {
   }
   .hypothesis-options button {
     min-height:48px;
-    padding:12px;
-  }
+}
   .investigation-actions {
     position:static;
     max-height:none;
@@ -5067,16 +4496,7 @@ html,body {
   .game-screen {
     padding-top:18px;
   }
-  .game-heading {
-    gap:15px;
-  }
-  .case-meters {
-    grid-template-columns:1fr 1fr;
-  }
-  .objective-meter {
-    grid-column:1/-1;
-  }
-  .impact-meter,.continuity-meter,.objective-meter {
+        .impact-meter,.continuity-meter,.objective-meter {
     width:auto;
   }
   .impact-meter>.mono,.continuity-meter>.mono,.objective-meter>.mono {
@@ -5111,13 +4531,7 @@ html,body {
     width:100%!important;
     max-width:none!important;
   }
-  .investigation-actions {
-    padding:13px 11px;
-  }
-  .investigation-dashboard .procedure-card {
-    min-height:150px;
-  }
-}
+    }
 @media(max-width:380px) {
   .workspace-tabs button>svg {
     display:none;
@@ -5217,21 +4631,21 @@ html,body {
 .topology-nodes button.monitored {
   box-shadow:inset 0 0 0 1px #4a4f57;
 }
-.topology-nodes button.monitored .node-icon,.topology-nodes button.monitored em {
+.topology-nodes button.monitored em {
   color:#e5d6b2;
 }
 .topology-nodes button.isolated {
   border-color:#d16f62;
   background:#211c1b;
 }
-.topology-nodes button.isolated .node-icon,.topology-nodes button.isolated em {
+.topology-nodes button.isolated em {
   color:#ef8d7e;
 }
 .topology-nodes button.restored {
   border-color:#e2d1a9;
   background:#1d2024;
 }
-.topology-nodes button.restored .node-icon,.topology-nodes button.restored em {
+.topology-nodes button.restored em {
   color:#eadec1;
 }
 .topology-routes>div.route-blocked {
@@ -5246,19 +4660,13 @@ html,body {
 .map-command-bar {
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:8px;
   margin-top:14px;
 }
 .map-command-bar>div {
   grid-column:1/-1;
 }
 .map-command-bar>div,.map-command-bar>button {
-  min-height:66px;
-  border:1px solid #40454d;
-  border-radius:3px;
-  background:#16191e;
   color:#d9d4c7;
-  padding:10px 12px;
   text-align:left;
   display:flex;
   gap:10px;
@@ -5281,7 +4689,6 @@ html,body {
 }
 .map-command-bar>button:hover:not(:disabled) {
   border-color:var(--sector-accent);
-  background:#24282e;
 }
 .map-command-bar>button:disabled {
   opacity:.42;
@@ -5291,18 +4698,13 @@ html,body {
   min-width:0;
   flex-direction:column;
 }
-.map-command-bar strong {
-  font-size:var(--type-body);
-}
 .map-command-bar small {
-  font-size:var(--type-caption);
   color:#a9a291;
 }
 .map-command-bar em {
   font-size:var(--type-caption);
   color:var(--sector-accent);
   font-style:normal;
-  text-transform:uppercase;
   margin-top:2px;
 }
 .specialist-transmission {
@@ -5326,11 +4728,9 @@ html,body {
 }
 .specialist-transmission strong {
   display:block;
-  font-size:var(--type-body);
   margin:3px 0;
 }
 .specialist-transmission p {
-  font-size:var(--type-body);
   color:#c6c0b2;
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
@@ -5386,9 +4786,6 @@ html,body {
   position:static;
   transform:none;
   justify-self:end;
-  padding:3px 6px;
-  border:1px solid #3c4148;
-  border-radius:2px;
   line-height:var(--leading-compact);
   font-size:var(--type-caption);
 }
@@ -5533,7 +4930,6 @@ html,body {
 }
 .report-dialog .evidence-decision>div {
   grid-template-columns:1fr;
-  gap:7px;
 }
 .report-dialog .evidence-decision button {
   min-height:0;
@@ -5596,11 +4992,6 @@ html,body {
 .decision-recorded {
   display:grid;
   gap:4px;
-  padding:12px 14px;
-  border:1px solid #c9bfac;
-  border-left:3px solid var(--lime);
-  border-radius:3px;
-  background:#e8e1d3;
 }
 .decision-recorded strong {
   font-size:var(--type-body);
@@ -5758,12 +5149,7 @@ span.effect-list>span.effect.note>span {
   display:inline-flex;
   align-items:center;
   gap:6px;
-  min-height:36px;
-  padding:6px 14px;
-  border:1px solid var(--lime);
   margin:0;
-  border-radius:2px;
-  background:#e8e1d3;
   color:inherit;
   font-size:inherit;
 }
@@ -5964,7 +5350,6 @@ span.effect-list>span.effect.note>span {
   border:1px solid var(--line);
   border-radius:3px;
   cursor:pointer;
-  font-weight:600;
 }
 .debrief-fold>summary span {
   color:var(--text-soft);
@@ -6162,7 +5547,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
   position:sticky;
   bottom:14px;
   z-index:5;
-  box-shadow:0 12px 24px #0c0e11cc;
 }
 /* On a laptop-height screen the sticky start sat over the difficulty cards on
    first load. One row of case numbers and the variant without its paragraph
@@ -6197,8 +5581,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
 @media(max-width:650px) {
   .start-button {
     position:static;
-    box-shadow:none;
-  }
+}
   .storage-notice {
     margin:0 18px;
   }
@@ -6399,15 +5782,10 @@ still sees the meter marked as crossed once the ring is suppressed. */
 }
 .resolution-steps {
   list-style:none;
-  margin:-14px 0 24px;
   padding:0;
   display:grid;
-  gap:7px;
 }
 .resolution-steps li {
-  display:flex;
-  align-items:center;
-  gap:9px;
   font-size:var(--type-body);
   line-height:var(--leading-base);
   color:#d3ccbc;
@@ -6452,9 +5830,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
 .end-lost p {
   color:#b6a396;
 }
-.end-lost .end-icon {
-  color:#c08a76;
-}
 .resolution-note {
   margin:0 0 24px;
   padding:12px 15px;
@@ -6489,9 +5864,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
 }
 .end-exercise p {
   color:#bfb894;
-}
-.end-exercise .end-icon {
-  color:#dcc069;
 }
 /* Debrief arrival: the review lands in beats rather than appearing all at once. */
 @keyframes debrief-beat {
@@ -6681,8 +6053,6 @@ the objective behind it stays gated behind the attribution read. */
 }
 .objective-meter>[data-slot=progress] {
   grid-column:1/-1;
-  height:5px;
-  background:#2c262b;
 }
 .objective-meter>[data-slot=progress]>div {
   background:#dab6cd;
@@ -6715,11 +6085,8 @@ the readouts that decide the operation. */
   align-items:center;
   gap:3px 12px;
   margin-top:11px;
-  max-width:430px;
 }
 .operation-status>.mono {
-  font-size:var(--type-micro);
-  letter-spacing:.06em;
   color:var(--text-soft);
   white-space:nowrap;
 }
@@ -6731,10 +6098,6 @@ the readouts that decide the operation. */
   margin:6px 0 0;
   font-size:var(--type-caption);
   color:var(--text-soft);
-}
-.sector-margin-line .mono {
-  font-size:var(--type-micro);
-  letter-spacing:.06em;
 }
 .sector-margin-line strong {
   color:var(--foreground);
@@ -6771,13 +6134,9 @@ the readouts that decide the operation. */
     width:auto;
   }
   .operation-status {
-    max-width:none;
     margin-top:9px;
   }
-  .operation-status>.mono {
-    font-size:var(--type-micro);
   }
-}
 /* A dialog that is on its way out is no longer a dialog. The registry exit
 animation kept the closed node mounted for its 200ms duration, which left the
 previous result — often emptied of its content by then — sitting in the
@@ -6862,10 +6221,6 @@ they want without scrolling past the other nine. */
   justify-self:end;
   white-space:nowrap;
   font:600 var(--type-micro) var(--font-mono);
-  letter-spacing:.07em;
-  padding:3px 8px;
-  border-radius:2px;
-  border:1px solid var(--line);
   color:var(--text-soft);
 }
 .hypothesis-ledger>details>div.matched b {
@@ -6924,9 +6279,6 @@ the player already holds, so neither narrows the answer for them. */
   list-style:none;
   display:grid;
   gap:2px;
-  padding:9px 12px;
-  border:1px solid var(--line);
-  border-radius:3px;
   font-size:var(--type-caption);
 }
 .modifier-details>summary::-webkit-details-marker {
@@ -6938,8 +6290,6 @@ the player already holds, so neither narrows the answer for them. */
 }
 .modifier-details>summary span {
   color:var(--text-soft);
-  font-family:var(--font-mono);
-  font-size:var(--type-micro);
   overflow-wrap:anywhere;
 }
 .modifier-details[open]>summary {
@@ -6956,18 +6306,12 @@ the player already holds, so neither narrows the answer for them. */
   margin:0;
   padding:0;
   display:grid;
-  gap:1px;
-  border:1px solid var(--line);
-  border-radius:3px;
   overflow:hidden;
-  background:var(--line);
 }
 .modifier-breakdown li {
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
   gap:2px 12px;
-  padding:9px 12px;
-  background:var(--popover);
 }
 .modifier-breakdown li>span {
   font-size:var(--type-caption);
@@ -7066,9 +6410,6 @@ awareness. */
   justify-content:space-between;
   gap:4px 12px;
   min-height:40px;
-  padding:9px 12px;
-  border:1px solid var(--line);
-  border-radius:3px;
   font-size:var(--type-caption);
 }
 .topology-detail>summary::-webkit-details-marker,.map-intel-detail>summary::-webkit-details-marker,.evidence-detail>summary::-webkit-details-marker,.known-facts>summary::-webkit-details-marker {
@@ -7078,13 +6419,8 @@ awareness. */
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
-.topology-detail>summary:hover,.map-intel-detail>summary:hover,.evidence-detail>summary:hover,.known-facts>summary:hover {
-  border-color:#485260;
-}
 .topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span {
   color:var(--text-soft);
-  font-family:var(--font-mono);
-  font-size:var(--type-micro);
 }
 .topology-detail>summary::after,.map-intel-detail>summary::after,.evidence-detail>summary::after,.known-facts>summary::after {
   content:"+";
@@ -7148,7 +6484,6 @@ awareness. */
   border-radius:4px;
   color:var(--text-soft);
   font:500 var(--type-micro) var(--font-mono);
-  letter-spacing:.04em;
 }
 .known-confirmed b {
   border-color:#485260;
@@ -7170,13 +6505,7 @@ awareness. */
   display:grid;
   gap:9px;
 }
-.first-read dt {
-  font-size:var(--type-caption);
-  font-weight:600;
-  color:var(--text-soft);
-}
 .first-read dd {
-  margin:2px 0 0;
   font-size:var(--type-body);
   line-height:var(--leading-base);
   max-width:80ch;
@@ -7210,9 +6539,7 @@ awareness. */
 .training-prompt .prompt-sources {
   display:block;
   margin-top:5px;
-  font-family:var(--font-mono);
   font-size:var(--type-micro);
-  letter-spacing:.04em;
   color:var(--lime);
 }
 .alignment-label .nowrap {
@@ -7324,21 +6651,8 @@ awareness. */
 }
 /* The plan persists between turns, so the selection says so in words as well as
 in colour, and the carried plan is stated before the options. */
-.procedure-planner .plan-selected {
-  float:right;
-  font:600 var(--type-micro) var(--font-mono);
-  letter-spacing:.08em;
-  color:var(--lime);
-}
-.procedure-planner button.active {
-  box-shadow:inset 0 0 0 1px var(--lime);
-}
 .carried-plan {
   margin:12px 0 0;
-  padding:9px 12px;
-  border:1px solid var(--line);
-  border-left:3px solid var(--lime);
-  border-radius:3px;
   font-size:var(--type-caption);
   color:var(--text-soft);
   line-height:var(--leading-base);
@@ -7456,7 +6770,6 @@ in colour, and the carried plan is stated before the options. */
 }
 .sit-body {
   min-width:0;
-  max-width:var(--measure-prose);
 }
 .sit-body p {
   margin:0;
@@ -7607,7 +6920,6 @@ in colour, and the carried plan is stated before the options. */
 }
 .response-options button {
   display:grid;
-  grid-template-columns:2rem minmax(0,1fr) minmax(15rem,19rem);
   column-gap:18px;
   align-items:start;
   width:100%;
@@ -7650,11 +6962,6 @@ in colour, and the carried plan is stated before the options. */
   gap:4px;
   margin:0;
 }
-.response-options span.option-terms {
-  margin-top:0;
-  padding-top:0;
-  border-top:0;
-}
 span.effect-list>span.effect.term>em {
   grid-column:2/-1;
   text-align:right;
@@ -7679,9 +6986,6 @@ span.effect-list>span.effect.term>em {
   border:0;
   border-radius:0;
   background:none;
-}
-.paper-dialog .score-total {
-  border-right-color:#c9bfac;
 }
 /* A fold is a ruled line that says what it holds and opens with a mark, not a
    bordered button. */
@@ -7977,16 +7281,11 @@ span.effect-list>span.effect.term>em {
   outline:2px solid var(--lime);
   outline-offset:-2px;
 }
-.map-command-bar em {
-  text-transform:none;
-  font-family:var(--font-ui);
-}
 .topology-routes .route-status {
   padding:0;
   border:0;
   border-radius:0;
   font:500 var(--type-micro) var(--font-mono);
-  letter-spacing:.06em;
 }
 .topology-detail>summary,.map-intel-detail>summary,.evidence-detail>summary,.known-facts>summary {
   padding:9px 0;
@@ -8017,7 +7316,6 @@ span.effect-list>span.effect.term>em {
 .paper-dialog .decision-summary span.decision-effects {
   display:grid;
   float:none;
-  max-width:34rem;
   margin-top:6px;
   border-top-color:#d8cfbd;
 }
@@ -8030,7 +7328,6 @@ span.effect-list>span.effect.term>em {
 .paper-dialog .debrief-chain section {
   padding:12px 0 12px 14px;
   border-top:1px solid #c9bfac;
-  box-shadow:inset 3px 0 0 var(--stage-color);
 }
 
 /* The assignment is a case file, not a pricing page: no accent stripe across
@@ -8103,9 +7400,6 @@ span.effect-list>span.effect.term>em {
   justify-self:end;
   text-align:right;
   font-size:var(--type-caption);
-}
-.start-button {
-  box-shadow:none;
 }
 
 /* The action sheet is one form: the question, the reading's fit, the roll and
@@ -8201,7 +7495,6 @@ span.effect-list>span.effect.term>em {
   float:none;
   margin-left:8px;
   font:400 var(--type-caption) var(--font-ui);
-  letter-spacing:0;
   color:var(--lime);
 }
 
@@ -8234,8 +7527,6 @@ span.effect-list>span.effect.term>em {
 .resolution-steps li b {
   color:var(--lime);
   font:500 var(--type-micro) var(--font-mono);
-  letter-spacing:.08em;
-  text-transform:uppercase;
 }
 
 /* Business impact takes the warning colour when it is rising, not before:
@@ -8288,7 +7579,7 @@ span.effect-list>span.effect.term>em {
 /* The captain's panel labels are labels, not data: sentence case in the body
    face. The actor model is an annotation, a rule in the margin rather than a box
    in the panel, and the roll rule under both panels is a footnote. */
-.brief-label,.captain-label span:not(.captain-avatar) {
+.brief-label {
   font-family:var(--font-ui);
   letter-spacing:0;
 }
@@ -8340,7 +7631,6 @@ span.effect-list>span.effect.term>em {
 }
 .set-piece-options button,.command-options button {
   display:grid;
-  grid-template-columns:2rem minmax(0,1fr) minmax(15rem,19rem);
   column-gap:18px;
   align-items:start;
   width:100%;
@@ -8475,15 +7765,12 @@ span.effect-list>span.effect.term>em {
    ACT 1, PACE, FULL CREDIT, CONFIRMED on every chain row) were a component
    library's outline badge and competed with the stamps, which mark an event:
    the report's result and the review's grade, one stamp each, never one a row. */
-.case-stamp,.chain-sheet li.confirmed .chain-status,.adversary-state,.hypothesis-ledger>details>div b {
+.chain-sheet li.confirmed .chain-status,.adversary-state,.hypothesis-ledger>details>div b {
   padding:0;
   border:0;
   border-radius:0;
   background:none;
   transform:none;
-}
-.chain-sheet li.confirmed .chain-status {
-  color:var(--lime);
 }
 .adversary-state.tempo-2,.adversary-state.tempo-3 {
   background:none;
@@ -8492,7 +7779,6 @@ span.effect-list>span.effect.term>em {
   padding:0;
   border:0;
   border-radius:0;
-  letter-spacing:.06em;
 }
 /* What a meter just did, in words in its status line, not a floating chip with
    an icon: for the moment it shows, the change stands in the status word's
@@ -8557,8 +7843,6 @@ span.effect-list>span.effect.term>em {
   transform:translateY(-50%);
   color:var(--text-soft);
   font:500 var(--type-micro) var(--font-mono);
-  letter-spacing:.06em;
-  text-transform:uppercase;
 }
 [data-slot=switch][data-state=checked]::before {
   content:"On" / "";
@@ -8611,20 +7895,10 @@ span.effect-list>span.effect.term>em {
   letter-spacing:0;
 }
 /* The four plain sentences are run-in heads, not four stacked mini-labels. */
-.first-read dl>div {
-  display:block;
-}
 .first-read dt {
-  display:inline;
   margin-right:.35em;
-  color:#1d1b18;
-  font-size:var(--type-body);
-}
-.first-read dt::after {
-  content:".";
 }
 .first-read dd {
-  display:inline;
   margin:0;
 }
 /* The campaign tally reads as the review's other tally: two columns, the figure
@@ -8671,7 +7945,7 @@ span.effect-list>span.effect.term>em {
    mono capitals on every label (the case line, the window, the meters' names,
    the chain's states, the map's tiles, the footer) were a "terminal" garnish
    applied everywhere, which is what made them read as generated. */
-.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.case-stamp,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes small,.topology-nodes em,.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,.procedure-planner .plan-selected,.case-theory .plan-selected,.training-prompt .prompt-sources,.service-node small {
+.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes small,.topology-nodes em,.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,.procedure-planner .plan-selected,.case-theory .plan-selected,.training-prompt .prompt-sources,.service-node small {
   font-family:var(--font-ui);
   text-transform:none;
   letter-spacing:0;
@@ -8985,7 +8259,6 @@ body {
   color:#9e3220;
 }
 .form-row dd.grade {
-  color:#9e3220;
   font-size:var(--type-title);
   line-height:1;
 }
@@ -9388,6 +8661,37 @@ span.effect-list>span.effect.pace.worse>em {
   color:var(--text-soft);
   font-size:var(--type-caption);
   line-height:var(--leading-base);
+}
+.game-loading h1 {
+  color:var(--text-soft);
+  font-size:var(--type-lead);
+}
+/* A part of the game that faulted says so in place: a warning, set as the
+   other warnings are, with the way on and a diagnostic to copy. */
+.fault-notice {
+  margin:16px 0;
+  padding:14px 16px;
+  border-left:3px solid #ff967d;
+  background:#2a1d1b;
+  color:#f6f1e4;
+}
+.fault-notice p {
+  margin:6px 0 10px;
+  color:#d7d1c3;
+  font-size:var(--type-caption);
+}
+.fault-notice>div {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+}
+.fault-notice pre {
+  margin:10px 0 0;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  color:#b1ab9c;
+  font-size:var(--type-micro);
 }
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
    than half of it, so the grid a player touches every turn sat below the fold.
@@ -9843,8 +9147,7 @@ span.effect-list>span.effect.pace.worse>em {
   }
   .paper-dialog .debrief-fold>summary span,.paper-dialog .briefing-more>summary>span {
     flex-basis:100%;
-    margin-left:1.2em;
-  }
+}
   .set-piece-options button,.command-options button {
     grid-template-columns:1.5rem minmax(0,1fr);
     row-gap:12px;
@@ -9928,7 +9231,7 @@ span.effect-list>span.effect.pace.worse>em {
   .response-heading>div>*:not(.eyebrow),.set-piece-title>div>*:not(.eyebrow),.end-banner>div:nth-child(2)>*:not(.eyebrow),.end-banner>button {
     grid-column:1/-1;
   }
-  .set-piece-title>svg,.end-icon svg {
+  .set-piece-title>svg {
     width:18px;
     height:18px;
   }

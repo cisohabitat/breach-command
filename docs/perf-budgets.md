@@ -28,6 +28,43 @@ dialog yet. Phase 1's target is under 400 KB of script on first
 interaction, by loading the review, the field guide, settings and the Bot
 Commander when they are first opened.
 
+## Phase 1, 9 October 2026
+
+The game screen and every dialog now load on demand and are warmed when the
+browser is idle (`app/page.tsx`); the procedural audio and the Bot Commander
+load on first use. The stylesheet lost 726 lines of declarations a later rule
+always overrode and rules for classes that no longer exist
+(`scripts/css-dead.py`).
+
+| Screen | Initial script (decoded) | All script by idle | Style | LCP | CLS |
+| --- | --- | --- | --- | --- | --- |
+| Assignment | 788,016 B (770 KB) | 991,206 B | 185,397 B (181 KB) | 1.1 s | 0.010 |
+| Operation in progress | 788,016 B | 1,000,780 B | 185,397 B | 1.1 s | 0.030 |
+
+Initial script is what the HTML references and the browser must parse before
+the page answers; it fell from 921 KB to 770 KB. Gzipped, the referenced chunks
+are 277 KB. Budgets: initial script 800,000 B, all script 1,010,000 B, style
+190,000 B, LCP 3,000 ms, CLS 0.05.
+
+The roadmap's first target, under 400 KB of script on first interaction, is
+below what this stack can reach: React DOM and the Next.js runtime alone are
+about 540 KB decoded (about 170 KB gzipped). What remains above that is the
+engine and its content tables, which the assignment screen imports through the
+session hook. Splitting the engine from the slip is the next step, and the
+budget falls when it lands.
+
+Lighthouse 12, mobile profile, assignment screen, two runs:
+
+| Category | Before | After |
+| --- | --- | --- |
+| Performance | 94 | 97 |
+| Accessibility | 100 | 100 |
+| Best practices | 100 | 100 |
+| SEO | 100 | 100 |
+
+Total blocking time fell from 200 ms to 60–70 ms; largest contentful paint is
+2.4–2.6 s and time to interactive 3.5 s.
+
 ## Measured by hand: Lighthouse
 
 Lighthouse runs without being a dependency:

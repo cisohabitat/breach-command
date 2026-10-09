@@ -2,21 +2,73 @@
 
 import Link from "next/link";
 import { BookOpen, RotateCcw, Settings2, X } from "lucide-react";
-import { ActionSheet } from "@/components/game/action-sheet";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { BriefingScreen } from "@/components/game/briefing-screen";
-import { CaptainReportDialog } from "@/components/game/captain-report-dialog";
-import { DebriefDialog } from "@/components/game/debrief-dialog";
-import { FieldGuideDialog } from "@/components/game/field-guide-dialog";
-import { GameScreen } from "@/components/game/game-screen";
-import { MissionBriefingDialog } from "@/components/game/mission-briefing-dialog";
-import { NewIncidentDialog } from "@/components/game/new-incident-dialog";
-import { RollDialog } from "@/components/game/roll-dialog";
-import { SettingsDialog } from "@/components/game/settings-dialog";
+import { FaultBoundary } from "@/components/game/fault-boundary";
 import { useGameSession } from "@/hooks/use-game-session";
+
+// The assignment screen is all a first visit needs. The game screen and every
+// dialog load on demand, so the script parsed before the page answers is the
+// slip, the engine and the framework rather than the whole game. Each is
+// warmed once the browser is idle, which makes its first opening immediate and
+// puts its script in the offline cache, since the service worker keeps every
+// same-origin script it sees.
+const parts = {
+  game: () => import("@/components/game/game-screen"),
+  actionSheet: () => import("@/components/game/action-sheet"),
+  roll: () => import("@/components/game/roll-dialog"),
+  brief: () => import("@/components/game/mission-briefing-dialog"),
+  report: () => import("@/components/game/captain-report-dialog"),
+  guide: () => import("@/components/game/field-guide-dialog"),
+  debrief: () => import("@/components/game/debrief-dialog"),
+  settings: () => import("@/components/game/settings-dialog"),
+  newIncident: () => import("@/components/game/new-incident-dialog"),
+};
+// While the game screen's script arrives the page keeps a main landmark and says
+// what it is doing, rather than showing nothing between the click and the case.
+const GameScreen = dynamic(() => parts.game().then(m => m.GameScreen), {
+  ssr: false,
+  loading: () => <main className="game-screen game-loading" id="main-content" aria-busy="true"><h1>Opening the operation</h1></main>,
+});
+const ActionSheet = dynamic(() => parts.actionSheet().then(m => m.ActionSheet), { ssr: false });
+const RollDialog = dynamic(() => parts.roll().then(m => m.RollDialog), { ssr: false });
+const MissionBriefingDialog = dynamic(() => parts.brief().then(m => m.MissionBriefingDialog), { ssr: false });
+const CaptainReportDialog = dynamic(() => parts.report().then(m => m.CaptainReportDialog), { ssr: false });
+const FieldGuideDialog = dynamic(() => parts.guide().then(m => m.FieldGuideDialog), { ssr: false });
+const DebriefDialog = dynamic(() => parts.debrief().then(m => m.DebriefDialog), { ssr: false });
+const SettingsDialog = dynamic(() => parts.settings().then(m => m.SettingsDialog), { ssr: false });
+const NewIncidentDialog = dynamic(() => parts.newIncident().then(m => m.NewIncidentDialog), { ssr: false });
+
+// Mounted from the first time it opens and kept after, so a dialog closes with
+// its own focus return and exit rather than vanishing with the component.
+function useOpened(open: boolean) {
+  const [opened, setOpened] = useState(open);
+  // Set during render, as React allows for state derived from a prop: an effect
+  // would mount the dialog a render late.
+  if (open && !opened) setOpened(true);
+  return opened || open;
+}
 
 export default function Home() {
   const session = useGameSession();
   const { game, ended, highContrast, announcement, criticalAnnouncement, storageNotice, rolling, setRules, setSettings, setNewConfirm, setStorageNotice, resetToBriefing } = session;
+  const show = {
+    actionSheet: useOpened(!!session.selected),
+    roll: useOpened(rolling),
+    brief: useOpened(session.missionBriefing),
+    report: useOpened(!!session.report),
+    guide: useOpened(session.rules),
+    debrief: useOpened(session.debrief),
+    settings: useOpened(session.settings),
+    newIncident: useOpened(session.newConfirm),
+  };
+  useEffect(() => {
+    const warm = () => Object.values(parts).forEach(load => load().catch(() => {}));
+    const idle = (window as Window & { requestIdleCallback?: (callback: () => void) => number }).requestIdleCallback;
+    if (idle) idle(warm);
+    else window.setTimeout(warm, 1500);
+  }, []);
 
   return (
     <div className={`app-shell ${highContrast ? "high-contrast" : ""}`}>
@@ -43,16 +95,16 @@ export default function Home() {
         </div>
       </header>
 
-      {!game ? <BriefingScreen session={session} /> : <GameScreen session={session} />}
+      <FaultBoundary name="game screen">{!game ? <BriefingScreen session={session} /> : <GameScreen session={session} />}</FaultBoundary>
 
-      <ActionSheet session={session} />
-      <RollDialog session={session} />
-      <MissionBriefingDialog session={session} />
-      <CaptainReportDialog session={session} />
-      <FieldGuideDialog session={session} />
-      <DebriefDialog session={session} />
-      <SettingsDialog session={session} />
-      <NewIncidentDialog session={session} />
+      {show.actionSheet && <FaultBoundary name="action sheet" onReset={() => session.setSelected(null)}><ActionSheet session={session} /></FaultBoundary>}
+      {show.roll && <FaultBoundary name="roll"><RollDialog session={session} /></FaultBoundary>}
+      {show.brief && <FaultBoundary name="mission brief" onReset={() => session.setMissionBriefing(false)}><MissionBriefingDialog session={session} /></FaultBoundary>}
+      {show.report && <FaultBoundary name="Captain's Report"><CaptainReportDialog session={session} /></FaultBoundary>}
+      {show.guide && <FaultBoundary name="field guide" onReset={() => setRules(false)}><FieldGuideDialog session={session} /></FaultBoundary>}
+      {show.debrief && <FaultBoundary name="after-action review" onReset={() => session.setDebrief(false)}><DebriefDialog session={session} /></FaultBoundary>}
+      {show.settings && <FaultBoundary name="settings" onReset={() => setSettings(false)}><SettingsDialog session={session} /></FaultBoundary>}
+      {show.newIncident && <FaultBoundary name="new incident confirmation" onReset={() => setNewConfirm(false)}><NewIncidentDialog session={session} /></FaultBoundary>}
     </div>
   );
 }

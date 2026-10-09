@@ -135,9 +135,13 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `lib/campaign.ts` | Persistent progression, acts, mastery and endings |
 | `lib/session.ts` | Versioned save format, migration and save rejection |
 | `lib/storage.ts` | Non-throwing local-storage access |
-| `lib/feedback.ts` | Audio and haptic feedback |
+| `lib/feedback.ts` | Audio and haptic feedback, loaded on first use through `lib/feedback-lazy.ts` |
+| `components/game/fault-boundary.tsx` | Keeps a render fault inside its workspace or dialog, with a copyable diagnostic |
 | `lib/telemetry.ts` | Device-local balance counters |
 | `tests/*.test.ts` | Engine, campaign, reads, session, content and simulation suites (`node --test`) |
+| `tests/saves.test.ts` | A save from every session version since 10 migrates and plays on |
+| `tests/e2e/visual.spec.ts` | Pixel baselines for eight screens at four widths |
+| `tests/e2e/performance.spec.ts` | Script, style, paint and layout-shift budgets on a throttled phone |
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
 | `tests/e2e/persistence.spec.ts` | Stored settings survive a load and a reload |

@@ -27,7 +27,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Repository map
 
-- `app/page.tsx`: application shell only — topbar, live regions, storage notice and overlay mounting.
+- `app/page.tsx`: application shell only — topbar, live regions, storage notice and overlay mounting. The game screen and every dialog load on demand: each mounts the first time it opens and stays mounted so it closes with its own focus return, all are warmed when the browser is idle (which also puts them in the offline cache, since the service worker keeps every same-origin script it sees), and the game screen keeps a `main` landmark with a heading while its script arrives. Each is wrapped in `FaultBoundary` (`components/game/fault-boundary.tsx`), so a render fault stays in its own part, says the operation is saved, and offers a diagnostic to copy: build, browser and error, nothing personal and nothing sent.
 - `hooks/use-game-session.ts`: game, session and campaign state, every transition, effect and derived readout.
 - `hooks/use-preferences.ts`: audio, haptics and contrast, loaded once and persisted after.
 - `hooks/use-challenge-code.ts`: the shareable configuration — seed, code field and whether the operation is reproducible.
@@ -44,7 +44,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `lib/campaign.ts`: persistent progression, mastery, acts and campaign endings.
 - `lib/session.ts`: saved-session schema, migration and rejection of impossible or future saves.
 - `lib/storage.ts`: the only local-storage accessor. It answers instead of throwing.
-- `lib/feedback.ts`: sound, music and haptic feedback.
+- `lib/feedback.ts`: sound, music and haptic feedback, loaded on first use through `lib/feedback-lazy.ts`, which keeps the calls in order and swallows a failed load like any other feedback failure. The Bot Commander's policy (`lib/game-bot.ts`) is likewise imported when a practice run first needs it.
 - `lib/telemetry.ts`: device-local balance counters and the first operation's record (when it began, its first procedure, its first revision, how it ended), set once and never moved. They travel only in the player's own backup.
 - `tests/*.test.ts`: the engine suite, run by `node --test`. One file per concern — engine, campaign, reads, session, content, simulation — so a failure in one reports without stopping the rest.
 - `tests/e2e/accessibility.spec.ts`: axe audit across the supported widths and overlays, and of the surfaces a fresh page never reaches — the sector warning, the investigation prompts, the opened map and evidence workspace, the response effects, the ending and the review's folds — built from engine fixtures. Opening the review's campaign fold found locked milestones dimmed below contrast by opacity.
@@ -53,6 +53,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `tests/e2e/visual.spec.ts`: pixel baselines for eight screens at 320, 390, 820 and 1280 px, in Chromium. Baselines are recorded on a GitHub runner, whose text anti-aliasing differs from a developer's machine by about one per cent of a phone screen: after a deliberate visual change, run the "Record visual baselines" workflow, which pushes them to `ci/visual-baselines`, look at every changed image, and bring them into the change that caused them. CI compares at one per cent, elsewhere at three. A baseline updated unseen is a regression accepted.
 - `tests/e2e/performance.spec.ts` and `performance-budgets.json`: script and style shipped, paint timings and layout shift on a throttled phone, against budgets that only move on purpose. `docs/perf-budgets.md` records the baseline and how to run Lighthouse by hand.
 - `docs/playtests/`: the newcomer playtest protocol and its results template. The first-session bar is measured there, with people; the local record's first-operation times (`lib/telemetry.ts`, shown in Settings) are read back against the observer's notes.
+- `tests/saves.test.ts` and `tests/fixtures/saves/`: one saved operation from every `SESSION_VERSION` since 10, each written by the code of its own era, must migrate, keep its turns and play to an ending. When the version moves, add the outgoing version's save before the change lands (the folder's README says how).
+- `scripts/css-dead.py`: counts, and with `--apply` removes, CSS that cannot apply — declarations a later rule with the same selector always overrides, and rules for classes that appear nowhere in the source. The visual baselines, the sweep and the accessibility audit are what make a removal safe; run them after.
 - `tests/e2e/fixtures.ts`: operations built from the engine with forced rolls, and the page opened on one as a saved session, shared by the browser suites.
 - `docs/ROADMAP.md`: the improvement roadmap towards AAA — eight phases, each with exit criteria and the instrument that measures them. `CLAUDE.md` is a pointer to this file and to it. When a phase's criteria are met, record the date, the commit and the numbers there.
 - `.claude/hooks/session-start.sh`: prepares a Claude Code cloud session — installs from the frozen lockfile and, when the container's Chromium is not the build the pinned Playwright expects, sets `PLAYWRIGHT_CHROMIUM_EXECUTABLE`, which `playwright.config.ts` honours.

@@ -47,12 +47,12 @@ import {
 } from "@/lib/advanced-game";
 import { parseSession, serialiseSession, sessionFromNewerBuild, PARKED_SESSION_KEY, SESSION_KEY, type SavedSession } from "@/lib/session";
 import { campaignAct, campaignChanges, campaignEnding, campaignReadable, campaignTier, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
-import { playFeedback, setAdaptiveScore } from "@/lib/feedback";
+import { playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
-import { chooseBotAction, type BotAction } from "@/lib/game-bot";
+import type { BotAction } from "@/lib/game-bot";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useChallengeCode } from "@/hooks/use-challenge-code";
 import { useIncidentStateTool } from "@/hooks/use-incident-state-tool";
@@ -680,6 +680,9 @@ export function useGameSession() {
   useEffect(() => {
     if (!game || !botActive || botPaused || rolling || missionBriefing || settings || rules || newConfirm || debrief || tutorial || selected) return;
     const delay = prefersReducedMotion() ? 350 : 900;
+    // The Bot Commander's policy loads with the first practice run rather than
+    // with the page; a change of state before it arrives cancels the step.
+    let cancelled = false;
     const timer = setTimeout(() => {
       const current = stateRef.current;
       if (!current) return;
@@ -689,11 +692,14 @@ export function useGameSession() {
         if (["won", "lost", "exercise"].includes(current.status)) setDebrief(true);
         return;
       }
-      const action = chooseBotAction(current);
-      setBotStatus(action.reason);
-      executeBotAction(action);
+      import("@/lib/game-bot").then(({ chooseBotAction }) => {
+        if (cancelled || stateRef.current !== current) return;
+        const action = chooseBotAction(current);
+        setBotStatus(action.reason);
+        executeBotAction(action);
+      }).catch(() => setBotStatus("The practice commander could not be loaded. Take manual control to continue."));
     }, delay);
-    return () => clearTimeout(timer);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [game, botActive, botPaused, rolling, missionBriefing, settings, rules, newConfirm, debrief, tutorial, selected, report]);
 
   useEffect(() => () => {

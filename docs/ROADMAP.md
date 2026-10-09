@@ -166,6 +166,23 @@ Exit criteria:
 
 Size: L (five to seven sessions). Depends on Phase 0.
 
+Status, 9 October 2026. Met: every browser suite is green on Chromium,
+WebKit and Firefox (the only failures were two tests asking their harness for
+what it cannot do); Lighthouse is 97 / 100 / 100 / 100 on the assignment
+screen; a fault in any workspace or dialog stays in it, with a copyable
+diagnostic (`components/game/fault-boundary.tsx`); every save from
+`SESSION_VERSION` 10 to 16, written by the code of its own era, migrates and
+plays to an ending (`tests/saves.test.ts`); the budgets are enforced in CI.
+Partly met: initial script fell from 921 KB to 770 KB by loading the game
+screen, the dialogs, the audio and the Bot Commander on demand, but the
+400 KB target is below this stack's floor (React DOM and the Next.js runtime
+are about 540 KB decoded); the next cut is splitting the engine from the
+assignment screen. Not met: the stylesheet is 9,330 lines, down from 10,032
+by removing only what provably cannot apply. Reaching 6,000 means
+restructuring it by component, which is better done with Phase 3's type
+system than ahead of it. Open, because it needs a device: offline play on a
+real iPhone (Playwright's WebKit cannot test it).
+
 ## Phase 2: first session
 
 Goal: a newcomer finishes their first operation and understands the loop —
