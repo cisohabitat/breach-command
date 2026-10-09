@@ -5,6 +5,8 @@ import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialist
 import { campaignRank, standingEffects } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
 import { describeWhen } from "@/lib/last-operation";
+import { hypothesisTrend, ledgerCsv } from "@/lib/ledger";
+import { ladderRungs } from "@/lib/campaign";
 import type { GameSession } from "@/hooks/use-game-session";
 
 // What each stage of the chain answers, in the words a newcomer would ask it.
@@ -18,7 +20,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
     challengeCode, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed,
     guided, setGuided, fastResolve, setFastResolve,
     botEnabled, setBotEnabled,
-    savedSession, resume, clearStoredSession, start, lastOperation, playRecommended,
+    savedSession, resume, clearStoredSession, start, lastOperation, playRecommended, ledger, replay,
   } = session;
 
   return (
@@ -56,6 +58,25 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             {(scenarioChoice !== lastOperation.next.scenario || difficulty !== lastOperation.next.difficulty) && <button className="text-action" onClick={() => playRecommended(lastOperation.next)}>Set up the suggestion</button>}
           </section>
         )}
+        {/* A finished operation set up for the Bot Commander to play again. */}
+        {replay && (
+          <section className="last-operation" aria-label="Replay set up">
+            <span className="field-label">Replay set up</span>
+            <p>The Bot Commander will play case {replay.scenario + 1}, {scenarios[replay.scenario].title}, at {difficulties[replay.difficulty].title} on the same seed: the same chain, adversary and rolls. Begin to watch it. A practice run records nothing.</p>
+          </section>
+        )}
+        {/* The personal record: every operation this device played to an end,
+            and whether reading the route is improving. */}
+        {ledger.length > 0 && (() => {
+          const trend = hypothesisTrend(ledger);
+          return (
+            <section className="last-operation" aria-label="Your record">
+              <span className="field-label">Your record</span>
+              <p>{ledger.length} operation{ledger.length === 1 ? "" : "s"} recorded, {ledger.filter(entry => entry.outcome !== "lost").length} won or stood down. Hypothesis accuracy over the last {trend.recentCount === 1 ? "operation" : `${trend.recentCount}`}: {trend.recent} of 10{trend.before === null ? "" : `, against ${trend.before} over the ten before`}.</p>
+              <button className="text-action" onClick={() => downloadText("breach-command-record.csv", ledgerCsv(ledger, index => scenarios[index].title), "text/csv")}>Download record</button>
+            </section>
+          );
+        })()}
         <section className="career-card" aria-label="Command career progression">
           <div><span className="field-label">Your command record</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents, trust {campaign.leadershipTrust}, readiness {campaign.readiness}</small><details className="standing-effects"><summary>What trust and readiness do</summary><small>{standingEffects(campaign).join(" ")}</small></details></div>
           <b><small>Experience </small>{campaign.xp}</b>
@@ -77,6 +98,12 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </dl>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
+        {(() => {
+          // The case's mastery ladder: the rungs climbed and the next one to try.
+          const climbed = ladderRungs.filter(rung => (campaign.ladder?.[String(scenarioChoice)] ?? []).includes(rung.id));
+          const nextRung = ladderRungs.find(rung => !climbed.includes(rung));
+          return <p className="slip-ladder">Mastery ladder, {climbed.length} of {ladderRungs.length}{climbed.length ? `: ${climbed.map(rung => lowerFirst(rung.title)).join(", ")}` : ""}.{nextRung ? ` Next: ${lowerFirst(nextRung.detail)}` : " Every rung climbed."}</p>;
+        })()}
         {previewVariant && <div className="variant-brief"><p className="variant-line"><span className="variant-label">Amended:</span> <strong>{previewVariant.title}.</strong> <small>{previewVariant.modifier}</small></p><p>{previewVariant.briefing}</p></div>}
         <div className="mission-selector" aria-label="Select incident">
           {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery star${(campaign.mastery[String(index)] ?? 0) === 1 ? "" : "s"}` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1)}</span>{campaign.completed.includes(index) && <small aria-hidden="true">{"|".repeat(campaign.mastery[String(index)] ?? 0)}</small>}</button>)}
@@ -112,7 +139,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <div className="challenge-console">
             <div><span className="eyebrow">Scenario code</span><button onClick={generateSeed}><RefreshCw size={14} /> New seed</button></div>
             <code>{challengeCode ?? "Preparing code"}</code>
-            <p className="muted small">A code reproduces the incident, its variant and its dice. Daily operation plays today’s code; an ordinary campaign operation draws a fresh incident unless you load a code or generate a seed, which applies to the next operation you begin. Campaign standing is not part of a code, so two commands at different seniority will see different modifiers from the same code.</p>
+            <p className="muted small">A code reproduces the incident, its variant and its dice. Daily operation plays today’s code and Weekly operation this week’s; an ordinary campaign operation draws a fresh incident unless you load a code or generate a seed, which applies to the next operation you begin. Campaign standing is not part of a code, so two commands at different seniority will see different modifiers from the same code.</p>
             <div className="challenge-load"><input aria-label="Challenge code" value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder="Enter a BC challenge code" /><button onClick={loadChallengeCode}>Load</button></div>
             {challengeMessage && <p aria-live="polite">{challengeMessage}</p>}
           </div>
@@ -155,3 +182,17 @@ export function BriefingScreen({ session }: { session: GameSession }) {
     </main>
   );
 }
+
+// A text file the player keeps, made on the device.
+function downloadText(name: string, text: string, type: string) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);

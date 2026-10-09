@@ -53,8 +53,11 @@ import { playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
+import { parseLedger, readLedger, writeLedger, type LedgerEntry } from "@/lib/ledger";
+import { encodeChallenge } from "@/lib/phase8";
 import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
+import { weeklyOperation } from "@/lib/command-systems";
 import type { BotAction } from "@/lib/game-bot";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useChallengeCode } from "@/hooks/use-challenge-code";
@@ -101,6 +104,14 @@ export function useGameSession() {
   const [telemetry, setTelemetry] = useState<BalanceTelemetry>(() => readTelemetry());
   // Read after mount with the campaign, never in the initialiser of a prerendered page.
   const [lastOperation, setLastOperation] = useState<LastOperation | null>(null);
+  // Every operation played to an end on this device, read after mount like the campaign.
+  const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+  // A finished operation set up again for the Bot Commander to play. Its seed
+  // reproduces the chain, the adversary and the rolls; its variant and route
+  // are carried as they were, because the campaign's route may have moved since
+  // and an odd variant meets the sector's other crisis.
+  const replayRef = useRef<{ scenario: number; variant: Game["variant"]; campaignRoute: Game["campaignRoute"] } | null>(null);
+  const [replay, setReplay] = useState<{ scenario: number; difficulty: Game["difficulty"] } | null>(null);
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   // What the last finished operation did to the campaign, for the review.
   const [campaignChange, setCampaignChange] = useState<string[]>([]);
@@ -109,7 +120,7 @@ export function useGameSession() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
   const [storageNotice, setStorageNotice] = useState("");
   const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled } = usePreferences(setStorageNotice);
-  const { todaySeed, seedFor, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
+  const { todaySeed, seedFor, applyCode, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
     setScenarioChoice(setup.scenario);
     setDifficulty(setup.difficulty);
     setMode(setup.mode);
@@ -187,9 +198,12 @@ export function useGameSession() {
     const seed = nextSeed ?? todaySeed();
     const random = reproducible ? seededChallengeRandom(seed) : undefined;
     const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
-    const route = routeForCampaign(campaign);
+    const replaying = replayRef.current?.scenario === index ? replayRef.current : null;
+    replayRef.current = null;
+    setReplay(null);
+    const route = replaying?.campaignRoute ?? routeForCampaign(campaign);
     const automated = botEnabled;
-    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: incidentVariant(index, route, seed), seed: reproducible ? seed : null, recentCommands: campaign.recentCommands, recentInjects: campaign.recentInjects, recentCrises: campaign.recentCrises });
+    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: replaying?.variant ?? incidentVariant(index, route, seed), seed: reproducible ? seed : null, recentCommands: campaign.recentCommands, recentInjects: campaign.recentInjects, recentCrises: campaign.recentCrises });
     spendChallenge();
     setGame(next);
     // A new operation starts on the default plan; Exhaustive carried over from
@@ -441,14 +455,14 @@ export function useGameSession() {
   }
 
   function exportProgress() {
-    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), session: game && game.mode !== "ironman" && !botRun ? serialiseSession(game, guided, fastResolve) : null });
+    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), ledger: readLedger(scenarios.length), session: game && game.mode !== "ironman" && !botRun ? serialiseSession(game, guided, fastResolve) : null });
     setBackupInput(payload);
     navigator.clipboard?.writeText(payload).then(() => setBackupMessage("Backup copied to the clipboard."), () => setBackupMessage("Backup prepared. Copy the text below."));
   }
 
   function importProgress() {
     try {
-      const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null; telemetry?: unknown };
+      const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null; telemetry?: unknown; ledger?: unknown };
       if (payload.format !== "breach-command-backup") throw new Error("format");
       // A backup without a readable campaign would otherwise restore the empty
       // default over the player's progress and call that a restore.
@@ -467,6 +481,13 @@ export function useGameSession() {
         const restoredTelemetry = parseTelemetry(payload.telemetry);
         writeTelemetry(restoredTelemetry);
         setTelemetry(restoredTelemetry);
+      }
+      // The personal record travels the same way; an older backup without one
+      // leaves this device's record alone.
+      if (Array.isArray(payload.ledger)) {
+        const restoredLedger = parseLedger(payload.ledger, scenarios.length);
+        writeLedger(restoredLedger);
+        setLedger(restoredLedger);
       }
       if (restoredSession) {
         writeStored(SESSION_KEY, serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
@@ -488,7 +509,12 @@ export function useGameSession() {
   function chooseMode(next: GameMode) {
     // Leaving Daily goes back to the campaign's own next case; it kept today's.
     if (next === "daily") setScenarioChoice(todaySeed() % scenarios.length);
-    else if (mode === "daily") setScenarioChoice(nextCase(campaign, scenarios.length));
+    // The week's operation is one case at Operational, so a week's results compare.
+    else if (next === "weekly") {
+      setScenarioChoice(weeklyOperation(new Date(), scenarios.length).scenario);
+      setDifficulty("operational");
+    }
+    else if (mode === "daily" || mode === "weekly") setScenarioChoice(nextCase(campaign, scenarios.length));
     setMode(next);
   }
 
@@ -510,6 +536,23 @@ export function useGameSession() {
     const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? getLossReason(result).title : result.status === "exercise" ? "Authorised exercise" : "Stood down", score, endedAt: Date.now(), next };
     writeLastOperation(record);
     setLastOperation(record);
+    const entry: LedgerEntry = { at: Date.now(), scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, outcome: result.status as LedgerEntry["outcome"], score, hypothesis: getOutcome(result).breakdown.hypothesis, stages: result.revealed.length, turns: result.turns.length, code: result.seed === null ? null : encodeChallenge({ scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, specialist: result.specialist, seed: result.seed }) };
+    const nextLedger = [...readLedger(scenarios.length), entry];
+    writeLedger(nextLedger);
+    setLedger(nextLedger);
+  }
+
+  // Sets up the finished operation again for the Bot Commander, to watch where
+  // a reading tested soundly would have gone. Only a reproducible operation can
+  // be replayed: an ordinary campaign one drew its chain fresh.
+  function replayWithBot(finished: Game) {
+    if (finished.seed === null) return;
+    const code = encodeChallenge({ scenario: finished.scenario, difficulty: finished.difficulty, mode: finished.mode, specialist: finished.specialist, seed: finished.seed });
+    resetToBriefing();
+    if (!applyCode(code)) return;
+    replayRef.current = { scenario: finished.scenario, variant: finished.variant, campaignRoute: finished.campaignRoute };
+    setBotEnabled(true);
+    setReplay({ scenario: finished.scenario, difficulty: finished.difficulty });
   }
 
   // Sets up the assignment the review or the landing page suggested.
@@ -647,6 +690,7 @@ export function useGameSession() {
       // at case 01 on every load, a case already cleared.
       setScenarioChoice(nextCase(loaded, scenarios.length));
       setLastOperation(readLastOperation(scenarios.length));
+      setLedger(readLedger(scenarios.length));
       // A first operation starts at Training, the only difficulty that discloses
       // what the team is seeing; without that clue the opening reading is a guess
       // between four routes, which is the wrong first lesson. The player can still
@@ -835,6 +879,9 @@ export function useGameSession() {
     resetToBriefing,
     lastOperation,
     playRecommended,
+    ledger,
+    replay,
+    replayWithBot,
     dismissTutorial,
     restartTutorial,
     clearLocalRecord,

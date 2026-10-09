@@ -6,7 +6,8 @@ export const SESSION_KEY = "breach-command.session";
 // newer build's operation outlives an older bundle served offline. A build that
 // can read it moves it back and offers it for resume.
 export const PARKED_SESSION_KEY = "breach-command.session.parked";
-export const SESSION_VERSION = 17;
+// 18: the Weekly operation mode, which an older build would read as damaged.
+export const SESSION_VERSION = 18;
 
 export type SavedSession = {
   version: number;

@@ -195,7 +195,8 @@ export function setPieceById(id: SetPieceId, scenario: number): SectorSetPiece {
 
 export type ChallengeSetup = { scenario: number; difficulty: Difficulty; mode: GameMode; specialist: SpecialistId; seed: number };
 const difficultyIds: Difficulty[] = ["training", "operational", "crisis"];
-const modeIds: GameMode[] = ["campaign", "daily", "ironman", "escalation", "expert"];
+// Appended, never inserted: a code carries the index.
+const modeIds: GameMode[] = ["campaign", "daily", "ironman", "escalation", "expert", "weekly"];
 const specialistIds: SpecialistId[] = ["hunter", "forensics", "identity", "ot", "continuity", "communications"];
 
 // A code promises the same operation, so it carries the version of the content

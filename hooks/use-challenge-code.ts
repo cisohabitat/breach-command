@@ -2,7 +2,8 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { decodeChallenge, encodeChallenge, isOutdatedChallenge } from "@/lib/phase8";
-import type { GameMode } from "@/lib/advanced-game";
+import { scenarios, type GameMode } from "@/lib/advanced-game";
+import { weeklyOperation } from "@/lib/command-systems";
 
 export type ChallengeSetup = NonNullable<ReturnType<typeof decodeChallenge>>;
 
@@ -14,6 +15,7 @@ function todaySeed() {
   return Number(`${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`);
 }
 const noSubscription = () => () => {};
+const thisWeeksSeed = () => weeklyOperation(new Date(), scenarios.length).seed;
 
 // A challenge is a shareable configuration, not a game. It owns the seed, the
 // code field and whether the player has deliberately chosen a reproducible
@@ -26,6 +28,7 @@ const noSubscription = () => () => {};
 // it made every later campaign operation replay the same chain.
 export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
   const dailySeed = useSyncExternalStore(noSubscription, todaySeed, () => null);
+  const weeklySeed = useSyncExternalStore(noSubscription, thisWeeksSeed, () => null);
   const [challenge, setChallenge] = useState<{ seed: number; source: "code" | "generated" } | null>(null);
   const [challengeInput, setChallengeInput] = useState("");
   const [challengeMessage, setChallengeMessage] = useState("");
@@ -43,6 +46,17 @@ export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
     setChallengeMessage("Challenge loaded. It applies to the next operation you begin.");
   }
 
+  // Loads a code the game itself produced, as the replay with the Bot Commander
+  // does, without going through the code field.
+  function applyCode(code: string) {
+    const setup = decodeChallenge(code);
+    if (!setup) return false;
+    applySetup(setup);
+    setChallenge({ seed: setup.seed, source: "code" });
+    setChallengeMessage("Replay loaded. It applies to the next operation you begin.");
+    return true;
+  }
+
   function generateSeed() {
     setChallenge({ seed: 100000 + Math.floor(Math.random() * 900000), source: "generated" });
     setChallengeMessage("New challenge generated. It applies to the next operation you begin.");
@@ -53,6 +67,7 @@ export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
   // configuration code, but its chain and rolls are drawn fresh.
   function seedFor(mode: GameMode): { seed: number | null; reproducible: boolean } {
     if (mode === "daily" && challenge?.source !== "code") return { seed: dailySeed, reproducible: true };
+    if (mode === "weekly" && challenge?.source !== "code") return { seed: weeklySeed, reproducible: true };
     if (challenge) return { seed: challenge.seed, reproducible: true };
     return { seed: dailySeed, reproducible: false };
   }
@@ -68,5 +83,5 @@ export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
     return seed === null ? null : encodeChallenge({ scenario, difficulty, mode, specialist, seed });
   };
 
-  return { todaySeed, seedFor, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor };
+  return { todaySeed, seedFor, applyCode, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor };
 }

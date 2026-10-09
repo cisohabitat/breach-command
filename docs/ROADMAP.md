@@ -449,6 +449,25 @@ Exit criteria:
 Size: M (four to five sessions). Depends on Phase 4 for the ladder to be
 worth climbing.
 
+Status, 9 October 2026. Built: Weekly Operation (one case at Operational on
+one seed from Monday to Sunday, UTC, appended to the code's mode list so
+every earlier code keeps its mode, and session version 18 so an older build
+parks a weekly save instead of discarding it); a five-rung mastery ladder per
+case on its slip (won at Crisis, without revising, in half the window, with a
+tired specialist, in Expert); Save image, a PNG drawn on the device from the
+share card; the replay of a reproducible operation by the Bot Commander,
+carrying its variant and route; the personal record of every operation, with
+the hypothesis-accuracy trend over the last ten and a CSV download; and
+Expert's own ending and mark.
+
+Met: the share image draws and saves as a PNG in Chromium, WebKit and Firefox
+(`tests/e2e/share.spec.ts`), and its card is checked against every technique
+title over simulated operations in every scenario (`tests/replay.test.ts`);
+the ladder, the record and the weekly code survive a reload and a backup
+round trip (`tests/e2e/persistence.spec.ts`). Not met: the rise in
+operations per device after the campaign is cleared needs a cohort of
+returning players.
+
 ## Phase 6: learning fidelity
 
 Goal: a practitioner would run Breach Command in a training room and stand

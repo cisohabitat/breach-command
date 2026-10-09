@@ -10,7 +10,7 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
 // installed (a cloud session whose network refuses the download) can still run
 // everything in Chromium; CI sets the variable and installs all three.
 const allBrowsers = !!process.env.PLAYWRIGHT_ALL_BROWSERS;
-const crossBrowserSuites = /(responsive-game|keyboard|persistence|offline)\.spec\.ts/;
+const crossBrowserSuites = /(responsive-game|keyboard|persistence|offline|share)\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./tests/e2e",

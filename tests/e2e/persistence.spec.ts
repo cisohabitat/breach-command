@@ -149,3 +149,48 @@ test.describe("local persistence", () => {
     expect(backup.telemetry.firstSession.firstProcedureAt).toBe(81000);
   });
 });
+
+test.describe("replayability records", () => {
+  test("the ladder, the personal record and the weekly code survive a reload and travel in the backup", async ({ page }) => {
+    const entry = { at: 1_790_000_000_000, scenario: 0, difficulty: "operational", mode: "campaign", outcome: "won", score: 74, hypothesis: 6, stages: 4, turns: 8, code: null };
+    await page.addInitScript(([recorded]) => {
+      try {
+        if (localStorage.getItem("breach-command.seeded")) return;
+        localStorage.clear();
+        localStorage.setItem("breach-command.tutorial-complete", "true");
+        localStorage.setItem("breach-command.campaign", JSON.stringify({ completed: [0], xp: 90, ladder: { "0": ["crisis", "expert"] } }));
+        localStorage.setItem("breach-command.ledger", JSON.stringify([recorded, { ...recorded, at: recorded.at + 1, hypothesis: 8 }]));
+        localStorage.setItem("breach-command.seeded", "1");
+      } catch {}
+    }, [entry] as const);
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "networkidle" });
+    await page.getByRole("button", { name: /^The quiet intrusion/ }).click();
+    await expect(page.locator(".slip-ladder")).toContainText("Mastery ladder, 2 of 5: won at Crisis, won in Expert.");
+    const record = page.getByRole("region", { name: "Your record" });
+    await expect(record).toContainText("2 operations recorded");
+    await expect(record).toContainText("over the last 2: 7 of 10");
+
+    await page.getByText("Advanced operation settings").click();
+    await page.getByRole("button", { name: /^Weekly operation/ }).click();
+    const code = await page.locator(".challenge-console code").innerText();
+    expect(code).toMatch(/^BC\d+-\d+-1-5-/);
+    await page.reload({ waitUntil: "networkidle" });
+    await page.getByText("Advanced operation settings").click();
+    await page.getByRole("button", { name: /^Weekly operation/ }).click();
+    await expect(page.locator(".challenge-console code")).toHaveText(code);
+
+    await page.getByRole("button", { name: "Game settings" }).click();
+    await page.getByRole("button", { name: "Export" }).click();
+    const text = await page.getByRole("textbox", { name: "Progress backup" }).inputValue();
+    const backup = JSON.parse(text);
+    expect(backup.ledger).toHaveLength(2);
+    expect(backup.campaign.ladder["0"]).toEqual(["crisis", "expert"]);
+
+    await page.evaluate(() => { localStorage.removeItem("breach-command.ledger"); localStorage.setItem("breach-command.campaign", JSON.stringify({ completed: [] })); });
+    await page.getByRole("textbox", { name: "Progress backup" }).fill(text);
+    await page.getByRole("button", { name: "Restore backup" }).click();
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem("breach-command.ledger") ?? "[]"))).toHaveLength(2);
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem("breach-command.campaign") ?? "{}")).ladder["0"]).toEqual(["crisis", "expert"]);
+  });
+});

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { getLossReason, getOperationalLabel, getResultSummary, type Game } from "@/lib/advanced-game";
+import { getLossReason, getOperationalLabel, getResultSummary, getShareCard, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 
@@ -17,12 +17,15 @@ export function EndState({ session }: { session: GameSession }) {
   const openDebrief = () => setDebrief(true);
 
   if (game.status === "won") {
+    // Expert withholds every aid, so its win is its own ending and its own mark
+    // on the case.
+    const expert = game.mode === "expert";
     return (
-      <section className="resolution resolution-won" data-resolution="won">
+      <section className="resolution resolution-won" data-resolution="won" data-expert={expert || undefined}>
         <div className="end-banner end-won">
           <div>
-            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{outcome?.title}</h2>
-            <p>{outcome?.detail} Impact is {game.impact} and {getOperationalLabel(game).toLowerCase()} is {game.continuity}. The captain has closed the active response.</p>
+            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{expert ? `Cleared in Expert: ${outcome?.title.toLowerCase()}` : outcome?.title}</h2>
+            <p>{expert ? "No clue, standing, ruled-out mark or prompt was offered, and every roll was one harder. " : ""}{outcome?.detail} Impact is {game.impact} and {getOperationalLabel(game).toLowerCase()} is {game.continuity}. The captain has closed the active response.</p>
           </div>
           <button className="primary-button" onClick={openDebrief}>Open after-action review</button>
         </div>
@@ -32,6 +35,7 @@ export function EndState({ session }: { session: GameSession }) {
           <li><b>Confirmed</b><span>Attack chain: {game.revealed.length} of 4 stages identified.</span></li>
           <li><b>Recorded</b><span>Response: containment, assurance and recovery.</span></li>
           <li><b>Scored</b><span>Outcome: grade {outcome?.grade}, {outcome?.breakdown.total} of 100.</span></li>
+          {expert && <li><b>Marked</b><span>Cleared in Expert, on this case’s mastery ladder.</span></li>}
         </ol>
         <ShareResult game={game} />
       </section>
@@ -84,9 +88,28 @@ function ShareResult({ game }: { game: Game }) {
     if (!navigator.clipboard?.writeText) return manual();
     navigator.clipboard.writeText(text).then(() => setState({ status: "copied", text }), manual);
   };
+  // The image is drawn on the device, from the share card alone, and saved as
+  // a file; the drawing code loads only when it is asked for.
+  const [image, setImage] = useState("");
+  const saveImage = () => {
+    setImage("Drawing the result…");
+    import("@/lib/share-image").then(({ drawShareCard }) => drawShareCard(getShareCard(game), window.location.origin)).then(blob => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "breach-command-result.png";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setImage("Result image saved.");
+    }).catch(() => setImage("This browser could not draw the image. Copy result works instead."));
+  };
   return (
     <div className="share-result">
       <button className="text-action" onClick={copy}>Copy result</button>
+      <button className="text-action" onClick={saveImage}>Save image</button>
+      <span aria-live="polite">{image}</span>
       <span aria-live="polite">{state.status === "copied" ? (game.seed === null ? "Result copied." : "Result and challenge code copied.") : ""}</span>
       {state.status === "manual" && <textarea readOnly aria-label="Result to copy" value={state.text} onFocus={event => event.currentTarget.select()} />}
     </div>

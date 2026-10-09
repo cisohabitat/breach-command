@@ -320,6 +320,26 @@ export function getResultSummary(game: Game): string[] {
   return [heading, `${result} · ${record}`, ...(code ? [`Play the same operation: ${code}`] : [])];
 }
 
+// The share image's text, under the same rule as the copied result: the case,
+// the outcome, counts and the code, never a technique. The image is drawn from
+// this and nothing else, so the rule is tested here.
+export type ShareCard = { form: string; title: string; meta: string; result: string; score: string; stages: string; code: string | null; expert: boolean };
+export function getShareCard(game: Game): ShareCard {
+  const scenario = scenarios[game.scenario];
+  const outcome = getOutcome(game);
+  const code = game.seed === null ? null : encodeChallenge({ scenario: game.scenario, difficulty: game.difficulty, mode: game.mode, specialist: game.specialist, seed: game.seed });
+  return {
+    form: "Form BC-310 / Result",
+    title: scenario.title,
+    meta: `Case ${game.scenario + 1}, ${scenario.sector}, ${difficulties[game.difficulty].title}, ${gameModes[game.mode].title}`,
+    result: game.status === "won" ? `Stood down, grade ${outcome.grade}` : game.status === "exercise" ? "Authorised exercise concluded" : `Lost: ${getLossReason(game).title}`,
+    score: `${outcome.breakdown.total} of 100`,
+    stages: `${game.revealed.length} of 4 stages confirmed in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}`,
+    code,
+    expert: game.mode === "expert" && game.status === "won",
+  };
+}
+
 // What each turn earned toward hypothesis accuracy, and why. The score and the
 // ledger both read this, so a row can never say "no credit" for a turn the
 // score paid half for.

@@ -12,7 +12,7 @@ import { objectiveTheory } from "@/lib/phase9";
 export function DebriefDialog({ session }: { session: GameSession }) {
   const {
     debrief, setDebrief, game, outcome, activeScenario, campaign, finalEnding,
-    resetToBriefing, setScenarioChoice, campaignChange, playRecommended,
+    resetToBriefing, setScenarioChoice, campaignChange, playRecommended, replayWithBot,
   } = session;
   const ledger = game ? getHypothesisLedger(game) : [];
   // The same suggestion the landing page will show a returning player.
@@ -187,6 +187,11 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <span className="eyebrow" id="next-recommendation-title">Suggested next</span>
             <h3>{recommendation!.title}</h3>
             <p>{recommendation!.reason}</p>
+            {/* The same operation played by the Bot Commander from what it can see,
+                to show where a reading tested soundly would have gone. */}
+            {game.seed !== null
+              ? <><p>Or watch the Bot Commander play this same operation from the evidence it can see, to compare where its readings went with yours.</p><button className="text-action" onClick={() => replayWithBot(game)}>Replay with the Bot Commander</button></>
+              : <p>This campaign operation drew its chain fresh, so it cannot be replayed. Daily, Weekly and challenge-code operations can be replayed by the Bot Commander from their review.</p>}
           </section>}
           <div className="debrief-actions">
             <button className="text-action" onClick={() => window.print()}>Print review</button>

@@ -1,4 +1,4 @@
-import type { Game } from "./advanced-game";
+import { SPECIALIST_EXHAUSTED_AT, countRevisions, type Game } from "./advanced-game.ts";
 
 export const CAMPAIGN_KEY = "breach-command.campaign";
 
@@ -22,9 +22,11 @@ export type CampaignState = {
   recentCommands: string[];
   recentInjects: string[];
   recentCrises: string[];
+  // Each case's mastery ladder: the rungs this command has climbed on it.
+  ladder: Record<string, LadderRungId[]>;
 };
 
-export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {}, specialistBonds: {}, routeHistory: [], recentCommands: [], recentInjects: [], recentCrises: [] };
+export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {}, specialistBonds: {}, routeHistory: [], recentCommands: [], recentInjects: [], recentCrises: [], ladder: {} };
 
 // Whether stored text is a campaign record at all. parseCampaign defaults every
 // missing field and falls back to a new campaign on anything unreadable, so this
@@ -43,6 +45,37 @@ const RECENT_INJECTS = 16;
 const RECENT_CRISES = 10;
 // Newest last, each id once.
 const remember = (list: string[], met: string[], keep: number) => [...list.filter(id => !met.includes(id)), ...met.filter((id, index) => met.indexOf(id) === index)].slice(-keep);
+
+// A case's mastery ladder: authored challenges past clearing it, each a won
+// operation under a constraint. An authorised exercise clears the case but
+// climbs no rung, because every rung is about carrying the response through.
+export type LadderRungId = "crisis" | "steady" | "swift" | "tired" | "expert";
+export const ladderRungs: { id: LadderRungId; title: string; detail: string }[] = [
+  { id: "crisis", title: "Won at Crisis", detail: "Win the case at Crisis difficulty." },
+  { id: "steady", title: "Won without revising", detail: "Win holding one reading from the first check to the last." },
+  { id: "swift", title: "Won in half the window", detail: "Win having used no more than half the investigation window." },
+  { id: "tired", title: "Won with a tired specialist", detail: `Win with the deployed specialist's fatigue at ${SPECIALIST_EXHAUSTED_AT} or more, where their bonus no longer applies.` },
+  { id: "expert", title: "Won in Expert", detail: "Win the case in Expert mode, with every aid withheld." },
+];
+
+export function rungsEarned(game: Game): LadderRungId[] {
+  if (game.status !== "won") return [];
+  const earned: LadderRungId[] = [];
+  if (game.difficulty === "crisis") earned.push("crisis");
+  if (countRevisions(game) === 0) earned.push("steady");
+  if (game.turns.length * 2 <= game.turnLimit) earned.push("swift");
+  if (game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT) earned.push("tired");
+  if (game.mode === "expert") earned.push("expert");
+  return earned;
+}
+
+function parseLadder(value: unknown): Record<string, LadderRungId[]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const known = new Set(ladderRungs.map(rung => rung.id as string));
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>)
+    .filter(([key, rungs]) => /^\d+$/.test(key) && Array.isArray(rungs))
+    .map(([key, rungs]) => [key, (rungs as unknown[]).filter((id): id is LadderRungId => typeof id === "string" && known.has(id))]));
+}
 
 export function parseCampaign(raw: string | null): CampaignState {
   if (!raw) return defaultCampaign;
@@ -66,6 +99,7 @@ export function parseCampaign(raw: string | null): CampaignState {
       recentCommands: Array.isArray(value.recentCommands) ? value.recentCommands.filter(item => typeof item === "string").slice(-RECENT_COMMANDS) : [],
       recentInjects: Array.isArray(value.recentInjects) ? value.recentInjects.filter(item => typeof item === "string").slice(-RECENT_INJECTS) : [],
       recentCrises: Array.isArray(value.recentCrises) ? value.recentCrises.filter(item => typeof item === "string").slice(-RECENT_CRISES) : [],
+      ladder: parseLadder(value.ladder),
     };
   } catch {
     return defaultCampaign;
@@ -127,6 +161,8 @@ export function campaignChanges(before: CampaignState, after: CampaignState, gam
   const xp = after.xp - before.xp;
   if (xp) lines.push(`Experience +${xp} to ${after.xp}: the score (${score}), raised for a harder difficulty or mode and reduced for an operation not won.`);
   for (const capability of unlockedCapabilities(after.xp)) if (capability.unlocked && !unlockedCapabilities(before.xp).find(item => item.title === capability.title)!.unlocked) lines.push(`Unlocked: ${capability.title}. ${capability.detail}`);
+  const climbed = (after.ladder?.[String(game.scenario)] ?? []).filter(id => !(before.ladder?.[String(game.scenario)] ?? []).includes(id));
+  for (const id of climbed) lines.push(`Ladder: ${ladderRungs.find(rung => rung.id === id)!.title.replace(/^W/, "w")} on this case, ${(after.ladder?.[String(game.scenario)] ?? []).length} of ${ladderRungs.length} rungs.`);
   if (after.completed.length > before.completed.length) lines.push(`Case cleared: ${after.completed.length} of 10. Every cleared case moves the campaign's acts and route forward.`);
   else if (game.status === "lost") lines.push("This case stays open in the campaign and is offered again as the next assignment.");
   return lines;
@@ -191,7 +227,7 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
   const completed = (game.status === "won" || game.status === "exercise") && !current.completed.includes(game.scenario)
     ? [...current.completed, game.scenario]
     : current.completed;
-  const modeReward = game.mode === "expert" ? 1.5 : game.mode === "escalation" ? 1.4 : game.mode === "ironman" ? 1.35 : game.mode === "daily" ? 1.15 : 1;
+  const modeReward = game.mode === "expert" ? 1.5 : game.mode === "escalation" ? 1.4 : game.mode === "ironman" ? 1.35 : game.mode === "weekly" ? 1.2 : game.mode === "daily" ? 1.15 : 1;
   const won = game.status === "won";
   // Seniority follows results. An operation that was not resolved still teaches
   // something, but a command that keeps losing should not reach the same tier as
@@ -235,6 +271,7 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     streak: won ? current.streak + 1 : drill ? current.streak : 0,
     specialistFatigue,
     mastery: { ...current.mastery, [String(game.scenario)]: Math.max(current.mastery[String(game.scenario)] ?? 0, mastery) },
+    ladder: { ...(current.ladder ?? {}), [String(game.scenario)]: ladderRungs.map(rung => rung.id).filter(id => (current.ladder?.[String(game.scenario)] ?? []).includes(id) || rungsEarned(game).includes(id)) },
     commandPosture,
     unresolvedThreads: Math.max(0, current.unresolvedThreads + (drill ? 0 : won && game.objectiveProgress < 65 ? -1 : 1)),
     actorSightings,

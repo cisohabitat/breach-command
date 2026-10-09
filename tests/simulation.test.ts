@@ -34,7 +34,7 @@ test("terminates every simulated operation", () => {
   }
   const simulationCount=Object.keys(difficulties).length*scenarios.length*30;
   assert.equal(Object.values(totals).reduce((a,b)=>a+b,0),simulationCount);
-  const modes=Object.keys({campaign:1,daily:1,ironman:1,escalation:1,expert:1}) as GameMode[];
+  const modes=Object.keys({campaign:1,daily:1,weekly:1,ironman:1,escalation:1,expert:1}) as GameMode[];
   const specialistIds=["hunter","forensics","identity","ot","continuity","communications"] as SpecialistId[];
   let modeSimulations=0;
   for(const mode of modes)for(let s=0;s<scenarios.length;s++)for(let attempt=0;attempt<6;attempt++){

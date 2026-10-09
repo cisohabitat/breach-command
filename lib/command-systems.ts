@@ -1,4 +1,4 @@
-export type GameMode = "campaign" | "daily" | "ironman" | "escalation" | "expert";
+export type GameMode = "campaign" | "daily" | "weekly" | "ironman" | "escalation" | "expert";
 export type SpecialistId = "hunter" | "forensics" | "identity" | "ot" | "continuity" | "communications";
 export type ProcedureScope = "focused" | "enterprise";
 export type ProcedureIntensity = "rapid" | "balanced" | "exhaustive";
@@ -8,6 +8,7 @@ export type AdversaryObjectiveId = "exfiltration" | "disruption" | "fraud" | "es
 export const gameModes: Record<GameMode, { title: string; description: string; reward: number }> = {
   campaign: { title: "Campaign", description: "Persistent readiness, trust and team fatigue carry between incidents.", reward: 1 },
   daily: { title: "Daily operation", description: "A fixed incident seed gives every commander the same case today.", reward: 1.15 },
+  weekly: { title: "Weekly operation", description: "One case and seed at Operational for the whole week, so a week's commanders can compare results by its code.", reward: 1.2 },
   ironman: { title: "Ironman", description: "No mid-incident save and one fewer turn. Decisions are final.", reward: 1.35 },
   escalation: { title: "Escalation", description: "Begin under pressure against an actor already moving.", reward: 1.4 },
   expert: { title: "Expert", description: "No coaching or suggested evidence, and every roll is one harder (−1).", reward: 1.5 },
@@ -91,4 +92,19 @@ export function modeRandom(mode: GameMode, scenario: number, now = new Date()) {
     state = (state * 1664525 + 1013904223) >>> 0;
     return state % max;
   };
+}
+
+// The week's operation, chosen from the week that began on the most recent
+// Monday (UTC). Its seed cannot meet a daily seed, which is a plain date, and
+// its case steps through the ten in order, a different one each week.
+export function weekStart(now: Date) {
+  const day = (now.getUTCDay() + 6) % 7;
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - day));
+}
+
+export function weeklyOperation(now: Date, cases: number) {
+  const monday = weekStart(now);
+  const stamp = `${monday.getUTCFullYear()}${String(monday.getUTCMonth() + 1).padStart(2, "0")}${String(monday.getUTCDate()).padStart(2, "0")}`;
+  const week = Math.floor(monday.getTime() / (7 * 86400000));
+  return { seed: Number(`7${stamp}`), scenario: ((week % cases) + cases) % cases, difficulty: "operational" as const, startsOn: stamp };
 }
