@@ -1,7 +1,7 @@
 // The engine's public surface. The implementation lives in lib/engine/: authored
 // content, types, shared rules, the reads shown during play, the transitions
 // that change an operation and the after-action review.
-import { attacks, procedures, sectorProcedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, type Difficulty, type HypothesisId } from "./game.ts";
+import { attacks, procedures, sectorProcedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, attackMitre, mitreUrl, type Difficulty, type HypothesisId } from "./game.ts";
 import { adversaryObjectives, gameModes, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type GameMode, type ProcedureIntensity, type ProcedurePlan, type ProcedureScope, type SpecialistId } from "./command-systems.ts";
 import { infrastructureTopologies, sectorSetPieces, setPieceById } from "./phase8.ts";
 
@@ -15,6 +15,8 @@ export {
   hypotheses,
   scenarioDynamics,
   attackVector,
+  attackMitre,
+  mitreUrl,
 };
 export type { Difficulty, HypothesisId };
 export { adversaryObjectives, gameModes, infrastructureTopologies, procedureIntensities, procedureScopes, sectorSetPieces, sectorSystems, setPieceById, specialists };

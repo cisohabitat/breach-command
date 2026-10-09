@@ -507,6 +507,24 @@ Exit criteria:
 Size: M (four sessions plus reviewers' time). Can run alongside Phase 4;
 depends on it for the new content to be reviewed too.
 
+Status, 9 October 2026. Met: the MITRE ATT&CK mapping is complete for all
+96 techniques and tested (`attackMitre`, `tests/content.test.ts`), shown in
+the review's attack chain with a link and on the facilitator sheet; the
+facilitator sheet prints alone on one page at A4 and Letter for a four-turn
+operation (`tests/e2e/facilitator.spec.ts` holds it to two and checks it
+starts on the page); the glossary test passes (`tests/glossary.test.ts`:
+every acronym in the authored prose and every listed field term has an
+entry, and 27 terms were added to meet it, VPN, OT and phishing among them).
+The educator pack is a page of the game, `/educators`, built from the tables
+the game reads, with no accessibility violations at 320 and 1280 px. Found on
+the way: the review's own print had been starting half off the page, because
+the minifier dropped the rule that undid the dialog's centring; fixed.
+
+Not met: the practitioner sign-off for every table, and the sector
+practitioners' review of briefings, leads and clues.
+`docs/reviews/PRACTITIONER-REVIEW-BRIEF.md` is their brief, with the ten
+least certain ATT&CK mappings listed first.
+
 ## Phase 7: accessibility and localisation
 
 Goal: the game is complete with a screen reader and a switch, and can be

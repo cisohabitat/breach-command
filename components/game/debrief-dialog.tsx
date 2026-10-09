@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
-import { OWN_SOURCE_BONUS, adversaryObjectives, countRevisions, attacks, describeMeterChange, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, recommendNext, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
+import { FacilitatorSheet } from "@/components/game/facilitator-sheet";
+import { OWN_SOURCE_BONUS, adversaryObjectives, attackMitre, countRevisions, mitreUrl, attacks, describeMeterChange, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, recommendNext, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { campaignRoutes, routeForCampaign, routeReason, specialistArc, specialistReaction } from "@/lib/phase9";
 import { nextCase, unlockedCapabilities } from "@/lib/campaign";
@@ -33,6 +34,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
   return (
     <Dialog open={debrief} onOpenChange={setDebrief}>
       <DialogContent className="game-dialog paper-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onCloseAutoFocus={returnFocusToAwaiting}>
+        {game && <FacilitatorSheet game={game} />}
         <DialogHeader>
           <div className="eyebrow">Form BC-300 <span className="separator">/</span> <span>After-action review</span></div>
           <DialogTitle>{game?.status === "won" ? outcome?.title : game?.status === "exercise" ? "Exercise concluded." : game ? `${getLossReason(game).title}.` : ""}</DialogTitle>
@@ -165,7 +167,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             {game.chain.map((id, index) => {
               const attack = attacks.find(item => item.id === id)!;
               const tactic = ["Initial Access", "Lateral Movement", "Persistence", "Command and Control / Exfiltration"][index];
-              return <section key={id} style={{ "--stage-color": stages[index].color } as CSSProperties}><span className="eyebrow">Stage {index + 1}: {stages[index].name}<span className={game.revealed.includes(id) ? "found-label" : "missed-label"}>{game.revealed.includes(id) ? "Found" : "Unresolved"}</span></span><h3>{attack.title}</h3><p>{attack.evidence}</p><small>MITRE ATT&amp;CK lens: {tactic}<br />Detectable with {attack.detect.map(source => procedureById(game, source)?.title).join(", ")}</small></section>;
+              return <section key={id} style={{ "--stage-color": stages[index].color } as CSSProperties}><span className="eyebrow">Stage {index + 1}: {stages[index].name}<span className={game.revealed.includes(id) ? "found-label" : "missed-label"}>{game.revealed.includes(id) ? "Found" : "Unresolved"}</span></span><h3>{attack.title}</h3><p>{attack.evidence}</p><small>MITRE ATT&amp;CK lens: {tactic}, nearest technique {attackMitre[attack.id].map((technique, position) => <span key={technique}>{position ? ", " : ""}<a href={mitreUrl(technique)} target="_blank" rel="noreferrer">{technique}</a></span>)}<br />Detectable with {attack.detect.map(source => procedureById(game, source)?.title).join(", ")}</small></section>;
             })}
           </div>
           </details>
@@ -193,6 +195,13 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               ? <><p>Or watch the Bot Commander play this same operation from the evidence it can see, to compare where its readings went with yours.</p><button className="text-action" onClick={() => replayWithBot(game)}>Replay with the Bot Commander</button></>
               : <p>This campaign operation drew its chain fresh, so it cannot be replayed. Daily, Weekly and challenge-code operations can be replayed by the Bot Commander from their review.</p>}
           </section>}
+          {/* A trainer's print: the whole chain and the questions for the room.
+              It gives the answer away, which this says before the button does. */}
+          <section className="next-recommendation facilitator-offer" aria-labelledby="facilitator-title">
+            <span className="eyebrow" id="facilitator-title">For a trainer</span>
+            <p>The facilitator sheet prints the whole hidden chain with its ATT&amp;CK techniques, the turn-by-turn ledger, the decisions and questions for the room, on one or two pages. It gives the answer away: print it after the room has played this case.</p>
+            <button className="text-action" onClick={printFacilitatorSheet}>Print facilitator sheet</button>
+          </section>
           <div className="debrief-actions">
             <button className="text-action" onClick={() => window.print()}>Print review</button>
             {!finalEnding && <button className="text-action" onClick={() => { const nextScenario = nextCase(campaign, scenarios.length); resetToBriefing(); setScenarioChoice(nextScenario); }}>Choose another incident</button>}
@@ -202,4 +211,17 @@ export function DebriefDialog({ session }: { session: GameSession }) {
       </DialogContent>
     </Dialog>
   );
+}
+
+// The facilitator sheet prints alone: the root carries a class the print rules
+// read, for as long as the print dialog is open.
+function printFacilitatorSheet() {
+  const root = document.documentElement;
+  const done = () => {
+    root.classList.remove("print-facilitator");
+    window.removeEventListener("afterprint", done);
+  };
+  root.classList.add("print-facilitator");
+  window.addEventListener("afterprint", done);
+  window.print();
 }

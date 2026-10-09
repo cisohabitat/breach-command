@@ -45,6 +45,10 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `lib/session.ts`: saved-session schema, migration and rejection of impossible or future saves.
 - `lib/storage.ts`: the only local-storage accessor. It answers instead of throwing.
 - `lib/feedback.ts`: sound, music and haptic feedback, loaded on first use through `lib/feedback-lazy.ts`, which keeps the calls in order and swallows a failed load like any other feedback failure. The Bot Commander's policy (`lib/game-bot.ts`) is likewise imported when a practice run first needs it.
+- `lib/educators.ts`: the debrief question sets and what each difficulty teaches, read by the educator pack (`app/educators/page.tsx`, at `/educators`) and the review's facilitator sheet (`components/game/facilitator-sheet.tsx`), so the handout and the screen agree.
+- `tests/glossary.test.ts`: every acronym and field term in the authored text has a `plainLanguage` entry and is glossed where it is read.
+- `tests/e2e/facilitator.spec.ts`: the facilitator sheet is never on screen, and printed alone it starts on the page and fits one or two pages at A4 and Letter.
+- `docs/reviews/PRACTITIONER-REVIEW-BRIEF.md`: what a practitioner reads to sign off the corpus, with the least certain ATT&CK mappings first.
 - `lib/ledger.ts`: every operation played to an end on this device, newest last, capped at 500; read through `lib/storage.ts`, carried in the backup and downloadable as CSV. Only `recordProgress` writes it, behind the guard that keeps bot runs out.
 - `lib/share-image.ts`: draws the result image from `getShareCard` alone, loaded on demand so it costs the first load nothing.
 - `tests/replay.test.ts`: the weekly seed, the mastery ladder, the ledger and the share card, which is checked against every technique title over simulated operations.
@@ -71,6 +75,9 @@ These instructions apply to the entire repository. Preserve the game as a polish
 ## Game-engine invariants
 
 - Treat game state as immutable. Clone collections before changing them and return a new `Game` object from transitions. A new collection on `Game` belongs in every transition's clone block, and `tests/game.test.ts` asserts this for `playTurn`.
+- Every technique maps to its nearest MITRE ATT&CK Enterprise technique (`attackMitre` in `lib/game.ts`, asserted complete in `tests/content.test.ts`). The ID is shown in the review's attack chain and on the facilitator sheet, after the operation, never during play: the ID names the technique. The facilitator sheet prints the whole hidden chain and is reached from the review with the warning that it gives the answer away.
+- A term that appears in play has a `plainLanguage` entry; `tests/glossary.test.ts` finds every acronym in the authored prose and checks a list of field terms against the glossary. Add the term to the test's list when content introduces new field vocabulary. "IT" stays out: read without case, it would gloss every "it".
+- Print rules clear the dialog's `translate` in a rule of its own: the minifier folds `transform:none; translate:none` in one rule into a single transform and drops the translate, which printed the review half off the page.
 - Keep hidden attack-chain information out of player-facing text until it has been revealed, and out of player-facing numbers. The planning bonus once applied only when the declared reading matched the hidden route: the Captain's Report said "including hypothesis bonus", a protected failure read "the route under test was the right one", and even with both words gone the report's total less the preview's modifier gave the answer. Nothing hidden now touches the roll. Every failed roll the grace did not absorb reads as `FAILED_CHECK`.
 - A procedure consumes one turn. Procedure cooldown, difficulty thresholds, turn limits and end-state checks must remain internally consistent.
 - Pending evidence decisions, command events and sector set pieces are blocking states. The player must resolve them before changing hypotheses, infrastructure focus or running another procedure.

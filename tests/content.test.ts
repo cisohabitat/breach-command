@@ -325,3 +325,15 @@ test("each case has seven incident variants, and a seed that met one of the firs
     assert.equal(new Set(seen.values()).size, 7, "with distinct titles");
   }
 });
+
+test("every technique maps to a MITRE ATT&CK technique", async () => {
+  const { attacks, attackMitre, mitreUrl } = await import("../lib/advanced-game.ts");
+  assert.equal(Object.keys(attackMitre).length, attacks.length, "no mapping for a technique that does not exist");
+  for (const attack of attacks) {
+    const ids = attackMitre[attack.id];
+    assert.ok(ids?.length, `${attack.id} has an ATT&CK technique`);
+    for (const id of ids) assert.match(id, /^T1\d{3}(\.\d{3})?$/, `${attack.id}: ${id} is an Enterprise technique ID`);
+  }
+  assert.equal(mitreUrl("T1566.001"), "https://attack.mitre.org/techniques/T1566/001/");
+  assert.equal(mitreUrl("T1190"), "https://attack.mitre.org/techniques/T1190/");
+});

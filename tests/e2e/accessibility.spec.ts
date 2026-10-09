@@ -194,3 +194,12 @@ test.describe("accessibility audit", () => {
     await expectNoViolations(page, "review in high contrast");
   });
 });
+
+test("the educator pack has no violations at a phone and a desktop width", async ({ page }) => {
+  for (const width of [320, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/educators", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { level: 1, name: "Running Breach Command with a group" })).toBeVisible();
+    await expectNoViolations(page, `educator pack at ${width}px`);
+  }
+});
