@@ -51,6 +51,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `tests/e2e/persistence.spec.ts`: local storage survives a page load and a reload.
 - `tests/e2e/keyboard.spec.ts`: where focus lands when an overlay opens or a control is replaced, and that the single-key shortcuts can be turned off.
 - `tests/e2e/fixtures.ts`: operations built from the engine with forced rolls, and the page opened on one as a saved session, shared by the browser suites.
+- `docs/ROADMAP.md`: the improvement roadmap towards AAA — eight phases, each with exit criteria and the instrument that measures them. `CLAUDE.md` is a pointer to this file and to it. When a phase's criteria are met, record the date, the commit and the numbers there.
 - `.claude/hooks/session-start.sh`: prepares a Claude Code cloud session — installs from the frozen lockfile and, when the container's Chromium is not the build the pinned Playwright expects, sets `PLAYWRIGHT_CHROMIUM_EXECUTABLE`, which `playwright.config.ts` honours.
 - `public/sw.js`: offline cache. Increment the cache name when deployed assets or application behaviour change. On install it caches the page shell and the scripts and styles the page references; before, it cached only the shell, and offline play rested on the browser's HTTP cache keeping the rest.
 - `tests/e2e/offline.spec.ts`: one visit leaves the page's own assets in the worker's cache and the game starts offline. It allows service workers, which the other suites block.

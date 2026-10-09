@@ -75,6 +75,10 @@ The settings panel can export a portable backup containing campaign progress and
 
 Daily Operation always plays the day's seed unless a loaded code says otherwise, and challenge codes use their own, allowing the same configuration to be replayed or shared. Scenario mastery awards one star for a successful recovery, two for a score of 74 or above, and three for a score of 88 or above.
 
+## Roadmap
+
+`docs/ROADMAP.md` is the improvement plan towards AAA: what that bar means for a browser tabletop game with no backend, where the project stands, and eight phases — instruments, foundation, first session, presentation, content depth, replayability, learning fidelity, accessibility and localisation, release engineering — each with measurable exit criteria.
+
 ## Run locally
 
 Requirements:
