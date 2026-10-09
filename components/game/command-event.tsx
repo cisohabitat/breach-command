@@ -1,4 +1,4 @@
-import { commandEvents, describeMeterChange, describeRollShift, type CommandEventId, type Game } from "@/lib/advanced-game";
+import { carryModifier, commandEvents, describeMeterChange, describeRollShift, type CommandEventId, type Game } from "@/lib/advanced-game";
 import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { EffectList } from "@/components/game/effect-list";
@@ -14,7 +14,7 @@ export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice
       <div className="command-options">
         {/* Numbered ruled rows with the exact effect in a column, as the response
             and the sector decision are set; two cards with corner arrows were not. */}
-        {(["a", "b"] as const).map((choice, index) => <button key={choice} onClick={() => onChoose(choice)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{event[choice].title}</strong><span>{event[choice].description}</span><span className="option-signals">{event[choice].signal.split(" · ").map(part => <span key={part}>{part}</span>)}</span></span><span className="option-effects"><EffectList className="command-effect" items={effectLine(game, event[choice])} /></span></button>)}
+        {(["a", "b"] as const).map((choice, index) => <button key={choice} onClick={() => onChoose(choice)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{event[choice].title}</strong><span>{event[choice].description}</span><span className="option-signals">{signalParts(game, event[choice]).map(part => <span key={part}>{part}</span>)}</span></span><span className="option-effects"><EffectList className="command-effect" items={effectLine(game, event[choice])} /></span></button>)}
       </div>
     </section>
   );
@@ -33,4 +33,11 @@ function effectLine(game: Game, option: { impact: number; continuity: number; mo
       ? `adversary pace one step ${option.tempo > 0 ? "faster" : "slower"}: about ${Math.abs(option.tempo) * 3} ${option.tempo > 0 ? "more" : "less"} adversary progress each turn`
       : option.tempo ? `adversary pace unchanged (already ${option.tempo > 0 ? "at its fastest" : "at its slowest"})` : "",
   ];
+}
+
+// The signal words are authored once; a roll the cap leaves unchanged drops its
+// "Next roll harder", which otherwise sat beside "next roll unchanged".
+function signalParts(game: Game, option: { signal: string; modifier: number }) {
+  const moves = carryModifier(game.nextModifier, option.modifier) !== game.nextModifier;
+  return option.signal.split(" · ").filter(part => moves || !/next roll|analytical advantage/i.test(part));
 }

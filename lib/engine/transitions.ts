@@ -225,7 +225,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // saying "Identity audit at the payment gateway" for a mailbox relay reads as
     // the game asserting a location it has not established. Lead with the finding,
     // then attribute the source and the focus for what they are.
-    narrative = `${attacks.find(attack => attack.id === match)!.evidence} Found by ${inSentence(procedureById(g, procedure)!.title)} with collection focused on ${focusNode.label}.`;
+    narrative = `${attacks.find(attack => attack.id === match)!.evidence} Found by ${inSentence(procedureById(g, procedure)!.title)} while map focus was on ${focusNode.label}.`;
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (success) {
     narrative = "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.";

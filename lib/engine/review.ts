@@ -10,12 +10,20 @@ import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate,
 // The full review is written for someone who already knows the trade. A first
 // operation needs four sentences before any of it: one thing that went well, one
 // that did not, the idea behind it, and one concrete change to try.
+// A revision is a change of reading between checks: two changes before the
+// same check count once, because only the reading the check was made under is
+// kept. The review and the device's own record both count this way; Settings
+// once said five where the review said four.
+export function countRevisions(game: Pick<Game, "hypothesisHistory">) {
+  return game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0);
+}
+
 export function getBeginnerReview(game: Game): BeginnerReview {
   const breakdown = getScoreBreakdown(game);
   const tested = game.turns.filter(turn => turn.hypothesis && turn.hypothesisTarget);
   const aligned = tested.filter(turn => turn.hypothesisMatched).length;
   const emptySuccesses = game.turns.filter(turn => turn.success && !turn.revealed).length;
-  const revisions = game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0);
+  const revisions = countRevisions(game);
 
   const strength = game.status === "exercise"
     ? `You confirmed ${game.revealed.length} of 4 stages in ${game.turns.length} turns before the controller stood the activity down as an authorised exercise; a natural 20 brought that card, and nothing was missed.`
@@ -197,7 +205,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
           : "Next operation, before each action, check the card can test your reading here; when none of its own sources can, revise the reading or use a card marked as able to test it."
         : game.mode === "expert"
           ? "Next operation, before a procedure, look for a bonus you can add: a monitored node, map focus on the source's system, or an established source."
-          : "Next operation, before a procedure, look for a bonus you can add (a monitored node, map focus on the source's system, an established source) and use the comparison's ruled-out marks to skip routes that are already out.",
+          : "Next operation, before a procedure, look for a bonus you can add (a monitored node, map focus on the source's system, an established source) and skip a route the comparison of the four readings marks ruled out: it marks one once your completed checks have excluded every way it could explain the stage.",
     };
   }
   return {
@@ -416,4 +424,35 @@ export function getCounterfactuals(game: Game) {
   if (readyToCorrelate(game)) items.push("Multiple findings were preserved but never correlated. The team left potential causal relationships untested.");
   if (game.setPieceHistory.some(record => record.quality <= 2)) items.push("The sector crisis decision protected short-term convenience but increased strategic exposure.");
   return items;
+}
+
+export type Recommendation = { scenario: number; difficulty: Game["difficulty"]; title: string; reason: string };
+
+// What to play next, from the record of the operation just finished. A loss to
+// the window is the reading running out at the last open stage, so the same
+// case comes back a rung easier, where Training's clue says what was observed;
+// a loss to a meter is a different lesson, kept at the same rung; a strong
+// clear moves up a rung on the next open case; anything else carries on at the
+// same rung. The reason quotes the record, so the advice can be checked.
+export function recommendNext(game: Game, nextOpen: number): Recommendation {
+  const rungs: Game["difficulty"][] = ["training", "operational", "crisis"];
+  const rung = rungs.indexOf(game.difficulty);
+  const title = (scenario: number, difficulty: Game["difficulty"]) => `Case ${scenario + 1}, ${scenarios[scenario].title}, at ${difficulties[difficulty].title}`;
+  if (game.status === "lost") {
+    const loss = getLossReason(game);
+    if (loss.cause === "window") {
+      const easier = rungs[Math.max(0, rung - 1)];
+      const reason = easier === game.difficulty
+        ? `The window closed with ${game.revealed.length} of 4 stages confirmed. Play it again, and revise the reading as soon as the board calls it weakening: the last open stage is where the turns ran out.`
+        : `The window closed with ${game.revealed.length} of 4 stages confirmed. One rung down, ${difficulties[easier].title} gives a longer window${easier === "training" ? " and the observation behind each stage" : ""}, so the reading has room to be revised.`;
+      return { scenario: game.scenario, difficulty: easier, title: title(game.scenario, easier), reason };
+    }
+    return { scenario: game.scenario, difficulty: game.difficulty, title: title(game.scenario, game.difficulty), reason: `${loss.title}. Play it again at the same rung and watch that readout: the investigation was not what ended it.` };
+  }
+  const score = getOutcome(game).breakdown.total;
+  if (score >= 74 && rung < rungs.length - 1 && (rung === 0 || score >= 88)) {
+    const harder = rungs[rung + 1];
+    return { scenario: nextOpen, difficulty: harder, title: title(nextOpen, harder), reason: `You cleared it with ${score} of 100. ${harder === "operational" ? "Operational withdraws the Training clue: the first reading is yours to make." : "Crisis gives one fewer command action, a moving objective and an adversary that adapts ahead of you."}` };
+  }
+  return { scenario: nextOpen, difficulty: game.difficulty, title: title(nextOpen, game.difficulty), reason: score >= 74 ? `You cleared it with ${score} of 100. The next open case at the same rung, before stepping up.` : `You cleared it with ${score} of 100. The next open case at the same rung: ${score < 60 ? "a cleaner reading is worth more than a harder case" : "one more at this rung before stepping up"}.` };
 }

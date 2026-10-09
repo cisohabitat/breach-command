@@ -69,6 +69,8 @@ The game does not call an AI service, inspect real systems or transmit incident 
 
 Campaign progression is stored in browser local storage. Mid-operation sessions are versioned and migrated by `lib/session.ts`, which refuses a save from a newer build or one describing a state the engine's own transitions could not produce. A save from a newer build is never deleted or overwritten: it is set aside before anything else is saved, and a build that can read it offers it again. Only an operation still in progress is offered for resume; a finished operation's save is cleared. Ironman mode intentionally disables normal mid-operation saving. Clearing browser storage resets local progress. The balance record counts wins, losses and authorised exercises separately — an exercise is never recorded as a defeat.
 
+After each operation the review suggests what to play next, from the record: a loss to the investigation window suggests the same case a rung lower, a loss to another meter the same case again, a strong win the next case a rung higher. The suggestion and the last operation are kept on the device (`lib/last-operation.ts`), and the landing page shows them to a returning player with a way to set the suggestion up.
+
 Every storage access goes through `lib/storage.ts`, which answers rather than throws. In a private window, with site data blocked, or against a full quota the game reports that nothing is being kept and continues from memory.
 
 The settings panel can export a portable backup containing campaign progress and the current non-Ironman operation. Restoring the text validates both halves before replacing anything: the campaign through `parseCampaign` and the operation through the same migration a local save goes through. An unreadable operation is reported and left out rather than stored, and a backup without a readable campaign is refused rather than restoring an empty one. A restored operation is offered for resume straight away; restored while another operation is in play, it replaces that one when the player returns to assignments.
@@ -138,6 +140,7 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `lib/feedback.ts` | Audio and haptic feedback, loaded on first use through `lib/feedback-lazy.ts` |
 | `components/game/fault-boundary.tsx` | Keeps a render fault inside its workspace or dialog, with a copyable diagnostic |
 | `lib/telemetry.ts` | Device-local balance counters |
+| `lib/last-operation.ts` | The last operation and the review's suggested next one, kept on the device for a returning player |
 | `tests/*.test.ts` | Engine, campaign, reads, session, content and simulation suites (`node --test`) |
 | `tests/saves.test.ts` | A save from every session version since 10 migrates and plays on |
 | `tests/e2e/visual.spec.ts` | Pixel baselines for eight screens at four widths |

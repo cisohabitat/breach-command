@@ -8699,6 +8699,40 @@ span.effect-list>span.effect.pace.worse>em {
    properties for wider screens, and cascade order is what settles it. */
 @media(max-width:650px) {
   /* A phone screen is 844px and the chrome above the procedure grid was taking
+/* Where a returning player left off, as a line of the record. */
+.last-operation {
+  margin:18px 0 0;
+  padding:12px 0;
+  border-top:1px solid #3e434a;
+}
+.last-operation p {
+  margin:6px 0 0;
+  color:#d7d1c3;
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+  max-width:var(--measure-prose);
+}
+.last-operation p strong {
+  color:#f6f1e4;
+  font-weight:600;
+}
+/* The review's suggestion for the next operation, a section of the document. */
+.paper-dialog .next-recommendation {
+  margin-top:24px;
+  padding-top:12px;
+  border-top:1px solid #1d1b18;
+}
+.paper-dialog .next-recommendation h3 {
+  margin:6px 0 4px;
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:var(--type-lead);
+}
+.paper-dialog .next-recommendation p {
+  color:#2f2c27;
+  font-size:var(--type-caption);
+  max-width:var(--measure-prose);
+}
      more than half of it. The three deciding readouts still share the top row and
      still say their state in words; they lose the stacked layout, and the
      investigation window — which rarely ends an operation — loses its bar. */

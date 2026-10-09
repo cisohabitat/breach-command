@@ -45,7 +45,7 @@ export function HypothesisBoard({
           className={`adversary-state tempo-${game.adversaryTempo}`}
           title={attribution.detail}
         >
-          Pace: {getAdversaryState(game).toLowerCase()}
+          Adversary pace: {getAdversaryState(game).toLowerCase()}
         </span>
       </div>
       {standing && standing.level !== "none" && (

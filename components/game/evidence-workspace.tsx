@@ -52,7 +52,9 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
       {!!game.correlations.length && <div className="correlation-results">{game.correlations.slice(-2).reverse().map((record, index) => <div key={`${record.evidence.join("-")}-${index}`} className={record.correct ? "valid" : "invalid"}>{record.correct ? <Check size={16} /> : <X size={16} />}<p><strong>{record.correct ? "Assessment supported" : "Assessment challenged"}</strong><span>{record.finding}</span><small className="correlation-effect">{!record.correct ? "Business impact +4 worse and adversary progress +3 worse." : record.valid ? "Business impact −3, adversary progress −6 and next roll +2, or −5, −10 and +3 when your case theory names the objective; the readouts show which." : "Business impact −3 better, adversary progress −6 better and next roll +2."}</small></p></div>)}</div>}
       {/* The prompts bring a player down here, three screens below the cards on a
           phone; this takes them back to where the next turn starts. */}
-      {!!game.correlations.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>Back to the procedures <ArrowUp size={14} /></button>}
+      {/* A recorded case theory left a phone playtest at the foot of the page as
+          a comparison did, with no way back but three screens of scrolling. */}
+      {(!!game.correlations.length || !!game.caseTheory) && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>Back to the procedures <ArrowUp size={14} /></button>}
     </section>
   );
 }

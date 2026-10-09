@@ -18,7 +18,7 @@ test("attributes a finding to the source that produced it", () => {
   // is where collection was focused, which is what it now says.
   const narrative=sourcedTurn.turns[0].narrative;
   assert.ok(narrative.startsWith(attacks.find(attack=>attack.id===sourcedTurn.turns[0].revealed)!.evidence),"the finding is stated first, in its own words");
-  assert.ok(/Found by email investigation with collection focused on .+\.$/.test(narrative),"then the source and the collection focus, named for what they are");
+  assert.ok(/Found by email investigation while map focus was on .+\.$/.test(narrative),"then the source and the collection focus, named for what they are");
   assert.ok(!/ at /.test(narrative.split("Found by")[1] ?? ""),"and the node is never presented as the finding's location");
   assert.equal(sourcedTurn.evidence.at(-1)!.detail,attacks.find(item=>item.id===sourcedTurn.turns[0].revealed)!.evidence,"the stored finding keeps its source fields separate from its body");
   for(const attack of attacks)assert.ok(!/^[A-Z][a-z]+ and [a-z]+ records show/.test(attack.evidence),`${attack.id} states a finding, not a log type`);
@@ -556,4 +556,53 @@ test("pays half credit once per reading at a stage, whatever else a turn reveals
   const disclosed = attacks.find(item => item.id !== first.hypothesisTarget && paid!.chain.includes(item.id))!.id;
   const twice = { ...paid, turns: [first, { ...first, number: 2, injectReveal: disclosed }] };
   assert.deepEqual(getHypothesisLedger(twice).map(row => row.credit), [0.5, 0], "the second identical check earns nothing, disclosure or not");
+});
+
+test("suggests the next operation from the record, and says why", async () => {
+  const { recommendNext, newGame, getOutcome, attackVector, attacks: all, availableIn: open, nextEvidenceSource, playTurn: play, procedures: shared, resolveCommand, resolveDecision, resolveResponse, resolveSetPiece, responseOptionsFor, setHypothesis: declare } = await import("../lib/advanced-game.ts");
+  const { parseLastOperation, describeWhen } = await import("../lib/last-operation.ts");
+  void all;
+  // A loss to the window is the reading running out: the same case, a rung down.
+  const windowLoss = { ...newGame(4, "crisis", () => 0), status: "lost" as const };
+  const down = recommendNext(windowLoss, 7);
+  assert.deepEqual([down.scenario, down.difficulty], [4, "operational"]);
+  assert.match(down.reason, /window closed with 0 of 4 stages/);
+  const atTraining = recommendNext({ ...windowLoss, difficulty: "training" }, 7);
+  assert.deepEqual([atTraining.scenario, atTraining.difficulty], [4, "training"], "Training has no rung below it");
+  // A loss to a meter is a different lesson: the same case at the same rung.
+  const meterLoss = recommendNext({ ...windowLoss, difficulty: "operational", impact: 100 }, 7);
+  assert.deepEqual([meterLoss.scenario, meterLoss.difficulty], [4, "operational"]);
+  assert.match(meterLoss.reason, /Business impact reached its limit/);
+  // A clear moves on to the next open case; a strong one at Training steps up.
+  let game = newGame(0, "training");
+  for (let guard = 0; guard < 80 && ["playing", "response"].includes(game.status); guard++) {
+    if (game.pendingDecision) { game = resolveDecision(game, "act"); continue; }
+    if (game.pendingCommand) { game = resolveCommand(game, "a"); continue; }
+    if (game.pendingSetPiece) { game = resolveSetPiece(game, "a"); continue; }
+    if (game.status === "response") { const profile = responseOptionsFor(game); game = resolveResponse(game, [profile.containment, profile.assurance, profile.recovery][game.responseChoices.length][0].id); continue; }
+    const unrevealed = game.chain.find(id => !game.revealed.includes(id));
+    if (unrevealed) game = declare(game, attackVector(unrevealed));
+    const wanted = nextEvidenceSource(game)?.id;
+    const procedure = wanted && open(game, wanted) === 0 ? wanted : shared.find(item => open(game, item.id) === 0)?.id;
+    if (!procedure) break;
+    game = play(game, procedure, 20);
+  }
+  if (game.status === "won") {
+    const score = getOutcome(game).breakdown.total;
+    const next = recommendNext(game, 3);
+    assert.equal(next.scenario, 3, "a clear moves on to the next open case");
+    assert.equal(next.difficulty, score >= 74 ? "operational" : "training");
+    assert.match(next.reason, new RegExp(`${score} of 100`));
+  }
+  // The stored record is read defensively: anything malformed is ignored.
+  const record = { scenario: 4, difficulty: "crisis", outcome: "lost", ending: "The investigation window closed", score: 41, endedAt: 1_000, next: { scenario: 4, difficulty: "operational", title: down.title, reason: down.reason } };
+  assert.deepEqual(parseLastOperation(record, 10), record);
+  assert.equal(parseLastOperation({ ...record, scenario: 12 }, 10), null, "a case this build does not have");
+  assert.equal(parseLastOperation({ ...record, next: { ...record.next, difficulty: "nightmare" } }, 10), null);
+  assert.equal(parseLastOperation("text", 10), null);
+  const now = new Date(2026, 9, 9, 15).getTime();
+  assert.equal(describeWhen(new Date(2026, 9, 9, 9).getTime(), now), "earlier today");
+  assert.equal(describeWhen(new Date(2026, 9, 8, 22).getTime(), now), "yesterday");
+  assert.equal(describeWhen(new Date(2026, 9, 6, 12).getTime(), now), "3 days ago");
+  assert.equal(describeWhen(new Date(2026, 8, 20).getTime(), now), "on 20 September");
 });

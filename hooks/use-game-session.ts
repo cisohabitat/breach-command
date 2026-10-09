@@ -23,6 +23,7 @@ import {
   guidanceLevel,
   responseOptionsFor,
   getOutcome,
+  recommendNext,
   getDecisionOptions,
   getAdversaryState,
   getAdversaryRead,
@@ -42,6 +43,7 @@ import {
   type DecisionChoice,
   type MapAction,
   type SetPieceChoice,
+  countRevisions,
   hypothesisSources,
   procedureById,
 } from "@/lib/advanced-game";
@@ -50,6 +52,7 @@ import { campaignAct, campaignChanges, campaignEnding, campaignReadable, campaig
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
+import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
 import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
 import type { BotAction } from "@/lib/game-bot";
@@ -96,6 +99,8 @@ export function useGameSession() {
   const [missionBriefing, setMissionBriefing] = useState(false);
   const [tutorial, setTutorial] = useState(false);
   const [telemetry, setTelemetry] = useState<BalanceTelemetry>(() => readTelemetry());
+  // Read after mount with the campaign, never in the initialiser of a prerendered page.
+  const [lastOperation, setLastOperation] = useState<LastOperation | null>(null);
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   // What the last finished operation did to the campaign, for the review.
   const [campaignChange, setCampaignChange] = useState<string[]>([]);
@@ -335,9 +340,9 @@ export function useGameSession() {
     const next = setHypothesis(current, id);
     setGame(next);
     setPendingUndo(null);
-    // A revision is a change from a reading already held, the step the first
-    // session is measured on; declaring the first reading is not one.
-    if (current.hypothesis && current.hypothesis !== id && !botRunRef.current) {
+    // A revision is a change from a reading already held, counted as the review
+    // counts it; declaring the first reading is not one.
+    if (countRevisions(next) > countRevisions(current) && !botRunRef.current) {
       recordTelemetry("revision");
       setTelemetry(readTelemetry());
     }
@@ -499,6 +504,18 @@ export function useGameSession() {
     campaignRef.current = updated;
     setCampaign(updated);
     if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice("This browser is not allowing saved data, so campaign progress was not kept.");
+    // What the review suggests next, kept so a returning player is met with it.
+    const next = recommendNext(result, nextCase(updated, scenarios.length));
+    const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? getLossReason(result).title : result.status === "exercise" ? "Authorised exercise" : "Stood down", score, endedAt: Date.now(), next };
+    writeLastOperation(record);
+    setLastOperation(record);
+  }
+
+  // Sets up the assignment the review or the landing page suggested.
+  function playRecommended(next: LastOperation["next"]) {
+    resetToBriefing();
+    setScenarioChoice(next.scenario);
+    setDifficulty(next.difficulty);
   }
 
   function dismissReport() {
@@ -628,6 +645,7 @@ export function useGameSession() {
       // The assignment offered on arrival is the campaign's next case. It began
       // at case 01 on every load, a case already cleared.
       setScenarioChoice(nextCase(loaded, scenarios.length));
+      setLastOperation(readLastOperation(scenarios.length));
       // A first operation starts at Training, the only difficulty that discloses
       // what the team is seeing; without that clue the opening reading is a guess
       // between four routes, which is the wrong first lesson. The player can still
@@ -813,6 +831,8 @@ export function useGameSession() {
     clearStoredSession,
     dismissReport,
     resetToBriefing,
+    lastOperation,
+    playRecommended,
     dismissTutorial,
     restartTutorial,
     clearLocalRecord,

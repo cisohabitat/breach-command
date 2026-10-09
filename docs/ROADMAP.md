@@ -222,6 +222,37 @@ Exit criteria:
 Size: M (four sessions across three playtest rounds). Depends on Phase 0;
 benefits from Phase 1's cross-browser fixes.
 
+Status, 9 October 2026. Built: the recommended next operation
+(`recommendNext`, from the record: a loss to the window drops a rung on the
+same case, a loss to another meter repeats it, a strong win steps up) in the
+review and on the landing page, and the return visit's line
+(`lib/last-operation.ts`: the last operation, when, how it ended and the
+suggestion, local only). Two agent stand-ins played a first Training
+operation as the protocol runs it, on a 390 px phone and a 1280 px laptop. They
+do not count toward the exit bar, but their timings were: first procedure in
+49 s and 60 s (the bar is four minutes), first revision at 2 min 36 s and
+about 3 min 20 s, and both won with a B. The device's own first-session
+record agreed with their clocks to the second; its revision count did not
+(Settings counted every click, the review a change between checks), and
+they now share `countRevisions`. Fixed from their reports: "Pace" read as
+the team's (now "Adversary pace"), a capped roll's "Next roll harder" beside
+"next roll unchanged", "the pace is fast" beside progress 2, "0 of 100" in
+the review without its meter, advice about ruled-out marks the player never
+saw, "4 findings" on the tab beside three stages (now "3 of 4 stages"), a
+stage clue whose only plain word belonged to the cloud route, "collection
+focused on" in a finding, and no way back to the procedures after recording
+a case theory.
+
+Open, for the human rounds to settle: both stand-ins read "Cannot explain
+this stage" on declaring a reading as a free elimination, and asked for it
+in the comparison instead; three failed opening rolls cost the laptop
+stand-in about +38 impact with nothing learned, and it asked for the map to
+be offered before the first check; the phone stand-in restored backups while
+the board warned of a backup verification gap, and asked to be told when a
+case theory is wrong before the ending; the difficulty ramp. Not met: the
+three playtest rounds with ten human newcomers, which no agent can stand in
+for.
+
 ## Phase 3: presentation
 
 Goal: a human designer's direction, carried through consistently, so the

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
-import { OWN_SOURCE_BONUS, adversaryObjectives, attacks, describeMeterChange, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, adversaryObjectives, countRevisions, attacks, describeMeterChange, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, recommendNext, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { campaignRoutes, routeForCampaign, routeReason, specialistReaction } from "@/lib/phase9";
 import { nextCase, unlockedCapabilities } from "@/lib/campaign";
@@ -12,10 +12,12 @@ import { objectiveTheory } from "@/lib/phase9";
 export function DebriefDialog({ session }: { session: GameSession }) {
   const {
     debrief, setDebrief, game, outcome, activeScenario, campaign, finalEnding,
-    resetToBriefing, setScenarioChoice, campaignChange,
+    resetToBriefing, setScenarioChoice, campaignChange, playRecommended,
   } = session;
   const ledger = game ? getHypothesisLedger(game) : [];
-  const revisions = game ? game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0) : 0;
+  // The same suggestion the landing page will show a returning player.
+  const recommendation = game ? recommendNext(game, nextCase(campaign, scenarios.length)) : null;
+  const revisions = game ? countRevisions(game) : 0;
   // The detail lists fold behind summaries that state what they hold: open, the
   // review was thirteen thousand pixels on a phone, and the four plain sentences
   // and the score are what most players need. The index opens a section before
@@ -116,7 +118,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             </section>
             <section className="mission-consequences">
               <div><span className="eyebrow">Sector outcome</span><strong>{sectorSystems[game.scenario].title}, {game.sectorHealth} of 100</strong><p>{sectorSystems[game.scenario].rule}</p></div>
-              <div><span className="eyebrow">Adversary intent</span><strong>{adversaryObjectives[game.objective].title}, {game.objectiveProgress} of 100</strong><p>{adversaryObjectives[game.objective].tell}</p>
+              <div><span className="eyebrow">Adversary intent</span><strong>{adversaryObjectives[game.objective].title}, adversary progress {game.objectiveProgress} of 100</strong><p>{adversaryObjectives[game.objective].tell}</p>
                 {/* A recorded theory was never judged anywhere, so a player could not
                     learn whether the reading of intent had been right. */}
                 <p className="theory-verdict">{!game.caseTheory ? "No case theory was recorded." : game.caseTheory === game.objective ? `Your case theory, ${objectiveTheory[game.caseTheory].title.toLowerCase()}, was right.` : `Your case theory was ${objectiveTheory[game.caseTheory].title.toLowerCase()}; the actor was after ${objectiveTheory[game.objective].title.toLowerCase()}.`}</p>{game.revealed.includes(game.chain[3]) && <p className="intent-link"><strong>{attacks.find(attack => attack.id === game.chain[3])?.title}:</strong> {adversaryObjectives[game.objective].outbound}</p>}</div>
@@ -179,9 +181,17 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <section className="mastery-panel"><div><span className="eyebrow">Scenario mastery</span><strong>{campaign.mastery[String(game.scenario)] ? `${campaign.mastery[String(game.scenario)]} of 3` : "Not yet earned"}</strong></div><p>Mastery is 1 for a recovery, 2 for a score of 74 or more and 3 for 88 or more.</p></section>
           </details>
           {finalEnding && <section className="campaign-finale"><div><span className="eyebrow">Final command briefing</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}
+          {/* What to play next, chosen from this record: the reason quotes it, so
+              the advice can be checked against what happened. */}
+          {!finalEnding && <section className="next-recommendation" aria-labelledby="next-recommendation-title">
+            <span className="eyebrow" id="next-recommendation-title">Suggested next</span>
+            <h3>{recommendation!.title}</h3>
+            <p>{recommendation!.reason}</p>
+          </section>}
           <div className="debrief-actions">
             <button className="text-action" onClick={() => window.print()}>Print review</button>
-            <button className="primary-button" onClick={() => { const nextScenario = nextCase(campaign, scenarios.length); resetToBriefing(); setScenarioChoice(nextScenario); }}>{finalEnding ? "Return to campaign command" : "Choose next incident"}</button>
+            {!finalEnding && <button className="text-action" onClick={() => { const nextScenario = nextCase(campaign, scenarios.length); resetToBriefing(); setScenarioChoice(nextScenario); }}>Choose another incident</button>}
+            <button className="primary-button" onClick={() => finalEnding ? (() => { const nextScenario = nextCase(campaign, scenarios.length); resetToBriefing(); setScenarioChoice(nextScenario); })() : playRecommended(recommendation!)}>{finalEnding ? "Return to campaign command" : "Set up the suggestion"}</button>
           </div>
         </>}
       </DialogContent>

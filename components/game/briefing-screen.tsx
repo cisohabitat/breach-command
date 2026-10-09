@@ -4,6 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
 import { campaignRank, standingEffects } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
+import { describeWhen } from "@/lib/last-operation";
 import type { GameSession } from "@/hooks/use-game-session";
 
 // What each stage of the chain answers, in the words a newcomer would ask it.
@@ -17,7 +18,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
     challengeCode, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed,
     guided, setGuided, fastResolve, setFastResolve,
     botEnabled, setBotEnabled,
-    savedSession, resume, clearStoredSession, start,
+    savedSession, resume, clearStoredSession, start, lastOperation, playRecommended,
   } = session;
 
   return (
@@ -44,6 +45,17 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           )}
           <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title}, ${namedSpecialists[specialist].name}`}, or choose the assignment below</small>
         </section>
+        {/* Where a returning player left off and what the review suggested, as a
+            line of the record with the way to set it up. A save in progress is
+            the first move instead, so this waits until there is none. */}
+        {lastOperation && !savedSession && (
+          <section className="last-operation" aria-label="Last operation">
+            <span className="field-label">Last operation, {describeWhen(lastOperation.endedAt)}</span>
+            <p>Case {lastOperation.scenario + 1}, {scenarios[lastOperation.scenario].title}, at {difficulties[lastOperation.difficulty].title}: {lastOperation.ending.toLowerCase()}{lastOperation.outcome === "lost" ? "" : `, ${lastOperation.score} of 100`}.</p>
+            <p><strong>Suggested next: {lastOperation.next.title}.</strong> {lastOperation.next.reason}</p>
+            {(scenarioChoice !== lastOperation.next.scenario || difficulty !== lastOperation.next.difficulty) && <button className="text-action" onClick={() => playRecommended(lastOperation.next)}>Set up the suggestion</button>}
+          </section>
+        )}
         <section className="career-card" aria-label="Command career progression">
           <div><span className="field-label">Your command record</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length} incidents, trust {campaign.leadershipTrust}, readiness {campaign.readiness}</small><details className="standing-effects"><summary>What trust and readiness do</summary><small>{standingEffects(campaign).join(" ")}</small></details></div>
           <b><small>Experience </small>{campaign.xp}</b>

@@ -128,7 +128,7 @@ export function GameScreen({ session }: { session: GameSession }) {
 
       <nav className="workspace-tabs" aria-label="Command workspace" ref={tabs}>
         <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><span><strong>Command</strong></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>Decision waiting</b>}</button>
-        <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><span><strong>Investigate</strong></span><b>{game.evidence.length} finding{game.evidence.length === 1 ? "" : "s"}</b></button>
+        <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><span><strong>Investigate</strong></span><b>{game.revealed.length} of 4 stages</b></button>
         <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><span><strong>Briefing</strong></span><b>{game.turns.length} turn{game.turns.length === 1 ? "" : "s"}</b></button>
         {/* A copy for sighted players who have scrolled past the readouts; the
             readouts themselves stay the accessible source. */}
