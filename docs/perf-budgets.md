@@ -136,3 +136,7 @@ keys where there were 605. All script by the time play starts rose from
 all-script budget moved to 1,150,000 B. The first load is 847,482 B, 2,518 B
 under its 850,000 B budget: the next change that adds to it has to take
 something out.
+
+Markup in messages (0.9.3) joined 37 more sentences and moved `richText` into
+`lib/i18n/rich.ts`: the first load is 847,786 B (2,214 B of headroom) and all
+script by the time play starts 1,127,337 B. No budget moved.

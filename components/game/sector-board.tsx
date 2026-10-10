@@ -12,7 +12,7 @@ register(sectorBoardMessages);
 // others. Six blocks of kicker, bold title and grey paragraph read as a
 // dashboard of stat cards.
 export function SectorBoard({ game }: { game: Game }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const sector = sectorSystems[game.scenario];
   const objective = getObjectiveRead(game);
   const specialist = specialists[game.specialist];
@@ -42,7 +42,7 @@ export function SectorBoard({ game }: { game: Game }) {
         <b className="sit-figure">{game.sectorHealth}</b>
       </div>
       <div className="sit-entry adversary">
-        <span className="sit-label">{t("sectorBoard.adversaryObjective")}<small>{t("sectorBoard.confidence2", { confidence: objective.confidence.toLowerCase() })}</small></span>
+        <span className="sit-label">{rich("sectorBoard.adversaryObjectiveSmall", { confidence: objective.confidence.toLowerCase() }, { small: chunk => <small>{chunk}</small> })}</span>
         <div className="sit-body">
           <p><strong>{objective.title}</strong></p>
           <Progress value={game.objectiveProgress} aria-label={t("sectorBoard.adversaryProgress", { objectiveTitle: objective.title })} />
@@ -55,7 +55,7 @@ export function SectorBoard({ game }: { game: Game }) {
         <div className="sit-body"><p>{transmission}</p></div>
       </div>
       <div className="sit-entry compact">
-        <span className="sit-label">{t("sectorBoard.specialist")}<small><span className="sit-data">{person.callsign}</span>{t("sectorBoard.fatigueOf6", { specialistFatigue: game.specialistFatigue })}</small></span>
+        <span className="sit-label">{t("sectorBoard.specialist")}<small>{rich("sectorBoard.spanSpanFatigue", { callsign: person.callsign, specialistFatigue: game.specialistFatigue }, { span: chunk => <span className="sit-data">{chunk}</span> })}</small></span>
         <div className="sit-body"><p>{person.name}, {specialist.title}: “{person.voice}”</p></div>
       </div>
     </>

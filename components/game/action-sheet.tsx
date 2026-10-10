@@ -14,7 +14,7 @@ register(actionSheetMessages);
 const rollLine = (t: Translate, modifier: number) => modifier === 0 ? t("actionSheet.thisRollUnchanged") : t("actionSheet.thisRoll", { change: `${modifier > 0 ? "+" : "−"}${Math.abs(modifier)}` });
 
 export function ActionSheet({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const {
     proc, rolling, setSelected, game, run,
     actionScope, setActionScope, actionIntensity, setActionIntensity, procedureAligned, config,
@@ -49,7 +49,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
           {/* What the roll needs sits above the plan that changes it: below the
               planner it was under the pinned run button on a tablet. */}
           {/* One typed line of the procedure form, not a row of big-number tiles. */}
-          <p className="roll-preview">{t("actionSheet.roll")}<b>d20 {(breakdown?.total ?? 0) < 0 ? "−" : "+"} {Math.abs(breakdown?.total ?? 0)}</b>{t("actionSheet.need")}<b>{config.threshold}</b>{t("actionSheet.orBetter")}</p>
+          <p className="roll-preview">{t("actionSheet.roll")}<b>d20 {(breakdown?.total ?? 0) < 0 ? "−" : "+"} {Math.abs(breakdown?.total ?? 0)}</b>{rich("actionSheet.needBB", { threshold: config.threshold }, { b: chunk => <b>{chunk}</b> })}</p>
           {breakdown && (
             <details className="modifier-details">
               <summary>{t("actionSheet.howThisModifier")}<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => describePart(part.label, part.value)).join(", ") || (breakdown.parts.some(part => part.suppressed) ? t("actionSheet.oneBonusIs") : t("actionSheet.nothingApplies"))}</span></summary>

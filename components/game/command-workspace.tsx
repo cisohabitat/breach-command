@@ -16,7 +16,7 @@ import { register } from "@/lib/i18n";
 register(commandWorkspaceMessages);
 
 export function CommandWorkspace({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const {
     game, activeWorkspace, ended, tutorial,
     setActiveWorkspace, respond, command, sectorDecision,
@@ -42,7 +42,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
             a button on the right was the stock empty-state call to action. */}
         <section className="situation-log lead-log" aria-label={t("commandWorkspace.currentIntelligence")}>
           <div className="sit-entry"><span className="sit-label">{t("commandWorkspace.currentIntelligence")}</span><div className="sit-body"><p className="sit-lead">{getLead(game)}</p></div></div>
-          {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <div className="sit-entry sit-order"><span className="sit-label">{t("commandWorkspace.nextAction")}</span><div className="sit-body"><p><strong>{t("commandWorkspace.buildAndTest")}</strong>{t("commandWorkspace.selectAnExplanation")}</p><button className="sit-link" onClick={() => setActiveWorkspace("investigate")}>{t("commandWorkspace.openInvestigate")}<ArrowRight size={15} /></button></div></div>}
+          {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <div className="sit-entry sit-order"><span className="sit-label">{t("commandWorkspace.nextAction")}</span><div className="sit-body"><p>{rich("commandWorkspace.strongBuildAnd", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p><button className="sit-link" onClick={() => setActiveWorkspace("investigate")}>{t("commandWorkspace.openInvestigate")}<ArrowRight size={15} /></button></div></div>}
         </section>
       </>))}
 
@@ -70,7 +70,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       <section className="situation-log" hidden={activeWorkspace !== "command"} aria-labelledby="situation-heading">
         <div className="section-heading"><h2 id="situation-heading">{t("briefingWorkspace.situation")}</h2></div>
         <div className="sit-entry compact">
-          <span className="sit-label">{t("commandWorkspace.campaignRoute")}<small>{campaignRoutes[game.campaignRoute].title}</small></span>
+          <span className="sit-label">{rich("commandWorkspace.campaignRouteSmall", { campaignRoutesTitle: campaignRoutes[game.campaignRoute].title }, { small: chunk => <small>{chunk}</small> })}</span>
           <div className="sit-body"><p><strong>{game.variant.title}.</strong> {game.variant.briefing}</p><small>{game.variant.modifier}</small></div>
         </div>
         <SectorBoard game={game} />

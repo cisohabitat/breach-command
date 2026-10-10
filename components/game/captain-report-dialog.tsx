@@ -32,7 +32,7 @@ function rollParts(t: Translate, report: Game["turns"][number]) {
 }
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const { report, game, ended, config, dismissReport, decide } = session;
   // The turn that ends an operation is headed by how it ended: "Evidence
   // confirmed." with a green tick sat above "OPERATION LOST".
@@ -48,7 +48,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   const settled = !!report && !!game && report.number === game.turns.length && report.success && (!report.revealed || report.windfall) && !report.injectReveal && !!game.hypothesis;
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
-  const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">{t("captainReportDialog.inject")}<span className="separator">/</span> {report.inject.reason}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>;
+  const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">{rich("captainReportDialog.injectSpanSpan", { reason: report.inject.reason }, { span: chunk => <span className="separator">{chunk}</span> })}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>;
 
   return (
     <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
@@ -64,7 +64,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
         onCloseAutoFocus={returnFocusToAwaiting}
       >
         <DialogHeader>
-          <div className="eyebrow">{t("captainReportDialog.formBc201")}<span className="separator">/</span>{t("captainReportDialog.captainReport")}</div>
+          <div className="eyebrow">{rich("captainReportDialog.formBc2012", {  }, { span: chunk => <span className="separator">{chunk}</span> })}</div>
           <DialogTitle>{lostHere ? (game?.status === "exercise" ? t("captainReportDialog.theOperationStood") : t("captainReportDialog.theOperationIs")) : report?.revealed ? (report.windfall ? t("captainReportDialog.aLaterStage") : t("captainReportDialog.evidenceConfirmed")) : report?.injectReveal ? t("captainReportDialog.aPartnerDisclosed") : report?.success ? t("captainReportDialog.theCheckCame") : t("captainReportDialog.theActionWas")}</DialogTitle>
           <DialogDescription className="sr-only">{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
           {/* The report's header is a row of form fields, the result among them,

@@ -10,13 +10,13 @@ import { register } from "@/lib/i18n";
 register(missionBriefingDialogMessages);
 
 export function MissionBriefingDialog({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const { missionBriefing, setMissionBriefing, game, activeScenario } = session;
 
   return (
     <Dialog open={missionBriefing} onOpenChange={setMissionBriefing}>
       <DialogContent className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false}>
-        <DialogHeader><div className="eyebrow">{t("missionBriefingDialog.formBc100")}<span className="separator">/</span>{t("missionBriefingDialog.missionBriefCase2", { scenario: (game?.scenario ?? 0) + 1 })}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">{rich("missionBriefingDialog.formBc1002", { scenario: (game?.scenario ?? 0) + 1 }, { span: chunk => <span className="separator">{chunk}</span> })}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
         {game && <>
           {/* What shapes the first decisions stays open: the sector's condition,
               the specialist on hand and what is known of the operator. The rest
@@ -28,7 +28,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
             <div><span>{t("missionBriefingDialog.attribution")}</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div>
           </div>
           {/* Expert withholds coaching; its brief said "Your first move" all the same. */}
-          {game.mode !== "expert" && <div className="briefing-first-move"><span>01</span><p><strong>{t("missionBriefingDialog.yourFirstMove")}</strong>{t("missionBriefingDialog.assumeCommandOpen")}</p></div>}
+          {game.mode !== "expert" && <div className="briefing-first-move"><span>01</span><p>{rich("missionBriefingDialog.strongYourFirst", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>}
           <details className="briefing-more">
             <summary>{t("missionBriefingDialog.operationContext")}<span>{gameModes[game.mode].title}{game.mode === "campaign" ? `, ${campaignRoutes[game.campaignRoute].title}` : ""}, {game.variant.title}</span></summary>
             <div className="briefing-readouts">

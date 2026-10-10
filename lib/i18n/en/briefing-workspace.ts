@@ -3,8 +3,6 @@ export const briefingWorkspaceMessages = {
   "briefingWorkspace.incidentCaptain": "Incident Captain",
   "briefingWorkspace.adaptiveComputerFacilitator": "Adaptive computer facilitator",
   "briefingWorkspace.situation": "Situation",
-  "briefingWorkspace.questionsForThe": "Questions for the captain ",
-  "briefingWorkspace.freeAction": "Free action",
   "briefingScreen.fastResolution": "Fast resolution",
   "briefingWorkspace.actorModel": "Actor model",
   "briefingWorkspace.incidentLog": "Incident log",
@@ -24,4 +22,5 @@ export const briefingWorkspaceMessages = {
   "briefingWorkspace.noNewEvidence": "No new evidence",
   "briefingWorkspace.actionUnsuccessful": "Action unsuccessful",
   "briefingWorkspace.aD20Roll2": "A d20 roll plus its modifier must reach {threshold} to succeed. One of your reading's own sources adds +{ownSourceBonus}, right or wrong; an established source adds +2.",
+  "briefingWorkspace.questionsForThe2": "Questions for the captain <span>Free action</span>",
 } as const;

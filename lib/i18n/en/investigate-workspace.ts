@@ -16,9 +16,6 @@ export const investigateWorkspaceMessages = {
   "investigateWorkspace.investigationProcedures": "Investigation procedures",
   "investigateWorkspace.oneActionPer": "One action per turn. A used source sits out the next ",
   "investigateWorkspace.itsCardCounts": "; its card counts them down.",
-  "investigateWorkspace.sectorDecisionRecorded": "Sector decision recorded: ",
-  "investigateWorkspace.recordWorkingHypothesis": "Record a working hypothesis to unlock procedures.",
-  "investigateWorkspace.chooseTheExplanation": " Choose the explanation that best fits ",
   "investigateWorkspace.captainPrompt": "Captain’s prompt:",
   "investigateWorkspace.recordACase": "Record a case theory",
   "investigateWorkspace.compareFindings": "Compare findings",
@@ -38,4 +35,6 @@ export const investigateWorkspaceMessages = {
   "investigateWorkspace.planScope": "Plan: {procedureScopesTitle} scope, {procedureIntensitiesTitle}",
   "investigateWorkspace.itsOwnSources2": ". Its own sources then earn the +{ownSourceBonus} own-source bonus.",
   "investigateWorkspace.mapActionPlural": { one: "{count} map action", other: "{count} map actions" },
+  "investigateWorkspace.sectorDecisionRecorded2": "Sector decision recorded: <strong>{sectorRecordedTitle}</strong>",
+  "investigateWorkspace.strongRecordA": "<strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits ",
 } as const;

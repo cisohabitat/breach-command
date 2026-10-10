@@ -1,8 +1,5 @@
 // The strings of components/game/captain-report-dialog.tsx (app/page.tsx for page), loaded with it.
 export const captainReportDialogMessages = {
-  "captainReportDialog.inject": "Inject ",
-  "captainReportDialog.formBc201": "Form BC-201 ",
-  "captainReportDialog.captainReport": " Captain’s report",
   "captainReportDialog.turn": "Turn",
   "captainReportDialog.source": "Source",
   "captainReportDialog.result": "Result",
@@ -65,4 +62,6 @@ export const captainReportDialogMessages = {
   "captainReportDialog.thisIsStage2": "This is stage {stage}, further along the chain. The stage you were testing, stage {stage2}, is still open, and a find here says nothing about the route it used.",
   "captainReportDialog.chooseOneOf2": "{attackTitle}: choose one of ",
   "captainReportDialog.pressureNowBusiness2": "Pressure now: business impact {impact}; adversary progress {objectiveProgress}, growing at a pace of “{getAdversaryState}” each turn. ",
+  "captainReportDialog.injectSpanSpan": "Inject <span>/</span> {reason}",
+  "captainReportDialog.formBc2012": "Form BC-201 <span>/</span> Captain’s report",
 } as const;

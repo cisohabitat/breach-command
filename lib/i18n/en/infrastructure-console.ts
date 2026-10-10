@@ -26,7 +26,7 @@ export const infrastructureConsoleMessages = {
   "infrastructureConsole.spend1Action": "Spend 1 action",
   "infrastructureConsole.techniquesConfirmed": { one: "{count} technique confirmed", other: "{count} techniques confirmed" },
   "infrastructureConsole.none": "none",
-  "infrastructureConsole.pathsBlocked": "{edges} paths, {count} blocked",
   "infrastructureConsole.criticalDependencyConfirmed": "Critical dependency: {criticalRule} Confirmed techniques: ",
   "infrastructureConsole.mapAction2Plural": { one: "{count} map action", other: "{count} map actions" },
+  "infrastructureConsole.trustRelationshipsSpan": "Trust relationships<span>{edges} paths, {count} blocked</span>",
 } as const;

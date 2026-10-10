@@ -22,7 +22,7 @@ export function ProcedureGrid({
   disabled: boolean;
   onChoose: (id: string) => void;
 }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const routeSources = game.hypothesis ? hypothesisSources(game, game.hypothesis) : [];
   return (
     <div className="procedure-grid">
@@ -62,8 +62,8 @@ export function ProcedureGrid({
                 the description: one sat beside it and the other below. */}
             {established && !cooldown && <small className="alignment-label established-label">{t("procedureGrid.establishedSource")}<span className="nowrap">+2</span></small>}
             {aligned && !cooldown && (blind
-              ? <small className="alignment-label blind">{t("procedureGrid.ownSource")}<span className="nowrap">+{OWN_SOURCE_BONUS}</span>{t("procedureGrid.canTestThis")}</small>
-              : <small className="alignment-label">{t("procedureGrid.ownSource")}<span className="nowrap">+{OWN_SOURCE_BONUS}</span></small>)}
+              ? <small className="alignment-label blind">{rich("procedureGrid.ownSourceSpan", { ownSourceBonus: OWN_SOURCE_BONUS }, { span: chunk => <span className="nowrap">{chunk}</span> })}</small>
+              : <small className="alignment-label">{rich("procedureGrid.ownSourceSpan2", { ownSourceBonus: OWN_SOURCE_BONUS }, { span: chunk => <span className="nowrap">{chunk}</span> })}</small>)}
             {seesOther && !cooldown && <small className="alignment-label other-sees">{t("procedureGrid.canAlsoTest")}</small>}
             {read && !cooldown && read.spent > 0 && <small className="spent-label">{t("procedureGrid.checkedNoStage", { spent: read.spent })}</small>}
             {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{t("procedureGrid.attempt2Plural", { count: read.inconclusive })}{t("procedureGrid.failedInconclusive")}</small>}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { isLocale, translate, type Locale, type MessageKey } from "@/lib/i18n";
+import { richText } from "@/lib/i18n/rich";
 
 // The locale is read on the client only, from ?locale= on the address, so the
 // prerendered page hydrates in English and switches after. Until a second
@@ -18,10 +19,19 @@ function readLocale(): Locale {
 }
 
 export type Translate = (key: MessageKey, params?: Record<string, string | number>) => string;
+// A message with markup: "<strong>{figure}</strong> of {limit} turns remaining".
+// Each tag is rendered by the component's own function, so the element keeps
+// its class and the translator can move it within the sentence. Tags do not
+// nest, and only the names the component passes are read as tags.
+export type Rich = (key: MessageKey, params: Record<string, string | number>, tags: Record<string, (chunk: string) => ReactNode>) => ReactNode;
 
-export function useMessages(): { locale: Locale; t: Translate } {
+export function useMessages(): { locale: Locale; t: Translate; rich: Rich } {
   const locale = useSyncExternalStore(noSubscription, readLocale, () => "en" as Locale);
-  return { locale, t: (key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params) };
+  return {
+    locale,
+    t: (key, params) => translate(locale, key, params),
+    rich: (key, params, tags) => richText(translate(locale, key, params), tags),
+  };
 }
 
 // For a class component or a helper outside a component, which cannot call a

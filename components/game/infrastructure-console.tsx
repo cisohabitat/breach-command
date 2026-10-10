@@ -26,7 +26,7 @@ function costLine(t: Translate, game: Game, nodeId: string, action: MapAction) {
 }
 
 export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const topology = infrastructureTopologies[game.scenario];
   const activeStage = Math.min(4, game.revealed.length);
   const focused = topology.nodes.find(node => node.id === game.focusedNode) ?? topology.nodes[0];
@@ -52,7 +52,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
           })}
         </div>
         <details className="topology-detail">
-          <summary>{t("infrastructureConsole.trustRelationships")}<span>{t("infrastructureConsole.pathsBlocked", { edges: topology.edges.length, count: topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length })}</span></summary>
+          <summary>{rich("infrastructureConsole.trustRelationshipsSpan", { edges: topology.edges.length, count: topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="topology-routes" role="group" aria-label={t("infrastructureConsole.trustRelationships")}>{topology.edges.map((edge, index) => {
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
           return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>

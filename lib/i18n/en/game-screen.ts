@@ -1,15 +1,11 @@
 // The strings of components/game/game-screen.tsx (app/page.tsx for page), loaded with it.
 export const gameScreenMessages = {
-  "briefingScreen.case": "Case ",
   "gameScreen.sector": "Sector ",
   "gameScreen.margin": "margin",
   "gameScreen.businessImpact": "Business impact",
   "gameScreen.adversaryProgress": "Adversary progress",
   "gameScreen.whatMovesIt": "What moves it",
   "gameScreen.commandWorkspace": "Command workspace",
-  "gameScreen.businessImpact2": "Business impact ",
-  "gameScreen.adversaryProgress2": "Adversary progress ",
-  "gameScreen.sectorMargin": "Sector margin ",
   "gameScreen.breachCommand": "Breach Command",
   "gameScreen.singlePlayerTabletop": "Single-player tabletop",
   "gameScreen.rulesAttribution": "Rules & attribution ",
@@ -33,5 +29,9 @@ export const gameScreenMessages = {
   "gameScreen.essentialServiceStopped": "Essential service stopped",
   "gameScreen.sectorMarginExhausted": "Sector margin exhausted",
   "gameScreen.windowClosed": "Window closed",
-  "gameScreen.ofTurnsRemaining": " of {limit} turns remaining",
+  "gameScreen.caseSpanSpan": "Case <span>{scenario}</span>",
+  "gameScreen.turnsRemaining": "<strong>{remaining}</strong> of {limit} turns remaining",
+  "gameScreen.businessImpactEm": "Business impact <em>{impact}</em>",
+  "gameScreen.adversaryProgressEm": "Adversary progress <em>{objectiveProgress}</em>",
+  "gameScreen.sectorMarginEm": "Sector margin <em>{sectorHealth}</em>",
 } as const;

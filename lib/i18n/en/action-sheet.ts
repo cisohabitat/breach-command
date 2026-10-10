@@ -5,8 +5,6 @@ export const actionSheetMessages = {
   "actionSheet.analysis": " analysis",
   "actionSheet.hypothesisCheck": "Hypothesis check",
   "actionSheet.roll": "Roll ",
-  "actionSheet.need": ", need ",
-  "actionSheet.orBetter": " or better",
   "actionSheet.howThisModifier": "How this modifier is calculated",
   "actionSheet.noModifiersApply": "No modifiers apply",
   "actionSheet.thisIsPlain": "This is a plain d20 against the difficulty threshold.",
@@ -25,4 +23,5 @@ export const actionSheetMessages = {
   "actionSheet.nothingApplies": "Nothing applies",
   "actionSheet.thisRollUnchanged": "this roll unchanged",
   "actionSheet.thisRoll": "this roll {change}",
+  "actionSheet.needBB": ", need <b>{threshold}</b> or better",
 } as const;

@@ -9,19 +9,19 @@ import { register } from "@/lib/i18n";
 register(fieldGuideDialogMessages);
 
 export function FieldGuideDialog({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const { rules, setRules } = session;
 
   return (
     <Dialog open={rules} onOpenChange={setRules}>
       <DialogContent className="game-dialog wide-dialog paper-dialog">
-        <DialogHeader><div className="eyebrow">{t("fieldGuideDialog.formBc002")}<span className="separator">/</span> <span>{t("shell.fieldGuide")}</span></div><DialogTitle>{t("fieldGuideDialog.howAnOperation")}</DialogTitle><DialogDescription>{t("fieldGuideDialog.aCompleteSolo")}</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">{rich("fieldGuideDialog.formBc0022", {  }, { span: chunk => <span className="separator">{chunk}</span>, span2: chunk => <span>{chunk}</span> })}</div><DialogTitle>{t("fieldGuideDialog.howAnOperation")}</DialogTitle><DialogDescription>{t("fieldGuideDialog.aCompleteSolo")}</DialogDescription></DialogHeader>
         <div className="rules-content">
           <section className="quick-start-guide" aria-label={t("briefingScreen.quickStart")}>
-            <div><span>1</span><p><strong>{t("fieldGuideDialog.formHypothesis")}</strong>{t("fieldGuideDialog.openInvestigateAnd")}</p></div>
-            <div><span>2</span><p><strong>{t("fieldGuideDialog.testIt")}</strong>{t("fieldGuideDialog.runProcedureMarked")}</p></div>
-            <div><span>3</span><p><strong>{t("fieldGuideDialog.decide")}</strong>{t("fieldGuideDialog.whenStageIs")}</p></div>
-            <div><span>4</span><p><strong>{t("fieldGuideDialog.respond")}</strong>{t("fieldGuideDialog.revealAllFour")}</p></div>
+            <div><span>1</span><p>{rich("fieldGuideDialog.strongFormA", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
+            <div><span>2</span><p>{rich("fieldGuideDialog.strongTestIt", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
+            <div><span>3</span><p>{rich("fieldGuideDialog.strongDecideStrong", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
+            <div><span>4</span><p>{rich("fieldGuideDialog.strongRespondStrong", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
           </section>
           <section className="plain-language" aria-label={t("fieldGuideDialog.plainLanguage")}>
             <h3>{t("fieldGuideDialog.plainLanguage")}</h3>
@@ -54,7 +54,7 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
             <section><h3>{t("evidenceWorkspace.caseTheory")}</h3><p>{t("fieldGuideDialog.declareWhatThe")}</p></section>
             <section><h3>{t("fieldGuideDialog.campaignDirector")}</h3><p>{t("fieldGuideDialog.yourCommandPosture")}</p></section>
             <section><h3>{t("fieldGuideDialog.mitreAttCk")}</h3><p>{t("fieldGuideDialog.everyTechniqueIn")}</p></section>
-            <section><h3>{t("fieldGuideDialog.runningItWith")}</h3><p>{t("faultBoundary.the")}<a href="/educators" target="_blank" rel="noopener">{t("fieldGuideDialog.educatorPack")}</a>{t("fieldGuideDialog.itOpensBeside")}</p></section>
+            <section><h3>{t("fieldGuideDialog.runningItWith")}</h3><p>{rich("fieldGuideDialog.theAEducator", {  }, { a: chunk => <a href="/educators" target="_blank" rel="noopener">{chunk}</a> })}</p></section>
             <section><h3>{t("fieldGuideDialog.portableBackup")}</h3><p>{t("fieldGuideDialog.settingsCanExport")}</p></section>
           </div>
           <section className="attribution"><h3>{t("fieldGuideDialog.aboutThisAdaptation")}</h3><p>{t("fieldGuideDialog.inspiredByBackdoors")}</p><a href="https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf" target="_blank" rel="noreferrer">{t("fieldGuideDialog.readTheOfficial")}<ArrowRight size={14} /></a></section>

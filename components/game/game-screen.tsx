@@ -27,7 +27,7 @@ const lossStatus: Record<LossCause, MessageKey> = {
 };
 
 export function GameScreen({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const {
     game, activeScenario, config, ended, activeWorkspace, setActiveWorkspace,
     tutorial, dismissTutorial, setRules, meterPulse,
@@ -72,14 +72,14 @@ export function GameScreen({ session }: { session: GameSession }) {
         <div className="game-identity">
           {/* Each separator travels with the segment after it, so a breadcrumb that
               wraps on a narrow phone never ends a line on a bare "/". */}
-          <div className="eyebrow case-line"><span>{t("briefingScreen.case")}<span className="mono">{String(game.scenario + 1)}</span></span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
+          <div className="eyebrow case-line"><span>{rich("gameScreen.caseSpanSpan", { scenario: String(game.scenario + 1) }, { span: chunk => <span className="mono">{chunk}</span> })}</span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
           <h1>{activeScenario.title}</h1>
           {/* The investigation window rarely decides an operation, so it reads as
               context under the title rather than competing with the three
               pressures that do. */}
           <div className="operation-status">
             <span className="mono">{game.status === "response" ? t("gameScreen.responsePhase") : ended ? t("gameScreen.finalStatus") : t("gameScreen.investigationWindow")}</span>
-            <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> {t("gameScreen.ofTurnsRemaining", { limit: getTurnLimit(game) })}</> : game.status === "response" ? t("gameScreen.containAssureAnd") : game.status === "won" ? t("gameScreen.responseComplete") : game.status === "exercise" ? t("gameScreen.exerciseConcluded") : t(lossStatus[getLossReason(game).cause])}</span>
+            <span>{!ended && game.status !== "response" ? <>{rich("gameScreen.turnsRemaining", { remaining: Math.max(0, getTurnLimit(game) - game.turns.length), limit: getTurnLimit(game) }, { strong: chunk => <strong>{chunk}</strong> })}</> : game.status === "response" ? t("gameScreen.containAssureAnd") : game.status === "won" ? t("gameScreen.responseComplete") : game.status === "exercise" ? t("gameScreen.exerciseConcluded") : t(lossStatus[getLossReason(game).cause])}</span>
             <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label={t("window.label")} />
           </div>
           {/* The sector's own margin ends an operation at zero like the three
@@ -139,10 +139,10 @@ export function GameScreen({ session }: { session: GameSession }) {
         {/* A copy for sighted players who have scrolled past the readouts; the
             readouts themselves stay the accessible source. */}
         <div className={`pinned-readouts ${metersAway ? "shown" : ""}`} aria-hidden="true">
-          <span>{t("gameScreen.businessImpact2")}<em>{game.impact}</em></span>
+          <span>{rich("gameScreen.businessImpactEm", { impact: game.impact }, { em: chunk => <em>{chunk}</em> })}</span>
           <span>{getOperationalLabel(game)} <em>{game.continuity}</em></span>
-          <span>{t("gameScreen.adversaryProgress2")}<em>{game.objectiveProgress}</em></span>
-          <span>{t("gameScreen.sectorMargin")}<em>{game.sectorHealth}</em></span>
+          <span>{rich("gameScreen.adversaryProgressEm", { objectiveProgress: game.objectiveProgress }, { em: chunk => <em>{chunk}</em> })}</span>
+          <span>{rich("gameScreen.sectorMarginEm", { sectorHealth: game.sectorHealth }, { em: chunk => <em>{chunk}</em> })}</span>
         </div>
       </nav>
 

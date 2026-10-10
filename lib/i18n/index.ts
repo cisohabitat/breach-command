@@ -27,8 +27,9 @@ type Params = Record<string, string | number>;
 
 const accents: Record<string, string> = { a: "á", e: "é", i: "î", o: "ö", u: "ü", c: "ç", n: "ñ", s: "š", y: "ý", A: "Å", E: "É", I: "Î", O: "Ö", U: "Ü", C: "Ç", N: "Ñ", S: "Š" };
 export function pseudo(text: string) {
-  // Placeholders stay as they are; everything else is accented and padded.
-  const accented = text.split(/(\{[a-zA-Z]+\})/).map(part => /^\{[a-zA-Z]+\}$/.test(part) ? part : [...part].map(char => accents[char] ?? char).join("")).join("");
+  // Placeholders and markup tags stay as they are; everything else is accented
+  // and padded.
+  const accented = text.split(/(\{[a-zA-Z]+\}|<\/?[a-z][a-z0-9]*>)/).map(part => /^(\{[a-zA-Z]+\}|<\/?[a-z][a-z0-9]*>)$/.test(part) ? part : [...part].map(char => accents[char] ?? char).join("")).join("");
   const pad = "·".repeat(Math.max(1, Math.round(text.length / 3)));
   return `[${accented}${pad}]`;
 }

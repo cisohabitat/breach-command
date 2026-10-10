@@ -4,10 +4,9 @@ export const sectorBoardMessages = {
   "sectorBoard.confidence": "Confidence: ",
   "sectorBoard.sectorMargin": "Sector margin",
   "sectorBoard.whyAndWhat": "Why, and what moves it",
-  "sectorBoard.adversaryObjective": "Adversary objective",
   "sectorBoard.liveTransmission": "Live transmission",
   "sectorBoard.specialist": "Specialist",
   "sectorBoard.adversaryProgress": "Adversary progress: {objectiveTitle}",
-  "sectorBoard.confidence2": "Confidence: {confidence}",
-  "sectorBoard.fatigueOf6": ", fatigue {specialistFatigue} of 6",
+  "sectorBoard.adversaryObjectiveSmall": "Adversary objective<small>Confidence: {confidence}</small>",
+  "sectorBoard.spanSpanFatigue": "<span>{callsign}</span>, fatigue {specialistFatigue} of 6",
 } as const;

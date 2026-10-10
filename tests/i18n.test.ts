@@ -7,6 +7,7 @@ import ts from "typescript";
 import { en } from "../lib/i18n/en.ts";
 import { formatNumber, pseudo, register, translate } from "../lib/i18n/index.ts";
 import { catalogueFiles } from "../lib/i18n/keys.ts";
+import { richText } from "../lib/i18n/rich.ts";
 
 // The shared base and each component's catalogue, by file stem.
 const catalogues: Record<string, Record<string, unknown>> = {};
@@ -132,4 +133,34 @@ test("every key a component reads is in the base or its own catalogue", () => {
     seen.set(key, value);
   }
   assert.equal(Object.keys(catalogues).length, readdirSync(new URL("../lib/i18n/en/", import.meta.url)).length, "keys.ts lists every catalogue");
+});
+
+// A message with markup renders each tag through the component's function and
+// keeps the rest as text; the pseudo-locale leaves the tags alone; and each
+// rich() call passes exactly the tags its message uses, each opened and closed.
+test("markup in a message renders through the component's tags", () => {
+  const parts = richText("<b>3</b> of 12 turns", { b: chunk => `[${chunk}]` }) as { props: { children: string } }[];
+  assert.deepEqual([parts[0].props.children, parts[1]], ["[3]", " of 12 turns"]);
+  assert.equal(richText("no tags", {}), "no tags");
+  assert.equal((richText("<i>x</i>", { b: chunk => chunk }) as string[])[0], "<i>x</i>", "a tag the component did not pass stays text");
+  assert.match(pseudo("<strong>{figure}</strong> of {limit}"), /^\[<strong>\{figure\}<\/strong> ö[fƒ] \{limit\}/);
+  const problems: string[] = [];
+  for (const file of componentFiles) {
+    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const visit = (node: ts.Node) => {
+      if (ts.isCallExpression(node) && node.expression.getText() === "rich" && ts.isStringLiteral(node.arguments[0]) && node.arguments[2] && ts.isObjectLiteralExpression(node.arguments[2])) {
+        const key = node.arguments[0].text;
+        const text = [en, ...Object.values(catalogues)].map(catalogue => (catalogue as Record<string, unknown>)[key]).find(Boolean) as string;
+        const opened = [...text.matchAll(/<([a-z][a-z0-9]*)>/g)].map(match => match[1]);
+        const closed = [...text.matchAll(/<\/([a-z][a-z0-9]*)>/g)].map(match => match[1]);
+        const passed = node.arguments[2].properties.map(property => property.name!.getText());
+        if (opened.join() !== closed.join()) problems.push(`${key}: unbalanced tags`);
+        if ([...new Set(opened)].sort().join() !== [...passed].sort().join()) problems.push(`${key}: message tags ${[...new Set(opened)]} but rich() passes ${passed}`);
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(tree);
+  }
+  assert.deepEqual(problems, []);
 });

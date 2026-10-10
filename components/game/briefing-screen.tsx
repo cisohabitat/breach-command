@@ -18,7 +18,7 @@ register(briefingScreenMessages);
 const stageQuestions: readonly MessageKey[] = ["briefingScreen.howTheyGot", "briefingScreen.whereTheyWent", "briefingScreen.howTheyStay", "briefingScreen.whatLeavesAnd"];
 
 export function BriefingScreen({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const {
     campaign, currentAct, currentStory, currentRoute, finalEnding,
     scenarioChoice, setScenarioChoice, activeScenario, previewVariant,
@@ -96,7 +96,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         {/* The assignment is a dispatch slip: a form number, then the case as a
             row of form cells, then what it is about. The pitch beside it is a
             note, not a hero. */}
-        <div className="eyebrow slip-form">{t("briefingScreen.formBc001")}<span className="separator">/</span>{t("briefingScreen.assignment")}</div>
+        <div className="eyebrow slip-form">{rich("briefingScreen.formBc0012", {  }, { span: chunk => <span className="separator">{chunk}</span> })}</div>
         <dl className="form-row on-desk">
           <div><dt>{t("briefingScreen.case2")}</dt><dd>{t("briefingScreen.of2", { scenarioChoice: scenarioChoice + 1, scenarios: scenarios.length })}</dd></div>
           <div><dt>{t("briefingScreen.sector")}</dt><dd>{activeScenario.sector}</dd></div>
@@ -132,7 +132,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}{t("briefingScreen.fatigueOf62", { specialistFatigue: campaign.specialistFatigue[specialist] ?? 0 })}{specialists[specialist].ability}{t("briefingScreen.rapportWithOf", { namedSpecialistsName: namedSpecialists[specialist].name, specialistBonds: campaign.specialistBonds[specialist] ?? 35 })}</p>
         </div>
         <details className="advanced-setup">
-          <summary>{t("briefingScreen.advancedOperationSettings")}<span>{gameModes[mode].title}</span></summary>
+          <summary>{rich("briefingScreen.advancedOperationSettings2", { gameModesTitle: gameModes[mode].title }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="mode-picker">
             <span className="eyebrow">{t("briefingScreen.operationMode")}</span>
             <div>{(Object.keys(gameModes) as GameMode[]).map(id => <button key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => setMode(id)}><strong>{gameModes[id].title}</strong><small>{gameModes[id].description}</small></button>)}</div>
@@ -184,7 +184,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </> : <button className="primary-button start-button" onClick={() => start()}>{t("briefingScreen.beginInvestigation")}</button>}
         <div className="mission-meta"><span>{t("briefingScreen.2035MinutesSolo")}</span><span>{t("briefingScreen.noRealSystems")}</span></div>
       </section>
-      <p className="adaptation-note">{t("briefingScreen.anUnofficialSolo")}<a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">{t("briefingScreen.backdoorsBreaches")}</a>{t("briefingScreen.originalScenariosAnd")}<span className="nowrap build-version">{t("footer.version", { version: process.env.NEXT_PUBLIC_APP_VERSION ?? "", build: process.env.NEXT_PUBLIC_BUILD_ID ?? "" })}</span></p>
+      <p className="adaptation-note">{rich("briefingScreen.anUnofficialSolo2", { version: process.env.NEXT_PUBLIC_APP_VERSION ?? "", build: process.env.NEXT_PUBLIC_BUILD_ID ?? "" }, { a: chunk => <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">{chunk}</a>, span: chunk => <span className="nowrap build-version">{chunk}</span> })}</p>
     </main>
   );
 }

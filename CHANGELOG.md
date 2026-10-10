@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.3, 10 October 2026
+
+- **Markup in messages.** A sentence with a bold figure or a link inside it
+  is one message, so a translator can move the figure; 37 sentences joined.
+  The component layer is fully catalogued, and the text on every seeded
+  screen is unchanged.
+- **The plan for the engine's prose**, `docs/design/ENGINE-LOCALISATION.md`:
+  about 2,700 strings, how a locale would cover them, what changes in the
+  saved game, and the order of work.
+
 ## 0.9.2, 10 October 2026
 
 - **Whole sentences.** The interface strings that were still written inside

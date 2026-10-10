@@ -9,7 +9,7 @@ import { register } from "@/lib/i18n";
 register(briefingWorkspaceMessages);
 
 export function BriefingWorkspace({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const {
     game, activeWorkspace, activeScenario, config, question, setQuestion, answer,
     guided, setGuided, fastResolve, setFastResolve, setReport,
@@ -24,7 +24,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
         <div className="brief-label">{t("briefingWorkspace.situation")}</div>
         <p className="captain-brief"><Glossed text={activeScenario.brief} /></p>
         <div className="captain-divider" />
-        <div className="brief-label">{t("briefingWorkspace.questionsForThe")}<span>{t("briefingWorkspace.freeAction")}</span></div>
+        <div className="brief-label">{rich("briefingWorkspace.questionsForThe2", {  }, { span: chunk => <span>{chunk}</span> })}</div>
         <div className="question-list">
           {[
             { id: "scope", label: t("briefingWorkspace.whatIsIn") },

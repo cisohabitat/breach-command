@@ -616,6 +616,18 @@ inside a sentence) is still two or three messages, since the catalogue has
 no rich-text markup; single lowercase words that look like ids are caught by
 review rather than by the test; and the engine's prose.
 
+10 October 2026 (0.9.3): messages carry markup, so a sentence with a bold
+figure or a link inside it is one message (`<strong>{remaining}</strong> of
+{limit} turns remaining`), rendered through the component's own element by
+`rich()`; 37 such sentences were joined, and the test checks every `rich()`
+call passes exactly the tags its message uses. Text identical on all 56
+screens. The component layer is now fully catalogued. The engine's prose is
+designed but not started: `docs/design/ENGINE-LOCALISATION.md` sets out
+overlays by table, id and field for authored content, messages instead of
+sentences for what the engine composes and saves (session version 19 with a
+migration), and the order of work, to begin when a first locale has a
+translator.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

@@ -25,7 +25,7 @@ const subscribePhone = (onChange: () => void) => {
 };
 
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const {
     game, guided, guidance, trainingPrompt, rolling, fastResolve, actionScope, actionIntensity,
     inlineReport, setInlineReport, pendingUndo, undo,
@@ -164,13 +164,13 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
                 saying it was recorded, a playtest compared the meters to find out.
                 It is a line under the heading, not a ruled strip above it, which
                 set the two columns' headings sixty pixels apart. */}
-            {sectorRecorded && <p className="recorded-line" role="status">{t("investigateWorkspace.sectorDecisionRecorded")}<strong>{sectorRecorded.title}</strong></p>}
+            {sectorRecorded && <p className="recorded-line" role="status">{rich("investigateWorkspace.sectorDecisionRecorded2", { sectorRecordedTitle: sectorRecorded.title }, { strong: chunk => <strong>{chunk}</strong> })}</p>}
             {/* One next step above the cards, not three: until a reading exists, the
                 hint that unlocks them; then the Training prompt where there is one,
                 or the Captain's prompt. Stacked, they put the first card below the
                 fold on a desktop. */}
             {!game.hypothesis
-              ? <div className="guide-nudge hypothesis-gate" role="status"><span><strong>{t("investigateWorkspace.recordWorkingHypothesis")}</strong>{t("investigateWorkspace.chooseTheExplanation")}{game.difficulty === "training" ? t("investigateWorkspace.whatTheTeam2") : t("investigateWorkspace.whatYouKnow")}{t("investigateWorkspace.itsOwnSources2", { ownSourceBonus: OWN_SOURCE_BONUS })}</span></div>
+              ? <div className="guide-nudge hypothesis-gate" role="status"><span>{rich("investigateWorkspace.strongRecordA", {  }, { strong: chunk => <strong>{chunk}</strong> })}{game.difficulty === "training" ? t("investigateWorkspace.whatTheTeam2") : t("investigateWorkspace.whatYouKnow")}{t("investigateWorkspace.itsOwnSources2", { ownSourceBonus: OWN_SOURCE_BONUS })}</span></div>
               : trainingNote
                 ? trainingNote
                 : guidance !== "off" && <div className="guide-nudge"><span><strong>{t("investigateWorkspace.captainPrompt")}</strong> {getCoachPrompt(game, guided)}{latestObservation && <b className="prompt-clue">{t("investigateWorkspace.latestFromThe")}<Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}

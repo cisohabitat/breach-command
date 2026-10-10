@@ -10,7 +10,7 @@ import { register } from "@/lib/i18n";
 register(evidenceWorkspaceMessages);
 
 export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void }) {
-  const { t } = useMessages();
+  const { t, rich } = useMessages();
   const [selected, setSelected] = useState<string[]>([]);
   // Nothing is chosen until the player chooses: preselected, "Causal sequence"
   // was tested by players who had not yet decided anything.
@@ -36,12 +36,12 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
         <div><span><strong>{t("evidenceWorkspace.caseTheory")}</strong><small>{t("evidenceWorkspace.declareIntentThen")}{objective.confidence === "LOW" ? t("evidenceWorkspace.theObjectiveCan") : t("evidenceWorkspace.currentAssessmentConfidence", { objectiveTheoryTitle: objectiveTheory[game.objective].title.toLowerCase(), confidence: objective.confidence.toLowerCase() })}</small></span></div>
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">{t("endState.recorded")}</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
       </div>
-      {!game.evidence.length ? <div className="evidence-empty"><p><strong>{t("evidenceWorkspace.noFindingsFiled")}</strong>{t("evidenceWorkspace.successfulProceduresWill")}</p></div> : <>
+      {!game.evidence.length ? <div className="evidence-empty"><p>{rich("evidenceWorkspace.strongNoFindings", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div> : <>
         <details className="evidence-detail" open={game.evidence.length <= 3}>
           {/* A finding is not a stage. A check that succeeds without exposing one is
               kept because it still narrows the search, so the count has to say which
               kind each is or a beginner reads every row as a technique they found. */}
-          <summary>{t("evidenceWorkspace.findings")}<span>{t("evidenceWorkspace.confirmedAStage2", { confirmed, evidence: game.evidence.length - confirmed, selected: selected.length })}</span></summary>
+          <summary>{rich("evidenceWorkspace.findingsSpanConfirmed", { confirmed, evidence: game.evidence.length - confirmed, selected: selected.length }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="evidence-timeline" role="group" aria-label={t("evidenceWorkspace.evidenceTimeline")}>{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
           <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
             <span>{t("evidenceWorkspace.turn2", { turn: item.turn })}</span><strong>{item.title}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{t("evidenceWorkspace.at", { source: item.source, system: item.system })}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? t("evidenceWorkspace.confirmedAStage") : t("evidenceWorkspace.foundNoStage2")}{t("evidenceWorkspace.confidence", { confidence: item.confidence.toLowerCase() })}</em>
