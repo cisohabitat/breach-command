@@ -48,6 +48,12 @@ export function formatNumber(locale: Locale, value: number) {
   return new Intl.NumberFormat(locale === "en-XA" ? "en" : locale).format(value);
 }
 
+// Fills {name} placeholders; a number is formatted for the locale, and a
+// missing parameter is left visible rather than blanked.
+export function interpolate(locale: Locale, text: string, params: Params = {}) {
+  return text.replace(/\{([a-zA-Z]+)\}/g, (whole, name: string) => name in params ? (typeof params[name] === "number" ? formatNumber(locale, params[name] as number) : String(params[name])) : whole);
+}
+
 export function translate(locale: Locale, key: MessageKey, params: Params = {}) {
   const value = lookup(locale, key);
   let text: string;
@@ -57,7 +63,7 @@ export function translate(locale: Locale, key: MessageKey, params: Params = {}) 
     const category = new Intl.PluralRules(locale === "en-XA" ? "en" : locale).select(count) as keyof typeof value;
     text = (value as Record<string, string>)[category] ?? (value as Record<string, string>).other;
   }
-  return text.replace(/\{([a-zA-Z]+)\}/g, (whole, name: string) => name in params ? (typeof params[name] === "number" ? formatNumber(locale, params[name] as number) : String(params[name])) : whole);
+  return interpolate(locale, text, params);
 }
 
 export function isLocale(value: unknown): value is Locale {

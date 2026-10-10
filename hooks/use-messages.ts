@@ -3,6 +3,7 @@
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { isLocale, translate, type Locale, type MessageKey } from "@/lib/i18n";
 import { richText } from "@/lib/i18n/rich";
+import { say as sayIn, type Message } from "@/lib/i18n/message";
 
 // The locale is read on the client only, from ?locale= on the address, so the
 // prerendered page hydrates in English and switches after. Until a second
@@ -43,7 +44,7 @@ function loadContent(locale: Locale) {
   });
 }
 
-export function useMessages(): { locale: Locale; t: Translate; rich: Rich } {
+export function useMessages(): { locale: Locale; t: Translate; rich: Rich; say: (message: Message) => string } {
   const locale = useSyncExternalStore(noSubscription, readLocale, () => "en" as Locale);
   useSyncExternalStore(subscribeContent, () => contentRevision, () => 0);
   useEffect(() => loadContent(locale), [locale]);
@@ -51,11 +52,19 @@ export function useMessages(): { locale: Locale; t: Translate; rich: Rich } {
     locale,
     t: (key, params) => translate(locale, key, params),
     rich: (key, params, tags) => richText(translate(locale, key, params), tags),
+    // A message the engine wrote (lib/i18n/message.ts), in this locale. The
+    // component must import "@/lib/i18n/engine-messages" for its words.
+    say: message => sayIn(message, locale),
   };
 }
 
 // For a class component or a helper outside a component, which cannot call a
 // hook: the same messages, read for the locale at the moment of the call.
 export function textFor(key: MessageKey, params?: Record<string, string | number>) {
-  return translate(typeof window === "undefined" ? "en" : readLocale(), key, params);
+  return translate(activeLocale(), key, params);
+}
+
+// The locale at the moment of the call, for code outside a component.
+export function activeLocale(): Locale {
+  return typeof window === "undefined" ? "en" : readLocale();
 }

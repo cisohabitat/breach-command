@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { difficulties, glossaryTerms, plainLanguage } from "@/lib/advanced-game";
+import { difficulties } from "@/lib/advanced-game";
+import { glossaryTerms, plainLanguage } from "@/lib/glossary";
 import { debriefQuestionSets, difficultyTeaches } from "@/lib/educators";
 
 export const metadata: Metadata = {

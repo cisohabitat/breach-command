@@ -35,4 +35,8 @@ export const en = {
   "settings.diagnosticsCopied": "Diagnostics copied.",
   "settings.diagnosticsManual": "Copy the text above into your report.",
   "footer.version": "Version {version}, build {build}.",
+  "legacy.text": "{text}",
+  "engine.variant.standardTitle": "Standard operating picture",
+  "engine.variant.standardBriefing": "The incident opens without an additional campaign complication.",
+  "engine.variant.standardModifier": "No starting modifier.",
 } as const;

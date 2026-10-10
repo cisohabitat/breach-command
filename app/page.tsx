@@ -10,6 +10,7 @@ import { FaultBoundary } from "@/components/game/fault-boundary";
 import { useGameSession } from "@/hooks/use-game-session";
 import { pageMessages } from "@/lib/i18n/en/page";
 import { register } from "@/lib/i18n";
+import { loadSharedText } from "@/lib/i18n/shared-text";
 
 register(pageMessages);
 
@@ -19,16 +20,19 @@ register(pageMessages);
 // warmed once the browser is idle, which makes its first opening immediate and
 // puts its script in the offline cache, since the service worker keeps every
 // same-origin script it sees.
+// Each part loads with the text the parts share (lib/i18n/shared-text.ts), so
+// the engine's catalogue and the glossary are one script, fetched once.
+const withText = <T,>(part: Promise<T>) => Promise.all([part, loadSharedText()]).then(([module]) => module);
 const parts = {
-  game: () => import("@/components/game/game-screen"),
-  actionSheet: () => import("@/components/game/action-sheet"),
-  roll: () => import("@/components/game/roll-dialog"),
-  brief: () => import("@/components/game/mission-briefing-dialog"),
-  report: () => import("@/components/game/captain-report-dialog"),
-  guide: () => import("@/components/game/field-guide-dialog"),
-  debrief: () => import("@/components/game/debrief-dialog"),
-  settings: () => import("@/components/game/settings-dialog"),
-  newIncident: () => import("@/components/game/new-incident-dialog"),
+  game: () => withText(import("@/components/game/game-screen")),
+  actionSheet: () => withText(import("@/components/game/action-sheet")),
+  roll: () => withText(import("@/components/game/roll-dialog")),
+  brief: () => withText(import("@/components/game/mission-briefing-dialog")),
+  report: () => withText(import("@/components/game/captain-report-dialog")),
+  guide: () => withText(import("@/components/game/field-guide-dialog")),
+  debrief: () => withText(import("@/components/game/debrief-dialog")),
+  settings: () => withText(import("@/components/game/settings-dialog")),
+  newIncident: () => withText(import("@/components/game/new-incident-dialog")),
 };
 // While the game screen's script arrives the page keeps a main landmark and says
 // what it is doing, rather than showing nothing between the click and the case.

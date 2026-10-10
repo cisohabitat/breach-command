@@ -1,10 +1,11 @@
 import { ArrowUp } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
-import { attacks, procedureById, getMapActionEffect, infrastructureTopologies, type Game, type MapAction, meterEffect, rollEffect } from "@/lib/advanced-game";
+import { attacks, words, procedureById, getMapActionEffect, infrastructureTopologies, type Game, type MapAction, meterEffect, rollEffect } from "@/lib/advanced-game";
 import { EffectList } from "@/components/game/effect-list";
 import { useMessages, type Translate } from "@/hooks/use-messages";
 import { infrastructureConsoleMessages } from "@/lib/i18n/en/infrastructure-console";
 import { register } from "@/lib/i18n";
+import { legacyText, msg, sameMessage } from "@/lib/i18n/message";
 
 register(infrastructureConsoleMessages);
 
@@ -42,7 +43,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             const nodePosture = game.nodePosture[node.id] ?? "normal";
             const state = nodePosture === "isolated" ? "isolated" : nodePosture === "restored" ? "restored" : index < activeStage ? "affected" : index === activeStage ? "exposed" : "clear";
             const critical = node.id === topology.critical;
-            const findings = game.evidence.filter(item => item.system === node.label).length;
+            const findings = game.evidence.filter(item => sameMessage(item.system, words.node(game.scenario, node.id)) || legacyText(item.system) === node.label).length;
             return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
               <small>{node.type.charAt(0) + node.type.slice(1).toLowerCase()}{critical ? ", critical" : ""}</small><strong>{node.label}</strong>
               {/* Selecting a node no longer hides its state: "SELECTED" in place of
@@ -67,7 +68,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
       <div className="map-command-bar">
         <div><span><small>{t("infrastructureConsole.selectedNode")}</small><strong>{focused.label}</strong><em>{criticalFocus ? t("infrastructureConsole.criticalDependency2") : ""}{posture === "normal" ? t("infrastructureConsole.noActiveControl") : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
             roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">{t("infrastructureConsole.mapFocusAdds1")}{focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(", ").replace(/, ([^,]*)$/, " and $1")}.</small></span></div>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><span><strong>{t("infrastructureConsole.monitor")}</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? t("infrastructureConsole.monitoredItsBonus") : t("infrastructureConsole.alreadyMonitoredIts")) : posture === "isolated" ? t("infrastructureConsole.isolatedNothingLeft") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "monitor")} />}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><span><strong>{t("infrastructureConsole.monitor")}</strong><small>{posture === "monitored" ? (game.nextModifierSources.some(item => sameMessage(item.source, msg("engine.source.monitored", { node: words.node(game.scenario, focused.id) })) || !!legacyText(item.source)?.includes(`Monitored ${focused.label}`)) ? t("infrastructureConsole.monitoredItsBonus") : t("infrastructureConsole.alreadyMonitoredIts")) : posture === "isolated" ? t("infrastructureConsole.isolatedNothingLeft") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "monitor")} />}</small></span></button>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><span><strong>{t("infrastructureConsole.isolate")}</strong><small>{posture === "isolated" ? t("infrastructureConsole.alreadyIsolated") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "isolate")} />}</small></span></button>
       </div>
       {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>{t("evidenceWorkspace.backToThe")}<ArrowUp size={14} /></button>}

@@ -1,30 +1,28 @@
 // Every change to an operation. Each takes a Game and returns a new one.
-import { attacks, procedures, scenarios, stages, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "../game.ts";
+import { attacks, procedures, scenarios, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "../game.ts";
 import { objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { type SetPieceId, infrastructureTopologies, seededRoll, setPieceById, setPieceFor } from "../phase8.ts";
 import { objectiveTheory } from "../phase9.ts";
-import { type DecisionLanguage, commandEvents, decisionChoices, decisionEffects, decisionLanguageFor, decisionTitles, injects, scenarioProfiles, inSentence } from "./content.ts";
-import { type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type Inject, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice } from "./types.ts";
-import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, responseFit, decisionRollShift, ownSourceBonus, procedureById, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
+import { commandEvents, decisionChoices, decisionLanguageFor, decisionTitles, injects, scenarioProfiles } from "./content.ts";
+import { type CarriedSource, type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice, type TurnInject } from "./types.ts";
+import { msg, type Message } from "../i18n/message.ts";
+import { words } from "./words.ts";
+import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, responseFit, decisionRollShift, ownSourceBonus, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
 
 // Where the bonus or penalty waiting for the next roll came from, so the roll
 // can name it: "Since your last roll +2" covered a monitored node, an inject and
 // a decision alike. Two different sources read as several.
-const signed = (value: number) => `${value < 0 ? "−" : "+"}${Math.abs(value)}`;
-const JOINED = /(, together|: [+−]\d+, capped at)$/;
 
-// With two or more sources each is named with its own share and the label ends on
-// how they combine, so "Monitored Access boundary +2; Inject: Hard going −2,
-// together" sits beside a 0 and still explains it. Netting to zero once dropped
-// the label, and with it the part: a map action looked wasted.
-function carriedSource(before: number, beforeSource: string | null, after: number, source: string, change = after - before): string | null {
-  if (change === 0) return beforeSource;
-  if (!beforeSource || (before === 0 && !JOINED.test(beforeSource))) return after === 0 ? null : source;
-  const listed = (JOINED.test(beforeSource) ? beforeSource.replace(JOINED, "") : `${beforeSource} ${signed(before)}`).replace(/: [+−]\d+$/, "");
-  const sum = [...`${listed}; ${source} ${signed(change)}`.matchAll(/ ([+−])(\d+)(?=;|$)/g)].reduce((total, [, sign, value]) => total + (sign === "−" ? -1 : 1) * Number(value), 0);
-  // A capped total says what the parts came to before the cap, so "+3 and +2,
-  // capped at +3" does not read as a sum a newcomer has to reconcile.
-  return sum === after ? `${listed}; ${source} ${signed(change)}, together` : `${listed}; ${source} ${signed(change)}: ${signed(sum)}, capped at`;
+// A change to the next roll joins what is already carried, each source with its
+// own share, so "Monitored Access boundary +2; Inject: Hard going −2,
+// together" sits beside a 0 and still explains it (carriedLabel words it).
+// Netting to zero once dropped the label, and with it the part: a map action
+// looked wasted. A lone source that has netted to zero gives way to the new one.
+function carriedSource(before: number, sources: CarriedSource[], after: number, source: Message, change = after - before): CarriedSource[] {
+  if (change === 0) return sources;
+  if (!sources.length || (before === 0 && sources.length === 1)) return after === 0 ? [] : [{ source, change }];
+  const listed = sources.length === 1 ? [{ source: sources[0].source, change: before }] : sources;
+  return [...listed, { source, change }];
 }
 
 // Cards the campaign drew lately go to the bottom of the deck, keeping the
@@ -51,7 +49,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   // an act does not meet the same beat twice. A reproducible operation ignores
   // it: the same code has to play the same incident on any device.
   const remembered = setup.seed == null ? { commands: setup.recentCommands ?? [], injects: setup.recentInjects ?? [], crises: setup.recentCrises ?? [] } : { commands: [], injects: [], crises: [] };
-  const variant = setup.variant ?? { id: `${scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 };
+  const variant = setup.variant ?? { id: `${scenario}-0`, title: msg("engine.variant.standardTitle"), briefing: msg("engine.variant.standardBriefing"), modifier: msg("engine.variant.standardModifier"), impact: 0, continuity: 0, objective: 0 };
   const campaignRoute = setup.campaignRoute ?? "common-ground";
   const routeImpact = mode === "campaign" && campaignRoute === "breakwater" ? -4 : 0;
   const routeContinuity = mode !== "campaign" ? 0 : campaignRoute === "breakwater" ? -4 : campaignRoute === "common-ground" ? 3 : 0;
@@ -68,7 +66,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     turns: [],
     failures: 0,
     nextModifier: 0,
-    nextModifierSource: null,
+    nextModifierSources: [],
     injectDeck: recentLast(shuffle(injects.map((_, i) => i), random), index => injects[index].id, remembered.injects),
     status: "playing",
     impact: clamp(startingImpact),
@@ -143,8 +141,8 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
   if (action === "monitor" && game.nodePosture[nodeId] === "monitored") throw new Error("This node is already monitored.");
   const change = getMapActionEffect(game, nodeId, action);
   const effect = action === "monitor"
-    ? `Telemetry priority established on ${node.label}. The next procedure, whichever it is, gains analytical support.`
-    : `${node.label} isolated. ${topology.criticalRule}`;
+    ? msg("engine.map.monitor", { node: words.node(game.scenario, nodeId) })
+    : msg("engine.map.isolate", { node: words.node(game.scenario, nodeId), rule: words.criticalRule(game.scenario) });
   const g: Game = {
     ...game,
     focusedNode: nodeId,
@@ -152,7 +150,7 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
     mapActionsRemaining: game.mapActionsRemaining - 1,
     mapHistory: [...game.mapHistory, { node: nodeId, action, turn: game.turns.length, effect }],
     nextModifier: carryModifier(game.nextModifier, change.modifier),
-    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, carryModifier(game.nextModifier, change.modifier), `Monitored ${node.label}`, change.modifier),
+    nextModifierSources: carriedSource(game.nextModifier, game.nextModifierSources, carryModifier(game.nextModifier, change.modifier), msg("engine.source.monitored", { node: words.node(game.scenario, nodeId) }), change.modifier),
     impact: clamp(game.impact + change.impact),
     continuity: clamp(game.continuity + change.continuity),
     sectorHealth: clamp(game.sectorHealth + change.sector),
@@ -219,15 +217,15 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   // One computation: the modifier the roll resolves with is the one previewed.
   const breakdown = getModifierBreakdown(g, procedure, plan);
   const modifier = breakdown.total;
-  const parts = breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => ({ label: part.label, value: part.value }));
+  const parts = breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => ({ label: part.label, value: part.value, ...(part.sources?.length ? { sources: part.sources } : {}) }));
   const total = raw + modifier;
   const success = total >= config.threshold;
   g.nextModifier = 0;
-  g.nextModifierSource = null;
+  g.nextModifierSources = [];
 
   const match = success ? g.chain.find(id => !g.revealed.includes(id) && attacks.find(attack => attack.id === id)!.detect.includes(procedure)) : undefined;
   let revealed: string | null = null;
-  let narrative = "";
+  let narrative: Message = FAILED_CHECK;
   let impactChange = (success ? 3 : 10) + scope.impact + intensity.impact;
   let continuityChange = success ? 0 : -1;
   if (match) {
@@ -239,10 +237,10 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // saying "Identity audit at the payment gateway" for a mailbox relay reads as
     // the game asserting a location it has not established. Lead with the finding,
     // then attribute the source and the focus for what they are.
-    narrative = `${attacks.find(attack => attack.id === match)!.evidence} Found by ${inSentence(procedureById(g, procedure)!.title)} while map focus was on ${focusNode.label}.`;
+    narrative = msg("engine.turn.found", { evidence: words.attack(match, "evidence"), procedure: words.procedure(procedure, "inSentence"), node: words.node(g.scenario, focusNode.id) });
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (success) {
-    narrative = "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.";
+    narrative = msg("engine.turn.noStage");
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (planningBonus > 0) {
     // A sound action that the dice refused. The route under test was the one
@@ -261,33 +259,32 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // Rapid coordination absorbs the first unlucky action of the operation. The
     // team reorients on its own time rather than the adversary's.
     g.graceRemaining -= 1;
-    narrative = "The action did not produce evidence, but the team reorients on its own time: coordination absorbed the setback before the actor could use it.";
+    narrative = msg("engine.turn.graceAbsorbed");
   } else {
     narrative = FAILED_CHECK;
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   }
   if (success) {
-    const source = procedureById(g, procedure)!;
-    const evidenceTitle = revealed ? `${attacks.find(item => item.id === revealed)!.title} evidence` : `${source.title} came back empty`;
+    const evidenceTitle = revealed ? msg("engine.evidence.stageTitle", { attack: words.attack(revealed, "title") }) : msg("engine.evidence.emptyTitle", { source: words.procedure(procedure) });
     g.evidence.push({
       id: `E${number}-${procedure}`,
       turn: number,
       title: evidenceTitle,
-      source: source.title,
-      system: focusNode.label,
+      source: words.procedure(procedure),
+      system: words.node(g.scenario, focusNode.id),
       confidence: revealed || plan.intensity === "exhaustive" ? "HIGH" : "MODERATE",
       supports: revealed,
-      detail: revealed ? attacks.find(attack => attack.id === revealed)!.evidence : `The finding at ${focusNode.label} is credible but does not yet establish a hidden attack stage.`,
+      detail: revealed ? words.attack(revealed, "evidence") : msg("engine.evidence.noStageDetail", { node: words.node(g.scenario, focusNode.id) }),
     });
   }
 
   g.lastUsed[procedure] = number + intensity.cooldown;
   if (specialistBonus) g.specialistFatigue = Math.min(6, g.specialistFatigue + (plan.intensity === "exhaustive" ? 2 : 1));
   g.failures = success ? 0 : g.failures + 1;
-  let inject: Inject | null = null;
+  let inject: TurnInject | null = null;
   let injectReveal: string | null = null;
   let exerciseEnd = false;
-  const reason = raw === 1 ? "Natural 1" : raw === 20 ? "Natural 20" : g.failures >= 3 ? "Three failed rolls" : null;
+  const reason = raw === 1 ? msg("engine.inject.natural1") : raw === 20 ? msg("engine.inject.natural20") : g.failures >= 3 ? msg("engine.inject.threeFailed") : null;
   // A natural 20 may also land the authorised stand-down, which is neutral: it
   // is a conclusion the investigation has earned, not a punishment. Excluding it
   // here is what dropped the exercise ending from six per cent of operations to
@@ -308,41 +305,42 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   const position = !reason || !g.injectDeck.length ? -1 : wanted ? g.injectDeck.findIndex(reaches) : g.injectDeck.findIndex(item => injects[item].effect !== "end");
   if (reason && position >= 0) {
     const index = g.injectDeck.splice(position, 1)[0];
-    inject = { ...injects[index], reason };
+    const card = injects[index];
+    inject = { id: card.id, reason };
     if (g.failures >= 3) g.failures = 0;
-    if (inject.effect === "bonus" || inject.effect === "penalty") {
+    if (card.effect === "bonus" || card.effect === "penalty") {
       const before = g.nextModifier;
-      const shift = inject.effect === "bonus" ? 2 : -2;
+      const shift = card.effect === "bonus" ? 2 : -2;
       g.nextModifier = carryModifier(before, shift);
-      g.nextModifierSource = carriedSource(before, g.nextModifierSource, g.nextModifier, `Inject: ${inject.title}`, shift);
-      if (inject.effect === "penalty") impactChange += 6;
+      g.nextModifierSources = carriedSource(before, g.nextModifierSources, g.nextModifier, msg("engine.source.inject", { inject: words.inject(card.id) }), shift);
+      if (card.effect === "penalty") impactChange += 6;
     }
-    if (inject.effect === "adjust") {
-      if (inject.shift) {
+    if (card.effect === "adjust") {
+      if (card.shift) {
         const before = g.nextModifier;
-        g.nextModifier = carryModifier(before, inject.shift);
-        g.nextModifierSource = carriedSource(before, g.nextModifierSource, g.nextModifier, `Inject: ${inject.title}`, inject.shift);
+        g.nextModifier = carryModifier(before, card.shift);
+        g.nextModifierSources = carriedSource(before, g.nextModifierSources, g.nextModifier, msg("engine.source.inject", { inject: words.inject(card.id) }), card.shift);
       }
-      impactChange += inject.impact ?? 0;
-      continuityChange += inject.continuity ?? 0;
-      g.adversaryTempo = Math.max(0, Math.min(3, g.adversaryTempo + (inject.tempo ?? 0)));
+      impactChange += card.impact ?? 0;
+      continuityChange += card.continuity ?? 0;
+      g.adversaryTempo = Math.max(0, Math.min(3, g.adversaryTempo + (card.tempo ?? 0)));
     }
-    if (inject.effect === "pressure") impactChange += 8;
-    if (inject.effect === "relief") impactChange -= 8;
-    if (inject.effect === "restore") {
+    if (card.effect === "pressure") impactChange += 8;
+    if (card.effect === "relief") impactChange -= 8;
+    if (card.effect === "restore") {
       const cooling = Object.keys(g.lastUsed).filter(id => g.lastUsed[id] + cooldownWindow(g) > number + 1).sort((a, b) => g.lastUsed[a] - g.lastUsed[b]);
       if (cooling.length) {
         delete g.lastUsed[cooling[0]];
-        inject.effectLabel = `${procedureById(g, cooling[0])!.title} is available again.`;
-      } else inject.effectLabel = "No procedures are cooling down; no change.";
+        inject.effectLabel = msg("engine.inject.availableAgain", { procedure: words.procedure(cooling[0]) });
+      } else inject.effectLabel = msg("engine.inject.noneCooling");
     }
-    if (inject.effect === "reveal") {
+    if (card.effect === "reveal") {
       injectReveal = g.chain.find(id => !g.revealed.includes(id)) ?? null;
       if (injectReveal) {
         g.revealed.push(injectReveal);
         g.pendingDecision = g.pendingDecision ?? injectReveal;
-        inject.effectLabel = `Additional discovery: ${attacks.find(item => item.id === injectReveal)!.title}.`;
-      } else inject.effectLabel = "All stages are already revealed.";
+        inject.effectLabel = msg("engine.inject.additionalDiscovery", { attack: words.attack(injectReveal, "title") });
+      } else inject.effectLabel = msg("engine.inject.allRevealed");
     }
     if (injectReveal) {
       // A stage revealed by the partner used to leave nothing in the evidence
@@ -352,15 +350,15 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       g.evidence.push({
         id: `E${number}-partner`,
         turn: number,
-        title: `${attacks.find(item => item.id === injectReveal)!.title} evidence`,
-        source: "Partner disclosure",
-        system: focusNode.label,
+        title: msg("engine.evidence.stageTitle", { attack: words.attack(injectReveal, "title") }),
+        source: msg("engine.evidence.partner"),
+        system: words.node(g.scenario, focusNode.id),
         confidence: "HIGH",
         supports: injectReveal,
-        detail: attacks.find(item => item.id === injectReveal)!.evidence,
+        detail: words.attack(injectReveal, "evidence"),
       });
     }
-    if (inject.effect === "end") {
+    if (card.effect === "end") {
       // Standing an operation down as an authorised exercise is a conclusion the
       // investigation reaches, not one it is handed. Below two confirmed stages
       // there is not enough attributed behaviour to support that call, so the
@@ -369,22 +367,22 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
         // The chain was completed on this same turn, so there is nothing left to
         // stand down: the response goes ahead and the card only eases pressure.
         impactChange -= 8;
-        inject.effectLabel = "Part of the activity is confirmed as authorised, but the full chain is already confirmed. Business pressure falls and the response goes ahead.";
+        inject.effectLabel = msg("engine.inject.authorisedChainDone");
       } else if (g.revealed.length >= 2) exerciseEnd = true;
       else {
         impactChange -= 8;
-        inject.effectLabel = "Part of the activity is confirmed as authorised. Business pressure falls and the investigation continues.";
+        inject.effectLabel = msg("engine.inject.authorisedContinues");
       }
     }
   }
 
-  let adversaryEvent: string | null = null;
+  let adversaryEvent: Message | null = null;
   const profile = getAdversaryProfile(g);
   const cadence = Math.max(2, profile.cadence - (g.difficulty === "crisis" ? 1 : 0));
   if (number % cadence === 0 && g.revealed.length < 4) {
     const dynamics = scenarioDynamics[g.scenario];
     const eventIndex = Math.min(dynamics.escalations.length - 1, Math.floor(number / cadence) - 1);
-    adversaryEvent = dynamics.escalations[eventIndex];
+    adversaryEvent = words.escalation(g.scenario, eventIndex);
     impactChange += profile.pressure + g.adversaryTempo * 2;
     continuityChange -= 2 + g.adversaryTempo;
     g.adversaryEvent = adversaryEvent;
@@ -398,7 +396,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       const adaptation = target !== null ? selectAdaptation(g, target, g.chain[target]) : null;
       if (adaptation && target !== null) {
         g.chain[target] = adaptation.id;
-        adversaryEvent = `${adversaryEvent} ${scenarioDynamics[g.scenario].reaction}`;
+        adversaryEvent = msg("engine.adversary.withReaction", { event: adversaryEvent, reaction: words.reaction(g.scenario) });
         g.adversaryEvent = adversaryEvent;
       }
     }
@@ -465,20 +463,19 @@ export function selectAdaptation(game: Game, stage: number, current: string) {
     return { id, score: (4 - Math.max(0, vectorRank)) * 2 - exposure * 2 + choiceBias };
   }).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
   const chosen = ranked[0].id;
-  const title = attacks.find(item => item.id === chosen)!.title;
   return {
     id: chosen,
-    reason: `${profile.title} selected ${title} because its evidence sources were less exposed by the last three procedures.`,
+    reason: msg("engine.adaptation.reason", { profile: words.profile(game.adversaryProfile), attack: words.attack(chosen, "title") }),
   };
 }
 
-export function decisionRationale(choice: DecisionChoice, highPressure: boolean, bindingSector: boolean, bindingContinuity: boolean) {
+export function decisionRationale(choice: DecisionChoice, highPressure: boolean, bindingSector: boolean, bindingContinuity: boolean): Message {
   switch (choice) {
-    case "observe": return highPressure ? "Additional observation improved evidence but accepted substantial operational risk." : "Observation was proportionate while impact and adversary tempo remained manageable.";
-    case "act": return highPressure ? "Intervention matched the elevated impact and adversary tempo." : "Intervention reduced exposure, although evidence collection still had room to continue.";
-    case "attribute": return highPressure ? "Deep attribution delayed containment while the actor remained free to act." : "Attribution deepened the analytical picture while the actor stayed covert.";
-    case "contain": return bindingSector ? "Bounded containment protected a sector margin that a full intervention would have eroded." : highPressure ? "Containment absorbed pressure without removing the actor's parallel access." : "Containment warned the actor and stopped the contained systems showing what it does, while impact and its pace were low enough to keep watching instead.";
-    case "notify": return bindingContinuity ? "Early notification protected service continuity while the picture stayed uncertain." : highPressure ? "Notification kept owners aligned, but it cost tempo and disclosed your read." : "Notification was low-cost, but it did not reduce exposure or preserve evidence.";
+    case "observe": return msg(highPressure ? "engine.rationale.observeHigh" : "engine.rationale.observeLow");
+    case "act": return msg(highPressure ? "engine.rationale.actHigh" : "engine.rationale.actLow");
+    case "attribute": return msg(highPressure ? "engine.rationale.attributeHigh" : "engine.rationale.attributeLow");
+    case "contain": return msg(bindingSector ? "engine.rationale.containSector" : highPressure ? "engine.rationale.containHigh" : "engine.rationale.containLow");
+    case "notify": return msg(bindingContinuity ? "engine.rationale.notifyContinuity" : highPressure ? "engine.rationale.notifyHigh" : "engine.rationale.notifyLow");
   }
 }
 
@@ -512,7 +509,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
   const before = { impact: g.impact, continuity: g.continuity, tempo: g.adversaryTempo, sector: g.sectorHealth, objective: g.objectiveProgress };
   let adaptedFrom: string | null = null;
   let adaptedTo: string | null = null;
-  let adaptationReason: string | null = null;
+  let adaptationReason: Message | null = null;
 
   switch (choice) {
     case "observe":
@@ -556,7 +553,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
       break;
   }
-  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Evidence decision: ${language[decisionTitles[choice]]}`, decisionRollShift[choice]);
+  g.nextModifierSources = carriedSource(game.nextModifier, game.nextModifierSources, g.nextModifier, msg("engine.source.decision", { title: words.decision(g.scenario, attack.stage, decisionTitles[choice]) }), decisionRollShift[choice]);
 
   if (choice === "act") {
     const nextStage = Math.min(3, attack.stage + 1);
@@ -568,7 +565,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
         adaptedTo = adaptation.id;
         adaptationReason = adaptation.reason;
         g.chain[nextStage] = adaptation.id;
-        g.adversaryEvent = scenarioDynamics[g.scenario].reaction;
+        g.adversaryEvent = words.reaction(g.scenario);
       }
     }
   }
@@ -576,9 +573,9 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
   g.decisions.push({
     stage: stageId,
     choice,
-    title: language[decisionTitles[choice]] as string,
-    effect: decisionEffects[choice],
-    counterfactual: decisionCounterfactual(choice, language),
+    title: words.decision(g.scenario, attack.stage, decisionTitles[choice]),
+    effect: words.decisionEffect(choice),
+    counterfactual: decisionCounterfactual(choice, g.scenario, attack.stage),
     adaptedFrom,
     adaptedTo,
     adaptationReason,
@@ -601,14 +598,10 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
   return g;
 }
 
-export function decisionCounterfactual(choice: DecisionChoice, language: DecisionLanguage) {
-  switch (choice) {
-    case "observe": return `${language.actTitle} would have reduced immediate exposure but sacrificed telemetry.`;
-    case "act": return `${language.observeTitle} would have improved confidence but given the actor more time.`;
-    case "attribute": return `${language.observeTitle} would have gathered telemetry faster, but with less attribution depth.`;
-    case "contain": return `${language.actTitle} would have removed access faster at greater service and sector cost.`;
-    case "notify": return `${language.attributeTitle} would have deepened attribution instead of briefing stakeholders.`;
-  }
+// The road not taken, named in the sector's own wording of it.
+export function decisionCounterfactual(choice: DecisionChoice, scenario: number, stage: number): Message {
+  const alternative = { observe: "actTitle", act: "observeTitle", attribute: "observeTitle", contain: "actTitle", notify: "attributeTitle" } as const;
+  return msg(`engine.counterfactual.${choice}`, { title: words.decision(scenario, stage, alternative[choice]) });
 }
 
 export function resolveCommand(game: Game, choice: "a" | "b"): Game {
@@ -618,12 +611,12 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   const option = event[choice];
   const g: Game = { ...game, commandHistory: [...game.commandHistory] };
   g.nextModifier = carryModifier(g.nextModifier, option.modifier);
-  g.nextModifierSource = carriedSource(game.nextModifier, game.nextModifierSource, g.nextModifier, `Command event: ${option.title}`, option.modifier);
+  g.nextModifierSources = carriedSource(game.nextModifier, game.nextModifierSources, g.nextModifier, msg("engine.source.command", { title: words.command(eventId, choice, "title") }), option.modifier);
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
   g.adversaryTempo = clamp(g.adversaryTempo + option.tempo, 0, 3);
   const communicationsBonus = g.specialist === "communications" && eventId === "leadership" ? 1 : 0;
-  g.commandHistory.push({ event: eventId, choice, title: option.title, quality: Math.min(5, option.quality + communicationsBonus), effect: option.signal });
+  g.commandHistory.push({ event: eventId, choice, title: words.command(eventId, choice, "title"), quality: Math.min(5, option.quality + communicationsBonus), effect: words.command(eventId, choice, "signal") });
   g.pendingCommand = null;
   if (breached(g)) settle(g, "lost");
   return g;
@@ -638,7 +631,7 @@ export function resolveSetPiece(game: Game, choice: SetPieceChoice): Game {
   g.continuity = clamp(g.continuity + option.continuity);
   g.sectorHealth = clamp(g.sectorHealth + option.sector);
   g.objectiveProgress = clamp(g.objectiveProgress + option.objective);
-  g.setPieceHistory.push({ event: event.id, choice, title: option.title, quality: option.quality, effect: option.detail });
+  g.setPieceHistory.push({ event: event.id, choice, title: words.setPiece(event.id, choice, "title"), quality: option.quality, effect: words.setPiece(event.id, choice, "detail") });
   g.pendingSetPiece = null;
   if (breached(g)) settle(g, "lost");
   return g;
@@ -656,28 +649,28 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const valid = !!firstAttack && !!secondAttack && (Math.abs(firstAttack.stage - secondAttack.stage) <= 1 || attackVector(firstAttack.id) === attackVector(secondAttack.id));
   const correct = (assessment === "causal") === valid;
   const theoryAligned = correct && valid && game.caseTheory === game.objective;
-  const basis = firstAttack && secondAttack
-    ? Math.abs(firstAttack.stage - secondAttack.stage) <= 1
-      ? `they sit in consecutive stages of the chain — ${inSentence(stages[Math.min(firstAttack.stage, secondAttack.stage)].name)} then ${inSentence(stages[Math.max(firstAttack.stage, secondAttack.stage)].name)} — so one is what the next one needed`
-      : attackVector(firstAttack.id) === attackVector(secondAttack.id)
-        ? `both sit on the ${hypotheses.find(item => item.id === attackVector(firstAttack.id))!.title.toLowerCase()} route, so they are steps in the same line of access`
-        : ""
-    : "";
-  const finding = correct
+  // Only a valid pair has a basis, and only a valid pair reads one out.
+  const basis: Message = firstAttack && secondAttack && Math.abs(firstAttack.stage - secondAttack.stage) <= 1
+    ? msg("engine.correlation.basisConsecutive", { first: words.stage(Math.min(firstAttack.stage, secondAttack.stage), "inSentence"), second: words.stage(Math.max(firstAttack.stage, secondAttack.stage), "inSentence") })
+    : msg("engine.correlation.basisRoute", { route: words.route(firstAttack ? attackVector(firstAttack.id) : "identity", "lower") });
+  const sameSystem = JSON.stringify(first.system) === JSON.stringify(second.system);
+  const finding: Message = correct
     ? valid
-      ? `${first.title} and ${second.title} form a credible causal sequence: ${basis}.`
-      : `${first.title} and ${second.title} overlap in time, but nothing links them: they are neither consecutive stages nor steps on the same route, and ${first.system === second.system ? `appearing on the same system, ${first.system},` : `appearing on ${first.system} and ${second.system}`} is not a relationship.`
+      ? msg("engine.correlation.credible", { first: first.title, second: second.title, basis })
+      : sameSystem
+        ? msg("engine.correlation.overlapSameSystem", { first: first.title, second: second.title, system: first.system })
+        : msg("engine.correlation.overlapSystems", { first: first.title, second: second.title, firstSystem: first.system, secondSystem: second.system })
     : valid
-      ? `These were assessed as coincidental, but ${basis}, which is what a causal sequence looks like.`
+      ? msg("engine.correlation.wronglyCoincidental", { basis })
       : firstAttack && secondAttack
         // A player judges on the story ("the stolen account led to the data
         // theft"), and was told they had judged on timing. Say what rules it out.
-        ? `These were treated as causal, but ${inSentence(stages[firstAttack.stage].name)} and ${inSentence(stages[secondAttack.stage].name)} are not consecutive stages and sit on different routes, so neither could have led straight to the other. A story can connect almost any two findings; a sequence needs consecutive stages or a shared route.`
-        : `These were treated as causal, but a finding that confirmed no stage cannot be a step in the sequence. A sequence needs two confirmed stages, consecutive or on a shared route.`;
+        ? msg("engine.correlation.wronglyCausal", { first: words.stage(firstAttack.stage, "inSentence"), second: words.stage(secondAttack.stage, "inSentence") })
+        : msg("engine.correlation.causalNoStage");
   const g: Game = {
     ...game,
     nextModifier: correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
-    nextModifierSource: carriedSource(game.nextModifier, game.nextModifierSource, correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, "Correct comparison of findings", correct ? (theoryAligned ? 3 : 2) : 0),
+    nextModifierSources: carriedSource(game.nextModifier, game.nextModifierSources, correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, msg("engine.source.comparison"), correct ? (theoryAligned ? 3 : 2) : 0),
     impact: clamp(game.impact + (correct ? (theoryAligned ? -5 : -3) : 4)),
     objectiveProgress: clamp(game.objectiveProgress + (correct ? (theoryAligned ? -10 : -6) : 3)),
     correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding }],

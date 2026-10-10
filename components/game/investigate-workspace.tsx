@@ -25,7 +25,7 @@ const subscribePhone = (onChange: () => void) => {
 };
 
 export function InvestigateWorkspace({ session }: { session: GameSession }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say } = useMessages();
   const {
     game, guided, guidance, trainingPrompt, rolling, fastResolve, actionScope, actionIntensity,
     inlineReport, setInlineReport, pendingUndo, undo,
@@ -142,7 +142,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             <div>
               <span className="eyebrow">{t("investigateWorkspace.turnQuickResult", { number: inlineReport.number })}</span>
               <strong>{inlineReport.success ? t("investigateWorkspace.procedureSucceeded") : t("investigateWorkspace.procedureUnsuccessful")}{t("investigateWorkspace.total2", { total: inlineReport.total })}</strong>
-              <p>{inlineReport.narrative}</p>
+              <p>{say(inlineReport.narrative)}</p>
             </div>
             <button onClick={() => setInlineReport(null)} aria-label={t("investigateWorkspace.dismissQuickResult")}><X size={18} /></button>
           </section>
@@ -164,7 +164,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
                 saying it was recorded, a playtest compared the meters to find out.
                 It is a line under the heading, not a ruled strip above it, which
                 set the two columns' headings sixty pixels apart. */}
-            {sectorRecorded && <p className="recorded-line" role="status">{rich("investigateWorkspace.sectorDecisionRecorded2", { sectorRecordedTitle: sectorRecorded.title }, { strong: chunk => <strong>{chunk}</strong> })}</p>}
+            {sectorRecorded && <p className="recorded-line" role="status">{rich("investigateWorkspace.sectorDecisionRecorded2", { sectorRecordedTitle: say(sectorRecorded.title) }, { strong: chunk => <strong>{chunk}</strong> })}</p>}
             {/* One next step above the cards, not three: until a reading exists, the
                 hint that unlocks them; then the Training prompt where there is one,
                 or the Captain's prompt. Stacked, they put the first card below the

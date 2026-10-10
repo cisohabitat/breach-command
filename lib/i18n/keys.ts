@@ -9,6 +9,7 @@ import type { commandEventMessages } from "./en/command-event.ts";
 import type { commandWorkspaceMessages } from "./en/command-workspace.ts";
 import type { debriefDialogMessages } from "./en/debrief-dialog.ts";
 import type { effectListMessages } from "./en/effect-list.ts";
+import type { engineMessages } from "./en/engine.ts";
 import type { endStateMessages } from "./en/end-state.ts";
 import type { evidenceWorkspaceMessages } from "./en/evidence-workspace.ts";
 import type { facilitatorSheetMessages } from "./en/facilitator-sheet.ts";
@@ -41,6 +42,7 @@ export type MessageKey = keyof typeof en
   | keyof typeof commandWorkspaceMessages
   | keyof typeof debriefDialogMessages
   | keyof typeof effectListMessages
+  | keyof typeof engineMessages
   | keyof typeof endStateMessages
   | keyof typeof evidenceWorkspaceMessages
   | keyof typeof facilitatorSheetMessages
@@ -63,4 +65,4 @@ export type MessageKey = keyof typeof en
   | keyof typeof sectorSetPieceMessages
   | keyof typeof settingsDialogMessages
   | keyof typeof tutorialCoachMessages;
-export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "command-event", "command-workspace", "debrief-dialog", "effect-list", "end-state", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "settings-dialog", "tutorial-coach"];
+export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "command-event", "command-workspace", "debrief-dialog", "effect-list", "engine", "end-state", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "settings-dialog", "tutorial-coach"];

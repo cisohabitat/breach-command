@@ -5,6 +5,7 @@ import { decisionChoices, decisionLanguageFor, decisionText, decisionTitles, inS
 import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type Game, type GuidanceLevel, type HypothesisStanding, type KnownFacts, type LossCause, type ReadingOdds, type SectorRead, type TrainingPrompt } from "./types.ts";
 import { availableIn, carryModifier, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
 import { infrastructureTopologies } from "../phase8.ts";
+import { say } from "../i18n/message.ts";
 export function getAttributionRead(game: Game) {
   const profile = getAdversaryProfile(game);
   const evidence = game.revealed.length;
@@ -26,7 +27,7 @@ export function getLead(game: Game) {
   // A new observation with each confirmed stage as well as with time: a phone
   // playtest chose its stage-2 reading beside the stage-1 lead.
   const index = Math.min(scenario.leads.length - 1, Math.max(Math.floor(game.turns.length / 3), game.revealed.length));
-  const reaction = game.adversaryEvent ? ` Latest development: ${game.adversaryEvent}` : "";
+  const reaction = game.adversaryEvent ? ` Latest development: ${say(game.adversaryEvent)}` : "";
   const decoy = game.turns.length >= 2 ? ` Unverified signal: ${getAdversaryProfile(game).unverifiedSignal}` : "";
   return scenario.leads[index] + reaction + decoy;
 }
@@ -347,7 +348,11 @@ export function getReadingOdds(game: Game): ReadingOdds {
   for (const turn of game.turns) {
     // A turn's own finds land before its escalation beat, so they count first.
     for (const id of [turn.revealed, turn.injectReveal]) if (id) confirmedSoFar.add(stageOf(id));
-    const rerouted = !!turn.adversaryEvent?.includes(reaction) && crisisRerouteTarget(confirmedSoFar) === stage;
+    // A Crisis re-route adds the actor's reaction to the turn's escalation; a
+    // save from before version 19 kept that as one English sentence.
+    const event = turn.adversaryEvent;
+    const withReaction = !!event && "key" in event && (event.key === "engine.adversary.withReaction" || (event.key === "legacy.text" && String(event.params?.text ?? "").includes(reaction)));
+    const rerouted = withReaction && crisisRerouteTarget(confirmedSoFar) === stage;
     const adaptedHere = [turn.revealed, turn.injectReveal].some(id => !!id && adaptedNext.has(id));
     if (rerouted || adaptedHere) changedAt = turn.number;
   }

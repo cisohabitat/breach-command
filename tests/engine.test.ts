@@ -1,11 +1,14 @@
 // Turn resolution, blocking states, end states and the decision layer.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,getModifierBreakdown,getScoreRows,type Difficulty,type Game,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import {carriedLabel,injectCard,getLossReason,newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,availableIn,scenarios,attacks,getDiscriminatingRead,getHypothesisStanding,getTrainingPrompt,hypothesisSources,procedures,nextEvidenceSource,guidanceLevel,responseOptions,responseOptionsFor,responseProfiles,decisionChoices,difficulties,getDecisionOptions,getAdversaryState,getAttributionRead,getScoreBreakdown,getTurnLimit,cooldownWindow,getObjectiveRead,getBeginnerReview,getMapActionEffect,getModifierBreakdown,getScoreRows,type Difficulty,type Game,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
 import {parseSession,serialiseSession,SESSION_VERSION} from "../lib/session.ts";
 import {modeRandom} from "../lib/command-systems.ts";
 import {CHALLENGE_VERSION,decodeChallenge,encodeChallenge,isOutdatedChallenge,seededChallengeRandom,seededRoll} from "../lib/phase8.ts";
 import {incidentVariant} from "../lib/phase9.ts";
+import { legacy, msg, say } from "../lib/i18n/message.ts";
+import "../lib/i18n/engine-messages.ts";
+const cardOf=(turn:{inject:{id:string}|null})=>turn.inject?injectCard(turn.inject.id):undefined;
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
 let g:Game=baseline();
@@ -29,11 +32,11 @@ test("resolves a turn, its decision and its cooldown", () => {
     // This deck opens with an unfavourable card. A natural 20 used to take it and
   // raise business pressure, which is the game contradicting its own loudest
   // signal; it now reaches past it to the relief card behind.
-  g=baseline();g=playTurn(g,"endpoint",20);assert.equal(g.turns[0].inject?.reason,"Natural 20");assert.equal(g.turns[0].inject?.effect,"relief","a natural 20 never hands the player a penalty");const oldPivot=g.chain[1];g=resolveDecision(g,"act");assert.equal(g.nextModifier,-1);assert.equal(g.impact,2);assert.notEqual(g.chain[1],oldPivot);assert.ok(g.adversaryEvent);
-  g=baseline();g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(g.turns[2].inject?.reason,"Three failed rolls");assert.equal(g.failures,0);assert.ok(g.turns[2].adversaryEvent);assert.ok(g.continuity<100);
+  g=baseline();g=playTurn(g,"endpoint",20);assert.equal(say(g.turns[0].inject!.reason),"Natural 20");assert.equal(cardOf(g.turns[0])?.effect,"relief","a natural 20 never hands the player a penalty");const oldPivot=g.chain[1];g=resolveDecision(g,"act");assert.equal(g.nextModifier,-1);assert.equal(g.impact,2);assert.notEqual(g.chain[1],oldPivot);assert.ok(g.adversaryEvent);
+  g=baseline();g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(say(g.turns[2].inject!.reason),"Three failed rolls");assert.equal(g.failures,0);assert.ok(g.turns[2].adversaryEvent);assert.ok(g.continuity<100);
   // Three failed rolls never draw the authorised stand-down: it ended a newcomer's
   // climax twice under a banner saying the investigation had earned it.
-  g=baseline();g.injectDeck=[8,7];g.revealed=g.chain.slice(0,2);g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(g.turns[2].inject?.reason,"Three failed rolls");assert.notEqual(g.turns[2].inject?.id,"exercise");assert.notEqual(g.status,"exercise","the operation goes on");
+  g=baseline();g.injectDeck=[8,7];g.revealed=g.chain.slice(0,2);g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(say(g.turns[2].inject!.reason),"Three failed rolls");assert.notEqual(g.turns[2].inject?.id,"exercise");assert.notEqual(g.status,"exercise","the operation goes on");
   g=baseline();g.injectDeck=[2];g=playTurn(g,"endpoint",20);assert.equal(availableIn(g,"endpoint"),0,"restoration override");
   // A stage the partner hands over has to leave a finding, or the player holds a
   // confirmed stage they cannot select in the evidence workspace.
@@ -41,14 +44,14 @@ test("resolves a turn, its decision and its cooldown", () => {
   assert.equal(g.turns[0].inject?.id,"partner","the partner card was the one drawn");
   const partnerFinding=g.evidence.find(item=>item.supports===g.turns[0].injectReveal);
   assert.ok(partnerFinding,"the disclosed stage leaves a correlatable finding");
-  assert.equal(partnerFinding!.source,"Partner disclosure","attributed to where it came from");
+  assert.equal(say(partnerFinding!.source),"Partner disclosure","attributed to where it came from");
   assert.equal(g.evidence.filter(item=>item.supports).length,2,"alongside the stage the procedure found");
 
   // A critical roll is the loudest signal the game sends; what it draws has to
   // agree with it. Deck order puts an unfavourable card first either way.
   const deck=[1,0];
-  assert.equal(playTurn((()=>{const b=baseline();b.injectDeck=[...deck];return b;})(),"endpoint",20).turns[0].inject?.effect,"bonus","a natural 20 reaches past the penalty");
-  assert.equal(playTurn((()=>{const b=baseline();b.injectDeck=[0,1];return b;})(),"email",1).turns[0].inject?.effect,"penalty","and a natural 1 reaches past the bonus");
+  assert.equal(cardOf(playTurn((()=>{const b=baseline();b.injectDeck=[...deck];return b;})(),"endpoint",20).turns[0])?.effect,"bonus","a natural 20 reaches past the penalty");
+  assert.equal(cardOf(playTurn((()=>{const b=baseline();b.injectDeck=[0,1];return b;})(),"email",1).turns[0])?.effect,"penalty","and a natural 1 reaches past the bonus");
   // The authorised stand-down is neither reward nor punishment, and a natural 20
   // must still be able to draw it or the ending all but disappears.
   assert.equal(playTurn((()=>{const b=baseline();b.injectDeck=[8];b.revealed=[b.chain[0],b.chain[1]];return b;})(),"endpoint",20).status,"exercise","a natural 20 can still stand the operation down");
@@ -60,7 +63,7 @@ test("earns the drill conclusion rather than drawing it", () => {
   // clears part of the activity and the operation continues.
   g=baseline();g.injectDeck=[8];g=playTurn(g,"email",20);
   assert.equal(g.status,"playing","an early drill draw does not end the operation");
-  assert.ok(g.turns[0].inject?.effectLabel.includes("authorised"),"the cleared activity is reported");
+  assert.ok(say(g.turns[0].inject!.effectLabel!).includes("authorised"),"the cleared activity is reported");
   const drillControl=playTurn({...baseline(),injectDeck:[0]},"email",20);
   const drillCleared=playTurn({...baseline(),injectDeck:[8]},"email",20);
   assert.ok(drillCleared.impact<drillControl.impact,"clearing part of the activity relieves business pressure");
@@ -147,13 +150,13 @@ test("holds the turn limit, modes, specialists and map actions", () => {
   g=baseline();g=resolveMapAction(g,"boundary","monitor");assert.equal(g.nodePosture.boundary,"monitored");assert.equal(g.mapActionsRemaining,2);assert.equal(g.nextModifier,2);g=resolveMapAction(g,"service","isolate");assert.equal(g.nodePosture.service,"isolated");assert.ok(g.continuity<100);
   g=baseline();g=playTurn(g,"email",12);if(g.pendingDecision)g=resolveDecision(g,"observe");g=playTurn(g,"cloud",12);if(g.pendingDecision)g=resolveDecision(g,"observe");assert.ok(g.pendingSetPiece);g=resolveSetPiece(g,"a");assert.equal(g.setPieceHistory.length,1);assert.equal(g.pendingSetPiece,null);
   g=baseline();g.evidence=[
-    {id:"E1",turn:1,title:"Initial access",source:"Email",system:"User access",confidence:"HIGH",supports:"phish",detail:"A"},
-    {id:"E2",turn:2,title:"Movement",source:"Identity",system:"Admin plane",confidence:"HIGH",supports:"spray",detail:"B"},
+    {id:"E1",turn:1,title:legacy("Initial access"),source:legacy("Email"),system:legacy("User access"),confidence:"HIGH",supports:"phish",detail:legacy("A")},
+    {id:"E2",turn:2,title:legacy("Movement"),source:legacy("Identity"),system:legacy("Admin plane"),confidence:"HIGH",supports:"spray",detail:legacy("B")},
   ];
   g=correlateEvidence(g,["E1","E2"]);assert.equal(g.correlations[0].valid,true);assert.equal(g.nextModifier,2);
   g=baseline();g.evidence=[
-    {id:"E1",turn:1,title:"Initial access",source:"Email",system:"User access",confidence:"HIGH",supports:"phish",detail:"A"},
-    {id:"E2",turn:2,title:"Unrelated exception",source:"Cloud",system:"Admin plane",confidence:"MODERATE",supports:null,detail:"B"},
+    {id:"E1",turn:1,title:legacy("Initial access"),source:legacy("Email"),system:legacy("User access"),confidence:"HIGH",supports:"phish",detail:legacy("A")},
+    {id:"E2",turn:2,title:legacy("Unrelated exception"),source:legacy("Cloud"),system:legacy("Admin plane"),confidence:"MODERATE",supports:null,detail:legacy("B")},
   ];
   g=correlateEvidence(g,["E1","E2"],"causal");assert.equal(g.correlations[0].correct,false);assert.equal(g.impact,26);
   assert.equal(getAttributionRead(baseline()).title,"Unknown operator");
@@ -233,8 +236,8 @@ test("never mutates the game a transition was given", () => {
 
   // The campaign route only shapes a campaign. Every other mode starts from the
   // mode's own terms, with no route bonus applied.
-  assert.equal(newGame(0,"operational",()=>0,{mode:"daily",campaignRoute:"common-ground",variant:{id:"0-x",title:"t",briefing:"b",modifier:"m",impact:0,continuity:-10,objective:0}}).continuity,90,"a non-campaign operation gets no route continuity");
-  assert.equal(newGame(0,"operational",()=>0,{mode:"campaign",campaignRoute:"common-ground",variant:{id:"0-x",title:"t",briefing:"b",modifier:"m",impact:0,continuity:-10,objective:0}}).continuity,93,"a campaign operation keeps the common-ground reserve");
+  assert.equal(newGame(0,"operational",()=>0,{mode:"daily",campaignRoute:"common-ground",variant:{id:"0-x",title:legacy("t"),briefing:legacy("b"),modifier:legacy("m"),impact:0,continuity:-10,objective:0}}).continuity,90,"a non-campaign operation gets no route continuity");
+  assert.equal(newGame(0,"operational",()=>0,{mode:"campaign",campaignRoute:"common-ground",variant:{id:"0-x",title:legacy("t"),briefing:legacy("b"),modifier:legacy("m"),impact:0,continuity:-10,objective:0}}).continuity,93,"a campaign operation keeps the common-ground reserve");
 });
 
 test("teaches the reasoning instead of handing over the answer", () => {
@@ -416,7 +419,7 @@ test("keeps the deck, the grace and the decisions honest", () => {
   const complete=playTurn({...baseline(),revealed:["phish","spray","task"],injectDeck:[8]},"network",20);
   assert.equal(complete.revealed.length,4);
   assert.equal(complete.status,"playing","the operation goes on to its decision and response");
-  assert.ok(!/Exercise ends/.test(complete.turns[0].inject!.effectLabel),"and the card does not claim it ended");
+  assert.ok(!/Exercise ends/.test(say(complete.turns[0].inject!.effectLabel!)),"and the card does not claim it ended");
   assert.equal(resolveDecision(complete,"contain").status,"response");
   // A sound failure is protected without the grace, so the grace is kept for the
   // failure that needs it, and the sound one hands the actor no extra progress.
@@ -431,7 +434,7 @@ test("keeps the deck, the grace and the decisions honest", () => {
   // cannot differ: a sound failure reads exactly as an unprotected one.
   const unprotected=playTurn({...setHypothesis(baseline(),"cloud"),graceRemaining:0,injectDeck:[]},"endpoint",2);
   assert.equal(sound.turns[0].narrative,unprotected.turns[0].narrative,"a protected failure is not announced");
-  assert.ok(!/right one|reasoning held/i.test(sound.turns[0].narrative),"and never says the route was right");
+  assert.ok(!/right one|reasoning held/i.test(say(sound.turns[0].narrative)),"and never says the route was right");
   // The partner can disclose a stage on the same turn a procedure finds one. Each
   // gets its own decision, one after the other.
   let both=playTurn({...baseline(),injectDeck:[3]},"endpoint",20);
@@ -480,19 +483,20 @@ test("erodes the sector margin more slowly at Training", () => {
 test("stacks every bonus waiting for the next roll under one cap", () => {
   // A monitored node's +2 once vanished when a comparison or a decision had
   // already set +2: the larger simply won. They now add, from -2 to +3.
-  const base={...newGame(0,"operational",()=>0),nextModifier:2,nextModifierSource:"Correct comparison of findings"};
+  const base={...newGame(0,"operational",()=>0),nextModifier:2,nextModifierSources:[{source:msg("engine.source.comparison"),change:2}]};
+  const label=(game:Game)=>say(carriedLabel(game.nextModifierSources,game.nextModifier));
   const node="boundary";
   assert.equal(getMapActionEffect(base,node,"monitor").modifier,2,"monitoring the boundary offers +2");
   const monitored=resolveMapAction(base,node,"monitor");
   assert.equal(monitored.nextModifier,3,"a monitored node adds to a carried bonus, capped at +3");
-  assert.equal(monitored.nextModifierSource,"Correct comparison of findings +2; Monitored Access boundary +2: +4, capped at","each source is named with its own share, and the cap is stated");
-  const low=resolveMapAction({...base,nextModifier:-2,nextModifierSource:"Inject: x"},node,"monitor");
+  assert.equal(label(monitored),"Correct comparison of findings +2; Monitored Access boundary +2: +4, capped at","each source is named with its own share, and the cap is stated");
+  const low=resolveMapAction({...base,nextModifier:-2,nextModifierSources:[{source:legacy("Inject: x"),change:-2}]},node,"monitor");
   assert.equal(low.nextModifier,0,"a bonus offsets a penalty rather than replacing it");
-  assert.equal(low.nextModifierSource,"Inject: x −2; Monitored Access boundary +2, together","sources that cancel are still named");
-  const part=getModifierBreakdown(low,"identity").parts.find(item=>item.label===low.nextModifierSource);
+  assert.equal(label(low),"Inject: x −2; Monitored Access boundary +2, together","sources that cancel are still named");
+  const part=getModifierBreakdown(low,"identity").parts.find(item=>say(item.label)===label(low));
   assert.ok(part?.shown&&part.value===0,"the preview keeps the cancelled part on screen");
   const played=playTurn({...low,pendingDecision:null},"identity");
-  assert.ok(played.turns.at(-1)!.parts.some(item=>item.label===low.nextModifierSource),"the turn records the part the report names");
+  assert.ok(played.turns.at(-1)!.parts.some(item=>say(item.label)===label(low)),"the turn records the part the report names");
 });
 
 test("gives each difficulty its own allowance of free turns", () => {

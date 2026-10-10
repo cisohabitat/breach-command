@@ -5,7 +5,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as game from "../lib/game.ts";
-import { adversaryProfiles, commandEvents, glossaryParts, hypotheses, plainLanguage, responseProfiles, sectorSystems } from "../lib/advanced-game.ts";
+import { adversaryProfiles,commandEvents,hypotheses,responseProfiles,sectorSystems } from "../lib/advanced-game.ts";
+import { glossaryParts, plainLanguage } from "../lib/glossary.ts";
 import { injects } from "../lib/engine/content.ts";
 import * as systems from "../lib/command-systems.ts";
 import * as phase8 from "../lib/phase8.ts";

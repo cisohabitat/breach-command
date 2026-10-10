@@ -1,5 +1,5 @@
 import { Fragment, useId, useState } from "react";
-import { glossaryParts, plainLanguage } from "@/lib/advanced-game";
+import { glossary } from "@/lib/i18n/shared-text";
 
 // A passage of field text with its vocabulary explained where it is read. A
 // glossary term is a quiet underlined control; choosing it opens the meaning in
@@ -8,6 +8,7 @@ import { glossaryParts, plainLanguage } from "@/lib/advanced-game";
 // to look a word up. Never place this inside another control: the terms are
 // buttons, so it belongs in prose only.
 export function Glossed({ text }: { text: string }) {
+  const { glossaryParts, plainLanguage } = glossary();
   const [open, setOpen] = useState<string | null>(null);
   const id = useId();
   return (

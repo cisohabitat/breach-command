@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.6, 10 October 2026
+
+- **Saves in any language.** What the game writes into a saved operation
+  (findings, reports, decisions, comparisons, injects) is stored as messages
+  rather than English, so a save reads in whatever language the game is in.
+  Older saves keep their sentences exactly as they were. Saved games move to
+  version 19.
+- **Faster first load.** The glossary and the game's own sentences now load
+  once, with the game, instead of with the first page and in copies.
+
 ## 0.9.5, 10 October 2026
 
 - **Effects and glossary in any language.** The lines that say what a choice

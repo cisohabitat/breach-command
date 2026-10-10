@@ -9,4 +9,5 @@ import "../../phase9.ts";
 import "../../command-systems.ts";
 import "../../campaign.ts";
 import "../../educators.ts";
+import "../../glossary.ts";
 export { contentTables } from "./registry.ts";

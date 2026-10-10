@@ -644,6 +644,14 @@ passage in the pseudo-locale. The component test now reads a component's own
 props (`items`, `label`) as text; the two strings that rule had let through
 (the cooldown note and the carried roll) went with the effects.
 
+10 October 2026 (0.9.6), step 3: the saved game stores messages, not English
+(session version 19), so an operation saved in one language reads in another;
+an older save keeps its sentences as they were, and its roll breakdown reads as
+it did. A whole operation saved by version 18 and replayed from its seed shows
+today's engine storing messages that read exactly as its 110 sentences did. The
+glossary and the engine's catalogue load once for every part that shows them,
+which took 3.7 KB off the first load.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

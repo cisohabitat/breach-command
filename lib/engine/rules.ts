@@ -3,7 +3,8 @@ import { attacks, procedures, sectorProcedures, hypotheses, scenarioDynamics, sc
 import { procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { infrastructureTopologies } from "../phase8.ts";
 import { adversaryProfiles, meterDirection, meterNames, responseProfiles } from "./content.ts";
-import { type DecisionChoice, type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
+import { type CarriedSource, type DecisionChoice, type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
+import { msg, ref, type Message } from "../i18n/message.ts";
 
 // The fatigue at which a specialist's bonus stops applying. The roll, its
 // preview and the deployment screen all read it here.
@@ -200,11 +201,29 @@ export function responseFit(game: Game, phaseIndex: number, choice: string) {
 // "Inject: Hard going −2; Monitored Access boundary +2, together" — and printed
 // with its value after it the line read as a sum to do in the head, so it is
 // set as "Since your last roll +0 (from …)".
-export function describePart(label: string, value: number) {
-  const signed = (n: number) => `${n < 0 ? "−" : "+"}${Math.abs(n)}`;
-  const joined = label.match(/^(.*?)(, together|: [+−]\d+, capped at)$/);
-  if (!joined) return `${label} ${signed(value)}`;
-  return `Since your last roll ${signed(value)} (from ${joined[1].replace(/; /g, ", ")}${joined[2] === ", together" ? "" : `, capped at ${signed(value)}`})`;
+export function describePart(part: { label: Message; value: number; sources?: CarriedSource[] }): Message {
+  const plus = (n: number) => `${n < 0 ? "−" : "+"}${Math.abs(n)}`;
+  if (!part.sources || part.sources.length < 2) return msg("engine.part.value", { label: part.label, value: plus(part.value) });
+  const sum = part.sources.reduce((total, item) => total + item.change, 0);
+  return msg(sum === part.value ? "engine.part.carried" : "engine.part.carriedCapped", { value: plus(part.value), list: listOf(part.sources, "engine.list.comma") });
+}
+
+// Two or more carried sources, each with its share: "Monitored Access boundary
+// +2; Inject: Hard going −2", as one message for a translator to order.
+function listOf(sources: CarriedSource[], join: "engine.list.semicolon" | "engine.list.comma"): Message {
+  const entries = sources.map(item => msg("engine.source.entry", { source: item.source, change: signed(item.change) }));
+  return entries.reduceRight((rest, first) => msg(join, { first, rest }));
+}
+
+// What the breakdown calls the change carried to this roll: what set it, and
+// with two or more sources how they combine — together, or what they came to
+// before the cap.
+export function carriedLabel(sources: CarriedSource[], value: number): Message {
+  if (!sources.length) return msg("engine.part.sinceLastRoll");
+  if (sources.length === 1) return sources[0].source;
+  const sum = sources.reduce((total, item) => total + item.change, 0);
+  const list = listOf(sources, "engine.list.semicolon");
+  return sum === value ? msg("engine.source.together", { list }) : msg("engine.source.capped", { list, sum: signed(sum) });
 }
 
 export function getModifierBreakdown(game: Game, procedure: string, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }) {
@@ -216,17 +235,17 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
   let consecutiveFailures = 0;
   for (let index = game.turns.length - 1; index >= 0 && !game.turns[index].success; index--) consecutiveFailures++;
   const parts: ModifierPart[] = [
-    { label: "Established", value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
-    { label: "Own source", value: ownSourceBonus(game, procedure), detail: "One of the declared reading's own evidence sources. Testing the explanation you have committed to earns this; it says nothing about whether the explanation is right." },
-    { label: game.nextModifierSource ?? "Since your last roll", value: game.nextModifier, shown: !!game.nextModifierSource, detail: "Set up by something since your last roll: monitoring a node on the map, an evidence decision, a command event, a correct comparison of two findings, or an inject. It applies to this roll only." },
-    { label: "After two failed rolls", value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
+    { label: msg("engine.part.established"), value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
+    { label: msg("engine.part.ownSource"), value: ownSourceBonus(game, procedure), detail: "One of the declared reading's own evidence sources. Testing the explanation you have committed to earns this; it says nothing about whether the explanation is right." },
+    { label: carriedLabel(game.nextModifierSources, game.nextModifier), value: game.nextModifier, shown: game.nextModifierSources.length > 0, sources: game.nextModifierSources, detail: "Set up by something since your last roll: monitoring a node on the map, an evidence decision, a command event, a correct comparison of two findings, or an inject. It applies to this roll only." },
+    { label: msg("engine.part.afterFailures"), value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
     specialist.procedures.includes(procedure as never) && game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT
-      ? { label: "Specialist", value: 0, suppressed: true, detail: `${specialist.title} works this source, but at fatigue ${game.specialistFatigue} of 6 the bonus no longer applies. Rest comes from finishing the operation.` }
-      : { label: "Specialist", value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },
-    { label: "Map focus", value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: `The system selected on the infrastructure map is one this source examines${focusNode ? `: ${focusNode.label}.` : "."}` },
-    { label: procedureScopes[plan.scope].title, value: procedureScopes[plan.scope].modifier, detail: procedureScopes[plan.scope].description },
-    { label: procedureIntensities[plan.intensity].title, value: procedureIntensities[plan.intensity].modifier, detail: procedureIntensities[plan.intensity].description },
-    { label: "Expert mode", value: game.mode === "expert" ? -1 : 0, detail: "Expert operations resolve every procedure one harder." },
+      ? { label: msg("engine.part.specialist"), value: 0, suppressed: true, detail: `${specialist.title} works this source, but at fatigue ${game.specialistFatigue} of 6 the bonus no longer applies. Rest comes from finishing the operation.` }
+      : { label: msg("engine.part.specialist"), value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },
+    { label: msg("engine.part.mapFocus"), value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: `The system selected on the infrastructure map is one this source examines${focusNode ? `: ${focusNode.label}.` : "."}` },
+    { label: ref(`procedureScopes.${plan.scope}.title`), value: procedureScopes[plan.scope].modifier, detail: procedureScopes[plan.scope].description },
+    { label: ref(`procedureIntensities.${plan.intensity}.title`), value: procedureIntensities[plan.intensity].modifier, detail: procedureIntensities[plan.intensity].description },
+    { label: msg("engine.part.expert"), value: game.mode === "expert" ? -1 : 0, detail: "Expert operations resolve every procedure one harder." },
   ];
   return { parts, total: parts.reduce((sum, part) => sum + part.value, 0) };
 }
@@ -254,7 +273,7 @@ export function breached(g: Game) {
 
 // One narrative for every failed roll the grace did not absorb. A failed check
 // settles nothing about the reading, and the words must not say otherwise.
-export const FAILED_CHECK = "The action did not produce reliable evidence. A failed check settles nothing about the working hypothesis either way; the team reorients.";
+export const FAILED_CHECK: Message = msg("engine.turn.failed");
 
 export function settle(g: Game, status: GameStatus): Game {
   g.status = status;

@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, decisionRollShift, describePart, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game, meterEffect, rollEffect } from "@/lib/advanced-game";
+import { attacks, decisionRollShift, describePart, injectCard, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game, meterEffect, rollEffect } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { Glossed } from "@/components/game/glossed";
 import { EffectList } from "@/components/game/effect-list";
 import { useMessages, type Translate } from "@/hooks/use-messages";
 import { captainReportDialogMessages } from "@/lib/i18n/en/captain-report-dialog";
-import { register, type MessageKey } from "@/lib/i18n";
+import { register, type Locale, type MessageKey } from "@/lib/i18n";
+import { legacyText, say as sayIn } from "@/lib/i18n/message";
 
 register(captainReportDialogMessages);
 
 // The business impact an inject added to the turn's movement, so a protected
 // failed check beside "Business impact +16 worse" says where the rest came from.
 function injectImpact(report: Game["turns"][number]) {
-  return report.inject?.effect === "penalty" ? 6 : report.inject?.effect === "pressure" ? 8 : report.inject?.effect === "relief" ? -8 : report.inject?.effect === "adjust" ? report.inject.impact ?? 0 : 0;
+  const card = report.inject ? injectCard(report.inject.id) : null;
+  return card?.effect === "penalty" ? 6 : card?.effect === "pressure" ? 8 : card?.effect === "relief" ? -8 : card?.effect === "adjust" ? card.impact ?? 0 : 0;
 }
 
 // The pressure line names the options as their buttons do: "acting fits best"
@@ -26,13 +28,13 @@ function optionTitle(options: { id: DecisionChoice; title: string }[], id: Decis
 
 // The report names the roll's parts as the action sheet named them. It once said
 // "own source +1, other parts +5" beside a sheet that listed all four.
-function rollParts(t: Translate, report: Game["turns"][number]) {
-  if (report.parts?.length) return ` (${report.parts.map(part => describePart(part.label, part.value)).join("; ")})`;
+function rollParts(t: Translate, report: Game["turns"][number], locale: Locale) {
+  if (report.parts?.length) return ` (${report.parts.map(part => sayIn(describePart(part), locale)).join("; ")})`;
   return report.planningBonus > 0 || report.specialistBonus > 0 ? ` (${[report.planningBonus > 0 ? t("captainReportDialog.ownSource", { planningBonus: report.planningBonus }) : "", report.specialistBonus > 0 ? t("captainReportDialog.specialist", { specialistBonus: report.specialistBonus }) : "", report.modifier - report.planningBonus - report.specialistBonus ? t("captainReportDialog.otherParts", { change: `${report.modifier - report.planningBonus - report.specialistBonus > 0 ? "+" : "−"}${Math.abs(report.modifier - report.planningBonus - report.specialistBonus)}` }) : ""].filter(Boolean).join(", ")})` : "";
 }
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say, locale } = useMessages();
   const { report, game, ended, config, dismissReport, decide } = session;
   // The turn that ends an operation is headed by how it ended: "Evidence
   // confirmed." with a green tick sat above "OPERATION LOST".
@@ -48,7 +50,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   const settled = !!report && !!game && report.number === game.turns.length && report.success && (!report.revealed || report.windfall) && !report.injectReveal && !!game.hypothesis;
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
-  const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">{rich("captainReportDialog.injectSpanSpan", { reason: report.inject.reason }, { span: chunk => <span className="separator">{chunk}</span> })}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>;
+  const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">{rich("captainReportDialog.injectSpanSpan", { reason: say(report.inject.reason) }, { span: chunk => <span className="separator">{chunk}</span> })}</span><h3>{injectCard(report.inject.id).title}</h3><p>{injectCard(report.inject.id).text}</p><strong>{report.inject.effectLabel ? say(report.inject.effectLabel) : injectCard(report.inject.id).effectLabel}</strong></div>;
 
   return (
     <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
@@ -90,7 +92,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             <section className="report-summary" aria-label={t("captainReportDialog.procedureResult")}>
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
-                <div><span>{t("captainReportDialog.rolledOnThe", { raw: report.raw })}{report.modifier >= 0 ? "+" : "−"} {t("captainReportDialog.modifier2", { modifier: Math.abs(report.modifier), rollParts: rollParts(t, report) })}</span><strong>{report.total} <span>{t("captainReportDialog.needed2", { threshold: config.threshold })}{report.success ? t("captainReportDialog.aSuccess") : t("captainReportDialog.aFailure")}</span></strong></div>
+                <div><span>{t("captainReportDialog.rolledOnThe", { raw: report.raw })}{report.modifier >= 0 ? "+" : "−"} {t("captainReportDialog.modifier2", { modifier: Math.abs(report.modifier), rollParts: rollParts(t, report, locale) })}</span><strong>{report.total} <span>{t("captainReportDialog.needed2", { threshold: config.threshold })}{report.success ? t("captainReportDialog.aSuccess") : t("captainReportDialog.aFailure")}</span></strong></div>
               </div>
               {/* The plan and the turn's movement are told apart: a playtest read
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
@@ -103,7 +105,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   : report.planningBonus > 0
                     ? t("captainReportDialog.theCheckFailed2", { change: `${report.objectiveChange >= 0 ? "+" : "−"}${Math.abs(report.objectiveChange)}` })
                     : t("captainReportDialog.theCheckFailed")}{injectImpact(report) ? t("captainReportDialog.theInjectBelow", { change: `${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))}` }) : ""}{report.adversaryEvent ? t("captainReportDialog.theSituationAlso") : ""}</p></div>
-              <p className="report-narrative"><Glossed text={report.narrative} /></p>
+              <p className="report-narrative"><Glossed text={say(report.narrative)} /></p>
               {report.revealed && <div className="discovery"><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short}: {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>{t("captainReportDialog.onTheRoute", { title: hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase() })}</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">{t("captainReportDialog.yourReadingWas2", { title: hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase() })}</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">{t("captainReportDialog.thisIsStage2", { stage: attacks.find(attack => attack.id === report.revealed)!.stage + 1, stage2: attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1 })}</small>}</div></div>}
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
@@ -122,13 +124,13 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               {!decision && game.decisions.filter(item => item.stage === report.revealed || item.stage === report.injectReveal).map(item => (
                 <div key={item.stage} className="decision-recorded" role="status">
                   <span className="eyebrow">{t("captainReportDialog.responseRecorded")}</span>
-                  <strong>{item.title}</strong>
-                  <p>{item.effect}</p>
-                  <EffectList items={[meterEffect(game, "impact", item.impactChange), meterEffect(game, "continuity", item.continuityChange), meterEffect(game, "sector", item.sectorChange), meterEffect(game, "objective", item.objectiveChange), report.number === game.turns.length && game.nextModifierSource?.includes("Evidence decision") && { kind: "roll", which: "next", amount: game.nextModifier, cap: null, carried: game.nextModifierSource.includes(";") }]} />
+                  <strong>{say(item.title)}</strong>
+                  <p>{say(item.effect)}</p>
+                  <EffectList items={[meterEffect(game, "impact", item.impactChange), meterEffect(game, "continuity", item.continuityChange), meterEffect(game, "sector", item.sectorChange), meterEffect(game, "objective", item.objectiveChange), report.number === game.turns.length && game.nextModifierSources.some(item => ("key" in item.source && item.source.key === "engine.source.decision") || !!legacyText(item.source)?.startsWith("Evidence decision")) && { kind: "roll", which: "next", amount: game.nextModifier, cap: null, carried: game.nextModifierSources.length > 1 }]} />
                   <p>{t("captainReportDialog.howWellIt")}</p>
                 </div>
               ))}
-              {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">{t("captainReportDialog.situationEscalates")}</span><p>{report.adversaryEvent}</p></div></div>}
+              {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">{t("captainReportDialog.situationEscalates")}</span><p>{say(report.adversaryEvent)}</p></div></div>}
               {/* With a decision waiting, the inject joins the result: beside four
                   options it pushed the last one under the fold and left this
                   column half empty. */}

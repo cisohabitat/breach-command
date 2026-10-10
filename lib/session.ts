@@ -1,5 +1,7 @@
 import { attacks, scenarios, difficulties, infrastructureTopologies, adversaryProfiles, adversaryObjectives, commandEvents, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
-import type { NodePosture } from "./advanced-game";
+import type { CarriedSource, NodePosture } from "./advanced-game";
+import { injects } from "./engine/content.ts";
+import { isMessage, legacy, msg, type Message } from "./i18n/message.ts";
 
 export const SESSION_KEY = "breach-command.session";
 // Where a save this build cannot read is moved before anything replaces it, so a
@@ -7,7 +9,30 @@ export const SESSION_KEY = "breach-command.session";
 // can read it moves it back and offers it for resume.
 export const PARKED_SESSION_KEY = "breach-command.session.parked";
 // 18: the Weekly operation mode, which an older build would read as damaged.
-export const SESSION_VERSION = 18;
+// 19: what the engine wrote for the player is stored as messages and content
+// references (lib/i18n/message.ts), not English, so a save reads in any
+// language; an older save's sentences are kept as they were, verbatim.
+export const SESSION_VERSION = 19;
+
+// A stored sentence: a message from version 19, or an older save's English,
+// kept as the player read it.
+const text = (value: unknown, fallback: Message): Message => isMessage(value) ? value : typeof value === "string" ? legacy(value.slice(0, 2000)) : fallback;
+const optionalText = (value: unknown): Message | null => value === null || value === undefined ? null : text(value, legacy(""));
+// Before version 19 the carried change to the next roll was one string, its
+// sources joined: "Monitored Access boundary +2; Inject: Hard going −2,
+// together". Each source, with its share, is read back out of it.
+const JOINED = /(, together|: [+−]\d+, capped at)$/;
+function carriedFrom(label: string, value: number): CarriedSource[] {
+  if (!JOINED.test(label)) return [{ source: legacy(label), change: value }];
+  return label.replace(JOINED, "").split("; ").map(entry => {
+    const share = entry.match(/^(.*) ([+−])(\d+)$/);
+    return share ? { source: legacy(share[1]), change: (share[2] === "−" ? -1 : 1) * Number(share[3]) } : { source: legacy(entry), change: 0 };
+  });
+}
+function sourcesOf(game: { nextModifierSources?: unknown; nextModifierSource?: unknown; nextModifier?: unknown }): CarriedSource[] {
+  if (Array.isArray(game.nextModifierSources)) return game.nextModifierSources.filter((item: unknown): item is CarriedSource => !!item && isMessage((item as CarriedSource).source) && Number.isFinite((item as CarriedSource).change)).slice(0, 8);
+  return typeof game.nextModifierSource === "string" && game.nextModifierSource.length <= 400 ? carriedFrom(game.nextModifierSource, Number(game.nextModifier) || 0) : [];
+}
 
 export type SavedSession = {
   version: number;
@@ -50,6 +75,15 @@ export function sessionFromNewerBuild(raw: string): boolean {
 }
 
 const isKnown = (table: object, key: unknown) => typeof key === "string" && Object.hasOwn(table, key);
+
+function injectOf(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const card = value as { id?: unknown; reason?: unknown; effectLabel?: unknown };
+  const content = injects.find(item => item.id === card.id);
+  if (!content) return null;
+  const label = typeof card.effectLabel === "string" && card.effectLabel !== content.effectLabel ? legacy(card.effectLabel) : isMessage(card.effectLabel) ? card.effectLabel : undefined;
+  return { id: content.id, reason: text(card.reason, legacy("")), ...(label ? { effectLabel: label } : {}) };
+}
 
 export function parseSession(raw: string): SavedSession | null {
   try {
@@ -100,7 +134,8 @@ export function parseSession(raw: string): SavedSession | null {
       failures: bounded(game.failures, 0, 0, 3),
       nextModifier: bounded(game.nextModifier, 0, -5, 5),
       // Version 15 names what set the modifier; older saves carry none.
-      nextModifierSource: typeof game.nextModifierSource === "string" && game.nextModifierSource.length <= 400 ? game.nextModifierSource : null,
+      nextModifierSources: sourcesOf(game),
+      adversaryEvent: optionalText(game.adversaryEvent),
       adversaryTempo: bounded(game.adversaryTempo, 0, 0, 3),
       responseScore: bounded(game.responseScore, 0, 0, 100),
       established: Array.isArray(game.established) ? game.established : [],
@@ -115,7 +150,7 @@ export function parseSession(raw: string): SavedSession | null {
       adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
       pendingDecision: finished ? null : game.pendingDecision ?? null,
       pendingCommand: finished ? null : game.pendingCommand ?? null,
-      commandHistory: Array.isArray(game.commandHistory) ? game.commandHistory : [],
+      commandHistory: Array.isArray(game.commandHistory) ? game.commandHistory.map(record => ({ ...record, title: text(record.title, legacy("")), effect: text(record.effect, legacy("")) })) : [],
       mode: game.mode ?? "campaign",
       turnLimit: Number.isFinite(game.turnLimit) ? game.turnLimit : difficulties[game.difficulty].maxTurns,
       specialist: game.specialist ?? "hunter",
@@ -126,30 +161,43 @@ export function parseSession(raw: string): SavedSession | null {
       objectiveProgress: bounded(game.objectiveProgress, 5),
       campaignTier: Number.isFinite(game.campaignTier) ? game.campaignTier : 0,
       focusedNode,
-      evidence: Array.isArray(game.evidence) ? game.evidence : [],
+      evidence: Array.isArray(game.evidence) ? game.evidence.map(item => ({ ...item, title: text(item.title, legacy("")), source: text(item.source, legacy("")), system: text(item.system, legacy("")), detail: text(item.detail, legacy("")) })) : [],
       correlations: Array.isArray(game.correlations) ? game.correlations.map(record => ({
         ...record,
         assessment: record.assessment ?? (record.valid ? "causal" : "coincidental"),
         correct: record.correct ?? true,
+        finding: text(record.finding, legacy("")),
       })) : [],
       pendingSetPiece: finished ? null : game.pendingSetPiece ?? null,
-      setPieceHistory: Array.isArray(game.setPieceHistory) ? game.setPieceHistory : [],
+      setPieceHistory: Array.isArray(game.setPieceHistory) ? game.setPieceHistory.map(record => ({ ...record, title: text(record.title, legacy("")), effect: text(record.effect, legacy("")) })) : [],
       campaignDoctrine: game.campaignDoctrine ?? "balanced",
       campaignRoute: game.campaignRoute ?? "common-ground",
-      variant: game.variant ?? { id: `${game.scenario}-0`, title: "Standard operating picture", briefing: "The incident opens without an additional campaign complication.", modifier: "No starting modifier.", impact: 0, continuity: 0, objective: 0 },
+      variant: game.variant
+        ? { ...game.variant, title: text(game.variant.title, msg("engine.variant.standardTitle")), briefing: text(game.variant.briefing, msg("engine.variant.standardBriefing")), modifier: text(game.variant.modifier, msg("engine.variant.standardModifier")) }
+        : { id: `${game.scenario}-0`, title: msg("engine.variant.standardTitle"), briefing: msg("engine.variant.standardBriefing"), modifier: msg("engine.variant.standardModifier"), impact: 0, continuity: 0, objective: 0 },
       caseTheory: game.caseTheory ?? null,
       caseTheoryHistory: Array.isArray(game.caseTheoryHistory) ? game.caseTheoryHistory : [],
       nodePosture: Object.fromEntries(nodeIds.length ? nodeIds.map(id => [id, knownPosture.includes(storedPosture[id]) ? storedPosture[id] : "normal"]) : [["boundary", storedPosture.boundary ?? "normal"]]),
       mapActionsRemaining: Number.isFinite(game.mapActionsRemaining) ? game.mapActionsRemaining : 3,
       graceRemaining: Number.isFinite(game.graceRemaining) ? Math.max(0, Math.min(1, Number(game.graceRemaining))) : 0,
-      mapHistory: Array.isArray(game.mapHistory) ? game.mapHistory : [],
+      mapHistory: Array.isArray(game.mapHistory) ? game.mapHistory.map(record => ({ ...record, effect: text(record.effect, legacy("")) })) : [],
       turns: game.turns.map(turn => ({
         ...turn,
         plan: turn.plan ?? { scope: "focused", intensity: "balanced" },
         specialistBonus: Number.isFinite(turn.specialistBonus) ? turn.specialistBonus : 0,
         // Version 16 names every part of the roll; an older turn has none and the
         // report falls back to its own-source and specialist summary.
-        parts: Array.isArray(turn.parts) ? turn.parts.filter((part: unknown): part is { label: string; value: number } => !!part && typeof (part as { label?: unknown }).label === "string" && Number.isFinite((part as { value?: unknown }).value)).slice(0, 12) : [],
+        // Version 19 stores a part's label as a message, and a carried part its
+        // sources; an older joined label is read back into them.
+        parts: Array.isArray(turn.parts) ? turn.parts.filter((part: unknown) => !!part && (typeof (part as { label?: unknown }).label === "string" || isMessage((part as { label?: unknown }).label)) && Number.isFinite((part as { value?: unknown }).value)).slice(0, 12).map((part: { label: unknown; value: number; sources?: unknown }) => {
+          if (typeof part.label !== "string") return { label: part.label as Message, value: part.value, ...(Array.isArray(part.sources) ? { sources: sourcesOf({ nextModifierSources: part.sources }) } : {}) };
+          return JOINED.test(part.label) ? { label: legacy(part.label), value: part.value, sources: carriedFrom(part.label, part.value) } : { label: legacy(part.label), value: part.value };
+        }) : [],
+        narrative: text(turn.narrative, legacy("")),
+        adversaryEvent: optionalText(turn.adversaryEvent),
+        // Before version 19 a turn kept a copy of the inject card; now its id,
+        // and what the card did when that depended on the game.
+        inject: injectOf(turn.inject),
         hypothesisTarget: typeof turn.hypothesisTarget === "string" ? turn.hypothesisTarget : null,
         hypothesisMatched: turn.hypothesisMatched === true,
         discriminating: turn.discriminating === true,
@@ -159,9 +207,12 @@ export function parseSession(raw: string): SavedSession | null {
       })),
       decisions: Array.isArray(game.decisions) ? game.decisions.map(decision => ({
         ...decision,
-        adaptationReason: decision.adaptationReason ?? null,
+        title: text(decision.title, legacy("")),
+        effect: text(decision.effect, legacy("")),
+        counterfactual: text(decision.counterfactual, legacy("")),
+        adaptationReason: optionalText(decision.adaptationReason),
         quality: Number.isFinite(decision.quality) ? decision.quality : 3,
-        rationale: decision.rationale ?? "This decision was restored from an earlier saved session.",
+        rationale: text(decision.rationale, legacy("This decision was restored from an earlier saved session.")),
         impactChange: Number.isFinite(decision.impactChange) ? decision.impactChange : 0,
         continuityChange: Number.isFinite(decision.continuityChange) ? decision.continuityChange : 0,
         tempoChange: Number.isFinite(decision.tempoChange) ? decision.tempoChange : 0,

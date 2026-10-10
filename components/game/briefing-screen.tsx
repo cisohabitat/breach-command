@@ -18,7 +18,7 @@ register(briefingScreenMessages);
 const stageQuestions: readonly MessageKey[] = ["briefingScreen.howTheyGot", "briefingScreen.whereTheyWent", "briefingScreen.howTheyStay", "briefingScreen.whatLeavesAnd"];
 
 export function BriefingScreen({ session }: { session: GameSession }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say } = useMessages();
   const {
     campaign, currentAct, currentStory, currentRoute, finalEnding,
     scenarioChoice, setScenarioChoice, activeScenario, previewVariant,
@@ -110,7 +110,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           const nextRung = ladderRungs.find(rung => !climbed.includes(rung));
           return <p className="slip-ladder">{t("briefingScreen.masteryLadderOf", { climbed: climbed.length, ladderRungs: ladderRungs.length })}{climbed.length ? `: ${climbed.map(rung => lowerFirst(rung.title)).join(", ")}` : ""}.{nextRung ? t("briefingScreen.next", { nextRungDetail: lowerFirst(nextRung.detail) }) : t("briefingScreen.everyRungClimbed")}</p>;
         })()}
-        {previewVariant && <div className="variant-brief"><p className="variant-line"><span className="variant-label">{t("briefingScreen.amended")}</span> <strong>{previewVariant.title}.</strong> <small>{previewVariant.modifier}</small></p><p>{previewVariant.briefing}</p></div>}
+        {previewVariant && <div className="variant-brief"><p className="variant-line"><span className="variant-label">{t("briefingScreen.amended")}</span> <strong>{say(previewVariant.title)}.</strong> <small>{say(previewVariant.modifier)}</small></p><p>{say(previewVariant.briefing)}</p></div>}
         <div className="mission-selector" aria-label={t("briefingScreen.selectIncident")}>
           {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={campaign.completed.includes(index) ? t("briefingScreen.completedMastery", { title: scenario.title, count: campaign.mastery[String(index)] ?? 0 }) : scenario.title} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1)}</span>{campaign.completed.includes(index) && <small aria-hidden="true">{"|".repeat(campaign.mastery[String(index)] ?? 0)}</small>}</button>)}
         </div>

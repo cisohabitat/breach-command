@@ -11,7 +11,7 @@ register(facilitatorSheetMessages);
 // questions to ask. It spoils the chain, so it is never on screen; the review
 // prints it on request, with that warning beside the button.
 export function FacilitatorSheet({ game }: { game: Game }) {
-  const { t } = useMessages();
+  const { t, say } = useMessages();
   const scenario = scenarios[game.scenario];
   const outcome = getOutcome(game);
   const ledger = getHypothesisLedger(game);
@@ -40,9 +40,9 @@ export function FacilitatorSheet({ game }: { game: Game }) {
       {(game.decisions.length > 0 || game.commandHistory.length > 0 || game.setPieceHistory.length > 0) && <>
         <h3>{t("facilitatorSheet.decisions")}</h3>
         <ul>
-          {game.decisions.map((decision, index) => <li key={`d${index}`}>{decision.title}: {decision.choice}{t("facilitatorSheet.gradedOf5", { quality: decision.quality })}</li>)}
-          {game.setPieceHistory.map((record, index) => <li key={`s${index}`}>{t("facilitatorSheet.sectorDecisionGraded", { recordTitle: record.title, quality: record.quality })}</li>)}
-          {game.commandHistory.map((record, index) => <li key={`c${index}`}>{t("facilitatorSheet.commandEventGraded", { recordTitle: record.title, quality: record.quality })}</li>)}
+          {game.decisions.map((decision, index) => <li key={`d${index}`}>{say(decision.title)}: {decision.choice}{t("facilitatorSheet.gradedOf5", { quality: decision.quality })}</li>)}
+          {game.setPieceHistory.map((record, index) => <li key={`s${index}`}>{t("facilitatorSheet.sectorDecisionGraded", { recordTitle: say(record.title), quality: record.quality })}</li>)}
+          {game.commandHistory.map((record, index) => <li key={`c${index}`}>{t("facilitatorSheet.commandEventGraded", { recordTitle: say(record.title), quality: record.quality })}</li>)}
         </ul>
       </>}
       <h3>{t("debriefDialog.whatMightHave")}</h3>

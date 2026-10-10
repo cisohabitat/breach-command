@@ -1,4 +1,5 @@
 import { SECTOR_ALERT_AT, attacks, availableIn, commandEvents, getHypothesisStanding, getMapActionEffect, getSectorAlert, sectorSystems, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, setPieceById, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
+import { say } from "./i18n/message.ts";
 
 export type BotAction =
   | { type: "decision"; choice: DecisionChoice; reason: string }
@@ -107,7 +108,7 @@ function nextCorrelation(game: Game): BotAction | null {
         type: "correlate",
         evidence: [first.id, second.id],
         assessment: causal ? "causal" : "coincidental",
-        reason: `Comparing ${first.title.toLowerCase()} with ${second.title.toLowerCase()} before the next action.`,
+        reason: `Comparing ${say(first.title).toLowerCase()} with ${say(second.title).toLowerCase()} before the next action.`,
       };
     }
   }

@@ -16,7 +16,7 @@ import { register } from "@/lib/i18n";
 register(commandWorkspaceMessages);
 
 export function CommandWorkspace({ session }: { session: GameSession }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say } = useMessages();
   const {
     game, activeWorkspace, ended, tutorial,
     setActiveWorkspace, respond, command, sectorDecision,
@@ -71,7 +71,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
         <div className="section-heading"><h2 id="situation-heading">{t("briefingWorkspace.situation")}</h2></div>
         <div className="sit-entry compact">
           <span className="sit-label">{rich("commandWorkspace.campaignRouteSmall", { campaignRoutesTitle: campaignRoutes[game.campaignRoute].title }, { small: chunk => <small>{chunk}</small> })}</span>
-          <div className="sit-body"><p><strong>{game.variant.title}.</strong> {game.variant.briefing}</p><small>{game.variant.modifier}</small></div>
+          <div className="sit-body"><p><strong>{say(game.variant.title)}.</strong> {say(game.variant.briefing)}</p><small>{say(game.variant.modifier)}</small></div>
         </div>
         <SectorBoard game={game} />
         {activeWorkspace === "command" && <SectorSituation game={game} />}

@@ -1,0 +1,817 @@
+{
+ "setup": {
+  "seed": 1,
+  "scenario": 2,
+  "difficulty": "operational",
+  "mode": "campaign",
+  "campaignTier": 1,
+  "readiness": 50,
+  "leadershipTrust": 50,
+  "unresolvedThreads": 1,
+  "campaignRoute": "watchtower",
+  "randomSeed": 1
+ },
+ "session": {
+  "version": 18,
+  "savedAt": "2026-10-10T03:01:35.328Z",
+  "game": {
+   "scenario": 2,
+   "difficulty": "operational",
+   "chain": [
+    "vendor",
+    "pivot",
+    "githook",
+    "beacon"
+   ],
+   "revealed": [
+    "vendor",
+    "githook",
+    "pivot",
+    "beacon"
+   ],
+   "established": [
+    "endpoint",
+    "hunt",
+    "email",
+    "server",
+    "network"
+   ],
+   "lastUsed": {
+    "network": 2,
+    "server": 7,
+    "intel": 3,
+    "hunt": 5,
+    "endpoint": 9,
+    "forensic": 6,
+    "email": 8
+   },
+   "turns": [
+    {
+     "number": 1,
+     "procedure": "network",
+     "raw": 7,
+     "modifier": 7,
+     "planningBonus": 1,
+     "total": 14,
+     "success": true,
+     "revealed": "vendor",
+     "narrative": "A vendor update path is used to introduce unauthorised code outside any approved change. Found by network analysis while map focus was on Maintenance gateway.",
+     "inject": null,
+     "injectReveal": null,
+     "impactChange": 1,
+     "continuityChange": 0,
+     "adversaryEvent": null,
+     "hypothesis": "application",
+     "plan": {
+      "scope": "focused",
+      "intensity": "exhaustive"
+     },
+     "specialistBonus": 1,
+     "parts": [
+      {
+       "label": "Established",
+       "value": 2
+      },
+      {
+       "label": "Own source",
+       "value": 1
+      },
+      {
+       "label": "Specialist",
+       "value": 1
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      },
+      {
+       "label": "Exhaustive",
+       "value": 2
+      }
+     ],
+     "sectorChange": 1,
+     "objectiveChange": 1,
+     "hypothesisTarget": "vendor",
+     "hypothesisMatched": true,
+     "discriminating": true,
+     "windfall": false
+    },
+    {
+     "number": 2,
+     "procedure": "server",
+     "raw": 1,
+     "modifier": 9,
+     "planningBonus": 1,
+     "total": 10,
+     "success": false,
+     "revealed": null,
+     "narrative": "The action did not produce reliable evidence. A failed check settles nothing about the working hypothesis either way; the team reorients.",
+     "inject": {
+      "id": "rumour",
+      "valence": "bad",
+      "title": "A rumour spreads",
+      "text": "A staff post about “the hack” is shared outside the organisation.",
+      "effect": "pressure",
+      "effectLabel": "Business pressure rises.",
+      "reason": "Natural 1"
+     },
+     "injectReveal": null,
+     "impactChange": 23,
+     "continuityChange": -1,
+     "adversaryEvent": null,
+     "hypothesis": "application",
+     "plan": {
+      "scope": "focused",
+      "intensity": "exhaustive"
+     },
+     "specialistBonus": 0,
+     "parts": [
+      {
+       "label": "Established",
+       "value": 2
+      },
+      {
+       "label": "Own source",
+       "value": 1
+      },
+      {
+       "label": "Evidence decision: Attribute the access pattern",
+       "value": 3
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      },
+      {
+       "label": "Exhaustive",
+       "value": 2
+      }
+     ],
+     "sectorChange": -7,
+     "objectiveChange": 7,
+     "hypothesisTarget": "pivot",
+     "hypothesisMatched": false,
+     "discriminating": false,
+     "windfall": false
+    },
+    {
+     "number": 3,
+     "procedure": "intel",
+     "raw": 14,
+     "modifier": 5,
+     "planningBonus": 1,
+     "total": 19,
+     "success": true,
+     "revealed": "githook",
+     "narrative": "A repository hook executes attacker code on the build server at every commit. Found by intelligence correlation while map focus was on Plant configuration.",
+     "inject": null,
+     "injectReveal": null,
+     "impactChange": 6,
+     "continuityChange": -4,
+     "adversaryEvent": "A maintenance job is delayed while access is verified.",
+     "hypothesis": "application",
+     "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+     },
+     "specialistBonus": 1,
+     "parts": [
+      {
+       "label": "Own source",
+       "value": 1
+      },
+      {
+       "label": "Monitored Supplier identity",
+       "value": 2
+      },
+      {
+       "label": "Specialist",
+       "value": 1
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      }
+     ],
+     "sectorChange": -2,
+     "objectiveChange": 4,
+     "hypothesisTarget": "pivot",
+     "hypothesisMatched": false,
+     "discriminating": false,
+     "windfall": true
+    },
+    {
+     "number": 4,
+     "procedure": "hunt",
+     "raw": 10,
+     "modifier": 9,
+     "planningBonus": 1,
+     "total": 19,
+     "success": true,
+     "revealed": null,
+     "narrative": "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.",
+     "inject": null,
+     "injectReveal": null,
+     "impactChange": 8,
+     "continuityChange": 0,
+     "adversaryEvent": null,
+     "hypothesis": "endpoint",
+     "plan": {
+      "scope": "focused",
+      "intensity": "exhaustive"
+     },
+     "specialistBonus": 1,
+     "parts": [
+      {
+       "label": "Established",
+       "value": 2
+      },
+      {
+       "label": "Own source",
+       "value": 1
+      },
+      {
+       "label": "Evidence decision: Remove the foothold −1; Correct comparison of findings +3, together",
+       "value": 2
+      },
+      {
+       "label": "Specialist",
+       "value": 1
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      },
+      {
+       "label": "Exhaustive",
+       "value": 2
+      }
+     ],
+     "sectorChange": -6,
+     "objectiveChange": 10,
+     "hypothesisTarget": "pivot",
+     "hypothesisMatched": true,
+     "discriminating": false,
+     "windfall": false
+    },
+    {
+     "number": 5,
+     "procedure": "endpoint",
+     "raw": 5,
+     "modifier": 6,
+     "planningBonus": 1,
+     "total": 11,
+     "success": true,
+     "revealed": "pivot",
+     "narrative": "A local tunnel carries administrative traffic into a segment the host does not normally reach. Found by endpoint analysis while map focus was on Maintenance jump host.",
+     "inject": null,
+     "injectReveal": null,
+     "impactChange": 1,
+     "continuityChange": 0,
+     "adversaryEvent": null,
+     "hypothesis": "endpoint",
+     "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+     },
+     "specialistBonus": 0,
+     "parts": [
+      {
+       "label": "Established",
+       "value": 2
+      },
+      {
+       "label": "Own source",
+       "value": 1
+      },
+      {
+       "label": "Monitored Maintenance gateway",
+       "value": 2
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      }
+     ],
+     "sectorChange": -3,
+     "objectiveChange": 7,
+     "hypothesisTarget": "pivot",
+     "hypothesisMatched": true,
+     "discriminating": true,
+     "windfall": false
+    },
+    {
+     "number": 6,
+     "procedure": "forensic",
+     "raw": 13,
+     "modifier": 3,
+     "planningBonus": 1,
+     "total": 16,
+     "success": true,
+     "revealed": null,
+     "narrative": "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.",
+     "inject": null,
+     "injectReveal": null,
+     "impactChange": 10,
+     "continuityChange": -5,
+     "adversaryEvent": "The jump host can no longer be treated as a trusted administration point.",
+     "hypothesis": "endpoint",
+     "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+     },
+     "specialistBonus": 0,
+     "parts": [
+      {
+       "label": "Own source",
+       "value": 1
+      },
+      {
+       "label": "Evidence decision: Segment the movement path −1; Correct comparison of findings +2, together",
+       "value": 1
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      }
+     ],
+     "sectorChange": -7,
+     "objectiveChange": 13,
+     "hypothesisTarget": "beacon",
+     "hypothesisMatched": true,
+     "discriminating": false,
+     "windfall": false
+    },
+    {
+     "number": 7,
+     "procedure": "server",
+     "raw": 1,
+     "modifier": 6,
+     "planningBonus": 1,
+     "total": 7,
+     "success": false,
+     "revealed": null,
+     "narrative": "The action did not produce reliable evidence. A failed check settles nothing about the working hypothesis either way; the team reorients.",
+     "inject": {
+      "id": "absent",
+      "valence": "bad",
+      "title": "A key engineer is off sick",
+      "text": "The engineer who knows the core system best is unavailable today.",
+      "effect": "adjust",
+      "shift": -2,
+      "impact": 0,
+      "continuity": 0,
+      "tempo": 0,
+      "effectLabel": "The next action is harder.",
+      "reason": "Natural 1"
+     },
+     "injectReveal": null,
+     "impactChange": 10,
+     "continuityChange": -1,
+     "adversaryEvent": null,
+     "hypothesis": "endpoint",
+     "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+     },
+     "specialistBonus": 0,
+     "parts": [
+      {
+       "label": "Established",
+       "value": 2
+      },
+      {
+       "label": "Own source",
+       "value": 1
+      },
+      {
+       "label": "Command event: Engage the outside team",
+       "value": 2
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      }
+     ],
+     "sectorChange": -9,
+     "objectiveChange": 13,
+     "hypothesisTarget": "beacon",
+     "hypothesisMatched": true,
+     "discriminating": false,
+     "windfall": false
+    },
+    {
+     "number": 8,
+     "procedure": "email",
+     "raw": 10,
+     "modifier": 1,
+     "planningBonus": 0,
+     "total": 11,
+     "success": true,
+     "revealed": null,
+     "narrative": "The procedure completed, but the evidence does not support an undiscovered stage. The working hypothesis remains unconfirmed.",
+     "inject": null,
+     "injectReveal": null,
+     "impactChange": 3,
+     "continuityChange": 0,
+     "adversaryEvent": null,
+     "hypothesis": "endpoint",
+     "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+     },
+     "specialistBonus": 0,
+     "parts": [
+      {
+       "label": "Established",
+       "value": 2
+      },
+      {
+       "label": "Inject: A key engineer is off sick",
+       "value": -2
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      }
+     ],
+     "sectorChange": -7,
+     "objectiveChange": 13,
+     "hypothesisTarget": "beacon",
+     "hypothesisMatched": true,
+     "discriminating": false,
+     "windfall": false
+    },
+    {
+     "number": 9,
+     "procedure": "endpoint",
+     "raw": 8,
+     "modifier": 7,
+     "planningBonus": 1,
+     "total": 15,
+     "success": true,
+     "revealed": "beacon",
+     "narrative": "A program calls out to new external infrastructure at regular intervals to collect commands. Found by endpoint analysis while map focus was on Maintenance jump host.",
+     "inject": null,
+     "injectReveal": null,
+     "impactChange": 1,
+     "continuityChange": 0,
+     "adversaryEvent": null,
+     "hypothesis": "endpoint",
+     "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+     },
+     "specialistBonus": 0,
+     "parts": [
+      {
+       "label": "Established",
+       "value": 2
+      },
+      {
+       "label": "Own source",
+       "value": 1
+      },
+      {
+       "label": "Correct comparison of findings",
+       "value": 3
+      },
+      {
+       "label": "Map focus",
+       "value": 1
+      }
+     ],
+     "sectorChange": -3,
+     "objectiveChange": 7,
+     "hypothesisTarget": "beacon",
+     "hypothesisMatched": true,
+     "discriminating": true,
+     "windfall": false
+    }
+   ],
+   "failures": 0,
+   "nextModifier": -1,
+   "nextModifierSource": "Evidence decision: Block the channel now",
+   "injectDeck": [
+    3,
+    2,
+    5,
+    7,
+    17,
+    12,
+    1,
+    8,
+    18,
+    16,
+    19,
+    4,
+    9,
+    14,
+    10,
+    0,
+    11,
+    6
+   ],
+   "status": "won",
+   "impact": 0,
+   "continuity": 56,
+   "pendingDecision": null,
+   "decisions": [
+    {
+     "stage": "vendor",
+     "choice": "attribute",
+     "title": "Attribute the access pattern",
+     "effect": "Attribution depth improved before any change to the environment.",
+     "counterfactual": "Trace the access path would have gathered telemetry faster, but with less attribution depth.",
+     "adaptedFrom": null,
+     "adaptedTo": null,
+     "adaptationReason": null,
+     "quality": 4,
+     "rationale": "Attribution deepened the analytical picture while the actor stayed covert.",
+     "impactChange": 3,
+     "continuityChange": 0,
+     "tempoChange": 0,
+     "sectorChange": -1,
+     "objectiveChange": -4
+    },
+    {
+     "stage": "githook",
+     "choice": "act",
+     "title": "Remove the foothold",
+     "effect": "Immediate exposure reduced; service and telemetry were affected.",
+     "counterfactual": "Capture the persistence mechanism would have improved confidence but given the actor more time.",
+     "adaptedFrom": "deadrop",
+     "adaptedTo": "beacon",
+     "adaptationReason": "Grey Lantern selected Periodic command beacon because its evidence sources were less exposed by the last three procedures.",
+     "quality": 5,
+     "rationale": "Intervention matched the elevated impact and adversary tempo.",
+     "impactChange": -14,
+     "continuityChange": -5,
+     "tempoChange": -1,
+     "sectorChange": -3,
+     "objectiveChange": -8
+    },
+    {
+     "stage": "pivot",
+     "choice": "act",
+     "title": "Segment the movement path",
+     "effect": "Immediate exposure reduced; service and telemetry were affected.",
+     "counterfactual": "Map lateral access would have improved confidence but given the actor more time.",
+     "adaptedFrom": null,
+     "adaptedTo": null,
+     "adaptationReason": null,
+     "quality": 5,
+     "rationale": "Intervention matched the elevated impact and adversary tempo.",
+     "impactChange": -15,
+     "continuityChange": -7,
+     "tempoChange": -1,
+     "sectorChange": -3,
+     "objectiveChange": -8
+    },
+    {
+     "stage": "beacon",
+     "choice": "act",
+     "title": "Block the channel now",
+     "effect": "Immediate exposure reduced; service and telemetry were affected.",
+     "counterfactual": "Trace the outbound channel would have improved confidence but given the actor more time.",
+     "adaptedFrom": null,
+     "adaptedTo": null,
+     "adaptationReason": null,
+     "quality": 5,
+     "rationale": "Intervention matched the elevated impact and adversary tempo.",
+     "impactChange": -18,
+     "continuityChange": -3,
+     "tempoChange": -1,
+     "sectorChange": -3,
+     "objectiveChange": -8
+    }
+   ],
+   "responseChoices": [
+    "isolate",
+    "verify",
+    "patch"
+   ],
+   "responseScore": 49,
+   "hypothesis": "endpoint",
+   "hypothesisHistory": [
+    {
+     "turn": 1,
+     "id": "application"
+    },
+    {
+     "turn": 4,
+     "id": "endpoint"
+    }
+   ],
+   "adversaryTempo": 2,
+   "adversaryEvent": "The jump host can no longer be treated as a trusted administration point.",
+   "adversaryProfile": "lantern",
+   "adversaryMemory": {
+    "procedureCounts": {
+     "network": 1,
+     "server": 2,
+     "intel": 1,
+     "hunt": 1,
+     "endpoint": 2,
+     "forensic": 1,
+     "email": 1
+    },
+    "observeChoices": 0,
+    "actChoices": 3,
+    "hypothesisChanges": 1
+   },
+   "pendingCommand": null,
+   "commandHistory": [
+    {
+     "event": "forensics",
+     "choice": "a",
+     "title": "Engage the outside team",
+     "quality": 4,
+     "effect": "Next roll easier · Pressure rises"
+    }
+   ],
+   "recentCommands": [],
+   "recentCrises": [],
+   "mode": "campaign",
+   "turnLimit": 11,
+   "specialist": "hunter",
+   "specialistFatigue": 5,
+   "sectorHealth": 57,
+   "sectorHistory": [
+    100,
+    92,
+    98,
+    89,
+    89,
+    79,
+    70,
+    63,
+    60
+   ],
+   "objective": "preposition",
+   "objectiveProgress": 8,
+   "campaignTier": 1,
+   "focusedNode": "jump",
+   "evidence": [
+    {
+     "id": "E1-network",
+     "turn": 1,
+     "title": "Vendor software push evidence",
+     "source": "Network analysis",
+     "system": "Maintenance gateway",
+     "confidence": "HIGH",
+     "supports": "vendor",
+     "detail": "A vendor update path is used to introduce unauthorised code outside any approved change."
+    },
+    {
+     "id": "E3-intel",
+     "turn": 3,
+     "title": "Repository hook persistence evidence",
+     "source": "Intelligence correlation",
+     "system": "Plant configuration",
+     "confidence": "HIGH",
+     "supports": "githook",
+     "detail": "A repository hook executes attacker code on the build server at every commit."
+    },
+    {
+     "id": "E4-hunt",
+     "turn": 4,
+     "title": "Targeted threat hunt came back empty",
+     "source": "Targeted threat hunt",
+     "system": "Engineering zone",
+     "confidence": "HIGH",
+     "supports": null,
+     "detail": "The finding at Engineering zone is credible but does not yet establish a hidden attack stage."
+    },
+    {
+     "id": "E5-endpoint",
+     "turn": 5,
+     "title": "Internal port-forward pivot evidence",
+     "source": "Endpoint analysis",
+     "system": "Maintenance jump host",
+     "confidence": "HIGH",
+     "supports": "pivot",
+     "detail": "A local tunnel carries administrative traffic into a segment the host does not normally reach."
+    },
+    {
+     "id": "E6-forensic",
+     "turn": 6,
+     "title": "Forensic triage came back empty",
+     "source": "Forensic triage",
+     "system": "Patch server",
+     "confidence": "MODERATE",
+     "supports": null,
+     "detail": "The finding at Patch server is credible but does not yet establish a hidden attack stage."
+    },
+    {
+     "id": "E8-email",
+     "turn": 8,
+     "title": "Email investigation came back empty",
+     "source": "Email investigation",
+     "system": "Supplier identity",
+     "confidence": "MODERATE",
+     "supports": null,
+     "detail": "The finding at Supplier identity is credible but does not yet establish a hidden attack stage."
+    },
+    {
+     "id": "E9-endpoint",
+     "turn": 9,
+     "title": "Periodic command beacon evidence",
+     "source": "Endpoint analysis",
+     "system": "Maintenance jump host",
+     "confidence": "HIGH",
+     "supports": "beacon",
+     "detail": "A program calls out to new external infrastructure at regular intervals to collect commands."
+    }
+   ],
+   "correlations": [
+    {
+     "evidence": [
+      "E1-network",
+      "E3-intel"
+     ],
+     "valid": true,
+     "assessment": "causal",
+     "correct": true,
+     "finding": "Vendor software push evidence and Repository hook persistence evidence form a credible causal sequence: both sit on the application or supplier path route, so they are steps in the same line of access."
+    },
+    {
+     "evidence": [
+      "E1-network",
+      "E4-hunt"
+     ],
+     "valid": false,
+     "assessment": "coincidental",
+     "correct": true,
+     "finding": "Vendor software push evidence and Targeted threat hunt came back empty overlap in time, but nothing links them: they are neither consecutive stages nor steps on the same route, and appearing on Maintenance gateway and Engineering zone is not a relationship."
+    },
+    {
+     "evidence": [
+      "E1-network",
+      "E5-endpoint"
+     ],
+     "valid": true,
+     "assessment": "causal",
+     "correct": true,
+     "finding": "Vendor software push evidence and Internal port-forward pivot evidence form a credible causal sequence: they sit in consecutive stages of the chain — initial compromise then pivot & escalate — so one is what the next one needed."
+    }
+   ],
+   "pendingSetPiece": null,
+   "setPieceHistory": [
+    {
+     "event": "sector-2-b",
+     "choice": "a",
+     "title": "Stop the export",
+     "quality": 5,
+     "effect": "Corporate reports go blind while the boundary is checked; operators still see the plant."
+    }
+   ],
+   "campaignDoctrine": "balanced",
+   "campaignRoute": "watchtower",
+   "variant": {
+    "title": "Control-room handover",
+    "briefing": "A shift handover overlaps the supplier window and delays a trusted decision.",
+    "modifier": "Decision latency raises impact; actor progress begins higher.",
+    "impact": 4,
+    "continuity": -2,
+    "objective": 6,
+    "id": "2-3"
+   },
+   "caseTheory": "preposition",
+   "caseTheoryHistory": [
+    {
+     "turn": 4,
+     "objective": "preposition"
+    }
+   ],
+   "nodePosture": {
+    "supplier": "monitored",
+    "gateway": "monitored",
+    "jump": "normal",
+    "patch": "normal",
+    "engineering": "normal",
+    "historian": "normal",
+    "config": "normal"
+   },
+   "mapActionsRemaining": 1,
+   "graceRemaining": 0,
+   "mapHistory": [
+    {
+     "node": "supplier",
+     "action": "monitor",
+     "turn": 2,
+     "effect": "Telemetry priority established on Supplier identity. The next procedure, whichever it is, gains analytical support."
+    },
+    {
+     "node": "gateway",
+     "action": "monitor",
+     "turn": 4,
+     "effect": "Telemetry priority established on Maintenance gateway. The next procedure, whichever it is, gains analytical support."
+    }
+   ],
+   "seed": 1
+  },
+  "guided": true,
+  "fastResolve": false
+ }
+}

@@ -10,7 +10,7 @@ import { register } from "@/lib/i18n";
 register(missionBriefingDialogMessages);
 
 export function MissionBriefingDialog({ session }: { session: GameSession }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say } = useMessages();
   const { missionBriefing, setMissionBriefing, game, activeScenario } = session;
 
   return (
@@ -30,13 +30,13 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
           {/* Expert withholds coaching; its brief said "Your first move" all the same. */}
           {game.mode !== "expert" && <div className="briefing-first-move"><span>01</span><p>{rich("missionBriefingDialog.strongYourFirst", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>}
           <details className="briefing-more">
-            <summary>{t("missionBriefingDialog.operationContext")}<span>{gameModes[game.mode].title}{game.mode === "campaign" ? `, ${campaignRoutes[game.campaignRoute].title}` : ""}, {game.variant.title}</span></summary>
+            <summary>{t("missionBriefingDialog.operationContext")}<span>{gameModes[game.mode].title}{game.mode === "campaign" ? `, ${campaignRoutes[game.campaignRoute].title}` : ""}, {say(game.variant.title)}</span></summary>
             <div className="briefing-readouts">
               <div><span>{t("missionBriefingDialog.mode")}</span><strong>{gameModes[game.mode].title}</strong><small>{gameModes[game.mode].description}</small></div>
               {/* Only a campaign operation runs under the campaign's route; an Expert
                   brief named one that was not in effect. */}
               {game.mode === "campaign" && <div><span>{t("commandWorkspace.campaignRoute")}</span><strong>{campaignRoutes[game.campaignRoute].title}</strong><small>{campaignRoutes[game.campaignRoute].order}</small></div>}
-              <div><span>{t("missionBriefingDialog.incidentVariant")}</span><strong>{game.variant.title}</strong><small>{game.variant.briefing}</small></div>
+              <div><span>{t("missionBriefingDialog.incidentVariant")}</span><strong>{say(game.variant.title)}</strong><small>{say(game.variant.briefing)}</small></div>
             </div>
             <div className="director-order"><p><span className="eyebrow">{t("missionBriefingDialog.directorIntent")}</span>{game.mode === "campaign" ? `${campaignRoutes[game.campaignRoute].order} ` : ""}{t("missionBriefingDialog.establishTheChain")}</p></div>
           </details>

@@ -4,6 +4,7 @@ import { type AdversaryObjectiveId, type GameMode, type ProcedurePlan, type Spec
 import { type SetPieceId } from "../phase8.ts";
 import { type CampaignRouteId, type IncidentVariant } from "../phase9.ts";
 import type { adversaryProfiles, commandEvents, injects } from "./content.ts";
+import type { Message } from "../i18n/message.ts";
 
 export type AdversaryProfileId = keyof typeof adversaryProfiles;
 
@@ -16,23 +17,29 @@ export type AdversaryMemory = {
   hypothesisChanges: number;
 };
 
-export type CommandRecord = { event: CommandEventId; choice: "a" | "b"; title: string; quality: number; effect: string };
+export type CommandRecord = { event: CommandEventId; choice: "a" | "b"; title: Message; quality: number; effect: Message };
 
-export type EvidenceItem = { id: string; turn: number; title: string; source: string; system: string; confidence: "LOW" | "MODERATE" | "HIGH"; supports: string | null; detail: string };
+export type EvidenceItem = { id: string; turn: number; title: Message; source: Message; system: Message; confidence: "LOW" | "MODERATE" | "HIGH"; supports: string | null; detail: Message };
 
-export type CorrelationRecord = { evidence: [string, string]; valid: boolean; assessment: "causal" | "coincidental"; correct: boolean; finding: string };
+export type CorrelationRecord = { evidence: [string, string]; valid: boolean; assessment: "causal" | "coincidental"; correct: boolean; finding: Message };
 
 export type SetPieceChoice = "a" | "b" | "c";
 
-export type SetPieceRecord = { event: SetPieceId; choice: SetPieceChoice; title: string; quality: number; effect: string };
+export type SetPieceRecord = { event: SetPieceId; choice: SetPieceChoice; title: Message; quality: number; effect: Message };
 
 export type MapAction = "monitor" | "isolate";
 
 export type NodePosture = "normal" | "monitored" | "isolated" | "restored";
 
-export type MapActionRecord = { node: string; action: MapAction; turn: number; effect: string };
+export type MapActionRecord = { node: string; action: MapAction; turn: number; effect: Message };
 
-export type Inject = typeof injects[number] & { reason: string };
+export type Inject = typeof injects[number];
+// The inject a turn drew, by id (its words are the content's), with why it
+// was drawn and, for the cards whose outcome depends on the game, what it did.
+export type TurnInject = { id: string; reason: Message; effectLabel?: Message };
+// A change to the next roll, carried until that roll, with what set it. Two or
+// more are named together on the roll's breakdown.
+export type CarriedSource = { source: Message; change: number };
 
 export type Turn = {
   number: number;
@@ -43,18 +50,18 @@ export type Turn = {
   total: number;
   success: boolean;
   revealed: string | null;
-  narrative: string;
-  inject: Inject | null;
+  narrative: Message;
+  inject: TurnInject | null;
   injectReveal: string | null;
   impactChange: number;
   continuityChange: number;
-  adversaryEvent: string | null;
+  adversaryEvent: Message | null;
   hypothesis: HypothesisId | null;
   plan: ProcedurePlan;
   specialistBonus: number;
   // Every part of the roll's modifier, named as the action sheet named it, so the
   // report can explain its total instead of lumping "other parts".
-  parts: { label: string; value: number }[];
+  parts: { label: Message; value: number; sources?: CarriedSource[] }[];
   sectorChange: number;
   objectiveChange: number;
   // What the working hypothesis was actually tested against on this turn. The
@@ -77,14 +84,14 @@ export type DecisionChoice = "observe" | "act" | "attribute" | "contain" | "noti
 export type DecisionRecord = {
   stage: string;
   choice: DecisionChoice;
-  title: string;
-  effect: string;
-  counterfactual: string;
+  title: Message;
+  effect: Message;
+  counterfactual: Message;
   adaptedFrom: string | null;
   adaptedTo: string | null;
-  adaptationReason: string | null;
+  adaptationReason: Message | null;
   quality: number;
-  rationale: string;
+  rationale: Message;
   impactChange: number;
   continuityChange: number;
   tempoChange: number;
@@ -113,8 +120,9 @@ export type Game = {
   turns: Turn[];
   failures: number;
   nextModifier: number;
-  // What set nextModifier, named for the roll's breakdown; null when nothing waits.
-  nextModifierSource: string | null;
+  // What set nextModifier, for the roll's breakdown; empty when nothing waits
+  // (session version 19; a string before).
+  nextModifierSources: CarriedSource[];
   injectDeck: number[];
   status: GameStatus;
   impact: number;
@@ -126,7 +134,7 @@ export type Game = {
   hypothesis: HypothesisId | null;
   hypothesisHistory: { turn: number; id: HypothesisId }[];
   adversaryTempo: number;
-  adversaryEvent: string | null;
+  adversaryEvent: Message | null;
   adversaryProfile: AdversaryProfileId;
   adversaryMemory: AdversaryMemory;
   pendingCommand: CommandEventId | null;
@@ -209,7 +217,7 @@ export type TrainingPrompt = {
 
 // `shown` keeps a named part on screen at zero: two carried sources that cancel
 // still explain the total.
-export type ModifierPart = { label: string; value: number; detail: string; suppressed?: boolean; shown?: boolean };
+export type ModifierPart = { label: Message; value: number; detail: string; suppressed?: boolean; shown?: boolean; sources?: CarriedSource[] };
 
 export type HypothesisStanding = {
   level: "none" | "untested" | "holding" | "weakening" | "unsupported";

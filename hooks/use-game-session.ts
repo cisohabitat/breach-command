@@ -55,6 +55,8 @@ import { readStored, removeStored, storageWritable, writeStored } from "@/lib/st
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
 import { parseLedger, readLedger, writeLedger, type LedgerEntry } from "@/lib/ledger";
 import { encodeChallenge } from "@/lib/phase8";
+import { say } from "@/lib/i18n/message";
+import { activeLocale } from "@/hooks/use-messages";
 import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
 import { weeklyOperation } from "@/lib/command-systems";
@@ -420,7 +422,7 @@ export function useGameSession() {
     const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
     setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? "Isolation" : "Monitoring", game: current } : null);
     playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "lost" ? `The operation is lost. ${getLossReason(next).title}.` : next.mapHistory.at(-1)?.effect ?? "Infrastructure action recorded.");
+    setAnnouncement(next.status === "lost" ? `The operation is lost. ${getLossReason(next).title}.` : (next.mapHistory.at(-1) ? say(next.mapHistory.at(-1)!.effect, activeLocale()) : "Infrastructure action recorded."));
     afterStep(next);
   }
 

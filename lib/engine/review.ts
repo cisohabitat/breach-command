@@ -3,6 +3,7 @@ import { attacks, difficulties, scenarios, stages, hypotheses, scenarioDynamics 
 import { gameModes, sectorSystems } from "../command-systems.ts";
 import { encodeChallenge } from "../phase8.ts";
 import { inSentence } from "./content.ts";
+import { say } from "../i18n/message.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
 import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
@@ -175,7 +176,7 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const weakest = [...game.decisions].sort((a, b) => a.quality - b.quality)[0];
   if (weakest && weakest.quality <= 2) return {
     strength,
-    gap: `Your weakest call was “${weakest.title}” on ${attacks.find(item => item.id === weakest.stage)?.title.toLowerCase() ?? "a confirmed stage"}: ${weakest.rationale.charAt(0).toLowerCase()}${weakest.rationale.slice(1)}`,
+    gap: `Your weakest call was “${say(weakest.title)}” on ${attacks.find(item => item.id === weakest.stage)?.title.toLowerCase() ?? "a confirmed stage"}: ${say(weakest.rationale).charAt(0).toLowerCase()}${say(weakest.rationale).slice(1)}`,
     concept: "No response is right in every incident. What decides it is the pressure at that moment: how high business impact is, how fast the actor is moving, and how much margin the service and the sector have left.",
     next: "Next operation, before choosing a response, look at business impact and the actor's pace, which the Training decision states and the hypothesis board shows. Above about half, or once the actor is accelerating, act or contain; while both are low, watching or attributing is affordable.",
   };
@@ -416,7 +417,7 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
 }
 
 export function getCounterfactuals(game: Game) {
-  const items = game.decisions.slice(-3).map(decision => `${decision.title}: ${decision.counterfactual} ${decision.rationale}`);
+  const items = game.decisions.slice(-3).map(decision => `${say(decision.title)}: ${say(decision.counterfactual)} ${say(decision.rationale)}`);
   const dynamics = scenarioDynamics[game.scenario];
   const responseProfile = responseOptionsFor(game);
   if (game.responseChoices.length) {

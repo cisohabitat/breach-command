@@ -1,6 +1,6 @@
 # Localising the engine's prose
 
-Status: steps 1 and 2 built (0.9.4 and 0.9.5, 10 October 2026); steps 3 to 5 follow. The interface around it is
+Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026); steps 4 and 5 follow. The interface around it is
 catalogued (`lib/i18n/`, 0.9.1 to 0.9.3); this is the plan for the rest, so
 that the work can start when a first locale has a translator and a reviewer
 (Phase 7, `docs/ROADMAP.md`).
@@ -81,20 +81,41 @@ Three parts of the interface read English back:
    `confidence` and `residual` words, so those level fields are structural and
    are translated where they are shown.
 
-4. **The engine returns messages, not sentences.** A composed sentence
-   becomes a descriptor, `{ key: "turn.found", params: { evidence: { ref:
-   ["attacks", "phishing", "evidence"] }, procedure: { ref: [...] }, node:
-   ... } }`. A param is a number, a string, or a reference into content,
-   resolved through the overlay when it renders. The keys live in a new
-   catalogue, `lib/i18n/en/engine.ts`, registered by the game screen's chunk.
+4. **The engine returns messages, not sentences.** *Built for what it stores
+   in 0.9.6.* A message (`lib/i18n/message.ts`) is a catalogue key with its
+   parameters, or a reference to content by the path the overlay uses
+   (`{ ref: "attacks.phish.evidence" }`), which may carry parameters of its
+   own (the decision wording's `{owners}`) and a `form` for its English casing
+   inside a sentence. A parameter is a number, a string or another message;
+   `say(message, locale)` puts it into words, and `lib/engine/words.ts` builds
+   the references so the engine names what it means. The keys live in
+   `lib/i18n/en/engine.ts`. *Amended:* it is not registered by the game
+   screen's chunk but loaded once, with the glossary, by
+   `lib/i18n/shared-text.ts`, which every lazily loaded part of the page awaits
+   (`withText` in `app/page.tsx`); imported by each component that showed a
+   message, it was copied into five scripts. A reference shows the content as
+   it is now, so a clue edited after a save reads edited in that save; that is
+   what a translation needs, and a change from the copies saves held before.
 
-5. **Saves store descriptors.** The stored fields listed above change type
-   from `string` to `Message`, with `SESSION_VERSION` 19. The migration wraps
-   each old string as `{ key: "legacy.text", params: { text } }`, which
-   renders the old English as it was, so a save made before 19 still reads
-   exactly as it did and every later turn localises. The saved game from
-   18 in `tests/fixtures/saves/session-v18.json` proves it, as the earlier
-   versions' fixtures do for theirs.
+5. **Saves store messages.** *Built in 0.9.6.* The stored fields listed above
+   are `Message`s, `nextModifierSource` is a list of carried sources
+   (`nextModifierSources`, each with its share, which `carriedLabel` words),
+   a turn's inject keeps its id with its reason and, where the card's outcome
+   depended on the game, what it did, and the variant's words are references to
+   its template. `SESSION_VERSION` is 19. The migration wraps each older
+   sentence as `{ key: "legacy.text", params: { text } }`, which reads as the
+   player read it, and reads an older joined carried-source string back into its
+   sources, so an old roll breakdown reads as it did. A whole operation saved
+   by version 18 (`tests/fixtures/full/full-v18.json`) proves both directions
+   (`tests/full-save.test.ts`): replayed from its seed, today's engine stores
+   messages that read exactly as version 18's sentences, all 110 of them, and
+   the old save migrates and reads as it did. The rules read structure where
+   they read words before: the Crisis re-route by the message's key, the
+   carried evidence decision by its source's key. Because TypeScript lets an
+   object into a template literal without a word, `tests/message-types.test.ts`
+   reads every file with the type checker and fails where a message becomes a
+   string except through `say()`; the text comparison found the review saying
+   "[object Object]" before that test existed.
 
 6. **Rendering reads structure, not words.** *Built in 0.9.5.* The effect
    lines are data, an `Effect` (`lib/engine/rules.ts`: a meter's change with

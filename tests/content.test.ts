@@ -6,6 +6,7 @@ import {allSetPieces, secondSetPieces, sectorSetPieces, setPieceFor} from "../li
 import {hypothesisSources, proceduresFor, sectorProcedures} from "../lib/advanced-game.ts";
 import {adversaryObjectives} from "../lib/command-systems.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
+import { legacy, say } from "../lib/i18n/message.ts";
 
 
 test("explains what each objective's outbound stage is for", () => {
@@ -306,7 +307,7 @@ test("each sector has a second crisis, met by the odd incident variants", () => 
     assert.notEqual(secondSetPieces[scenario].title, sectorSetPieces[scenario].title);
     assert.equal(setPieceFor(scenario, `${scenario}-0`).id, `sector-${scenario}`, "the standard picture meets the first crisis");
     assert.equal(setPieceFor(scenario, `${scenario}-3`).id, `sector-${scenario}-b`, "an odd variant meets the second");
-    const g = newGame(scenario, "operational", () => 0, { variant: { id: `${scenario}-1`, title: "t", briefing: "b", modifier: "m", impact: 0, continuity: 0, objective: 0 } });
+    const g = newGame(scenario, "operational", () => 0, { variant: { id: `${scenario}-1`, title: legacy("t"), briefing: legacy("b"), modifier: legacy("m"), impact: 0, continuity: 0, objective: 0 } });
     assert.equal(g.variant.id, `${scenario}-1`);
   }
 });
@@ -317,7 +318,7 @@ test("each case has seven incident variants, and a seed that met one of the firs
     const seen = new Map<string, string>();
     for (let seed = 0; seed < 400; seed++) {
       const variant = incidentVariant(scenario, "common-ground", seed);
-      seen.set(variant.id, variant.title);
+      seen.set(variant.id, say(variant.title));
       const old = (seed + scenario) % 5;
       if (old < 3) assert.equal(variant.id, `${scenario}-${old}`, "the first three stay where they were");
     }

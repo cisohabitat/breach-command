@@ -11,7 +11,7 @@ import { extractContent } from "../scripts/extract-content.ts";
 import { contentTables } from "../lib/i18n/content/tables.ts";
 import { contentLeaves } from "../lib/i18n/content/walk.ts";
 import { applyContentOverlay, pseudoOverlay } from "../lib/i18n/content/overlay.ts";
-import { glossaryParts } from "../lib/engine/content.ts";
+import { glossaryParts } from "../lib/glossary.ts";
 
 test("lib/i18n/content/en.json is what the tables hold (pnpm extract:content)", () => {
   const committed = JSON.parse(readFileSync(new URL("../lib/i18n/content/en.json", import.meta.url), "utf8"));

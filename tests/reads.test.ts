@@ -1,8 +1,11 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,plainLanguage,glossaryParts,sourceSeesReading,getDiscriminatingRead,getHypothesisLedger,hypotheses,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS} from "../lib/advanced-game.ts";
+import { getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,sourceSeesReading,getDiscriminatingRead,getHypothesisLedger,hypotheses,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS } from "../lib/advanced-game.ts";
+import { plainLanguage, glossaryParts } from "../lib/glossary.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
+import { legacy, msg, say } from "../lib/i18n/message.ts";
+import "../lib/i18n/engine-messages.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
 let g:Game=baseline();
@@ -16,11 +19,11 @@ test("attributes a finding to the source that produced it", () => {
   // The finding leads and the attribution follows. "Email investigation at the
   // payment gateway" asserted a location the game had not established — the node
   // is where collection was focused, which is what it now says.
-  const narrative=sourcedTurn.turns[0].narrative;
+  const narrative=say(sourcedTurn.turns[0].narrative);
   assert.ok(narrative.startsWith(attacks.find(attack=>attack.id===sourcedTurn.turns[0].revealed)!.evidence),"the finding is stated first, in its own words");
   assert.ok(/Found by email investigation while map focus was on .+\.$/.test(narrative),"then the source and the collection focus, named for what they are");
   assert.ok(!/ at /.test(narrative.split("Found by")[1] ?? ""),"and the node is never presented as the finding's location");
-  assert.equal(sourcedTurn.evidence.at(-1)!.detail,attacks.find(item=>item.id===sourcedTurn.turns[0].revealed)!.evidence,"the stored finding keeps its source fields separate from its body");
+  assert.equal(say(sourcedTurn.evidence.at(-1)!.detail),attacks.find(item=>item.id===sourcedTurn.turns[0].revealed)!.evidence,"the stored finding keeps its source fields separate from its body");
   for(const attack of attacks)assert.ok(!/^[A-Z][a-z]+ and [a-z]+ records show/.test(attack.evidence),`${attack.id} states a finding, not a log type`);
 });
 
@@ -60,15 +63,18 @@ test("reports how the declared reading is holding up", () => {
   // stage under test survives it...
   const reaction=scenarioDynamics[standingRun.scenario].reaction;
   const last=standingRun.turns.length-1;
-  const rerouted={...standingRun,turns:standingRun.turns.map((turn,index)=>index===last?{...turn,success:false,adversaryEvent:`Escalation. ${reaction}`}:turn)};
+  const rerouted={...standingRun,turns:standingRun.turns.map((turn,index)=>index===last?{...turn,success:false,adversaryEvent:msg("engine.adversary.withReaction",{event:legacy("Escalation."),reaction:legacy(reaction)})}:turn)};
   assert.equal(getReadingOdds(rerouted).stage,0);
   assert.deepEqual(getReadingOdds(rerouted).ruledOutBy,getReadingOdds({...standingRun,turns:standingRun.turns.map((turn,index)=>index===last?{...turn,success:false}:turn)}).ruledOutBy,"a re-route ahead does not erase what was ruled out here");
   // ...and when that later stage becomes the one under test, what was ruled out
   // about it before the re-route no longer stands. A confirmation alone resets nothing.
-  const thenConfirmed=(withReroute:boolean)=>({...standingRun,revealed:[standingRun.chain[0]],turns:standingRun.turns.map((turn,index)=>index===last-1?{...turn,success:false,adversaryEvent:withReroute?`Escalation. ${reaction}`:null}:index===last?{...turn,revealed:standingRun.chain[0]}:turn)});
+  const thenConfirmed=(withReroute:boolean)=>({...standingRun,revealed:[standingRun.chain[0]],turns:standingRun.turns.map((turn,index)=>index===last-1?{...turn,success:false,adversaryEvent:withReroute?msg("engine.adversary.withReaction",{event:legacy("Escalation."),reaction:legacy(reaction)}):null}:index===last?{...turn,revealed:standingRun.chain[0]}:turn)});
   assert.equal(getReadingOdds(thenConfirmed(true)).stage,1);
   assert.ok(getReadingOdds(thenConfirmed(false)).ruledOutBy.length>0,"without a re-route, earlier empty checks still rule out techniques at the next stage");
   assert.equal(getReadingOdds(thenConfirmed(true)).ruledOutBy.length,0,"after a re-route that targeted it, they do not");
+  // A save from before version 19 kept the escalation and the reaction as one sentence.
+  const legacyReroute={...standingRun,turns:standingRun.turns.map((turn,index)=>index===last?{...turn,success:false,adversaryEvent:legacy(`Escalation. ${reaction}`)}:turn)};
+  assert.deepEqual(getReadingOdds(legacyReroute),getReadingOdds(rerouted),"an older save's re-route reads the same");
 
   // The property the old count lacked: a correct reading survives empty checks
   // from sources that could not have seen its technique. Phishing sits on the
@@ -108,7 +114,7 @@ test("asks for a comparison once two findings have confirmed stages", () => {
   // Correlation sits below the map, and no playtest found it unprompted. The
   // prompt appears once there is something worth comparing: two checks that
   // settled nothing say nothing about causation.
-  const finding=(id:string,supports:string|null)=>({id,turn:1,title:id,source:"Identity",system:"Admin plane",confidence:"HIGH" as const,supports,detail:"x"});
+  const finding=(id:string,supports:string|null)=>({id,turn:1,title:legacy(id),source:legacy("Identity"),system:legacy("Admin plane"),confidence:"HIGH" as const,supports,detail:legacy("x")});
   const empty={...setHypothesis(baseline(),"identity"),evidence:[finding("E1",null),finding("E2",null)]};
   assert.equal(readyToCorrelate(empty),false,"two empty results are not worth comparing");
   assert.ok(!/compare them/.test(getCoachPrompt(empty,true)));
@@ -156,23 +162,23 @@ test("shows the modifier it will resolve with", () => {
       const preview=getModifierBreakdown(previewBase,procedure,plan);
       const resolved=playTurn(previewBase,procedure,10,plan).turns[0];
       assert.equal(preview.total,resolved.modifier,`${procedure}/${plan.scope}/${plan.intensity} preview matches resolution`);
-      assert.equal(preview.parts.find(part=>part.label==="Own source")?.value,resolved.planningBonus,"the planning bonus is the previewed own-source part");
+      assert.equal(preview.parts.find(part=>say(part.label)==="Own source")?.value,resolved.planningBonus,"the planning bonus is the previewed own-source part");
     }
   }
   // Every term the resolution can apply is named in the preview.
-  assert.deepEqual(getModifierBreakdown(previewBase,"endpoint").parts.map(part=>part.label),
+  assert.deepEqual(getModifierBreakdown(previewBase,"endpoint").parts.map(part=>say(part.label)),
     ["Established","Own source","Since your last roll","After two failed rolls","Specialist","Map focus","Focused","Balanced","Expert mode"]);
   // The own-source bonus follows the declared reading, not the hidden route, so
   // it reads the same whatever the chain is.
   const declared=setHypothesis(previewBase,"identity");
-  assert.equal(getModifierBreakdown(declared,"identity").parts.find(part=>part.label==="Own source")?.value,OWN_SOURCE_BONUS,"a declared reading's own source earns the bonus");
-  assert.equal(getModifierBreakdown(declared,"endpoint").parts.find(part=>part.label==="Own source")?.value,0,"a source it does not predict does not");
+  assert.equal(getModifierBreakdown(declared,"identity").parts.find(part=>say(part.label)==="Own source")?.value,OWN_SOURCE_BONUS,"a declared reading's own source earns the bonus");
+  assert.equal(getModifierBreakdown(declared,"endpoint").parts.find(part=>say(part.label)==="Own source")?.value,0,"a source it does not predict does not");
   assert.deepEqual(getModifierBreakdown({...declared,chain:["token","role","vault","apikey"]},"identity"),getModifierBreakdown(declared,"identity"),"and the preview never consults the hidden chain");
-  assert.equal(getModifierBreakdown({...previewBase,mode:"expert"},"identity").parts.find(part=>part.label==="Expert mode")?.value,-1);
+  assert.equal(getModifierBreakdown({...previewBase,mode:"expert"},"identity").parts.find(part=>say(part.label)==="Expert mode")?.value,-1);
 
   // Two failed rolls in a row is variance. The bonus that answers it is read from
   // the player's own record, shown before the action, and gone once one lands.
-  const persistence=(game:Game)=>getModifierBreakdown(game,"endpoint").parts.find(part=>part.label==="After two failed rolls")!.value;
+  const persistence=(game:Game)=>getModifierBreakdown(game,"endpoint").parts.find(part=>say(part.label)==="After two failed rolls")!.value;
   const sample=playTurn(previewBase,"identity",10).turns[0];
   const failed=(number:number,success:boolean)=>({...sample,number,success});
   assert.equal(persistence(previewBase),0,"no failures, no bonus");
@@ -246,8 +252,8 @@ test("speaks plainly to a player who is new to the subject", () => {
   // actually left rather than the first one in the list.
   const run = baseline();
   run.evidence = [
-    { id: "E1", turn: 1, title: "Initial access", source: "Email", system: "User access", confidence: "HIGH", supports: "phish", detail: "A" },
-    { id: "E2", turn: 2, title: "Movement", source: "Identity", system: "Admin plane", confidence: "HIGH", supports: "spray", detail: "B" },
+    { id: "E1", turn: 1, title: legacy("Initial access"), source: legacy("Email"), system: legacy("User access"), confidence: "HIGH", supports: "phish", detail: legacy("A") },
+    { id: "E2", turn: 2, title: legacy("Movement"), source: legacy("Identity"), system: legacy("Admin plane"), confidence: "HIGH", supports: "spray", detail: legacy("B") },
   ];
   const uncorrelated = getBeginnerReview(run);
   for (const line of [uncorrelated.strength, uncorrelated.gap, uncorrelated.concept, uncorrelated.next]) {
@@ -325,21 +331,21 @@ test("explains a score the player can check against what they saw", () => {
   // The correlation result states why a sequence is causal. Naming the two
   // systems taught that sharing a node is the reason, which it is not.
   const withEvidence = { ...baseline(), evidence: [
-    { id: "E1", turn: 1, title: "Initial access", source: "Email", system: "User access", confidence: "HIGH" as const, supports: "phish", detail: "A" },
-    { id: "E2", turn: 2, title: "Movement", source: "Identity", system: "User access", confidence: "HIGH" as const, supports: "spray", detail: "B" },
+    { id: "E1", turn: 1, title: legacy("Initial access"), source: legacy("Email"), system: legacy("User access"), confidence: "HIGH" as const, supports: "phish", detail: legacy("A") },
+    { id: "E2", turn: 2, title: legacy("Movement"), source: legacy("Identity"), system: legacy("User access"), confidence: "HIGH" as const, supports: "spray", detail: legacy("B") },
   ] };
   const causal = correlateEvidence(withEvidence, ["E1", "E2"], "causal").correlations[0];
   assert.equal(causal.correct, true);
-  assert.ok(/consecutive stages/.test(causal.finding), "it names stage adjacency as the basis");
-  assert.ok(!/across User access and User access/.test(causal.finding), "and never offers the shared system as the reason");
+  assert.ok(/consecutive stages/.test(say(causal.finding)), "it names stage adjacency as the basis");
+  assert.ok(!/across User access and User access/.test(say(causal.finding)), "and never offers the shared system as the reason");
 
   const unrelated = { ...baseline(), evidence: [
-    { id: "E1", turn: 1, title: "Initial access", source: "Email", system: "User access", confidence: "HIGH" as const, supports: "phish", detail: "A" },
-    { id: "E2", turn: 2, title: "Noise", source: "Cloud", system: "User access", confidence: "LOW" as const, supports: null, detail: "B" },
+    { id: "E1", turn: 1, title: legacy("Initial access"), source: legacy("Email"), system: legacy("User access"), confidence: "HIGH" as const, supports: "phish", detail: legacy("A") },
+    { id: "E2", turn: 2, title: legacy("Noise"), source: legacy("Cloud"), system: legacy("User access"), confidence: "LOW" as const, supports: null, detail: legacy("B") },
   ] };
   const wrong = correlateEvidence(unrelated, ["E1", "E2"], "causal").correlations[0];
   assert.equal(wrong.correct, false);
-  assert.ok(/not consecutive stages and sit on different routes|confirmed no stage/.test(wrong.finding), "a wrong causal call is told what rules the sequence out");
+  assert.ok(/not consecutive stages and sit on different routes|confirmed no stage/.test(say(wrong.finding)), "a wrong causal call is told what rules the sequence out");
 
   assert.ok(plainLanguage["evidence boundary"], "the vocabulary a playtest asked about is translated");
   assert.ok(/consecutive stages|same route/.test(plainLanguage["causal sequence"]), "and the causal rule is stated in the glossary too");
@@ -531,11 +537,11 @@ test("names what set the bonus waiting for the next roll", () => {
   const game={...baseline(),injectDeck:[]} as Game;
   const monitored=resolveMapAction(game,game.focusedNode,"monitor");
   assert.ok(monitored.nextModifier>0,"the fixture monitors a node that sets up the next roll");
-  assert.ok(getModifierBreakdown(monitored,"endpoint").parts.some(item=>/^Monitored /.test(item.label)&&item.value===monitored.nextModifier),"a monitored node names itself");
+  assert.ok(getModifierBreakdown(monitored,"endpoint").parts.some(item=>/^Monitored /.test(say(item.label))&&item.value===monitored.nextModifier),"a monitored node names itself");
   const rolled=playTurn(monitored,"endpoint",10);
-  assert.equal(rolled.nextModifier===0?rolled.nextModifierSource:null,null,"and the name clears with the bonus");
-  const restored=parseSession(serialiseSession({...monitored,nextModifierSource:undefined} as unknown as Game,false,false))!;
-  assert.equal(restored.game.nextModifierSource,null,"an older save carries no name");
+  assert.equal(rolled.nextModifier===0?rolled.nextModifierSources.length:0,0,"and the name clears with the bonus");
+  const restored=parseSession(serialiseSession({...monitored,nextModifierSources:undefined} as unknown as Game,false,false))!;
+  assert.deepEqual(restored.game.nextModifierSources,[],"an older save carries no name");
 });
 
 test("pays half credit once per reading at a stage, whatever else a turn reveals", () => {

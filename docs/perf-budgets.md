@@ -146,3 +146,12 @@ its registry is on the first load: 849,093 B, 907 B under budget. Loading the
 overlay with every content module behind one import() cost 3,830 B of
 loader on the first load; registering each table from its own module, so the
 lazy chunk holds only the walker, removed that.
+
+Stored messages (0.9.6) put the message code and the engine's keys on the first
+load, and the engine's catalogue in the game. Imported by each component that
+showed a message, the catalogue was copied into five scripts, and the glossary,
+moved off the first load, into four: all script came to 1,191,458 B. Loading
+both once, in one script that every lazy part awaits (`lib/i18n/shared-text.ts`),
+brought it to 1,146,408 B by the time play starts, and the first load to
+845,618 B, 3,754 B less than before the step, because the glossary no longer
+rides on it. No budget moved.

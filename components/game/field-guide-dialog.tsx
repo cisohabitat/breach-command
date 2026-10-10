@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { glossaryTerms, plainLanguage } from "@/lib/advanced-game";
+import { glossary } from "@/lib/i18n/shared-text";
 import type { GameSession } from "@/hooks/use-game-session";
 import { useMessages } from "@/hooks/use-messages";
 import { fieldGuideDialogMessages } from "@/lib/i18n/en/field-guide-dialog";
@@ -9,6 +9,7 @@ import { register } from "@/lib/i18n";
 register(fieldGuideDialogMessages);
 
 export function FieldGuideDialog({ session }: { session: GameSession }) {
+  const { glossaryTerms, plainLanguage } = glossary();
   const { t, rich } = useMessages();
   const { rules, setRules } = session;
 

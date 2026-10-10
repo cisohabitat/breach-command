@@ -12,11 +12,12 @@ import { objectiveTheory } from "@/lib/phase9";
 import { useMessages } from "@/hooks/use-messages";
 import { debriefDialogMessages } from "@/lib/i18n/en/debrief-dialog";
 import { register } from "@/lib/i18n";
+import { sameMessage } from "@/lib/i18n/message";
 
 register(debriefDialogMessages);
 
 export function DebriefDialog({ session }: { session: GameSession }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say } = useMessages();
   const {
     debrief, setDebrief, game, outcome, activeScenario, campaign, finalEnding,
     resetToBriefing, setScenarioChoice, campaignChange, playRecommended, replayWithBot,
@@ -139,7 +140,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             {game.turns.map(turn => (
               <div key={turn.number}>
                 <span>{String(turn.number)}</span>
-                <p><strong>{procedureById(game, turn.procedure)?.title}</strong>{turn.hypothesis ? `, hypothesis: ${hypotheses.find(item => item.id === turn.hypothesis)?.title}` : t("debriefDialog.noHypothesisRecorded2")}<small>{procedureScopes[turn.plan.scope].title}{t("debriefDialog.scopeAnalysis", { procedureIntensitiesTitle: procedureIntensities[turn.plan.intensity].title.toLowerCase() })}{turn.revealed ? t("debriefDialog.revealed", { title: String(attacks.find(attack => attack.id === turn.revealed)?.title) }) : turn.narrative}</small></p>
+                <p><strong>{procedureById(game, turn.procedure)?.title}</strong>{turn.hypothesis ? `, hypothesis: ${hypotheses.find(item => item.id === turn.hypothesis)?.title}` : t("debriefDialog.noHypothesisRecorded2")}<small>{procedureScopes[turn.plan.scope].title}{t("debriefDialog.scopeAnalysis", { procedureIntensitiesTitle: procedureIntensities[turn.plan.intensity].title.toLowerCase() })}{turn.revealed ? t("debriefDialog.revealed", { title: String(attacks.find(attack => attack.id === turn.revealed)?.title) }) : say(turn.narrative)}</small></p>
               </div>
             ))}
             </details>
@@ -149,9 +150,9 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               <details className="debrief-fold">
                 <summary>{rich("debriefDialog.yourDecisionsSpan", { decisions: game.decisions.length + game.commandHistory.length + game.setPieceHistory.length + game.responseChoices.length + game.mapHistory.length }, { span: chunk => <span>{chunk}</span> })}</summary>
               {/* A reason already given for the decision above is not repeated word for word. */}
-              {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {record.title}<span>{t("debriefDialog.qualityOf5", { quality: record.quality })}</span>{(index === 0 || game.decisions[index - 1].rationale !== record.rationale) && <em>{record.rationale}</em>}<EffectList className="decision-effects" items={[...([["impact", record.impactChange], ["continuity", record.continuityChange], ["sector", record.sectorChange], ["objective", record.objectiveChange]] as const).filter(([, change]) => change).map(([meter, change]) => meterEffect(game, meter, change)), !!record.tempoChange && { kind: "pace", faster: record.tempoChange > 0 }, record.impactChange || record.continuityChange || record.sectorChange || record.objectiveChange || record.tempoChange ? "" : t("debriefDialog.noMeterMoved")]} />{record.adaptedTo && <em>{t("debriefDialog.actorAdaptation")}{record.adaptationReason ?? t("debriefDialog.theHiddenRoute", { title: String(attacks.find(attack => attack.id === record.adaptedTo)?.title) })}</em>}</p>)}
-              {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>{t("commandEvent.commandEvent")}</strong> {record.title}<span>{t("debriefDialog.qualityOf5", { quality: record.quality })}</span><em>{record.effect}</em></p>)}
-              {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>{t("debriefDialog.sectorDecision")}</strong> {record.title}<span>{t("debriefDialog.qualityOf5", { quality: record.quality })}</span><em>{record.effect}</em></p>)}
+              {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {say(record.title)}<span>{t("debriefDialog.qualityOf5", { quality: record.quality })}</span>{(index === 0 || !sameMessage(game.decisions[index - 1].rationale, record.rationale)) && <em>{say(record.rationale)}</em>}<EffectList className="decision-effects" items={[...([["impact", record.impactChange], ["continuity", record.continuityChange], ["sector", record.sectorChange], ["objective", record.objectiveChange]] as const).filter(([, change]) => change).map(([meter, change]) => meterEffect(game, meter, change)), !!record.tempoChange && { kind: "pace", faster: record.tempoChange > 0 }, record.impactChange || record.continuityChange || record.sectorChange || record.objectiveChange || record.tempoChange ? "" : t("debriefDialog.noMeterMoved")]} />{record.adaptedTo && <em>{t("debriefDialog.actorAdaptation")}{record.adaptationReason ? say(record.adaptationReason) : t("debriefDialog.theHiddenRoute", { title: String(attacks.find(attack => attack.id === record.adaptedTo)?.title) })}</em>}</p>)}
+              {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>{t("commandEvent.commandEvent")}</strong> {say(record.title)}<span>{t("debriefDialog.qualityOf5", { quality: record.quality })}</span><em>{say(record.effect)}</em></p>)}
+              {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>{t("debriefDialog.sectorDecision")}</strong> {say(record.title)}<span>{t("debriefDialog.qualityOf5", { quality: record.quality })}</span><em>{say(record.effect)}</em></p>)}
               {/* Each response phase graded against the best its sector offered, so
                   a containment-and-recovery score below full says which call cost it. */}
               {(["containment", "assurance", "recovery"] as const).map((phase, index) => {
@@ -161,12 +162,12 @@ export function DebriefDialog({ session }: { session: GameSession }) {
                 const best = Math.max(...options.map(option => option.score));
                 return <p key={phase}><strong>{phase.charAt(0).toUpperCase() + phase.slice(1)}:</strong> {chosen.title}<span>{t("debriefDialog.ofABest", { score: chosen.score, best, confidence: chosen.confidence.toLowerCase(), residual: chosen.residual.toLowerCase() })}</span><em>{chosen.score === best ? t("debriefDialog.theStrongestOption") : t("debriefDialog.wouldHaveScored", { title: options.find(option => option.score === best)!.title })}</em></p>;
               })}
-              {game.mapHistory.map((record, index) => <p key={`${record.node}-${index}`}><strong>{t("debriefDialog.infrastructure")}</strong> {record.action === "isolate" ? t("debriefDialog.isolated") : t("debriefDialog.monitored")} {infrastructureTopologies[game.scenario].nodes.find(node => node.id === record.node)?.label ?? record.node}<span>{t("debriefDialog.mapAction")}</span><em>{record.effect}</em></p>)}
+              {game.mapHistory.map((record, index) => <p key={`${record.node}-${index}`}><strong>{t("debriefDialog.infrastructure")}</strong> {record.action === "isolate" ? t("debriefDialog.isolated") : t("debriefDialog.monitored")} {infrastructureTopologies[game.scenario].nodes.find(node => node.id === record.node)?.label ?? record.node}<span>{t("debriefDialog.mapAction")}</span><em>{say(record.effect)}</em></p>)}
               </details>
             </div>
           )}
           <section className="counterfactuals"><details className="debrief-fold"><summary>{rich("debriefDialog.whatMightHave2", { getCounterfactuals: getCounterfactuals(game).length }, { span: chunk => <span>{chunk}</span> })}</summary>{getCounterfactuals(game).map((item, index) => <p key={index}>{item}</p>)}</details></section>
-          <section className="evidence-review"><details className="debrief-fold"><summary>{t("debriefDialog.evidenceReconstruction")}<span>{t("debriefDialog.finding2Plural", { count: game.evidence.length })}{t("debriefDialog.confirmedAStage", { count: game.evidence.filter(item => item.supports).length })}</span></summary>{game.evidence.map(item => <div key={item.id}><strong>{t("debriefDialog.turn2", { turn: item.turn, itemTitle: item.title })}</strong><span>{t("debriefDialog.atConfidence", { source: item.source, system: item.system, confidence: item.confidence.toLowerCase() })}</span><p>{item.detail}</p></div>)}</details></section>
+          <section className="evidence-review"><details className="debrief-fold"><summary>{t("debriefDialog.evidenceReconstruction")}<span>{t("debriefDialog.finding2Plural", { count: game.evidence.length })}{t("debriefDialog.confirmedAStage", { count: game.evidence.filter(item => item.supports).length })}</span></summary>{game.evidence.map(item => <div key={item.id}><strong>{t("debriefDialog.turn2", { turn: item.turn, itemTitle: say(item.title) })}</strong><span>{t("debriefDialog.atConfidence", { source: say(item.source), system: say(item.system), confidence: item.confidence.toLowerCase() })}</span><p>{say(item.detail)}</p></div>)}</details></section>
           <details className="debrief-fold debrief-chain-fold" id="debrief-chain">
             <summary>{rich("debriefDialog.theAttackChain2", { revealed: game.revealed.length }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="debrief-chain">
