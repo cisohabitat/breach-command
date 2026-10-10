@@ -32,4 +32,3 @@ export function firstLoad(entry: string) {
   visit(entry);
   return [...seen].map(file => file.slice(root.length));
 }
-
