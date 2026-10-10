@@ -11,6 +11,7 @@ import { extractContent } from "../scripts/extract-content.ts";
 import { contentTables } from "../lib/i18n/content/tables.ts";
 import { contentLeaves } from "../lib/i18n/content/walk.ts";
 import { applyContentOverlay, pseudoOverlay } from "../lib/i18n/content/overlay.ts";
+import { glossaryParts } from "../lib/engine/content.ts";
 
 test("lib/i18n/content/en.json is what the tables hold (pnpm extract:content)", () => {
   const committed = JSON.parse(readFileSync(new URL("../lib/i18n/content/en.json", import.meta.url), "utf8"));
@@ -31,9 +32,28 @@ test("an overlay replaces every leaf and English restores the tables exactly", (
   const before = JSON.stringify(contentTables);
   applyContentOverlay(pseudoOverlay);
   const replaced = contentLeaves(contentTables);
-  assert.ok(replaced.every(leaf => leaf.text.startsWith("[")), "every leaf was replaced");
+  assert.ok(replaced.filter(leaf => !leaf.path.startsWith("glossaryTerms.")).every(leaf => leaf.text.startsWith("[")), "every leaf was replaced; glossary terms are only accented");
   applyContentOverlay(() => undefined);
   assert.equal(JSON.stringify(contentTables), before);
+});
+
+// Glossary terms are found by the words the locale gives them, so the same
+// terms are marked in a translated passage as in the English one (a plural
+// "s" is English's; the pseudo-locale accents it, so those are left out).
+test("glossary terms are found in translated content", () => {
+  const leaves = contentLeaves(contentTables);
+  const marked = () => new Map(leaves.map(leaf => [leaf.path, glossaryParts(leaf.get()).filter(part => part.term && !/s$/i.test(part.text)).map(part => part.term)]));
+  const english = marked();
+  applyContentOverlay(pseudoOverlay);
+  const translated = marked();
+  applyContentOverlay(() => undefined);
+  let compared = 0;
+  for (const [path, terms] of english) {
+    if (path.startsWith("glossaryTerms.") || !terms.length) continue;
+    compared++;
+    for (const term of terms) assert.ok(translated.get(path)?.includes(term), `${path} still marks "${term}"`);
+  }
+  assert.ok(compared > 100, `${compared} passages compared`);
 });
 
 test("the rules play the same game with the content in another language", () => {

@@ -1,4 +1,4 @@
-import { carryModifier, commandEvents, describeMeterChange, describeRollShift, type CommandEventId, type Game } from "@/lib/advanced-game";
+import { carryModifier, commandEvents, type CommandEventId, type Game, meterEffect, rollEffect } from "@/lib/advanced-game";
 import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { EffectList } from "@/components/game/effect-list";
@@ -30,9 +30,9 @@ export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice
 // action · Greater blind-spot risk" was followed by a cost no one had been shown.
 function effectLine(t: Translate, game: Game, option: { impact: number; continuity: number; modifier: number; tempo: number }) {
   return [
-    describeMeterChange(game, "impact", option.impact),
-    describeMeterChange(game, "continuity", option.continuity),
-    describeRollShift(game.nextModifier, option.modifier),
+    meterEffect(game, "impact", option.impact),
+    meterEffect(game, "continuity", option.continuity),
+    rollEffect(game.nextModifier, option.modifier),
     // Pace runs from 0 to 3; a step past either end changes nothing, and said
     // "one step faster" beside a pace already at "pressing hard".
     option.tempo && Math.min(3, Math.max(0, game.adversaryTempo + option.tempo)) !== game.adversaryTempo

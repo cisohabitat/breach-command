@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { CONTINUITY_AT_RISK } from "@/hooks/use-meter-pulse";
-import { describeMeterChange, getOperationalLabel, responseOptionsFor, type Game } from "@/lib/advanced-game";
+import { getOperationalLabel, responseOptionsFor, type Game, meterEffect } from "@/lib/advanced-game";
 import { EffectList } from "@/components/game/effect-list";
 import { useMessages } from "@/hooks/use-messages";
 import { responsePanelMessages } from "@/lib/i18n/en/response-panel";
@@ -62,7 +62,7 @@ function OptionEffect({ game, impact, continuity }: { game: Game; impact: number
   return (
     <span className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
       {/* The change the meter will actually show: "−22 better" at an impact of 0 promised nothing. */}
-      <EffectList items={[describeMeterChange(game, "impact", after.impact - game.impact), describeMeterChange(game, "continuity", after.continuity - game.continuity)]} />
+      <EffectList items={[meterEffect(game, "impact", after.impact - game.impact), meterEffect(game, "continuity", after.continuity - game.continuity)]} />
       <small>{t("responsePanel.endsAt2", { getOperationalLabel: getOperationalLabel(game), continuity: after.continuity })}{ends && <b>{t("responsePanel.whichEndsThe")}</b>}{atRisk && <b>{t("responsePanel.atRisk")}</b>}</small>
     </span>
   );

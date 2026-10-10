@@ -25,13 +25,14 @@ export function registered(key: string) {
 }
 type Params = Record<string, string | number>;
 
-const accents: Record<string, string> = { a: "á", e: "é", i: "î", o: "ö", u: "ü", c: "ç", n: "ñ", s: "š", y: "ý", A: "Å", E: "É", I: "Î", O: "Ö", U: "Ü", C: "Ç", N: "Ñ", S: "Š" };
+const accents: Record<string, string> = { a: "á", e: "é", i: "î", o: "ö", u: "ü", c: "ç", n: "ñ", s: "š", y: "ý", A: "Á", E: "É", I: "Î", O: "Ö", U: "Ü", C: "Ç", N: "Ñ", S: "Š" };
+// Placeholders and markup tags stay as they are; everything else is accented.
+export function accent(text: string) {
+  return text.split(/(\{[a-zA-Z]+\}|<\/?[a-z][a-z0-9]*>)/).map(part => /^(\{[a-zA-Z]+\}|<\/?[a-z][a-z0-9]*>)$/.test(part) ? part : [...part].map(char => accents[char] ?? char).join("")).join("");
+}
 export function pseudo(text: string) {
-  // Placeholders and markup tags stay as they are; everything else is accented
-  // and padded.
-  const accented = text.split(/(\{[a-zA-Z]+\}|<\/?[a-z][a-z0-9]*>)/).map(part => /^(\{[a-zA-Z]+\}|<\/?[a-z][a-z0-9]*>)$/.test(part) ? part : [...part].map(char => accents[char] ?? char).join("")).join("");
   const pad = "·".repeat(Math.max(1, Math.round(text.length / 3)));
-  return `[${accented}${pad}]`;
+  return `[${accent(text)}${pad}]`;
 }
 
 function lookup(locale: Locale, key: MessageKey): Value {

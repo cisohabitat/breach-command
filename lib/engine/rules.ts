@@ -2,7 +2,7 @@
 import { attacks, procedures, sectorProcedures, hypotheses, scenarioDynamics, scenarios, randomInt, type HypothesisId } from "../game.ts";
 import { procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { infrastructureTopologies } from "../phase8.ts";
-import { adversaryProfiles, meterDirection, responseProfiles } from "./content.ts";
+import { adversaryProfiles, meterDirection, meterNames, responseProfiles } from "./content.ts";
 import { type DecisionChoice, type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
 
 // The fatigue at which a specialist's bonus stops applying. The roll, its
@@ -43,14 +43,17 @@ export function getOperationalLabel(game: Game) {
 // A change in the words the readouts above it use. "Continuity −3" and "Sector
 // confidence +5" under readouts called "Terminal service flow" and "Terminal
 // operating window" left a playtest unable to say which bar would move.
-export function describeMeterChange(game: Game, meter: keyof typeof meterDirection, value: number) {
+export function meterEffect(game: Game, meter: keyof typeof meterDirection, value: number): Effect {
   const labels: Partial<Record<keyof typeof meterDirection, string>> = {
-    impact: "Business impact",
+    impact: meterNames.impact,
     continuity: getOperationalLabel(game),
     sector: sectorSystems[game.scenario].title,
-    objective: "Adversary progress",
+    objective: meterNames.objective,
   };
-  return describeChange(meter, value, labels[meter]);
+  return changeEffect(meter, value, labels[meter]);
+}
+export function describeMeterChange(game: Game, meter: keyof typeof meterDirection, value: number) {
+  return effectText(meterEffect(game, meter, value));
 }
 
 export function getTurnLimit(game: Game) {
@@ -105,17 +108,42 @@ export function availableIn(game: Game, id: string) {
   return Math.max(0, game.lastUsed[id] + cooldownWindow(game) - (game.turns.length + 1));
 }
 
-export function describeChange(meter: keyof typeof meterDirection | string, value: number, label?: string) {
+// An effect line as data. EffectList lays it out and the catalogue words it, so
+// nothing reads English back; effectText says it in English for the sentences
+// that still quote one (and for the tests, which read what a player read).
+export type Effect =
+  | { kind: "change"; label: string; amount: number; good: boolean }
+  | { kind: "same"; label: string }
+  | { kind: "roll"; which: "next" | "this"; amount: number; cap: string | null; carried?: boolean }
+  | { kind: "pace"; faster: boolean }
+  | { kind: "note"; text: string };
+export const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)}`;
+
+export function changeEffect(meter: keyof typeof meterDirection | string, value: number, label?: string): Effect {
   const known = meterDirection[meter];
   // A scenario names its own continuity meter ("Business service integrity"), and
   // the change reads in that name rather than "<name>: Continuity".
   const direction = known && label ? { ...known, label } : known;
-  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-  const amount = `${sign}${Math.abs(value)}`;
-  if (!direction) return `${meter} ${amount}`;
-  if (value === 0) return `${direction.label} unchanged`;
-  const good = value > 0 ? direction.risesIsGood : !direction.risesIsGood;
-  return `${direction.label} ${amount} ${good ? "better" : "worse"}`;
+  if (!direction) return { kind: "note", text: `${meter} ${signed(value)}` };
+  if (value === 0) return { kind: "same", label: direction.label };
+  return { kind: "change", label: direction.label, amount: value, good: value > 0 ? direction.risesIsGood : !direction.risesIsGood };
+}
+export function describeChange(meter: keyof typeof meterDirection | string, value: number, label?: string) {
+  return effectText(changeEffect(meter, value, label));
+}
+
+export function effectText(effect: Effect): string {
+  switch (effect.kind) {
+    case "change": return `${effect.label} ${signed(effect.amount)} ${effect.good ? "better" : "worse"}`;
+    case "same": return `${effect.label} unchanged`;
+    case "pace": return `adversary pace ${effect.faster ? "faster" : "slower"}`;
+    case "note": return effect.text;
+    case "roll": {
+      const which = `${effect.which} roll`;
+      if (!effect.amount) return effect.cap ? `${which} unchanged (rolls carry ${effect.cap} at most)` : `${which} unchanged`;
+      return `${which} ${signed(effect.amount)}${effect.cap ? ` (rolls carry ${effect.cap} at most)` : ""}${effect.carried ? " with what was already carried" : ""}`;
+    }
+  }
 }
 
 // Every part of the roll, before committing. Nothing here depends on the hidden
@@ -145,12 +173,15 @@ export function carryModifier(before: number, change: number) {
 }
 
 // A carried change to the next roll in words, saying when the cap trims it.
-export function describeRollShift(before: number, shift: number) {
-  if (!shift) return "";
+export function rollEffect(before: number, shift: number): Effect | null {
+  if (!shift) return null;
   const actual = carryModifier(before, shift) - before;
   // "next roll −0" read as a typo; a change the cap swallows whole says so.
-  if (!actual) return `next roll unchanged (rolls carry ${shift > 0 ? "+3" : "−2"} at most)`;
-  return `next roll ${actual < 0 ? "−" : "+"}${Math.abs(actual)}${actual !== shift ? ` (rolls carry ${shift > 0 ? "+3" : "−2"} at most)` : ""}`;
+  return { kind: "roll", which: "next", amount: actual, cap: actual !== shift ? (shift > 0 ? "+3" : "−2") : null };
+}
+export function describeRollShift(before: number, shift: number) {
+  const effect = rollEffect(before, shift);
+  return effect ? effectText(effect) : "";
 }
 
 // What a response choice earns beyond its own score: four for the sector's

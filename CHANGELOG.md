@@ -4,6 +4,12 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.5, 10 October 2026
+
+- **Effects and glossary in any language.** The lines that say what a choice
+  costs are laid out from data rather than read back from English, and the
+  glossary finds its terms in translated text. English is unchanged.
+
 ## 0.9.4, 10 October 2026
 
 - **Content ready for translation.** The words of every case, attack, clue,

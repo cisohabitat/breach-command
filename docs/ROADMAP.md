@@ -637,6 +637,13 @@ balance check's 1,800 operations and 300 campaigns with the content in the
 pseudo-locale and requires the same figures and fingerprint, which caught the
 Bot Commander scoring response options by their words.
 
+10 October 2026 (0.9.5), step 2: nothing reads English back. The effect
+lines are data that `EffectList` lays out and the catalogue words, and the
+glossary finds its terms by the words a locale gives them, checked on every
+passage in the pseudo-locale. The component test now reads a component's own
+props (`items`, `label`) as text; the two strings that rule had let through
+(the cooldown note and the carried roll) went with the effects.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

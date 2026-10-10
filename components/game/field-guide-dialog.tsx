@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { plainLanguage } from "@/lib/advanced-game";
+import { glossaryTerms, plainLanguage } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { useMessages } from "@/hooks/use-messages";
 import { fieldGuideDialogMessages } from "@/lib/i18n/en/field-guide-dialog";
@@ -28,7 +28,7 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
             <p>{t("fieldGuideDialog.theInterfaceUses")}</p>
             <dl>
               {Object.entries(plainLanguage).map(([term, meaning]) => (
-                <div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>
+                <div key={term}><dt>{glossaryTerms[term]}</dt><dd>{meaning}</dd></div>
               ))}
             </dl>
           </section>

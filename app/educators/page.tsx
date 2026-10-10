@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { difficulties, plainLanguage } from "@/lib/advanced-game";
+import { difficulties, glossaryTerms, plainLanguage } from "@/lib/advanced-game";
 import { debriefQuestionSets, difficultyTeaches } from "@/lib/educators";
 
 export const metadata: Metadata = {
@@ -45,7 +45,7 @@ export default function EducatorPack() {
       <h2>The vocabulary in plain words</h2>
       <p>The game explains each of these where it is first read. They are listed here for a handout.</p>
       <dl className="educator-glossary">
-        {Object.entries(plainLanguage).sort(([a], [b]) => a.localeCompare(b)).map(([term, meaning]) => <div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>)}
+        {Object.entries(plainLanguage).sort(([a], [b]) => glossaryTerms[a].localeCompare(glossaryTerms[b])).map(([term, meaning]) => <div key={term}><dt>{glossaryTerms[term]}</dt><dd>{meaning}</dd></div>)}
       </dl>
 
       <h2>What it is and is not</h2>

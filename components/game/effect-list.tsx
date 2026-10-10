@@ -1,32 +1,39 @@
 import { useMessages } from "@/hooks/use-messages";
 import { effectListMessages } from "@/lib/i18n/en/effect-list";
 import { register } from "@/lib/i18n";
+import { signed, type Effect } from "@/lib/advanced-game";
 
 register(effectListMessages);
 
 // A choice's effects as a ruled column, one meter a line, so a player reads the
-// cost down the list instead of along a sentence joined by dots. It takes the
-// same strings describeMeterChange and describeRollShift write, so the words a
-// screen reader hears are unchanged. Spans rather than a list, because it sits
-// inside option buttons, which hold phrasing content only.
-export function EffectList({ items, className = "" }: { items: (string | null | undefined | false)[]; className?: string }) {
+// cost down the list instead of along a sentence joined by dots. The engine
+// gives each line as data (meterEffect, rollEffect), and this lays it out and
+// words it from the catalogue, so a translation needs no pattern of English.
+// A plain string is a note, shown as it is. Spans rather than a list, because
+// it sits inside option buttons, which hold phrasing content only.
+export function EffectList({ items, className = "" }: { items: (Effect | string | null | undefined | false)[]; className?: string }) {
   const { t } = useMessages();
-  const lines = items.filter((item): item is string => !!item);
+  const lines = items.filter((item): item is Effect | string => !!item);
   const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
   if (!lines.length) return null;
+  const word = (good: boolean) => t(good ? "effectList.better" : "effectList.worse");
   return (
     <span className={`effect-list ${className}`}>
       {lines.map((line, index) => {
-        const change = line.match(/^(.+?) ([+−]\d+) (better|worse)$/);
-        if (change) return <span key={index} className={`effect ${change[3]}`}><span>{change[1]}</span> <b>{change[2]}</b> <em>{change[3]}</em></span>;
-        const same = line.match(/^(.+) unchanged$/);
-        if (same) return <span key={index} className="effect same"><span>{capital(same[1])}</span> <b>0</b> <em>{t("effectList.unchanged")}</em></span>;
-        // The adversary's pace moves a step, not by a number: the step is the value.
-        const pace = line.match(/^(adversary pace) (slower|faster)$/);
-        if (pace) return <span key={index} className={`effect pace ${pace[2] === "slower" ? "better" : "worse"}`}><span>{capital(pace[1])}</span> <em>{pace[2]}</em></span>;
-        const roll = line.match(/^(next roll|this roll) ([+−]\d+)(.*)$/);
-        if (roll) return <span key={index} className={`effect ${roll[2].startsWith("+") ? "better" : "worse"}`}><span>{capital(roll[1])}{roll[3]}</span> <b>{roll[2]}</b> <em>{roll[2].startsWith("+") ? "better" : "worse"}</em></span>;
-        return <span key={index} className="effect note"><span>{capital(line)}</span></span>;
+        if (typeof line === "string") return <span key={index} className="effect note"><span>{capital(line)}</span></span>;
+        switch (line.kind) {
+          case "change": return <span key={index} className={`effect ${line.good ? "better" : "worse"}`}><span>{line.label}</span> <b>{signed(line.amount)}</b> <em>{word(line.good)}</em></span>;
+          case "same": return <span key={index} className="effect same"><span>{capital(line.label)}</span> <b>0</b> <em>{t("effectList.unchanged")}</em></span>;
+          // The adversary's pace moves a step, not by a number: the step is the value.
+          case "pace": return <span key={index} className={`effect pace ${line.faster ? "worse" : "better"}`}><span>{t("effectList.adversaryPace")}</span> <em>{t(line.faster ? "effectList.faster" : "effectList.slower")}</em></span>;
+          case "note": return <span key={index} className="effect note"><span>{capital(line.text)}</span></span>;
+          case "roll": {
+            const which = t(line.which === "next" ? "effectList.nextRoll" : "effectList.thisRoll");
+            if (!line.amount && line.cap) return <span key={index} className="effect note"><span>{t("effectList.rollUnchangedCapped", { roll: which, cap: line.cap })}</span></span>;
+            if (!line.amount) return <span key={index} className="effect same"><span>{which}</span> <b>0</b> <em>{t("effectList.unchanged")}</em></span>;
+            return <span key={index} className={`effect ${line.amount > 0 ? "better" : "worse"}`}><span>{which}{line.cap ? t("effectList.rollsCarry", { cap: line.cap }) : ""}{line.carried ? t("effectList.withCarried") : ""}</span> <b>{signed(line.amount)}</b> <em>{word(line.amount > 0)}</em></span>;
+          }
+        }
       })}
     </span>
   );

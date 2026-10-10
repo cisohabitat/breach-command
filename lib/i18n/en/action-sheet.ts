@@ -21,7 +21,6 @@ export const actionSheetMessages = {
   "actionSheet.thisProcedureDoes": "This procedure does not directly test your working hypothesis. It may still collect useful evidence, but earns no own-source bonus.",
   "actionSheet.oneBonusIs": "One bonus is unavailable — see why",
   "actionSheet.nothingApplies": "Nothing applies",
-  "actionSheet.thisRollUnchanged": "this roll unchanged",
-  "actionSheet.thisRoll": "this roll {change}",
   "actionSheet.needBB": ", need <b>{threshold}</b> or better",
+  "actionSheet.sourceRestsLonger": { one: "the source rests {count} turn longer", other: "the source rests {count} turns longer" },
 } as const;

@@ -47,14 +47,17 @@ test("the pseudo-locale lengthens every string by about a third and keeps its pl
 // that reads as words (two words, or a capitalised one) anywhere in
 // components/game and the page shell, unless its position says it is not text.
 // Those positions are structural, never a list of strings: imports and types,
-// attributes other than aria-label, aria-description, aria-valuetext,
-// placeholder, title and alt; comparison operands and object keys; arguments
+// attributes that never hold text (className, key, href, role, data-*, ARIA
+// states; a component's own props such as items and label are text);
+// comparison operands and object keys; arguments
 // to string methods, DOM and storage calls, console, Error and t() itself;
 // class names; media queries; and a statement marked "i18n: maintainer
 // English", which a player copies into a report for whoever fixes the game.
 // A single lowercase word reads like an id and is not caught; catalogue one by
 // hand ("none", "stable").
-const shownAttributes = new Set(["aria-label", "aria-description", "aria-valuetext", "aria-roledescription", "placeholder", "title", "alt"]);
+// Attributes that never hold text a player reads; every other attribute, a
+// component's own props included (items, label), is read as text.
+const nonTextAttribute = /^(className|key|id|href|role|type|style|src|htmlFor|name|target|rel|tabIndex|method|action|value|defaultValue|autoComplete|inputMode|data-[a-z-]+|aria-(hidden|controls|describedby|labelledby|live|expanded|pressed|current|haspopup|modal|atomic|relevant|busy|selected|checked|disabled|invalid|level|orientation|owns|posinset|setsize|sort|valuemax|valuemin|valuenow)|variant|size|tone|kind|mode|status|state|cls|tag|sound|cue|side|align|as|direction|placement|icon)$/;
 const notText = /^(includes|match|matchAll|startsWith|endsWith|replace|replaceAll|split|indexOf|lastIndexOf|test|querySelector|querySelectorAll|getElementById|addEventListener|removeEventListener|setItem|getItem|removeItem|closest|matches|getPropertyValue|setProperty|createElement|postMessage|dispatchEvent|toLocaleString|toLocaleDateString|toLocaleTimeString|setAttribute|getAttribute|hasAttribute|removeAttribute|play|has|get|set|delete|add|push|join|padStart|padEnd|t|textFor|log|warn|error|info|debug|register|useMessages|cue|track|record|matchMedia)$/;
 const reads = (text: string) => /[A-Za-z]{2,}/.test(text) && (/[A-Za-z]\S*\s+\S*[A-Za-z]/.test(text) || /^[^A-Za-z]*[A-Z][a-z]/.test(text));
 function literalText(node: ts.Node) {
@@ -69,7 +72,7 @@ function notInterface(node: ts.Node): boolean {
   const parent = node.parent;
   if (/^\((prefers-|max-|min-|orientation|hover|pointer)[a-z-]*:/.test(literalText(node) ?? "")) return true;
   if (ts.isImportDeclaration(parent) || ts.isExportDeclaration(parent) || ts.isLiteralTypeNode(parent) || ts.isExpressionStatement(parent) || ts.isCaseClause(parent)) return true;
-  if (ts.isJsxAttribute(parent)) return !shownAttributes.has(parent.name.getText());
+  if (ts.isJsxAttribute(parent)) return nonTextAttribute.test(parent.name.getText());
   if (ts.isBinaryExpression(parent) && [ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsToken, ts.SyntaxKind.InKeyword].includes(parent.operatorToken.kind)) return true;
   if ((ts.isPropertyAssignment(parent) || ts.isPropertySignature(parent) || ts.isMethodDeclaration(parent)) && parent.name === node) return true;
   if (ts.isElementAccessExpression(parent) && parent.argumentExpression === node) return true;
@@ -83,7 +86,7 @@ function notInterface(node: ts.Node): boolean {
     if (ts.isConditionalExpression(up) && up.condition === node) return true;
     up = up.parent;
   }
-  if (up && ts.isJsxExpression(up) && up.parent && ts.isJsxAttribute(up.parent)) return !shownAttributes.has(up.parent.name.getText());
+  if (up && ts.isJsxExpression(up) && up.parent && ts.isJsxAttribute(up.parent)) return nonTextAttribute.test(up.parent.name.getText());
   if (up && ts.isPropertyAssignment(up) && /^(className|key|id|href|role|type|tone|kind|variant|status|mode|state|cls|tag|sound|cue)$/.test(up.name.getText())) return true;
   return false;
 }

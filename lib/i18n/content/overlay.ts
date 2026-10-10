@@ -4,7 +4,7 @@
 // it), and on the balance check's --overlay run, which proves the rules give
 // the same game in any language. The English is kept, so applying again, or
 // another locale, always starts from it.
-import { pseudo } from "../index.ts";
+import { accent, pseudo } from "../index.ts";
 import { contentTables, whenContentRegisters } from "./registry.ts";
 import { contentLeaves, type Leaf } from "./walk.ts";
 
@@ -29,7 +29,9 @@ export function applyContentOverlay(overlay: (path: string, english: string) => 
   });
 }
 
-export const pseudoOverlay = (_path: string, text: string) => pseudo(text);
+// A glossary term is only accented, without brackets or padding, so it is still
+// found inside the accented text it explains.
+export const pseudoOverlay = (path: string, text: string) => path.startsWith("glossaryTerms.") ? accent(text) : pseudo(text);
 
 export function applyLocaleContent(locale: string) {
   if (locale === "en-XA") applyContentOverlay(pseudoOverlay);

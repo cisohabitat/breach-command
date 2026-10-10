@@ -125,4 +125,5 @@ export const debriefDialogMessages = {
   "debriefDialog.whatMightHave2": "What might have changed<span>{getCounterfactuals} alternatives</span>",
   "debriefDialog.theAttackChain2": "The attack chain<span>{revealed} of 4 stages confirmed; see what each one was</span>",
   "debriefDialog.campaignAndTeam2": "Campaign and team<span>trust {leadershipTrust}, readiness {readiness}, mastery {mastery} of 3 on this case</span>",
+  "debriefDialog.noMeterMoved": "no meter moved",
 } as const;

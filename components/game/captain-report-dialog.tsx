@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, decisionRollShift, describeMeterChange, describePart, describeRollShift, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game } from "@/lib/advanced-game";
+import { attacks, decisionRollShift, describePart, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game, meterEffect, rollEffect } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { Glossed } from "@/components/game/glossed";
@@ -96,7 +96,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
                   game going back on its word. The reason says what moved them. */}
               <p className="turn-plan">{t("captainReportDialog.planScopeAnalysis", { procedureScopesTitle: procedureScopes[report.plan.scope].title.toLowerCase(), procedureIntensitiesTitle: procedureIntensities[report.plan.intensity].title.toLowerCase() })}</p>
-              <div className="turn-movement"><b>{t("captainReportDialog.thisTurn")}</b><EffectList items={[describeMeterChange(game, "impact", report.impactChange), describeMeterChange(game, "continuity", report.continuityChange), describeMeterChange(game, "sector", report.sectorChange), describeMeterChange(game, "objective", report.objectiveChange)]} /><p>{report.revealed
+              <div className="turn-movement"><b>{t("captainReportDialog.thisTurn")}</b><EffectList items={[meterEffect(game, "impact", report.impactChange), meterEffect(game, "continuity", report.continuityChange), meterEffect(game, "sector", report.sectorChange), meterEffect(game, "objective", report.objectiveChange)]} /><p>{report.revealed
                 ? t("captainReportDialog.findingTheStage")
                 : report.success
                   ? t("captainReportDialog.theCheckCompleted")
@@ -124,7 +124,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   <span className="eyebrow">{t("captainReportDialog.responseRecorded")}</span>
                   <strong>{item.title}</strong>
                   <p>{item.effect}</p>
-                  <EffectList items={[describeMeterChange(game, "impact", item.impactChange), describeMeterChange(game, "continuity", item.continuityChange), describeMeterChange(game, "sector", item.sectorChange), describeMeterChange(game, "objective", item.objectiveChange), report.number === game.turns.length && game.nextModifierSource?.includes("Evidence decision") && `next roll ${game.nextModifier < 0 ? "−" : "+"}${Math.abs(game.nextModifier)}${game.nextModifierSource.includes(";") ? " with what was already carried" : ""}`]} />
+                  <EffectList items={[meterEffect(game, "impact", item.impactChange), meterEffect(game, "continuity", item.continuityChange), meterEffect(game, "sector", item.sectorChange), meterEffect(game, "objective", item.objectiveChange), report.number === game.turns.length && game.nextModifierSource?.includes("Evidence decision") && { kind: "roll", which: "next", amount: game.nextModifier, cap: null, carried: game.nextModifierSource.includes(";") }]} />
                   <p>{t("captainReportDialog.howWellIt")}</p>
                 </div>
               ))}
@@ -195,11 +195,11 @@ function previewDecision(game: Game, choice: DecisionChoice) {
   try {
     const next = resolveDecision(game, choice);
     return [
-      describeMeterChange(game, "impact", next.impact - game.impact),
-      describeMeterChange(game, "continuity", next.continuity - game.continuity),
-      describeMeterChange(game, "sector", next.sectorHealth - game.sectorHealth),
-      describeMeterChange(game, "objective", next.objectiveProgress - game.objectiveProgress),
-      describeRollShift(game.nextModifier, decisionRollShift[choice]),
+      meterEffect(game, "impact", next.impact - game.impact),
+      meterEffect(game, "continuity", next.continuity - game.continuity),
+      meterEffect(game, "sector", next.sectorHealth - game.sectorHealth),
+      meterEffect(game, "objective", next.objectiveProgress - game.objectiveProgress),
+      rollEffect(game.nextModifier, decisionRollShift[choice]),
     ];
   } catch {
     return null;

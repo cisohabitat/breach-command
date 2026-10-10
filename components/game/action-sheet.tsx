@@ -1,17 +1,17 @@
 import { useRef } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { describeMeterChange, describePart, getDiscriminatingRead, getModifierBreakdown, procedureIntensities, procedureScopes, type ProcedureIntensity, type ProcedureScope } from "@/lib/advanced-game";
+import { describePart, getDiscriminatingRead, getModifierBreakdown, procedureIntensities, procedureScopes, type ProcedureIntensity, type ProcedureScope, meterEffect, type Effect } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { Glossed } from "@/components/game/glossed";
 import { EffectList } from "@/components/game/effect-list";
-import { useMessages, type Translate } from "@/hooks/use-messages";
+import { useMessages } from "@/hooks/use-messages";
 import { actionSheetMessages } from "@/lib/i18n/en/action-sheet";
 import { register } from "@/lib/i18n";
 
 register(actionSheetMessages);
 
 // A plan's change to this roll, in the words EffectList reads.
-const rollLine = (t: Translate, modifier: number) => modifier === 0 ? t("actionSheet.thisRollUnchanged") : t("actionSheet.thisRoll", { change: `${modifier > 0 ? "+" : "−"}${Math.abs(modifier)}` });
+const rollLine = (modifier: number): Effect => ({ kind: "roll", which: "this", amount: modifier, cap: null });
 
 export function ActionSheet({ session }: { session: GameSession }) {
   const { t, rich } = useMessages();
@@ -62,8 +62,8 @@ export function ActionSheet({ session }: { session: GameSession }) {
             </details>
           )}
           <div className="procedure-planner">
-            <div role="group" aria-label={t("actionSheet.scope2")}><span className="eyebrow">{t("actionSheet.scope2")}</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureScopes[id].description}</small><EffectList className="plan-effects" items={[rollLine(t, procedureScopes[id].modifier), describeMeterChange(game, "impact", procedureScopes[id].impact), describeMeterChange(game, "objective", procedureScopes[id].objective)]} /></button>)}</div></div>
-            <div role="group" aria-label={t("actionSheet.intensity")}><span className="eyebrow">{t("actionSheet.intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(t, procedureIntensities[id].modifier), describeMeterChange(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && `the source rests ${procedureIntensities[id].cooldown} turn longer`]} /></button>)}</div></div>
+            <div role="group" aria-label={t("actionSheet.scope2")}><span className="eyebrow">{t("actionSheet.scope2")}</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureScopes[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureScopes[id].modifier), meterEffect(game, "impact", procedureScopes[id].impact), meterEffect(game, "objective", procedureScopes[id].objective)]} /></button>)}</div></div>
+            <div role="group" aria-label={t("actionSheet.intensity")}><span className="eyebrow">{t("actionSheet.intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureIntensities[id].modifier), meterEffect(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && t("actionSheet.sourceRestsLonger", { count: procedureIntensities[id].cooldown })]} /></button>)}</div></div>
           </div>
           <p className="muted small">{t("actionSheet.successRevealsStage")}</p>
           <button className="primary-button full" onClick={() => run(proc.id)}>{t("actionSheet.runProcedure")}</button>

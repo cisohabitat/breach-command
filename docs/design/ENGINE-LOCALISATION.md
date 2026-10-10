@@ -1,6 +1,6 @@
 # Localising the engine's prose
 
-Status: step 1 built (0.9.4, 10 October 2026); steps 2 to 5 follow. The interface around it is
+Status: steps 1 and 2 built (0.9.4 and 0.9.5, 10 October 2026); steps 3 to 5 follow. The interface around it is
 catalogued (`lib/i18n/`, 0.9.1 to 0.9.3); this is the plan for the rest, so
 that the work can start when a first locale has a translator and a reviewer
 (Phase 7, `docs/ROADMAP.md`).
@@ -96,12 +96,22 @@ Three parts of the interface read English back:
    18 in `tests/fixtures/saves/session-v18.json` proves it, as the earlier
    versions' fixtures do for theirs.
 
-6. **Rendering reads structure, not words.** The effect lines become data,
-   `{ meter, change, direction }`, which `EffectList` lays out and the
-   catalogue words; the patterns go. Glossary terms are marked where content
-   is authored (`[[lateral movement]]` in the source, the translator places the
-   brackets in the overlay), so `Glossed` finds them in any language. The
-   share card takes its strings from `translate()` like any component.
+6. **Rendering reads structure, not words.** *Built in 0.9.5.* The effect
+   lines are data, an `Effect` (`lib/engine/rules.ts`: a meter's change with
+   its label, amount and whether it is better; unchanged; a roll's change with
+   its cap; the adversary's pace; a note), which `EffectList` lays out and the
+   catalogue words; the patterns are gone, and `effectText` still says an
+   effect in English for the sentences that quote one. *Amended:* glossary
+   terms are not marked in the content, as first planned, because content
+   reaches many places that are not glossed and would show the brackets.
+   Instead the terms are a content table of their own (`glossaryTerms`, the
+   English term as key, the shown words as value), which a translation
+   overlays, and `glossaryParts` matches the words the locale gives them, at
+   any letter boundary rather than ASCII ones. `tests/content-overlay.test.ts`
+   checks that every term marked in an English passage is still marked in its
+   pseudo-locale translation. The plural "s" a term may take is English's; a
+   locale with other plurals lists its forms in its own terms. The share card
+   takes its strings from `translate()` like any component.
 
 7. **What stays English:** the diagnostic a player copies into a bug report
    (marked `i18n: maintainer English`), the ledger's CSV column names (a file

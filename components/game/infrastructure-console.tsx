@@ -1,6 +1,6 @@
 import { ArrowUp } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
-import { attacks, describeMeterChange, procedureById, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
+import { attacks, procedureById, getMapActionEffect, infrastructureTopologies, type Game, type MapAction, meterEffect, rollEffect } from "@/lib/advanced-game";
 import { EffectList } from "@/components/game/effect-list";
 import { useMessages, type Translate } from "@/hooks/use-messages";
 import { infrastructureConsoleMessages } from "@/lib/i18n/en/infrastructure-console";
@@ -17,11 +17,11 @@ function costLine(t: Translate, game: Game, nodeId: string, action: MapAction) {
   const change = getMapActionEffect(game, nodeId, action);
   return [
     t("infrastructureConsole.spend1Action"),
-    describeRollShift(game.nextModifier, change.modifier) || null,
-    describeMeterChange(game, "impact", reachable(game.impact, change.impact)),
-    change.continuity ? describeMeterChange(game, "continuity", reachable(game.continuity, change.continuity)) : null,
-    describeMeterChange(game, "sector", reachable(game.sectorHealth, change.sector)),
-    describeMeterChange(game, "objective", reachable(game.objectiveProgress, change.objective)),
+    rollEffect(game.nextModifier, change.modifier),
+    meterEffect(game, "impact", reachable(game.impact, change.impact)),
+    change.continuity ? meterEffect(game, "continuity", reachable(game.continuity, change.continuity)) : null,
+    meterEffect(game, "sector", reachable(game.sectorHealth, change.sector)),
+    meterEffect(game, "objective", reachable(game.objectiveProgress, change.objective)),
   ];
 }
 

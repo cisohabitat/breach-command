@@ -596,15 +596,27 @@ export function inSentence(name: string) {
 // ones inside them ("privileged tier" before a bare match), a term may be plural
 // or hyphenated ("control-plane"), and only its first use in a passage is
 // marked, so a paragraph does not turn into a row of links.
+// A term is found by the words a locale gives it (glossaryTerms, which a
+// translation overlays like any content), so the text and its terms are always
+// in one language; `term` is the English key, which names the meaning in
+// plainLanguage. Boundaries are any letter or digit, not only ASCII ones.
 export type GlossaryPart = { text: string; term?: string };
-const glossaryTerms = Object.keys(plainLanguage).sort((a, b) => b.length - a.length);
-const glossaryPattern = new RegExp(`\\b(${glossaryTerms.map(term => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "[ -]")).join("|")})s?\\b`, "gi");
+export const glossaryTerms: Record<string, string> = Object.fromEntries(Object.keys(plainLanguage).map(term => [term, term]));
+const escape = (term: string) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "[ -]");
+let glossaryCache: { words: string; pattern: RegExp; terms: [string, string][] } | null = null;
+function glossaryMatcher() {
+  const terms = Object.entries(glossaryTerms).sort(([, a], [, b]) => b.length - a.length);
+  const words = terms.map(([, shown]) => shown).join("\u0000");
+  if (glossaryCache?.words !== words) glossaryCache = { words, terms, pattern: new RegExp(`(?<![\\p{L}\\p{N}])(${terms.map(([, shown]) => escape(shown)).join("|")})s?(?![\\p{L}\\p{N}])`, "giu") };
+  return glossaryCache;
+}
 export function glossaryParts(text: string): GlossaryPart[] {
   const parts: GlossaryPart[] = [];
   const seen = new Set<string>();
+  const { pattern, terms } = glossaryMatcher();
   let last = 0;
-  for (const match of text.matchAll(glossaryPattern)) {
-    const term = glossaryTerms.find(candidate => new RegExp(`^${candidate.replace(/ /g, "[ -]")}s?$`, "i").test(match[0]));
+  for (const match of text.matchAll(pattern)) {
+    const term = terms.find(([, shown]) => new RegExp(`^${escape(shown)}s?$`, "iu").test(match[0]))?.[0];
     if (!term || seen.has(term)) continue;
     seen.add(term);
     if (match.index > last) parts.push({ text: text.slice(last, match.index) });
@@ -618,6 +630,10 @@ export function glossaryParts(text: string): GlossaryPart[] {
 // A bare signed number leaves a new player guessing which way is good: impact
 // rising is bad, continuity and sector confidence rising are good. Every meter
 // delta the interface shows says which.
+// The names the readouts give two meters, which the effect lines repeat. The
+// other two take the scenario's own names (getOperationalLabel, sectorSystems).
+export const meterNames = { impact: "Business impact", objective: "Adversary progress" };
+
 export const meterDirection: Record<string, { label: string; risesIsGood: boolean }> = {
   impact: { label: "Impact", risesIsGood: false },
   continuity: { label: "Continuity", risesIsGood: true },
@@ -639,4 +655,4 @@ export const decisionEffects: Record<DecisionChoice, string> = {
 };
 
 // The words of these tables are a locale's to replace (lib/i18n/content/).
-registerContent({ injects, adversaryProfiles, commandEvents, responseProfiles, decisionLanguage, sectorDecisionTerms, plainLanguage, meterDirection, decisionEffects });
+registerContent({ injects, adversaryProfiles, commandEvents, responseProfiles, decisionLanguage, sectorDecisionTerms, plainLanguage, glossaryTerms, meterNames, meterDirection, decisionEffects });
