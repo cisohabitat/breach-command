@@ -10,7 +10,6 @@ export const briefingScreenMessages = {
   "briefingScreen.setUpThe": "Set up the suggestion",
   "briefingScreen.replaySetUp": "Replay set up",
   "briefingScreen.yourRecord": "Your record",
-  "briefingScreen.of10": " of 10",
   "briefingScreen.downloadRecord": "Download record",
   "briefingScreen.commandCareerProgression": "Command career progression",
   "briefingScreen.yourCommandRecord": "Your command record",
@@ -88,4 +87,6 @@ export const briefingScreenMessages = {
   "briefingScreen.formBc0012": "Form BC-001 <span>/</span> Assignment",
   "briefingScreen.advancedOperationSettings2": "Advanced operation settings <span>{gameModesTitle}</span>",
   "briefingScreen.anUnofficialSolo2": "An unofficial solo adaptation inspired by <a>Backdoors & Breaches</a>. Original scenarios and card text. Rule-based computer facilitator. <span>Version {version}, build {build}.</span>",
+  "briefingScreen.accuracyOver": { one: "operation: {recent} of 10", other: "{count}: {recent} of 10" },
+  "briefingScreen.scoreOf100": ", {score} of 100",
 } as const;

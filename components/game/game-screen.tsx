@@ -121,7 +121,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
-                {meterPulse.objective > 0 ? "+" : "−"}{Math.abs(meterPulse.objective)} {meterPulse.objective > 0 ? "worse" : "better"}
+                {meterPulse.objective > 0 ? "+" : "−"}{Math.abs(meterPulse.objective)} {t(meterPulse.objective > 0 ? "gameScreen.worse" : "gameScreen.better")}
               </span>
             )}
           </div>

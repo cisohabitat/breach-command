@@ -129,4 +129,6 @@ export const debriefDialogMessages = {
   "debriefDialog.phaseContainment": "Containment",
   "debriefDialog.phaseAssurance": "Assurance",
   "debriefDialog.phaseRecovery": "Recovery",
+  "debriefDialog.turnHypothesis": ", hypothesis: {title}",
+  "debriefDialog.masteryOf3": "{mastery} of 3",
 } as const;

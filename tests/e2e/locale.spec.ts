@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { pseudo } from "../../lib/i18n/index.ts";
+import { msg, ref } from "../../lib/i18n/message.ts";
 import { openWithSave, responsePhaseGame, twoStagesGame } from "./fixtures";
 
 // The pseudo-locale makes every catalogued string a third longer, as German
@@ -47,6 +48,8 @@ test("every word on the seeded screens comes from the catalogue or the content o
   const { namedSpecialists } = await import("../../lib/phase8.ts");
   const allowed = new Set([...Object.values(namedSpecialists).map(specialist => specialist.callsign), "local"]);
   const leftOver = async (where: string) => {
+    // A folded section is still on the screen to open; innerText skips it.
+    await page.evaluate(() => document.querySelectorAll("details").forEach(details => { details.open = true; }));
     let text = await page.locator("body").innerText();
     for (let previous = ""; previous !== text;) { previous = text; text = text.replace(/\[[^[\]]*\]/g, " "); }
     const words = [...new Set(text.match(/[A-Za-z]{4,}/g) ?? [])].filter(word => !allowed.has(word));
@@ -55,6 +58,25 @@ test("every word on the seeded screens comes from the catalogue or the content o
   await page.setViewportSize({ width: 1280, height: 900 });
   await openWithSave(page, null, false, null, "/?locale=en-XA");
   await leftOver("assignment");
+  await page.getByRole("button", { name: pseudo("Game settings") }).click();
+  await expect(page.locator("[role=dialog]")).toBeVisible();
+  await leftOver("settings");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: pseudo("Field guide") }).click();
+  await expect(page.locator("[role=dialog]")).toBeVisible();
+  await leftOver("field guide");
+  await page.keyboard.press("Escape");
+  // A returning player: a won operation with the review's suggestion, and a
+  // record of operations with its accuracy line.
+  const won = { scenario: 0, difficulty: "training", outcome: "won", ending: msg("record.endingStoodDown"), score: 82, endedAt: Date.UTC(2026, 9, 1, 12), next: { scenario: 1, difficulty: "operational", title: msg("record.nextTitle", { number: 2, title: ref("scenarios.care-network.title"), difficulty: ref("difficulties.operational.title") }), reason: msg("record.clearedOperational", { score: 82 }) } };
+  const entry = { at: Date.UTC(2026, 9, 1, 12), scenario: 0, difficulty: "training", mode: "standard", outcome: "won", score: 82, hypothesis: 8, stages: 4, turns: 9, code: null };
+  await page.addInitScript(([record, ledger]) => {
+    try { localStorage.setItem("breach-command.last-operation", record); localStorage.setItem("breach-command.ledger", ledger); } catch {}
+  }, [JSON.stringify(won), JSON.stringify([entry, { ...entry, outcome: "lost", score: 40 }])] as const);
+  await page.goto("/?locale=en-XA", { waitUntil: "domcontentloaded" });
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator(".last-operation").first()).toBeVisible();
+  await leftOver("returning player's assignment");
   await openWithSave(page, twoStagesGame(), false, null, "/?locale=en-XA");
   await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
   await page.waitForTimeout(400);

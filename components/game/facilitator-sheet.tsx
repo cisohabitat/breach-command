@@ -16,7 +16,7 @@ export function FacilitatorSheet({ game }: { game: Game }) {
   const outcome = getOutcome(game);
   const ledger = getHypothesisLedger(game);
   const questions = questionsFor(game.status);
-  const routeTitle = (id: string | null) => hypotheses.find(item => item.id === id)?.title ?? "none";
+  const routeTitle = (id: string | null) => hypotheses.find(item => item.id === id)?.title ?? t("facilitatorSheet.noRoute");
   const result = game.status === "won" ? t("facilitatorSheet.stoodDownGrade", { grade: outcome.grade }) : game.status === "exercise" ? t("facilitatorSheet.authorisedExerciseConcluded") : say(getLossReason(game).title);
   return (
     <section className="facilitator-sheet" aria-hidden="true">
@@ -35,7 +35,7 @@ export function FacilitatorSheet({ game }: { game: Game }) {
       <h3>{t("facilitatorSheet.turnByTurn")}</h3>
       <table>
         <thead><tr><th>{t("captainReportDialog.turn")}</th><th>{t("facilitatorSheet.reading")}</th><th>{t("facilitatorSheet.routeUnderTest")}</th><th>{t("facilitatorSheet.check")}</th><th>{t("facilitatorSheet.credit")}</th></tr></thead>
-        <tbody>{ledger.map(row => <tr key={row.turn}><td>{row.turn}</td><td>{row.predicted ?? t("facilitatorSheet.noneDeclared")}</td><td>{row.actualRoute ?? say(row.testedAgainst)}</td><td>{procedureById(game, row.procedure)?.title ?? row.procedure}{row.found ? `, found ${row.found}` : ""}</td><td>{row.credit === 1 ? t("facilitatorSheet.full") : row.credit ? t("facilitatorSheet.half") : t("facilitatorSheet.none")}</td></tr>)}</tbody>
+        <tbody>{ledger.map(row => <tr key={row.turn}><td>{row.turn}</td><td>{row.predicted ?? t("facilitatorSheet.noneDeclared")}</td><td>{row.actualRoute ?? say(row.testedAgainst)}</td><td>{procedureById(game, row.procedure)?.title ?? row.procedure}{row.found ? t("facilitatorSheet.foundStage", { found: row.found }) : ""}</td><td>{row.credit === 1 ? t("facilitatorSheet.full") : row.credit ? t("facilitatorSheet.half") : t("facilitatorSheet.none")}</td></tr>)}</tbody>
       </table>
       {(game.decisions.length > 0 || game.commandHistory.length > 0 || game.setPieceHistory.length > 0) && <>
         <h3>{t("facilitatorSheet.decisions")}</h3>

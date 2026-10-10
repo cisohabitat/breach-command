@@ -4,6 +4,17 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.11, 10 October 2026
+
+- **The last of the leftover English.** The pseudo-locale sweep now opens
+  every folded section and reads Settings, the field guide and a returning
+  player's assignment screen as well. It found the map's connection words
+  ("authenticates", "reads"), the selected system's state, the review's
+  "hypothesis:" and mastery "of 3", the facilitator sheet's "found" and
+  "none", the last operation's score, the record's accuracy line, the
+  objective meter's "worse"/"better" and the action sheet's Close. All are
+  translatable now (2,031 strings for a translator); English is unchanged.
+
 ## 0.9.10, 10 October 2026
 
 - **Nothing left in English by accident.** A test now reads the whole engine

@@ -230,6 +230,15 @@ exact.
    the log's count and the dialogs' Close were English in components; the
    first-session record in Settings was English in `lib/telemetry.ts`; and an
    unused copy of the response options sat in `lib/game.ts`.
+   *Widened in 0.9.11.* `innerText` skips a closed `<details>`, so the sweep
+   had read a folded review; it now opens every fold first, and reads
+   Settings, the field guide and a returning player's assignment (a won last
+   operation and a record) as well. That found the map's edge labels, one
+   word in capitals the walker did not take for words (`label` is now always
+   text), and eight more single lower-case words in components. The class
+   the parser rule cannot see, a template whose only literal is one
+   lower-case word (`` `, found ${x}` ``), is what the sweep is for; a screen
+   it does not reach can still hold one.
 
 ## Costs to expect
 

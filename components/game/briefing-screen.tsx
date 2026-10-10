@@ -60,7 +60,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         {lastOperation && !savedSession && (
           <section className="last-operation" aria-label={t("briefingScreen.lastOperation")}>
             <span className="field-label">{t("briefingScreen.lastOperation3", { describeWhen: say(describeWhen(lastOperation.endedAt, undefined, locale)) })}</span>
-            <p>{t("briefingScreen.caseAt", { scenario: lastOperation.scenario + 1, scenariosTitle: scenarios[lastOperation.scenario].title, difficultiesTitle: difficulties[lastOperation.difficulty].title, ending: say(withForm(lastOperation.ending, "lower")) })}{lastOperation.outcome === "lost" ? "" : `, ${lastOperation.score} of 100`}.</p>
+            <p>{t("briefingScreen.caseAt", { scenario: lastOperation.scenario + 1, scenariosTitle: scenarios[lastOperation.scenario].title, difficultiesTitle: difficulties[lastOperation.difficulty].title, ending: say(withForm(lastOperation.ending, "lower")) })}{lastOperation.outcome === "lost" ? "" : t("briefingScreen.scoreOf100", { score: lastOperation.score })}.</p>
             <p><strong>{t("briefingScreen.suggestedNext2", { nextTitle: say(lastOperation.next.title) })}</strong> {say(lastOperation.next.reason)}</p>
             {(scenarioChoice !== lastOperation.next.scenario || difficulty !== lastOperation.next.difficulty) && <button className="text-action" onClick={() => playRecommended(lastOperation.next)}>{t("briefingScreen.setUpThe")}</button>}
           </section>
@@ -79,7 +79,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           return (
             <section className="last-operation" aria-label={t("briefingScreen.yourRecord")}>
               <span className="field-label">{t("briefingScreen.yourRecord")}</span>
-              <p>{t("briefingScreen.operation2Plural", { count: ledger.length })}{t("briefingScreen.recordedWonOr", { count: ledger.filter(entry => entry.outcome !== "lost").length })}{trend.recentCount === 1 ? "operation" : `${trend.recentCount}`}: {trend.recent}{t("briefingScreen.of10")}{trend.before === null ? "" : t("briefingScreen.againstOverThe", { before: trend.before })}.</p>
+              <p>{t("briefingScreen.operation2Plural", { count: ledger.length })}{t("briefingScreen.recordedWonOr", { count: ledger.filter(entry => entry.outcome !== "lost").length })}{t("briefingScreen.accuracyOver", { count: trend.recentCount, recent: trend.recent ?? "" })}{trend.before === null ? "" : t("briefingScreen.againstOverThe", { before: trend.before })}.</p>
               <button className="text-action" onClick={() => downloadText("breach-command-record.csv", ledgerCsv(ledger, index => scenarios[index].title), "text/csv")}>{t("briefingScreen.downloadRecord")}</button>
             </section>
           );

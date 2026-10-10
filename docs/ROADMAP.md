@@ -697,6 +697,15 @@ fingerprint 1826729440 with and without the pseudo-locale; first load
 845,031 B; all script 1,189,715 B, budget moved to 1,200,000 B. The engine
 localisation plan (`docs/design/ENGINE-LOCALISATION.md`) is complete.
 
+10 October 2026 (0.9.11): the sweep opens every fold and reads Settings, the
+field guide and a returning player's assignment, which found nine more
+leftovers (the map's edge labels among them) now translated; 2,031 content
+strings. "No string outside the catalogue" is asserted for components, hooks
+and `lib/` by `tests/i18n.test.ts`, and on every screen the sweep reaches by
+`tests/e2e/locale.spec.ts`; the Phase 7 criteria still open are the
+screen-reader and keyboard-only playthroughs and a first shipped locale.
+First load 845,158 B; all script 1,190,300 B.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

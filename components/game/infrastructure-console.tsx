@@ -5,7 +5,7 @@ import { EffectList } from "@/components/game/effect-list";
 import { useMessages, type Translate } from "@/hooks/use-messages";
 import { infrastructureConsoleMessages } from "@/lib/i18n/en/infrastructure-console";
 import { register, type MessageKey } from "@/lib/i18n";
-import { legacyText, msg, sameMessage } from "@/lib/i18n/message";
+import { legacyText, lit, msg, sameMessage } from "@/lib/i18n/message";
 
 register(infrastructureConsoleMessages);
 
@@ -30,9 +30,9 @@ function costLine(t: Translate, game: Game, nodeId: string, action: MapAction) {
 // A node's kind and its state on the map, as words: the topology keys on the
 // codes, and the catalogue says them.
 const nodeTypes: Record<string, MessageKey> = { APPLICATION: "infrastructureConsole.typeApplication", ASSET: "infrastructureConsole.typeAsset", CONTROL: "infrastructureConsole.typeControl", EDGE: "infrastructureConsole.typeEdge", EXTERNAL: "infrastructureConsole.typeExternal", IDENTITY: "infrastructureConsole.typeIdentity" };
-const nodeStates: Record<string, MessageKey> = { isolated: "infrastructureConsole.stateIsolated", restored: "infrastructureConsole.stateRestored", affected: "infrastructureConsole.stateAffected", exposed: "infrastructureConsole.stateExposed", clear: "infrastructureConsole.stateClear" };
+const nodeStates: Record<string, MessageKey> = { isolated: "infrastructureConsole.stateIsolated", monitored: "infrastructureConsole.stateMonitored", restored: "infrastructureConsole.stateRestored", affected: "infrastructureConsole.stateAffected", exposed: "infrastructureConsole.stateExposed", clear: "infrastructureConsole.stateClear" };
 export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say } = useMessages();
   const topology = infrastructureTopologies[game.scenario];
   const activeStage = Math.min(4, game.revealed.length);
   const focused = topology.nodes.find(node => node.id === game.focusedNode) ?? topology.nodes[0];
@@ -63,7 +63,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
           return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>
             <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
-            <b className="route-relation">{edge.label.toLowerCase()}</b>
+            <b className="route-relation">{say(lit(edge.label, "lower"))}</b>
             <span className="route-target">{topology.nodes.find(node => node.id === edge.to)?.label}</span>
             <i className="route-status">{isolated ? t("infrastructureConsole.blocked2") : index < Math.max(0, activeStage - 1) ? t("infrastructureConsole.confirmed") : index === Math.max(0, activeStage - 1) ? t("infrastructureConsole.suspected") : t("infrastructureConsole.unassessed")}</i>
           </div>;
@@ -71,7 +71,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
         </details>
       </div>
       <div className="map-command-bar">
-        <div><span><small>{t("infrastructureConsole.selectedNode")}</small><strong>{focused.label}</strong><em>{criticalFocus ? t("infrastructureConsole.criticalDependency2") : ""}{posture === "normal" ? t("infrastructureConsole.noActiveControl") : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
+        <div><span><small>{t("infrastructureConsole.selectedNode")}</small><strong>{focused.label}</strong><em>{criticalFocus ? t("infrastructureConsole.criticalDependency2") : ""}{posture === "normal" ? t("infrastructureConsole.noActiveControl") : t(nodeStates[posture])}</em>{/* Map focus applies only to the sources that examine the selected system, so a
             roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">{t("infrastructureConsole.mapFocusAdds1")}{focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(", ").replace(/, ([^,]*)$/, " and $1")}.</small></span></div>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><span><strong>{t("infrastructureConsole.monitor")}</strong><small>{posture === "monitored" ? (game.nextModifierSources.some(item => sameMessage(item.source, msg("engine.source.monitored", { node: words.node(game.scenario, focused.id) })) || !!legacyText(item.source)?.includes(`Monitored ${focused.label}`)) ? t("infrastructureConsole.monitoredItsBonus") : t("infrastructureConsole.alreadyMonitoredIts")) : posture === "isolated" ? t("infrastructureConsole.isolatedNothingLeft") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "monitor")} />}</small></span></button>
         <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><span><strong>{t("infrastructureConsole.isolate")}</strong><small>{posture === "isolated" ? t("infrastructureConsole.alreadyIsolated") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "isolate")} />}</small></span></button>

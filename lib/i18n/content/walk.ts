@@ -11,6 +11,9 @@ export type Leaf = { path: string; text: string; get: () => string; set: (text: 
 const structural = new Set(["id", "icon", "color", "vector", "kind", "type", "route", "detect", "procedures", "scenarios", "from", "to", "event", "choice", "tone", "disruption", "confidence", "residual"]);
 // Tables whose every string is text, however short: the glossary's terms.
 const allText = new Set(["glossaryTerms"]);
+// Fields that are always shown as text, however short: the map's edge labels
+// ("AUTHENTICATES") are one word in capitals.
+const textFields = new Set(["label"]);
 // "C2 & exfiltration" reads as words too: a space and a lower-case word.
 export const readsAsWords = (text: string) => /[A-Za-z]{2,}/.test(text) && (/[A-Za-z]\S*\s+\S*[A-Za-z]/.test(text) || /^[^A-Za-z]*[A-Z][a-z]/.test(text) || /\s/.test(text) && /[a-z]{3,}/.test(text));
 
@@ -19,7 +22,7 @@ export function contentLeaves(tables: Record<string, unknown>): Leaf[] {
   const leaves: Leaf[] = [];
   const visit = (value: unknown, path: string, field: string, get: () => unknown, set: (text: string) => void) => {
     if (typeof value === "string") {
-      if (!structural.has(field) && (readsAsWords(value) || allText.has(path.split(".")[0]))) leaves.push({ path, text: value, get: get as () => string, set });
+      if (!structural.has(field) && (readsAsWords(value) || allText.has(path.split(".")[0]) || textFields.has(field) && /[A-Za-z]{2,}/.test(value))) leaves.push({ path, text: value, get: get as () => string, set });
       return;
     }
     if (!value || typeof value !== "object" || seen.has(value)) return;

@@ -29,4 +29,6 @@ export const facilitatorSheetMessages = {
   "facilitatorSheet.sectorDecisionGraded": "Sector decision: {recordTitle}, graded {quality} of 5.",
   "facilitatorSheet.commandEventGraded": "Command event: {recordTitle}, graded {quality} of 5.",
   "facilitatorSheet.questionsForThe2": "Questions for the room: {questionsTitle}",
+  "facilitatorSheet.foundStage": ", found {found}",
+  "facilitatorSheet.noRoute": "none",
 } as const;
