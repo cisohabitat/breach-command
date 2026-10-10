@@ -1,4 +1,5 @@
 import { Building2, HeartPulse, Factory, Ship, Cloud, Network, Landmark, RadioTower, Droplets, BadgeDollarSign } from "lucide-react";
+import { registerContent } from "./i18n/content/registry.ts";
 
 export const stages = [
   {name:"Initial compromise",short:"Entry",color:"#ff967d"},
@@ -316,3 +317,6 @@ export const responseOptions = {
 };
 
 export function randomInt(max:number) {if(typeof crypto!=="undefined"&&crypto.getRandomValues){const limit=Math.floor(0x100000000/max)*max;const value=new Uint32Array(1);do{crypto.getRandomValues(value)}while(value[0]>=limit);return value[0]%max;}return Math.floor(Math.random()*max);}
+
+// The words of these tables are a locale's to replace (lib/i18n/content/).
+registerContent({ stages, procedures, attacks, scenarios, difficulties, hypotheses, sectorProcedures, scenarioDynamics });

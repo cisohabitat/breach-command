@@ -1,5 +1,6 @@
 import type { Difficulty } from "./game";
 import type { GameMode, SpecialistId } from "./command-systems";
+import { registerContent } from "./i18n/content/registry.ts";
 
 export type InfrastructureNode = { id: string; label: string; type: string; procedures: string[] };
 export type InfrastructureEdge = { from: string; to: string; label: string };
@@ -246,3 +247,6 @@ export function seededChallengeRandom(seed: number) {
   let state = seed >>> 0;
   return (max: number) => { state = (state * 1664525 + 1013904223) >>> 0; return state % max; };
 }
+
+// The words of these tables are a locale's to replace (lib/i18n/content/).
+registerContent({ infrastructureTopologies, namedSpecialists, sectorSetPieces, secondSetPieces });

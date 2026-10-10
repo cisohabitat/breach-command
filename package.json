@@ -1,6 +1,6 @@
 {
   "name": "breach-command",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -24,6 +24,7 @@
     "repetition": "node scripts/repetition.ts",
     "validate:content": "node --test tests/content.test.ts tests/glossary.test.ts tests/drafts.test.ts",
     "balance:check": "node scripts/balance-check.ts",
+    "extract:content": "node scripts/extract-content.ts",
     "new-scenario": "node scripts/new-scenario.ts"
   },
   "dependencies": {

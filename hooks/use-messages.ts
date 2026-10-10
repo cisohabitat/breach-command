@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { isLocale, translate, type Locale, type MessageKey } from "@/lib/i18n";
 import { richText } from "@/lib/i18n/rich";
 
@@ -25,8 +25,28 @@ export type Translate = (key: MessageKey, params?: Record<string, string | numbe
 // nest, and only the names the component passes are read as tags.
 export type Rich = (key: MessageKey, params: Record<string, string | number>, tags: Record<string, (chunk: string) => ReactNode>) => ReactNode;
 
+// The content tables' words for a locale other than English are replaced once,
+// on the client, after the page has hydrated in English: the overlay loads with
+// import(), so English carries none of it. Every component that reads messages
+// subscribes to the revision, and renders again once the content has changed.
+let contentRevision = 0;
+let contentLocale: Locale = "en";
+const contentListeners = new Set<() => void>();
+const subscribeContent = (listener: () => void) => { contentListeners.add(listener); return () => { contentListeners.delete(listener); }; };
+function loadContent(locale: Locale) {
+  if (locale === contentLocale) return;
+  contentLocale = locale;
+  void import("@/lib/i18n/content/overlay").then(({ applyLocaleContent }) => {
+    applyLocaleContent(locale);
+    contentRevision++;
+    for (const listener of contentListeners) listener();
+  });
+}
+
 export function useMessages(): { locale: Locale; t: Translate; rich: Rich } {
   const locale = useSyncExternalStore(noSubscription, readLocale, () => "en" as Locale);
+  useSyncExternalStore(subscribeContent, () => contentRevision, () => 0);
+  useEffect(() => loadContent(locale), [locale]);
   return {
     locale,
     t: (key, params) => translate(locale, key, params),

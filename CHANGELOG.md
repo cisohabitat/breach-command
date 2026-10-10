@@ -4,6 +4,17 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.4, 10 October 2026
+
+- **Content ready for translation.** The words of every case, attack, clue,
+  procedure, event and option (1,780 strings) are extracted for a translator
+  (`pnpm extract:content`), and a locale replaces them on the device. The
+  pseudo-locale now lengthens them too, and every layout holds.
+- **Fixed:** in any language but English the Bot Commander would have chosen
+  response options differently, because it scored them by their words. A
+  test now plays 1,800 operations and 300 campaigns in the pseudo-locale and
+  requires the same games.
+
 ## 0.9.3, 10 October 2026
 
 - **Markup in messages.** A sentence with a bold figure or a link inside it

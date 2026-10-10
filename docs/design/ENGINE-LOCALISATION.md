@@ -1,6 +1,6 @@
 # Localising the engine's prose
 
-Status: design, 10 October 2026. Not started. The interface around it is
+Status: step 1 built (0.9.4, 10 October 2026); steps 2 to 5 follow. The interface around it is
 catalogued (`lib/i18n/`, 0.9.1 to 0.9.3); this is the plan for the rest, so
 that the work can start when a first locale has a translator and a reviewer
 (Phase 7, `docs/ROADMAP.md`).
@@ -63,12 +63,23 @@ Three parts of the interface read English back:
    test fails when an overlay names a table, id or field the source no longer
    has, or drops a placeholder.
 
-3. **Components localise content where it renders, by id.** A hook,
-   `useContent()`, returns `text("attacks", id, "title")`. The engine keeps
-   reading its English tables for rules, so no rule can change with the
-   language, and the balance check needs no locale. The overlay for the
-   active locale loads with a dynamic `import()` when the locale is not
-   English, so English ships no extra bytes.
+3. **The overlay replaces the tables' words in place, on the client.**
+   *Amended 10 October 2026, when it was built (0.9.4).* The note first said
+   components would look content up by id where it renders. Hundreds of
+   places reach content through variables and through what the engine
+   returns, so instead each content module registers its tables
+   (`registerContent()`, `lib/i18n/content/registry.ts`), and for a locale
+   other than English `hooks/use-messages.ts` loads `lib/i18n/content/overlay.ts`
+   with `import()` after the page has hydrated in English, replaces every
+   leaf's words, and re-renders every component that reads messages. A table
+   whose module loads later is overlaid as it registers. The rules then read
+   tables whose words have changed, so what keeps them language-blind is a
+   test, not the structure: `tests/content-overlay.test.ts` runs the balance
+   check with the pseudo-locale applied and requires the same figures and the
+   same fingerprint of every seeded game. It found one leak when it was first
+   run: the Bot Commander scores response options by their `disruption`,
+   `confidence` and `residual` words, so those level fields are structural and
+   are translated where they are shown.
 
 4. **The engine returns messages, not sentences.** A composed sentence
    becomes a descriptor, `{ key: "turn.found", params: { evidence: { ref:

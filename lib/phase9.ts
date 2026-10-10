@@ -1,4 +1,5 @@
 import type { AdversaryObjectiveId, SpecialistId } from "./command-systems";
+import { registerContent } from "./i18n/content/registry.ts";
 
 export type CampaignRouteId = "watchtower" | "breakwater" | "common-ground" | "convergence";
 
@@ -180,3 +181,6 @@ export function specialistArc(id: SpecialistId, bond: number): string | null {
   const reached = ARC_THRESHOLDS.filter(threshold => bond >= threshold).length;
   return reached ? specialistArcs[id][reached - 1] : null;
 }
+
+// The words of these tables are a locale's to replace (lib/i18n/content/).
+registerContent({ campaignRoutes, objectiveTheory, variantTemplates });

@@ -9,4 +9,5 @@ export const sectorBoardMessages = {
   "sectorBoard.adversaryProgress": "Adversary progress: {objectiveTitle}",
   "sectorBoard.adversaryObjectiveSmall": "Adversary objective<small>Confidence: {confidence}</small>",
   "sectorBoard.spanSpanFatigue": "<span>{callsign}</span>, fatigue {specialistFatigue} of 6",
+  "sectorBoard.attributed": "attributed",
 } as const;

@@ -1,6 +1,7 @@
 // Material for a trainer running Breach Command with a group: three sets of
 // debrief questions, and what each difficulty is for. The educator pack page
 // and the facilitator sheet both read this, so the room and the handout agree.
+import { registerContent } from "./i18n/content/registry.ts";
 
 export type QuestionSet = { id: "reading" | "decisions" | "response"; title: string; purpose: string; questions: string[] };
 
@@ -50,3 +51,6 @@ export const difficultyTeaches: Record<"training" | "operational" | "crisis", st
   operational: "Reading the route without the clue. The standing and the ruled-out marks remain, so a group learns to reason from what checks have excluded rather than from a hint.",
   crisis: "Judgement under pressure: fewer map actions, a faster adversary that re-routes the stage after the one under test, and a shorter window. The reasoning is the same; the cost of a slow or unsound reading is higher.",
 };
+
+// The words of these tables are a locale's to replace (lib/i18n/content/).
+registerContent({ debriefQuestionSets, difficultyTeaches });

@@ -22,3 +22,12 @@
    AGENTS.md and the changelog.
 5. A practitioner reads the new content before it ships
    (`docs/reviews/PRACTITIONER-REVIEW-BRIEF.md`).
+
+## Translation
+
+The words of every content table are extracted, by path, into
+`lib/i18n/content/en.json`, the file a translator works from. After changing
+any content, run `pnpm extract:content`; `pnpm test` fails until the file
+matches the tables. A field the rules compare (an id, a vector, a level the
+Bot Commander scores) must not be translated: add it to `structural` in
+`lib/i18n/content/walk.ts`.

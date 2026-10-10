@@ -628,6 +628,15 @@ sentences for what the engine composes and saves (session version 19 with a
 migration), and the order of work, to begin when a first locale has a
 translator.
 
+10 October 2026 (0.9.4), engine prose step 1: the content tables' words,
+1,780 strings, are extracted by path into `lib/i18n/content/en.json` for a
+translator, and a locale's overlay replaces them in place on the client; the
+pseudo-locale now lengthens every case, attack, clue and option, and the
+layout sweep holds with them. `tests/content-overlay.test.ts` plays the
+balance check's 1,800 operations and 300 campaigns with the content in the
+pseudo-locale and requires the same figures and fingerprint, which caught the
+Bot Commander scoring response options by their words.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

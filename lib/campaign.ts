@@ -1,4 +1,5 @@
 import { SPECIALIST_EXHAUSTED_AT, countRevisions, type Game } from "./advanced-game.ts";
+import { registerContent } from "./i18n/content/registry.ts";
 
 export const CAMPAIGN_KEY = "breach-command.campaign";
 
@@ -282,3 +283,6 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     recentCrises: remember(current.recentCrises ?? [], game.setPieceHistory.map(record => record.event), RECENT_CRISES),
   };
 }
+
+// The words of these tables are a locale's to replace (lib/i18n/content/).
+registerContent({ ladderRungs });

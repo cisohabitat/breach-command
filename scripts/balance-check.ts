@@ -11,6 +11,7 @@ import { campaignAct, campaignTier, defaultCampaign, nextCase, recordCampaignRes
 import { chooseBotAction, type BotAction } from "../lib/game-bot.ts";
 import { seededChallengeRandom } from "../lib/phase8.ts";
 import { incidentVariant, routeForCampaign } from "../lib/phase9.ts";
+import { applyLocaleContent } from "../lib/i18n/content/overlay.ts";
 
 // A campaign operation has no seed of its own, so its dice come from crypto.
 // Here they come from a seeded Math.random instead (randomInt falls back to it
@@ -21,6 +22,19 @@ Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: tr
 
 const expectedPath = new URL("./balance-expected.json", import.meta.url);
 const record = process.argv.includes("--record");
+// --overlay=en-XA plays every game with the content in the pseudo-locale, and
+// --figures prints the figures and a fingerprint of every game instead of
+// comparing them: tests/content-overlay.test.ts runs both and requires the
+// same output, so no rule reads a word of content.
+const overlay = process.argv.find(arg => arg.startsWith("--overlay="))?.slice("--overlay=".length);
+if (overlay) applyLocaleContent(overlay);
+const printFigures = process.argv.includes("--figures");
+let fingerprint = 0;
+const mix = (value: number) => { fingerprint = (Math.imul(fingerprint, 31) + Math.round(value * 1000)) | 0; };
+const trace = (game: Game) => {
+  mix(getScoreBreakdown(game).total); mix(["playing", "response", "won", "lost", "exercise"].indexOf(game.status)); mix(game.impact); mix(game.continuity); mix(game.objectiveProgress);
+  for (const turn of game.turns) { mix(turn.raw); mix(turn.total); mix(turn.success ? 1 : 0); for (const char of turn.procedure + (turn.revealed ?? "")) mix(char.charCodeAt(0)); }
+};
 const TOLERANCE = 3;
 
 function apply(game: Game, action: BotAction): Game {
@@ -56,6 +70,7 @@ for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) 
     const seed = 900000 + scenario * 1000 + index;
     const game = play(newGame(scenario, difficulty, seededChallengeRandom(seed), { seed }));
     total++;
+    trace(game);
     if (game.status === "won") won++;
     score += getScoreBreakdown(game).total;
   }
@@ -81,13 +96,16 @@ for (let run = 0; run < campaigns; run++) {
       if (met[kind].some(id => record[kind].includes(id))) repeated[kind] = true;
       record[kind].push(...met[kind]);
     }
+    trace(game);
     campaign = recordCampaignResult(campaign, game, getScoreBreakdown(game).total);
   }
   for (const kind of ["command", "inject", "crisis"] as const) if (repeated[kind]) repeats[kind]++;
 }
 for (const kind of ["command", "inject", "crisis"] as const) figures[`${kind} repeats within an act`] = round(100 * repeats[kind] / campaigns);
 
-if (record) {
+if (printFigures) {
+  console.log(JSON.stringify({ ...figures, fingerprint }));
+} else if (record) {
   writeFileSync(expectedPath, `${JSON.stringify(figures, null, 2)}\n`);
   console.log("Recorded", figures);
 } else {

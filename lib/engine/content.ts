@@ -1,6 +1,7 @@
 // Authored tables the engine reads: injects, adversary profiles, command events, response options and decision language.
 import { type HypothesisId } from "../game.ts";
 import { type AdversaryProfileId, type DecisionChoice, type ResponseOption, type ResponsePhase, type ResponseProfile } from "./types.ts";
+import { registerContent } from "../i18n/content/registry.ts";
 
 // A critical roll is the loudest feedback the game gives, so what it draws has to
 // agree with it: a natural 20 must never hand the player a penalty and a natural 1
@@ -636,3 +637,6 @@ export const decisionEffects: Record<DecisionChoice, string> = {
   contain: "The observed path was restricted; the actor was warned, and the contained systems stopped showing what it does.",
   notify: "Stakeholders were aligned on confirmed facts; the actor gained tempo.",
 };
+
+// The words of these tables are a locale's to replace (lib/i18n/content/).
+registerContent({ injects, adversaryProfiles, commandEvents, responseProfiles, decisionLanguage, sectorDecisionTerms, plainLanguage, meterDirection, decisionEffects });

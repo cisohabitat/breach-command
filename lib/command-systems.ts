@@ -1,3 +1,4 @@
+import { registerContent } from "./i18n/content/registry.ts";
 export type GameMode = "campaign" | "daily" | "weekly" | "ironman" | "escalation" | "expert";
 export type SpecialistId = "hunter" | "forensics" | "identity" | "ot" | "continuity" | "communications";
 export type ProcedureScope = "focused" | "enterprise";
@@ -108,3 +109,6 @@ export function weeklyOperation(now: Date, cases: number) {
   const week = Math.floor(monday.getTime() / (7 * 86400000));
   return { seed: Number(`7${stamp}`), scenario: ((week % cases) + cases) % cases, difficulty: "operational" as const, startsOn: stamp };
 }
+
+// The words of these tables are a locale's to replace (lib/i18n/content/).
+registerContent({ gameModes, specialists, procedureScopes, procedureIntensities, adversaryObjectives, sectorSystems });

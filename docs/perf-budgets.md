@@ -140,3 +140,9 @@ something out.
 Markup in messages (0.9.3) joined 37 more sentences and moved `richText` into
 `lib/i18n/rich.ts`: the first load is 847,786 B (2,214 B of headroom) and all
 script by the time play starts 1,127,337 B. No budget moved.
+
+The content overlay (0.9.4) loads only for a locale other than English, but
+its registry is on the first load: 849,093 B, 907 B under budget. Loading the
+overlay with every content module behind one import() cost 3,830 B of
+loader on the first load; registering each table from its own module, so the
+lazy chunk holds only the walker, removed that.

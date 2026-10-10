@@ -23,7 +23,7 @@ export function SectorBoard({ game }: { game: Game }) {
   return (
     <>
       <div className="sit-entry compact">
-        <span className="sit-label">{t("missionBriefingDialog.attribution")}<small>{t("sectorBoard.confidence")}{attribution.confidence === "ATTRIBUTED" ? "attributed" : attribution.confidence.toLowerCase()}</small></span>
+        <span className="sit-label">{t("missionBriefingDialog.attribution")}<small>{t("sectorBoard.confidence")}{attribution.confidence === "ATTRIBUTED" ? t("sectorBoard.attributed") : attribution.confidence.toLowerCase()}</small></span>
         <div className="sit-body"><p><strong>{attribution.title}.</strong> {attribution.detail}</p></div>
       </div>
       <div className="sit-entry">
