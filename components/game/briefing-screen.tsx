@@ -5,6 +5,7 @@ import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialist
 import { campaignRank, standingEffects } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
 import { describeWhen } from "@/lib/last-operation";
+import { withForm } from "@/lib/i18n/message";
 import { useMessages } from "@/hooks/use-messages";
 import { hypothesisTrend, ledgerCsv } from "@/lib/ledger";
 import { ladderRungs } from "@/lib/campaign";
@@ -18,7 +19,7 @@ register(briefingScreenMessages);
 const stageQuestions: readonly MessageKey[] = ["briefingScreen.howTheyGot", "briefingScreen.whereTheyWent", "briefingScreen.howTheyStay", "briefingScreen.whatLeavesAnd"];
 
 export function BriefingScreen({ session }: { session: GameSession }) {
-  const { t, rich, say } = useMessages();
+  const { t, rich, say, locale } = useMessages();
   const {
     campaign, currentAct, currentStory, currentRoute, finalEnding,
     scenarioChoice, setScenarioChoice, activeScenario, previewVariant,
@@ -58,9 +59,9 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             the first move instead, so this waits until there is none. */}
         {lastOperation && !savedSession && (
           <section className="last-operation" aria-label={t("briefingScreen.lastOperation")}>
-            <span className="field-label">{t("briefingScreen.lastOperation3", { describeWhen: describeWhen(lastOperation.endedAt) })}</span>
-            <p>{t("briefingScreen.caseAt", { scenario: lastOperation.scenario + 1, scenariosTitle: scenarios[lastOperation.scenario].title, difficultiesTitle: difficulties[lastOperation.difficulty].title, ending: lastOperation.ending.toLowerCase() })}{lastOperation.outcome === "lost" ? "" : `, ${lastOperation.score} of 100`}.</p>
-            <p><strong>{t("briefingScreen.suggestedNext2", { nextTitle: lastOperation.next.title })}</strong> {lastOperation.next.reason}</p>
+            <span className="field-label">{t("briefingScreen.lastOperation3", { describeWhen: say(describeWhen(lastOperation.endedAt, undefined, locale)) })}</span>
+            <p>{t("briefingScreen.caseAt", { scenario: lastOperation.scenario + 1, scenariosTitle: scenarios[lastOperation.scenario].title, difficultiesTitle: difficulties[lastOperation.difficulty].title, ending: say(withForm(lastOperation.ending, "lower")) })}{lastOperation.outcome === "lost" ? "" : `, ${lastOperation.score} of 100`}.</p>
+            <p><strong>{t("briefingScreen.suggestedNext2", { nextTitle: say(lastOperation.next.title) })}</strong> {say(lastOperation.next.reason)}</p>
             {(scenarioChoice !== lastOperation.next.scenario || difficulty !== lastOperation.next.difficulty) && <button className="text-action" onClick={() => playRecommended(lastOperation.next)}>{t("briefingScreen.setUpThe")}</button>}
           </section>
         )}
@@ -84,13 +85,13 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           );
         })()}
         <section className="career-card" aria-label={t("briefingScreen.commandCareerProgression")}>
-          <div><span className="field-label">{t("briefingScreen.yourCommandRecord")}</span><strong>{campaignRank(campaign.xp)}</strong><small>{t("briefingScreen.incidentsTrustReadiness", { completed: campaign.completed.length, scenarios: scenarios.length, leadershipTrust: campaign.leadershipTrust, readiness: campaign.readiness })}</small><details className="standing-effects"><summary>{t("briefingScreen.whatTrustAnd")}</summary><small>{standingEffects(campaign).join(" ")}</small></details></div>
+          <div><span className="field-label">{t("briefingScreen.yourCommandRecord")}</span><strong>{campaignRank(campaign.xp)}</strong><small>{t("briefingScreen.incidentsTrustReadiness", { completed: campaign.completed.length, scenarios: scenarios.length, leadershipTrust: campaign.leadershipTrust, readiness: campaign.readiness })}</small><details className="standing-effects"><summary>{t("briefingScreen.whatTrustAnd")}</summary><small>{standingEffects(campaign).map(line => say(line)).join(" ")}</small></details></div>
           <b><small>{t("briefingScreen.experience")}</small>{campaign.xp}</b>
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
         <section className="campaign-act-card"><span className="act-number">{t("briefingScreen.act2", { number: currentAct.number })}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p>{!finalEnding && <p className="act-briefing">{t("briefingScreen.director2", { briefing: currentStory.briefing })}</p>}{!finalEnding && currentStory.development && <p className="act-briefing">{t("briefingScreen.sinceThen2", { development: currentStory.development })}</p>}<small>{t("briefingScreen.unresolvedAccess2", { unresolvedThreads: campaign.unresolvedThreads })}{campaign.unresolvedThreads ? t("briefingScreen.eachStartsLater") : ""}</small></div></section>
         <section className="campaign-route-card"><div><span className="field-label">{t("briefingScreen.campaignRoute2", { currentRouteTitle: currentRoute.title })}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
-        {finalEnding && <section className="campaign-ending"><div><span className="field-label">{t("briefingScreen.campaignConclusion")}</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
+        {finalEnding && <section className="campaign-ending"><div><span className="field-label">{t("briefingScreen.campaignConclusion")}</span><strong>{finalEnding.title}</strong><p>{say(finalEnding.detail)}</p></div></section>}
       </div>
       <section className="mission-panel">
         {/* The assignment is a dispatch slip: a form number, then the case as a

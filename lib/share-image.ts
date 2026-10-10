@@ -1,10 +1,11 @@
 import type { ShareCard } from "./advanced-game.ts";
+import { translate, type Locale } from "./i18n/index.ts";
 import { say } from "./i18n/message.ts";
 
 // The result as an image, drawn on the device: a paper result form on the dark
 // desk, in the form face. Nothing is sent anywhere, and it is drawn only from
-// the share card, which names no technique.
-export async function drawShareCard(card: ShareCard, origin: string): Promise<Blob> {
+// the share card, which names no technique, in the player's language.
+export async function drawShareCard(card: ShareCard, origin: string, locale: Locale): Promise<Blob> {
   const width = 1200, height = 630;
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -24,16 +25,16 @@ export async function drawShareCard(card: ShareCard, origin: string): Promise<Bl
 
   context.fillStyle = soft;
   context.font = font(600, 22);
-  context.fillText(say(card.form), x + 48, y + 64);
+  context.fillText(say(card.form, locale), x + 48, y + 64);
   context.fillStyle = ink;
   context.font = font(600, 56);
   context.fillText(fit(context, card.title, w - 96), x + 48, y + 136);
   context.fillStyle = soft;
   context.font = font(500, 24);
-  context.fillText(fit(context, say(card.meta), w - 96), x + 48, y + 178);
+  context.fillText(fit(context, say(card.meta, locale), w - 96), x + 48, y + 178);
 
   // The result as a row of form cells sharing their borders.
-  const cells: [string, string][] = [["Result", say(card.result)], ["Score", say(card.score)]];
+  const cells: [string, string][] = [[translate(locale, "ending.imageResult"), say(card.result, locale)], [translate(locale, "ending.imageScore"), say(card.score, locale)]];
   const top = y + 214, cellHeight = 110, columns = [0.64, 0.36];
   context.strokeStyle = rule;
   context.lineWidth = 2;
@@ -52,13 +53,13 @@ export async function drawShareCard(card: ShareCard, origin: string): Promise<Bl
 
   context.fillStyle = ink;
   context.font = font(500, 26);
-  context.fillText(fit(context, say(card.stages), w - 96), x + 48, top + cellHeight + 52);
+  context.fillText(fit(context, say(card.stages, locale), w - 96), x + 48, top + cellHeight + 52);
   context.font = font(600, 26);
-  const foot = card.code ? `Play the same operation: ${card.code}` : "A campaign operation: its chain was drawn fresh and cannot be replayed.";
+  const foot = card.code ? translate(locale, "ending.imageReplay", { code: card.code }) : translate(locale, "ending.imageCampaign");
   context.fillText(fit(context, foot, w - 96), x + 48, top + cellHeight + 98);
   context.fillStyle = soft;
   context.font = font(500, 22);
-  context.fillText(fit(context, `${card.expert ? "Cleared in Expert. " : ""}Breach Command, ${origin.replace(/^https?:\/\//, "")}`, w - 96), x + 48, top + cellHeight + 140);
+  context.fillText(fit(context, translate(locale, card.expert ? "ending.imageSiteExpert" : "ending.imageSite", { site: origin.replace(/^https?:\/\//, "") }), w - 96), x + 48, top + cellHeight + 140);
 
   return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("No image")), "image/png"));
 }

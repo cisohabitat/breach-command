@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {SPECIALIST_EXHAUSTED_AT,newGame,playTurn,type Game} from "../lib/advanced-game.ts";
 import {campaignAct,campaignChanges,campaignEnding,campaignReadable,defaultCampaign,nextCase,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
 import {campaignRoutes,incidentVariant,routeForCampaign,routeReason} from "../lib/phase9.ts";
+import { en } from "./english.ts";
 
 
 test("records a drill as something other than a defeat", () => {
@@ -100,11 +101,11 @@ test("offers the next uncleared case and says what an operation changed", () => 
   const before={...defaultCampaign,leadershipTrust:61,readiness:55};
   const lost={...newGame(3,"operational",()=>0),status:"lost" as const};
   const after=recordCampaignResult(before,lost,30);
-  const lines=campaignChanges(before,after,lost,30);
+  const lines=en(campaignChanges(before,after,lost,30));
   assert.ok(lines.some(line=>/Leadership trust −8 to 53: a loss costs eight/.test(line)),"trust names its change and its reason");
   assert.ok(lines.some(line=>/Unresolved access \+1/.test(line)),"an unresolved thread is named and explained");
   assert.ok(lines.some(line=>/offered again/.test(line)),"and the lost case is said to come back");
-  assert.match(routeReason({completed:[0,1,2],commandPosture:{observe:0,act:8},leadershipTrust:53}),/act \(8\) more than to watch \(0\)/,"the route says why");
+  assert.match(en(routeReason({completed:[0,1,2],commandPosture:{observe:0,act:8},leadershipTrust:53})),/act \(8\) more than to watch \(0\)/,"the route says why");
 });
 
 test("the campaign tells its story: a director's briefing per act, a development keyed to route, and an ending in the record's numbers", async () => {
@@ -116,7 +117,7 @@ test("the campaign tells its story: a director's briefing per act, a development
   const developments = new Set(["watchtower", "breakwater", "common-ground", "convergence"].map(route => campaignStory({ ...defaultCampaign, completed: [0, 1, 2, 3, 4] }, route).development));
   assert.equal(developments.size, 4, "and differs by route");
   const ending = campaignEnding({ ...defaultCampaign, completed: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], operations: 13, commandPosture: { observe: 9, act: 4 }, unresolvedThreads: 2 })!;
-  assert.match(ending.detail, /ten cases cleared in 13 operations, 9 evidence decisions to watch and 4 to act, 2 unresolved access/);
+  assert.match(en(ending.detail), /ten cases cleared in 13 operations, 9 evidence decisions to watch and 4 to act, 2 unresolved access/);
   for (const id of ["hunter", "forensics", "identity", "ot", "continuity", "communications"] as const) {
     assert.equal(specialistArc(id, ARC_THRESHOLDS[0] - 1), null, "no arc before rapport is earned");
     const beats = ARC_THRESHOLDS.map(threshold => specialistArc(id, threshold));

@@ -2,7 +2,7 @@
 import { attacks, difficulties, scenarios, stages, hypotheses, scenarioDynamics } from "../game.ts";
 import { gameModes, sectorSystems } from "../command-systems.ts";
 import { encodeChallenge } from "../phase8.ts";
-import { lit, msg, say, withForm, type Message } from "../i18n/message.ts";
+import { lit, msg, ref, withForm, type Message } from "../i18n/message.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
 import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
@@ -454,7 +454,7 @@ export function getCounterfactuals(game: Game): Message[] {
   return items;
 }
 
-export type Recommendation = { scenario: number; difficulty: Game["difficulty"]; title: string; reason: string };
+export type Recommendation = { scenario: number; difficulty: Game["difficulty"]; title: Message; reason: Message };
 
 // What to play next, from the record of the operation just finished. A loss to
 // the window is the reading running out at the last open stage, so the same
@@ -465,22 +465,23 @@ export type Recommendation = { scenario: number; difficulty: Game["difficulty"];
 export function recommendNext(game: Game, nextOpen: number): Recommendation {
   const rungs: Game["difficulty"][] = ["training", "operational", "crisis"];
   const rung = rungs.indexOf(game.difficulty);
-  const title = (scenario: number, difficulty: Game["difficulty"]) => `Case ${scenario + 1}, ${scenarios[scenario].title}, at ${difficulties[difficulty].title}`;
+  const title = (scenario: number, difficulty: Game["difficulty"]) => msg("record.nextTitle", { number: scenario + 1, title: ref(`scenarios.${scenarios[scenario].id}.title`), difficulty: ref(`difficulties.${difficulty}.title`) });
   if (game.status === "lost") {
     const loss = getLossReason(game);
     if (loss.cause === "window") {
       const easier = rungs[Math.max(0, rung - 1)];
+      const revealed = game.revealed.length;
       const reason = easier === game.difficulty
-        ? `The window closed with ${game.revealed.length} of 4 stages confirmed. Play it again, and revise the reading as soon as the board calls it weakening: the last open stage is where the turns ran out.`
-        : `The window closed with ${game.revealed.length} of 4 stages confirmed. One rung down, ${difficulties[easier].title} gives a longer window${easier === "training" ? " and the observation behind each stage" : ""}, so the reading has room to be revised.`;
+        ? msg("record.windowSameRung", { revealed })
+        : msg(easier === "training" ? "record.windowTraining" : "record.windowEasier", { revealed, difficulty: ref(`difficulties.${easier}.title`) });
       return { scenario: game.scenario, difficulty: easier, title: title(game.scenario, easier), reason };
     }
-    return { scenario: game.scenario, difficulty: game.difficulty, title: title(game.scenario, game.difficulty), reason: `${say(loss.title)}. Play it again at the same rung and watch that readout: the investigation was not what ended it.` };
+    return { scenario: game.scenario, difficulty: game.difficulty, title: title(game.scenario, game.difficulty), reason: msg("record.lossSameRung", { loss: loss.title }) };
   }
   const score = getOutcome(game).breakdown.total;
   if (score >= 74 && rung < rungs.length - 1 && (rung === 0 || score >= 88)) {
     const harder = rungs[rung + 1];
-    return { scenario: nextOpen, difficulty: harder, title: title(nextOpen, harder), reason: `You cleared it with ${score} of 100. ${harder === "operational" ? "Operational withdraws the Training clue: the first reading is yours to make." : "Crisis gives one fewer command action, a moving objective and an adversary that adapts ahead of you."}` };
+    return { scenario: nextOpen, difficulty: harder, title: title(nextOpen, harder), reason: msg(harder === "operational" ? "record.clearedOperational" : "record.clearedCrisis", { score }) };
   }
-  return { scenario: nextOpen, difficulty: game.difficulty, title: title(nextOpen, game.difficulty), reason: score >= 74 ? `You cleared it with ${score} of 100. The next open case at the same rung, before stepping up.` : `You cleared it with ${score} of 100. The next open case at the same rung: ${score < 60 ? "a cleaner reading is worth more than a harder case" : "one more at this rung before stepping up"}.` };
+  return { scenario: nextOpen, difficulty: game.difficulty, title: title(nextOpen, game.difficulty), reason: msg(score >= 74 ? "record.clearedSameRung" : score < 60 ? "record.clearedCleaner" : "record.clearedOneMore", { score }) };
 }

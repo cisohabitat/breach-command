@@ -88,7 +88,7 @@ export function EndState({ session }: { session: GameSession }) {
 // technique, so it spoils nothing. Where the clipboard is refused, the text is
 // shown to copy by hand.
 function ShareResult({ game }: { game: Game }) {
-  const { t, say } = useMessages();
+  const { t, say, locale } = useMessages();
   const [state, setState] = useState<{ status: "idle" | "copied" | "manual"; text: string }>({ status: "idle", text: "" });
   const copy = () => {
     const text = [...getResultSummary(game).map(line => say(line)), window.location.origin].join("\n");
@@ -101,7 +101,7 @@ function ShareResult({ game }: { game: Game }) {
   const [image, setImage] = useState("");
   const saveImage = () => {
     setImage(t("ending.drawing"));
-    import("@/lib/share-image").then(({ drawShareCard }) => drawShareCard(getShareCard(game), window.location.origin)).then(blob => {
+    import("@/lib/share-image").then(({ drawShareCard }) => drawShareCard(getShareCard(game), window.location.origin, locale)).then(blob => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;

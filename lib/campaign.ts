@@ -1,5 +1,6 @@
 import { SPECIALIST_EXHAUSTED_AT, countRevisions, type Game } from "./advanced-game.ts";
 import { registerContent } from "./i18n/content/registry.ts";
+import { lit, msg, type Message } from "./i18n/message.ts";
 
 export const CAMPAIGN_KEY = "breach-command.campaign";
 
@@ -107,38 +108,38 @@ export function parseCampaign(raw: string | null): CampaignState {
   }
 }
 
+// Highest first: a command holds the first rank whose threshold it has reached.
+const campaignRanks = [
+  { id: "national", at: 800, title: "National Incident Commander" },
+  { id: "senior", at: 450, title: "Senior Incident Commander" },
+  { id: "commander", at: 200, title: "Incident Commander" },
+  { id: "response", at: 75, title: "Response Lead" },
+  { id: "investigation", at: 0, title: "Investigation Lead" },
+];
+
 export function campaignRank(xp: number) {
-  if (xp >= 800) return "National Incident Commander";
-  if (xp >= 450) return "Senior Incident Commander";
-  if (xp >= 200) return "Incident Commander";
-  if (xp >= 75) return "Response Lead";
-  return "Investigation Lead";
+  return campaignRanks.find(rank => xp >= rank.at)!.title;
 }
 
+const campaignCapabilities = [
+  { id: "fusion", title: "Evidence fusion", at: 75, detail: "One additional evidence procedure begins established." },
+  { id: "coordination", title: "Rapid coordination", at: 200, detail: "One more command action, five less starting impact, and the first unlucky action of an operation no longer hands the actor tempo." },
+  { id: "continuity", title: "Continuity command", at: 450, detail: "A sixth established procedure and a deeper continuity reserve." },
+];
+
 export function unlockedCapabilities(xp: number) {
-  return [
-    { title: "Evidence fusion", unlocked: xp >= 75, at: 75, detail: "One additional evidence procedure begins established." },
-    { title: "Rapid coordination", unlocked: xp >= 200, at: 200, detail: "One more command action, five less starting impact, and the first unlucky action of an operation no longer hands the actor tempo." },
-    { title: "Continuity command", unlocked: xp >= 450, at: 450, detail: "A sixth established procedure and a deeper continuity reserve." },
-  ];
+  return campaignCapabilities.map(capability => ({ title: capability.title, unlocked: xp >= capability.at, at: capability.at, detail: capability.detail }));
 }
 
 // What trust and readiness do to the next Campaign operation, in the thresholds
 // newGame applies. Both rose every operation and nothing said what they bought.
-export function standingEffects(state: CampaignState) {
-  const trust = state.leadershipTrust < 35
-    ? `Trust ${state.leadershipTrust}: below 35 costs a map action and adds 5 starting impact.`
-    : state.leadershipTrust >= 75
-      ? `Trust ${state.leadershipTrust}: 75 or more takes 3 off starting impact.`
-      : `Trust ${state.leadershipTrust}: no effect yet; at 75 it takes 3 off starting impact, below 35 it costs a map action.`;
-  const readiness = state.readiness < 30
-    ? `Readiness ${state.readiness}: below 30 costs a turn and 5 service at the start.`
-    : state.readiness >= 75
-      ? `Readiness ${state.readiness}: +3 service at the start and one more turn.`
-      : state.readiness >= 60
-        ? `Readiness ${state.readiness}: +3 service at the start; at 75 it adds a turn.`
-        : `Readiness ${state.readiness}: no effect yet; at 60 it adds 3 service at the start, at 75 a turn.`;
-  return [trust, readiness];
+export function standingEffects(state: CampaignState): Message[] {
+  const trust = { trust: state.leadershipTrust };
+  const readiness = { readiness: state.readiness };
+  return [
+    state.leadershipTrust < 35 ? msg("campaign.trustLow", trust) : state.leadershipTrust >= 75 ? msg("campaign.trustHigh", trust) : msg("campaign.trustNone", trust),
+    state.readiness < 30 ? msg("campaign.readinessLow", readiness) : state.readiness >= 75 ? msg("campaign.readinessHigh", readiness) : state.readiness >= 60 ? msg("campaign.readinessGood", readiness) : msg("campaign.readinessNone", readiness),
+  ];
 }
 
 // The campaign's next case: the first not yet cleared, so a reload or a loss
@@ -150,22 +151,23 @@ export function nextCase(state: CampaignState, cases = 10) {
 
 // What one operation did to the campaign, in words, for the review. Trust and
 // readiness were shown as totals with no change and no reason.
-export function campaignChanges(before: CampaignState, after: CampaignState, game: Game, score: number) {
+export function campaignChanges(before: CampaignState, after: CampaignState, game: Game, score: number): Message[] {
+  // The sign is a figure's, not a word: "+5", "−3", "±0".
   const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : "±"}${Math.abs(value)}`;
-  const lines: string[] = [];
-  const trust = after.leadershipTrust - before.leadershipTrust;
-  lines.push(`Leadership trust ${signed(trust)} to ${after.leadershipTrust}: ${game.status === "won" ? `a win restores trust by its score (${score} here)` : game.status === "exercise" ? "a drill neither costs nor earns trust" : "a loss costs eight"}.`);
-  const readiness = after.readiness - before.readiness;
-  lines.push(`Readiness ${signed(readiness)} to ${after.readiness}: ${game.status === "won" ? "+5 for a win" : game.status === "exercise" ? "+2 for exercising the process" : "−3 for a loss"}.`);
+  const lines: Message[] = [];
+  const trust = { change: signed(after.leadershipTrust - before.leadershipTrust), now: after.leadershipTrust, score };
+  lines.push(game.status === "won" ? msg("engine.campaign.trustWon", trust) : game.status === "exercise" ? msg("engine.campaign.trustDrill", trust) : msg("engine.campaign.trustLost", trust));
+  const readiness = { change: signed(after.readiness - before.readiness), now: after.readiness };
+  lines.push(game.status === "won" ? msg("engine.campaign.readinessWon", readiness) : game.status === "exercise" ? msg("engine.campaign.readinessDrill", readiness) : msg("engine.campaign.readinessLost", readiness));
   const threads = after.unresolvedThreads - before.unresolvedThreads;
-  if (threads) lines.push(`Unresolved access ${signed(threads)} to ${after.unresolvedThreads}: a lost operation leaves the adversary's access open. Four or more at the campaign's end decide its ending, and each one makes later operations start harder.`);
+  if (threads) lines.push(msg("engine.campaign.unresolvedAccess", { change: signed(threads), now: after.unresolvedThreads }));
   const xp = after.xp - before.xp;
-  if (xp) lines.push(`Experience +${xp} to ${after.xp}: the score (${score}), raised for a harder difficulty or mode and reduced for an operation not won.`);
-  for (const capability of unlockedCapabilities(after.xp)) if (capability.unlocked && !unlockedCapabilities(before.xp).find(item => item.title === capability.title)!.unlocked) lines.push(`Unlocked: ${capability.title}. ${capability.detail}`);
+  if (xp) lines.push(msg("engine.campaign.experience", { xp, now: after.xp, score }));
+  for (const capability of unlockedCapabilities(after.xp)) if (capability.unlocked && !unlockedCapabilities(before.xp).find(item => item.at === capability.at)!.unlocked) lines.push(msg("engine.campaign.unlocked", { title: lit(capability.title), detail: lit(capability.detail) }));
   const climbed = (after.ladder?.[String(game.scenario)] ?? []).filter(id => !(before.ladder?.[String(game.scenario)] ?? []).includes(id));
-  for (const id of climbed) lines.push(`Ladder: ${ladderRungs.find(rung => rung.id === id)!.title.replace(/^W/, "w")} on this case, ${(after.ladder?.[String(game.scenario)] ?? []).length} of ${ladderRungs.length} rungs.`);
-  if (after.completed.length > before.completed.length) lines.push(`Case cleared: ${after.completed.length} of 10. Every cleared case moves the campaign's acts and route forward.`);
-  else if (game.status === "lost") lines.push("This case stays open in the campaign and is offered again as the next assignment.");
+  for (const id of climbed) lines.push(msg("engine.campaign.ladder", { rung: lit(ladderRungs.find(rung => rung.id === id)!.title, "lowerFirst"), climbed: (after.ladder?.[String(game.scenario)] ?? []).length, rungs: ladderRungs.length }));
+  if (after.completed.length > before.completed.length) lines.push(msg("engine.campaign.caseCleared", { cleared: after.completed.length }));
+  else if (game.status === "lost") lines.push(msg("engine.campaign.caseStaysOpen"));
   return lines;
 }
 
@@ -173,11 +175,16 @@ export function campaignTier(xp: number) {
   return xp >= 450 ? 3 : xp >= 200 ? 2 : xp >= 75 ? 1 : 0;
 }
 
+// "Escalation" is also a mode; the second act reads as its own thing.
+const campaignActs = [
+  { number: 1, from: 0, title: "First contact", detail: "Establish the pattern behind a series of apparently isolated compromises." },
+  { number: 2, from: 3, title: "Widening pattern", detail: "Recurring infrastructure and trust paths connect previously separate incidents." },
+  { number: 3, from: 7, title: "Convergence", detail: "Cross-sector evidence points to a coordinated strategic campaign." },
+];
+
 export function campaignAct(completed: number) {
-  if (completed >= 7) return { number: 3, title: "Convergence", detail: "Cross-sector evidence points to a coordinated strategic campaign." };
-  // "Escalation" is also a mode; the act reads as its own thing.
-  if (completed >= 3) return { number: 2, title: "Widening pattern", detail: "Recurring infrastructure and trust paths connect previously separate incidents." };
-  return { number: 1, title: "First contact", detail: "Establish the pattern behind a series of apparently isolated compromises." };
+  const act = campaignActs.findLast(item => completed >= item.from)!;
+  return { number: act.number, title: act.title, detail: act.detail };
 }
 
 // What the director says at the start of each act, and the development that
@@ -205,19 +212,41 @@ export function campaignStory(state: CampaignState, route: string) {
   };
 }
 
-export function campaignEnding(state: CampaignState) {
+const campaignEndings = [
+  { id: "resilience", title: "Collective resilience", detail: "The campaign closes with trusted coordination, strong service continuity and no material unresolved access." },
+  { id: "foothold", title: "The quiet foothold", detail: "Services survived, but unresolved access leaves the strategic picture uncertain and forces a sustained hunt." },
+  { id: "fractured", title: "Operational victory, fractured trust", detail: "The technical campaign was contained, but delayed or unclear decisions weakened collective confidence." },
+  { id: "stability", title: "Guarded stability", detail: "The campaign is contained with manageable residual risk and a funded programme of follow-up work." },
+];
+const doctrineNames: Record<string, Parameters<typeof msg>[0]> = {
+  watchtower: "campaign.doctrine.watchtower",
+  breakwater: "campaign.doctrine.breakwater",
+  "common-ground": "campaign.doctrine.commonGround",
+  convergence: "campaign.doctrine.convergence",
+};
+
+export function campaignEnding(state: CampaignState): { title: string; detail: Message } | null {
   if (state.completed.length < 10) return null;
   const bonds = Object.values(state.specialistBonds);
   const cohesion = bonds.length ? Math.round(bonds.reduce((sum, value) => sum + value, 0) / bonds.length) : 35;
   const finalRoute = state.routeHistory.at(-1) ?? "common-ground";
   // The ending names what this command did, in the record's own numbers.
   const { observe, act } = state.commandPosture;
-  const record = ` The record: ten cases cleared in ${state.operations} operation${state.operations === 1 ? "" : "s"}, ${observe} evidence decision${observe === 1 ? "" : "s"} to watch and ${act} to act, ${state.unresolvedThreads ? `${state.unresolvedThreads} unresolved access` : "no access left unresolved"}.`;
-  const coda = `${record} Final doctrine: ${finalRoute.replace("-", " ")}. Team cohesion: ${cohesion}/100.`;
-  if (state.leadershipTrust >= 75 && state.readiness >= 75 && state.unresolvedThreads <= 1) return { title: "Collective resilience", detail: "The campaign closes with trusted coordination, strong service continuity and no material unresolved access." + coda };
-  if (state.unresolvedThreads >= 4) return { title: "The quiet foothold", detail: "Services survived, but unresolved access leaves the strategic picture uncertain and forces a sustained hunt." + coda };
-  if (state.leadershipTrust < 40) return { title: "Operational victory, fractured trust", detail: "The technical campaign was contained, but delayed or unclear decisions weakened collective confidence." + coda };
-  return { title: "Guarded stability", detail: "The campaign is contained with manageable residual risk and a funded programme of follow-up work." + coda };
+  const ending = campaignEndings.find(item => item.id === (
+    state.leadershipTrust >= 75 && state.readiness >= 75 && state.unresolvedThreads <= 1 ? "resilience"
+      : state.unresolvedThreads >= 4 ? "foothold"
+        : state.leadershipTrust < 40 ? "fractured"
+          : "stability"))!;
+  const detail = msg("campaign.endingRecord", {
+    detail: lit(ending.detail),
+    operations: msg("campaign.operations", { count: state.operations }),
+    watched: msg("campaign.evidenceDecisions", { count: observe }),
+    act,
+    access: state.unresolvedThreads ? msg("campaign.unresolvedAccess", { count: state.unresolvedThreads }) : msg("campaign.noAccessUnresolved"),
+    doctrine: msg(doctrineNames[finalRoute] ?? "campaign.doctrine.commonGround"),
+    cohesion,
+  });
+  return { title: ending.title, detail };
 }
 
 export function recordCampaignResult(current: CampaignState, game: Game, score: number): CampaignState {
@@ -285,4 +314,4 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
 }
 
 // The words of these tables are a locale's to replace (lib/i18n/content/).
-registerContent({ ladderRungs });
+registerContent({ ladderRungs, campaignRanks, campaignCapabilities, campaignActs, actBriefings, routeDevelopments, campaignEndings });

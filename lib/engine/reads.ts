@@ -5,7 +5,7 @@ import { decisionChoices, decisionLanguageFor, decisionText, decisionTitles, inS
 import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type Game, type GuidanceLevel, type HypothesisStanding, type KnownFacts, type LossCause, type ReadingOdds, type SectorRead, type TrainingPrompt } from "./types.ts";
 import { availableIn, carryModifier, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
 import { infrastructureTopologies } from "../phase8.ts";
-import { lit, msg, type Message } from "../i18n/message.ts";
+import { lit, msg, ref, type Message } from "../i18n/message.ts";
 // Each read is a message: the engine's words, or the content's, kept as text.
 export function getAttributionRead(game: Game): { title: Message; confidence: string; detail: Message } {
   const profile = getAdversaryProfile(game);
@@ -469,7 +469,7 @@ export function getLossReason(game: Game): { cause: LossCause; title: Message; d
   if (game.objectiveProgress >= 100) return { cause: "objective", title: msg("engine.reads.theAdversaryCompleted"), detail: msg("engine.reads.adversaryProgressToward", { adversaryObjectivesTitle: lit(adversaryObjectives[game.objective].title, "lower") }) };
   if (game.impact >= 100) return { cause: "impact", title: msg("engine.reads.businessImpactReached"), detail: msg("engine.reads.exposureGrewFaster") };
   if (game.continuity <= 0) return { cause: "continuity", title: msg("engine.reads.theEssentialService"), detail: msg("engine.reads.fellToZero", { scenarioDynamicsLabel: scenarioDynamics[game.scenario].label }) };
-  if (game.sectorHealth <= 0) return { cause: "sector", title: msg("engine.reads.reachedZero", { sectorSystemsTitle: sectorSystems[game.scenario].title }), detail: msg("engine.reads.theSectorS") };
+  if (game.sectorHealth <= 0) return { cause: "sector", title: msg("engine.reads.reachedZero", { sector: ref(`sectorSystems.${game.scenario}.title`) }), detail: msg("engine.reads.theSectorS") };
   return { cause: "window", title: msg("engine.reads.theInvestigationWindow"), detail: msg("engine.reads.of4Stages", { revealed: game.revealed.length, count: game.turns.length }) };
 }
 

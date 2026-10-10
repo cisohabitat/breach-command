@@ -1,6 +1,6 @@
 # Localising the engine's prose
 
-Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026), step 4's engine half built (0.9.7); its periphery and step 5 follow. The interface around it is
+Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026), step 4 built (0.9.7 and 0.9.8, the session hook's own sentences aside); step 5 follows. The interface around it is
 catalogued (`lib/i18n/`, 0.9.1 to 0.9.3); this is the plan for the rest, so
 that the work can start when a first locale has a translator and a reviewer
 (Phase 7, `docs/ROADMAP.md`).
@@ -180,6 +180,25 @@ exact.
    `recommendNext`, whose title and reason `last-operation` stores, so a
    stored English recommendation needs a legacy path. It is done when
    `grep "say(" lib/engine lib/game-bot.ts` finds nothing.
+   *Built in 0.9.8*, with what it turned up. Messages the assignment screen
+   shows before the game loads (trust and readiness, the campaign's ending, the
+   last operation and the review's suggestion, `describeWhen`, the five loss
+   titles the suggestion quotes) are in the base catalogue (`lib/i18n/en.ts`),
+   as the variant's words were; the review's own (what an operation changed,
+   the route's reason, the specialist's note, the Bot Commander's reasons) are
+   in the engine's. The campaign's ranks, capabilities, acts, director's
+   briefings, route developments and endings, and the specialists' reactions
+   and arcs, were tables inside functions and are now registered content.
+   `last-operation` stores messages; a record of English strings reads back
+   as legacy messages, and a test reads both. The share card takes the
+   player's locale from its component, and an end-to-end test requires every
+   line drawn on it in the pseudo-locale to be the pseudo-locale's; another
+   reads the last operation in it, where the date, which `Intl` writes, is
+   accented too. The incident-state tool for browser agents says what the
+   player sees, so in the player's locale. Left for its own step: the
+   sentences `hooks/use-game-session.ts` composes itself (about 40
+   announcements and briefing answers), which are the components' kind of
+   string, not the engine's.
 5. **A ratchet like the components'.** `tests/i18n.test.ts` gains a pass over
    `lib/` that allows prose only in content tables, and the pseudo-locale
    sweep gains a check that no seeded screen in `en-XA` shows a run of four
@@ -191,7 +210,10 @@ exact.
   even; the engine catalogue (about 380 messages) adds roughly 25 KB to the
   game screen's chunk, which is lazy. *Measured at 4a (0.9.7):* the first load
   fell 9,157 B, to 836,461 B, and all script by the time play starts rose
-  27,874 B, to 1,174,282 B; the all-script budget moved to 1,190,000 B. The first load carries none of it: it
+  27,874 B, to 1,174,282 B; the all-script budget moved to 1,190,000 B. *At
+  4b (0.9.8):* the first load rose 3,918 B, to 840,379 B (9,621 B of
+  headroom), for the messages the assignment screen shows; all script
+  1,181,390 B. The first load carries none of it: it
   has 2,214 B of headroom under 850,000 B, so nothing here may land on it.
 - **Tests.** Engine tests that assert sentences assert descriptors instead,
   or render them with `translate("en", …)`.

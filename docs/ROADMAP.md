@@ -664,6 +664,19 @@ balance fingerprint 1826729440 with and without the pseudo-locale, first load
 the Bot Commander's reasons, announcements, the stored recommendation),
 follows.
 
+10 October 2026 (0.9.8), step 4b: the campaign's sentences, the route's
+reason, the specialists' notes, the Bot Commander's reasons, the suggestion
+for the next operation and the last operation's record are messages, and the
+campaign's ranks, acts, endings and capabilities and the specialists' notes
+are registered content (1,964 strings for a translator). `grep "say("
+lib/engine lib/game-bot.ts` finds nothing. The result image is drawn in the
+player's locale, checked in the pseudo-locale by `tests/e2e/share.spec.ts`;
+the last operation's record stores messages and reads an older English one
+as it was (`tests/e2e/last-operation.spec.ts`). Prose unchanged against 0.9.7's
+record; text and pixels identical on all 56 screens; fingerprint 1826729440
+with and without the pseudo-locale; first load 840,379 B, all script
+1,181,390 B. The session hook's own sentences are next, then step 5.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

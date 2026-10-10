@@ -183,19 +183,19 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <summary>{rich("debriefDialog.campaignAndTeam2", { leadershipTrust: campaign.leadershipTrust, readiness: campaign.readiness, mastery: campaign.mastery[String(game.scenario)] ?? 0 }, { span: chunk => <span>{chunk}</span> })}</summary>
             {/* What this operation did to the campaign, and why. Trust and readiness
                 were totals with no change and no reason beside them. */}
-            {!!campaignChange.length && <section className="campaign-change"><span className="eyebrow">{t("debriefDialog.whatThisOperation")}</span><ul>{campaignChange.map(line => <li key={line}>{line}</li>)}</ul>{game.mode === "campaign" && <p>{t("debriefDialog.route2", { campaignRoutesTitle: campaignRoutes[routeForCampaign(campaign)].title, routeReason: routeReason(campaign) })}</p>}</section>}
+            {!!campaignChange.length && <section className="campaign-change"><span className="eyebrow">{t("debriefDialog.whatThisOperation")}</span><ul>{campaignChange.map((line, index) => <li key={index}>{say(line)}</li>)}</ul>{game.mode === "campaign" && <p>{t("debriefDialog.route2", { campaignRoutesTitle: campaignRoutes[routeForCampaign(campaign)].title, routeReason: say(routeReason(campaign)) })}</p>}</section>}
             <section className="capability-review"><span className="eyebrow">{t("debriefDialog.campaignCapabilities")}</span>{unlockedCapabilities(campaign.xp).map(item => <div key={item.title} className={item.unlocked ? "unlocked" : "locked"}><strong>{item.title}</strong><span>{item.unlocked ? item.detail : t("debriefDialog.unlocksAtCampaign", { at: item.at, xp: campaign.xp, itemDetail: item.detail })}</span></div>)}</section>
             <section className="campaign-consequences"><div><span>{t("debriefDialog.leadershipTrust")}</span><strong>{t("debriefDialog.of1004", { leadershipTrust: campaign.leadershipTrust })}</strong></div><div><span>{t("debriefDialog.readiness")}</span><strong>{t("debriefDialog.of1005", { readiness: campaign.readiness })}</strong></div><div><span>{t("debriefDialog.winStreak")}</span><strong>{campaign.streak}</strong></div></section>
-            <section className="specialist-reaction"><span className="eyebrow">{t("debriefDialog.teamAfterAction2", { namedSpecialistsName: namedSpecialists[game.specialist].name, specialistBonds: campaign.specialistBonds[game.specialist] ?? 35 })}</span><p>{specialistReaction(game.specialist, game.status !== "lost", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35)}</p>{specialistArc(game.specialist, campaign.specialistBonds[game.specialist] ?? 35) && <p className="specialist-arc">{specialistArc(game.specialist, campaign.specialistBonds[game.specialist] ?? 35)}</p>}</section>
+            <section className="specialist-reaction"><span className="eyebrow">{t("debriefDialog.teamAfterAction2", { namedSpecialistsName: namedSpecialists[game.specialist].name, specialistBonds: campaign.specialistBonds[game.specialist] ?? 35 })}</span><p>{say(specialistReaction(game.specialist, game.status !== "lost", outcome.breakdown.total, campaign.specialistBonds[game.specialist] ?? 35))}</p>{specialistArc(game.specialist, campaign.specialistBonds[game.specialist] ?? 35) && <p className="specialist-arc">{specialistArc(game.specialist, campaign.specialistBonds[game.specialist] ?? 35)}</p>}</section>
             <section className="mastery-panel"><div><span className="eyebrow">{t("debriefDialog.scenarioMastery")}</span><strong>{campaign.mastery[String(game.scenario)] ? `${campaign.mastery[String(game.scenario)]} of 3` : t("debriefDialog.notYetEarned")}</strong></div><p>{t("debriefDialog.masteryIs1For")}</p></section>
           </details>
-          {finalEnding && <section className="campaign-finale"><div><span className="eyebrow">{t("debriefDialog.finalCommandBriefing")}</span><h3>{finalEnding.title}</h3><p>{finalEnding.detail}</p></div></section>}
+          {finalEnding && <section className="campaign-finale"><div><span className="eyebrow">{t("debriefDialog.finalCommandBriefing")}</span><h3>{finalEnding.title}</h3><p>{say(finalEnding.detail)}</p></div></section>}
           {/* What to play next, chosen from this record: the reason quotes it, so
               the advice can be checked against what happened. */}
           {!finalEnding && <section className="next-recommendation" aria-labelledby="next-recommendation-title">
             <span className="eyebrow" id="next-recommendation-title">{t("debriefDialog.suggestedNext")}</span>
-            <h3>{recommendation!.title}</h3>
-            <p>{recommendation!.reason}</p>
+            <h3>{say(recommendation!.title)}</h3>
+            <p>{say(recommendation!.reason)}</p>
             {/* The same operation played by the Bot Commander from what it can see,
                 to show where a reading tested soundly would have gone. */}
             {game.seed !== null

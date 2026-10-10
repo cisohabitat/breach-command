@@ -4,6 +4,21 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.8, 10 October 2026
+
+- **The campaign, the Bot Commander and your last operation in any language.**
+  What the campaign says after an operation and at its end, why it is on its
+  route, what trust and readiness buy, the specialists' after-action notes,
+  the Bot Commander's reasons, the suggestion for what to play next and when
+  you last played are messages, and the campaign's ranks, acts, endings and
+  capabilities are content a translation replaces (110 more strings for a
+  translator). English is unchanged.
+- **The result image in your language.** The image is drawn in the language
+  the game is in; it was always drawn in English.
+- **Your last operation survives the change.** The assignment screen's record
+  of it is now stored as messages; one saved by an earlier version keeps its
+  English as you read it.
+
 ## 0.9.7, 10 October 2026
 
 - **The board and the review in any language.** What the game says as you

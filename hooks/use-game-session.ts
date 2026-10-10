@@ -55,7 +55,7 @@ import { readStored, removeStored, storageWritable, writeStored } from "@/lib/st
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
 import { parseLedger, readLedger, writeLedger, type LedgerEntry } from "@/lib/ledger";
 import { encodeChallenge } from "@/lib/phase8";
-import { say } from "@/lib/i18n/message";
+import { msg, say, type Message } from "@/lib/i18n/message";
 import { activeLocale } from "@/hooks/use-messages";
 import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
@@ -116,7 +116,7 @@ export function useGameSession() {
   const [replay, setReplay] = useState<{ scenario: number; difficulty: Game["difficulty"] } | null>(null);
   const [campaign, setCampaign] = useState<CampaignState>(defaultCampaign);
   // What the last finished operation did to the campaign, for the review.
-  const [campaignChange, setCampaignChange] = useState<string[]>([]);
+  const [campaignChange, setCampaignChange] = useState<Message[]>([]);
   const [backupInput, setBackupInput] = useState("");
   const [backupMessage, setBackupMessage] = useState("");
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
@@ -535,7 +535,7 @@ export function useGameSession() {
     if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice("This browser is not allowing saved data, so campaign progress was not kept.");
     // What the review suggests next, kept so a returning player is met with it.
     const next = recommendNext(result, nextCase(updated, scenarios.length));
-    const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? say(getLossReason(result).title) : result.status === "exercise" ? "Authorised exercise" : "Stood down", score, endedAt: Date.now(), next };
+    const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? getLossReason(result).title : result.status === "exercise" ? msg("record.endingExercise") : msg("record.endingStoodDown"), score, endedAt: Date.now(), next };
     writeLastOperation(record);
     setLastOperation(record);
     const entry: LedgerEntry = { at: Date.now(), scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, outcome: result.status as LedgerEntry["outcome"], score, hypothesis: getOutcome(result).breakdown.hypothesis, stages: result.revealed.length, turns: result.turns.length, code: result.seed === null ? null : encodeChallenge({ scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, specialist: result.specialist, seed: result.seed }) };
@@ -760,7 +760,7 @@ export function useGameSession() {
       import("@/lib/game-bot").then(({ chooseBotAction }) => {
         if (cancelled || stateRef.current !== current) return;
         const action = chooseBotAction(current);
-        setBotStatus(action.reason);
+        setBotStatus(say(action.reason, activeLocale()));
         executeBotAction(action);
       }).catch(() => setBotStatus("The practice commander could not be loaded. Take manual control to continue."));
     }, delay);

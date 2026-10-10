@@ -1,7 +1,7 @@
 // Everything the interface is allowed to show before and after an action.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,sourceSeesReading,getDiscriminatingRead,getHypothesisLedger,hypotheses,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS } from "../lib/advanced-game.ts";
+import { getLossReason,getScoreRows,getSectorAlert,SECTOR_ALERT_AT,getResultSummary,getRuledOutRoutes,correlateEvidence,describeChange,getBeginnerReview,getCoachPrompt,getMapHint,getTrainingPrompt,readyForTheory,readyToCorrelate,resolveMapAction,setCaseTheory,sourceSeesReading,getDiscriminatingRead,getHypothesisLedger,hypotheses,getHypothesisStanding,getKnownFacts,getModifierBreakdown,getScoreBreakdown,hypothesisSources,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,setHypothesis,attacks,getOutcome,getCounterfactuals,newGame,type Game,scenarioDynamics,getReadingOdds,OWN_SOURCE_BONUS } from "../lib/advanced-game.ts";
 import { plainLanguage, glossaryParts } from "../lib/glossary.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 import { legacy, msg, say } from "../lib/i18n/message.ts";
@@ -573,13 +573,13 @@ test("suggests the next operation from the record, and says why", async () => {
   const windowLoss = { ...newGame(4, "crisis", () => 0), status: "lost" as const };
   const down = recommendNext(windowLoss, 7);
   assert.deepEqual([down.scenario, down.difficulty], [4, "operational"]);
-  assert.match(down.reason, /window closed with 0 of 4 stages/);
+  assert.match(en(down.reason), /window closed with 0 of 4 stages/);
   const atTraining = recommendNext({ ...windowLoss, difficulty: "training" }, 7);
   assert.deepEqual([atTraining.scenario, atTraining.difficulty], [4, "training"], "Training has no rung below it");
   // A loss to a meter is a different lesson: the same case at the same rung.
   const meterLoss = recommendNext({ ...windowLoss, difficulty: "operational", impact: 100 }, 7);
   assert.deepEqual([meterLoss.scenario, meterLoss.difficulty], [4, "operational"]);
-  assert.match(meterLoss.reason, /Business impact reached its limit/);
+  assert.match(en(meterLoss.reason), /Business impact reached its limit/);
   // A clear moves on to the next open case; a strong one at Training steps up.
   let game = newGame(0, "training");
   for (let guard = 0; guard < 80 && ["playing", "response"].includes(game.status); guard++) {
@@ -599,17 +599,21 @@ test("suggests the next operation from the record, and says why", async () => {
     const next = recommendNext(game, 3);
     assert.equal(next.scenario, 3, "a clear moves on to the next open case");
     assert.equal(next.difficulty, score >= 74 ? "operational" : "training");
-    assert.match(next.reason, new RegExp(`${score} of 100`));
+    assert.match(en(next.reason), new RegExp(`${score} of 100`));
   }
   // The stored record is read defensively: anything malformed is ignored.
-  const record = { scenario: 4, difficulty: "crisis", outcome: "lost", ending: "The investigation window closed", score: 41, endedAt: 1_000, next: { scenario: 4, difficulty: "operational", title: down.title, reason: down.reason } };
-  assert.deepEqual(parseLastOperation(record, 10), record);
+  const record = { scenario: 4, difficulty: "crisis", outcome: "lost", ending: getLossReason(windowLoss).title, score: 41, endedAt: 1_000, next: { scenario: 4, difficulty: "operational", title: down.title, reason: down.reason } };
+  assert.deepEqual(parseLastOperation(JSON.parse(JSON.stringify(record)), 10), record, "a record of messages reads back as written");
+  // One written before the record held messages keeps its English as it was.
+  const older = { ...record, ending: "The investigation window closed", next: { ...record.next, title: en(down.title), reason: en(down.reason) } };
+  assert.deepEqual(en(parseLastOperation(older, 10)), older, "an older record of sentences reads as it did");
+  assert.equal(parseLastOperation({ ...record, ending: 7 }, 10), null, "words that are neither a sentence nor a message");
   assert.equal(parseLastOperation({ ...record, scenario: 12 }, 10), null, "a case this build does not have");
   assert.equal(parseLastOperation({ ...record, next: { ...record.next, difficulty: "nightmare" } }, 10), null);
   assert.equal(parseLastOperation("text", 10), null);
   const now = new Date(2026, 9, 9, 15).getTime();
-  assert.equal(describeWhen(new Date(2026, 9, 9, 9).getTime(), now), "earlier today");
-  assert.equal(describeWhen(new Date(2026, 9, 8, 22).getTime(), now), "yesterday");
-  assert.equal(describeWhen(new Date(2026, 9, 6, 12).getTime(), now), "3 days ago");
-  assert.equal(describeWhen(new Date(2026, 8, 20).getTime(), now), "on 20 September");
+  assert.equal(en(describeWhen(new Date(2026, 9, 9, 9).getTime(), now)), "earlier today");
+  assert.equal(en(describeWhen(new Date(2026, 9, 8, 22).getTime(), now)), "yesterday");
+  assert.equal(en(describeWhen(new Date(2026, 9, 6, 12).getTime(), now)), "3 days ago");
+  assert.equal(en(describeWhen(new Date(2026, 8, 20).getTime(), now)), "on 20 September");
 });

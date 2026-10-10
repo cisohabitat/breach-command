@@ -1,6 +1,6 @@
 import type { AdversaryObjectiveId, SpecialistId } from "./command-systems";
 import { registerContent } from "./i18n/content/registry.ts";
-import { ref, type Message } from "./i18n/message.ts";
+import { lit, msg, ref, type Message } from "./i18n/message.ts";
 
 export type CampaignRouteId = "watchtower" | "breakwater" | "common-ground" | "convergence";
 
@@ -21,15 +21,15 @@ export function routeForCampaign(state: { completed: number[]; commandPosture: {
 
 // Why the campaign is on its route, in the terms routeForCampaign reads. The
 // route changed from Common Ground to Breakwater with nothing saying why.
-export function routeReason(state: { completed: number[]; commandPosture: { observe: number; act: number }; leadershipTrust: number }) {
+export function routeReason(state: { completed: number[]; commandPosture: { observe: number; act: number }; leadershipTrust: number }): Message {
   const route = routeForCampaign(state);
   const { observe, act } = state.commandPosture;
-  if (route === "convergence") return "Seven or more cases are cleared, so every thread is being drawn together.";
-  if (state.completed.length < 2) return "Fewer than two cases are cleared, so the campaign is still on common ground.";
-  if (route === "watchtower") return `You have chosen to watch (${observe}) more than to act (${act}) in evidence decisions, so the command leans to observation.`;
-  if (route === "breakwater" && act > observe + 1) return `You have chosen to act (${act}) more than to watch (${observe}) in evidence decisions, so the command leans to holding the line.`;
-  if (route === "breakwater") return `Watching and acting are balanced, and leadership trust is below 55 (${state.leadershipTrust}), so the command is holding the line.`;
-  return `Watching and acting are balanced and leadership trust is ${state.leadershipTrust}, so the command keeps to common ground.`;
+  if (route === "convergence") return msg("engine.campaign.routeConvergence");
+  if (state.completed.length < 2) return msg("engine.campaign.routeEarly");
+  if (route === "watchtower") return msg("engine.campaign.routeWatchtower", { observe, act });
+  if (route === "breakwater" && act > observe + 1) return msg("engine.campaign.routeBreakwaterAct", { observe, act });
+  if (route === "breakwater") return msg("engine.campaign.routeBreakwaterTrust", { trust: state.leadershipTrust });
+  return msg("engine.campaign.routeCommonGround", { trust: state.leadershipTrust });
 }
 
 // An operation's variant: its numbers, and its words as references to the
@@ -130,7 +130,7 @@ const specialistReactions: Record<SpecialistId, Record<ReactionTone, string[]>> 
   },
 };
 
-export function specialistReaction(id: SpecialistId, won: boolean, score: number, bond: number): string {
+export function specialistReaction(id: SpecialistId, won: boolean, score: number, bond: number): Message {
   const name = specialistNames[id];
   const tone: ReactionTone = !won
     ? "loss"
@@ -143,7 +143,7 @@ export function specialistReaction(id: SpecialistId, won: boolean, score: number
           : "steady";
   const lines = specialistReactions[id][tone];
   const index = Math.abs(Math.round(score) * 7 + Math.round(bond) * 3) % lines.length;
-  return `${name}: ${lines[index]}`;
+  return msg("engine.campaign.reaction", { name, line: lit(lines[index]) });
 }
 
 // Each specialist develops across a campaign as rapport grows: a request, then
@@ -189,4 +189,4 @@ export function specialistArc(id: SpecialistId, bond: number): string | null {
 }
 
 // The words of these tables are a locale's to replace (lib/i18n/content/).
-registerContent({ campaignRoutes, objectiveTheory, variantTemplates });
+registerContent({ campaignRoutes, objectiveTheory, variantTemplates, specialistReactions, specialistArcs });

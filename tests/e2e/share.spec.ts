@@ -26,3 +26,31 @@ test("the result image is drawn and saved, and its card names no technique", asy
   const card = Object.values(getShareCard(game)).filter(value => typeof value === "string").join(" ").toLowerCase();
   for (const attack of attacks) expect(card).not.toContain(attack.title.toLowerCase());
 });
+
+// Drawn outside React, the image takes the player's locale from the component:
+// in the pseudo-locale every line on it is one the catalogue or the content
+// overlay wrote, each of which brackets what it gives.
+test("the result image is drawn in the player's language", async ({ page }) => {
+  await page.addInitScript(() => {
+    const drawn: string[] = [];
+    (window as unknown as { drawn: string[] }).drawn = drawn;
+    const fillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (text: string, ...rest: [number, number, number?]) {
+      drawn.push(text);
+      return fillText.call(this, text, ...rest);
+    };
+  });
+  await openWithSave(page, { ...responsePhaseGame(), seed: 424242 }, false, null, "/?locale=en-XA");
+  await page.getByRole("button", { name: /^\[Réšümé·+\]$/ }).click();
+  await page.waitForLoadState("networkidle");
+  for (let phase = 0; phase < 3; phase++) {
+    await page.locator(".response-options > button").first().click();
+    await page.waitForTimeout(300);
+  }
+  const download = page.waitForEvent("download");
+  await page.locator(".share-result button").nth(1).click();
+  await download;
+  const drawn = await page.evaluate(() => (window as unknown as { drawn: string[] }).drawn);
+  expect(drawn.length).toBeGreaterThan(6);
+  for (const text of drawn) expect(text, "every line on the image is in the pseudo-locale").toMatch(/^\[/);
+});

@@ -165,3 +165,9 @@ assignment screen), 24,282 B over the 1,150,000 B budget. As in 0.9.1 and
 the engine uses them, and the plurals, which write a sentence once for each
 form. The all-script budget moved to 1,190,000 B, leaving the periphery of
 step 4 room in the lazy part; the first-load budget did not move.
+
+The periphery as messages (0.9.8) put on the first load the messages the
+assignment screen shows before the game's script arrives (the last operation,
+the suggestion, trust and readiness, the campaign's ending): 840,379 B,
+3,918 B more, 9,621 B under budget. All script by the time play starts is
+1,181,390 B. No budget moved.
