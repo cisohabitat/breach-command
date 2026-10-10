@@ -2,8 +2,7 @@
 import { attacks, difficulties, scenarios, stages, hypotheses, scenarioDynamics } from "../game.ts";
 import { gameModes, sectorSystems } from "../command-systems.ts";
 import { encodeChallenge } from "../phase8.ts";
-import { inSentence } from "./content.ts";
-import { say } from "../i18n/message.ts";
+import { lit, msg, say, withForm, type Message } from "../i18n/message.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
 import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
@@ -19,6 +18,12 @@ export function countRevisions(game: Pick<Game, "hypothesisHistory">) {
   return game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0);
 }
 
+// One or two reasons, said together; nothing when there are none.
+function both(parts: (Message | null)[]): Message {
+  const given = parts.filter((part): part is Message => !!part);
+  return given.length === 2 ? msg("engine.review.bothReasons", { first: given[0], second: given[1] }) : given[0] ?? lit("");
+}
+
 export function getBeginnerReview(game: Game): BeginnerReview {
   const breakdown = getScoreBreakdown(game);
   const tested = game.turns.filter(turn => turn.hypothesis && turn.hypothesisTarget);
@@ -27,19 +32,19 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const revisions = countRevisions(game);
 
   const strength = game.status === "exercise"
-    ? `You confirmed ${game.revealed.length} of 4 stages in ${game.turns.length} turns before the controller stood the activity down as an authorised exercise; a natural 20 brought that card, and nothing was missed.`
+    ? msg("engine.review.youConfirmedOf", { revealed: game.revealed.length, turns: game.turns.length })
     : game.revealed.length === 4
-    ? `You confirmed the whole attack chain, all four stages, in ${game.turns.length} turns.`
+    ? msg("engine.review.youConfirmedThe", { turns: game.turns.length })
     : game.impact <= 40
-      ? `You kept business impact down to ${game.impact} while the picture was still forming, which buys the team room to work.`
+      ? msg("engine.review.youKeptBusiness", { impact: game.impact })
       : game.revealed.length
-        ? `You confirmed ${game.revealed.length} of 4 stages under real pressure, and the record you built is where the next shift starts.`
+        ? msg("engine.review.youConfirmedOf2", { revealed: game.revealed.length })
         // With nothing confirmed, praise for the stages found would be false.
         // What a player did earn is the checks that completed and ruled
         // something out, or, if none did, a record that says the dice were part of it.
         : emptySuccesses
-          ? `No stage was confirmed, but ${emptySuccesses === 1 ? "your 1 completed check ruled out what its source" : `each of your ${emptySuccesses} completed checks ruled out what its source`} could see, which narrows the search for the next shift.`
-          : `No check completed before the operation closed, so the record says more about the pressure and the dice than about your reasoning.`;
+          ? emptySuccesses === 1 ? msg("engine.review.noStageOneCheck") : msg("engine.review.noStageChecks", { count: emptySuccesses })
+          : msg("engine.review.noCheckCompleted");
 
   // Reading the route is the skill the game is built on, so a reading that was
   // wrong more often than right is named before an untested correlation. In the
@@ -68,44 +73,44 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     // choice of source; telling that player to "run an Own source" told them
     // to do what they had done on every turn.
     const failedOwn = misses.filter(turn => !turn.success && hypothesisSources(game, turn.hypothesis!).includes(turn.procedure)).length;
-    const gap = `Your working hypothesis matched the route actually under test on ${aligned} of ${tested.length} turns, though you revised it ${revisions} times.`;
+    const gap = msg("engine.review.yourWorkingHypothesis", { aligned, tested: tested.length, revisions });
     if (carried * 2 >= misses.length) return {
       strength,
-      gap: `${gap} On ${carried} of the misses you were still testing a reading chosen for an earlier stage.`,
-      concept: "Each stage of an intrusion can travel a different route: a stolen account can open the way in and a compromised server can carry the data out. Confirming one stage answers that stage and opens the next question.",
-      next: "Next operation, as soon as a stage is confirmed, compare the four readings again and choose the one that fits the next stage before you run another procedure.",
+      gap: msg("engine.review.onOfThe", { gap, carried }),
+      concept: msg("engine.review.eachStageOf"),
+      next: msg("engine.review.nextOperationAs"),
     };
     if (untested * 2 >= misses.length && failedOwn === untested) return {
       strength,
-      gap: `${gap} On ${failedOwn} of the misses one of the reading's own sources failed on the roll, so the check settled nothing either way.`,
-      concept: "A failed roll is not evidence. The reading was never tested on those turns, so it was neither confirmed nor ruled out, and the same test is still worth running.",
-      next: "Next operation, give a check you need to settle a better chance: an established source, the bonus a monitored node or a correct comparison sets up, or a Focused, Exhaustive plan when the turn can afford it.",
+      gap: msg("engine.review.onOfThe2", { gap, failedOwn }),
+      concept: msg("engine.review.aFailedRoll"),
+      next: msg("engine.review.nextOperationGive"),
     };
     if (untested * 2 >= misses.length) return {
       strength,
-      gap: `${gap} On ${untested} of the misses the check settled nothing about the reading: ${[untested - blindMisses && `${untested - blindMisses} failed on the roll`, blindMisses && `${blindMisses} used a source that could not see it`].filter(Boolean).join(" and ")}.`,
-      concept: "A wrong reading is only corrected by a completed check of a source that can see it. A failed roll, or a source that cannot see the reading, leaves it exactly as open as before.",
+      gap: msg("engine.review.missesSettledNothing", { gap, untested, reasons: both([untested - blindMisses ? msg("engine.review.failedOnThe", { untested: untested - blindMisses }) : null, blindMisses ? msg("engine.review.usedASource", { blindMisses }) : null]) }),
+      concept: msg("engine.review.aWrongReading"),
       next: game.mode === "expert"
-        ? "Next operation, before each action, check by hand that the source can see a technique your reading could still be using at this stage."
-        : "Next operation, run a card marked as able to test the reading you hold (its own source, or one marked “Can also test this reading”), so that an empty result rules it out instead of leaving it standing.",
+        ? msg("engine.review.nextOperationBefore")
+        : msg("engine.review.nextOperationRun"),
     };
     return {
       strength,
-      gap: `${gap} You tested each reading with a source that could see it, which is the habit; with three or four routes open at most stages, some misses are the cost of finding out.`,
-      concept: "A wrong reading tested properly is how the right one is found, and it still earns half its credit in the hypothesis score. What costs turns is testing a route the record has already ruled out.",
+      gap: msg("engine.review.youTestedEach", { gap }),
+      concept: msg("engine.review.aWrongReading2"),
       next: game.mode === "expert"
-        ? "Next operation, keep your own tally of the routes your completed checks have ruled out, and never declare one of them again."
-        : "Next operation, when a reading weakens, compare all four before choosing the next, and pass over any the comparison marks as ruled out.",
+        ? msg("engine.review.nextOperationKeep")
+        : msg("engine.review.nextOperationWhen"),
     };
   }
   if (tested.length && aligned * 2 < tested.length) return {
     strength,
-    gap: `Your working hypothesis matched the route actually under test on ${aligned} of ${tested.length} turns${revisions === 0 ? ", and you never revised it" : ""}.`,
-    concept: "A hypothesis is a prediction you are trying to break, not a label to keep. When the evidence sources it predicts come back empty, that is the evidence telling you to change it.",
+    gap: msg(revisions === 0 ? "engine.review.matchedNeverRevised" : "engine.review.matched", { aligned, tested: tested.length }),
+    concept: msg("engine.review.aHypothesisIs"),
     // Expert withholds the standing, so the advice is the same habit without it.
     next: game.mode === "expert"
-      ? "Next operation, keep your own tally of which of the reading's sources have come back empty from a completed check, and change the reading once they have, before you spend another turn."
-      : "Next operation, watch the reading's standing on the hypothesis board. When it says weakening, change the reading before you spend another turn.",
+      ? msg("engine.review.nextOperationKeep2")
+      : msg("engine.review.nextOperationWatch"),
   };
   // A loss to a meter, not the window, is the thing to look at: a playtest that
   // read the route well and lost to the sector margin was told about empty
@@ -114,20 +119,20 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     const reason = getLossReason(game);
     return {
       strength,
-      gap: `The operation was lost: ${reason.title.charAt(0).toLowerCase()}${reason.title.slice(1)}.`,
-      concept: "Business impact, service integrity, adversary progress and the sector's own margin decide an operation as surely as the evidence does. A sound investigation still has to finish before one of them runs out.",
+      gap: msg("engine.review.theOperationWas", { title: withForm(reason.title, "lowerFirst") }),
+      concept: msg("engine.review.businessImpactService"),
       next: reason.cause === "sector"
-        ? `Next operation, watch the sector margin under the case title. ${sectorSystems[game.scenario].rule}`
-        : "Next operation, watch the three readouts on the top row, and when one is near its limit, choose the decision or response option that relieves it before you run another procedure.",
+        ? msg("engine.review.nextOperationWatch2", { rule: sectorSystems[game.scenario].rule })
+        : msg("engine.review.nextOperationWatch3"),
     };
   }
   // Two confirmed stages on the turn the operation ended left no turn to compare
   // them in, and a playtest was told it "never tested" what it never could.
   if (readyToCorrelate(game) && readyToCorrelate(recordBefore(game, game.turns.length - 1))) return {
     strength,
-    gap: `You confirmed ${game.evidence.filter(item => item.supports).length} stages but never tested how any two of them relate.`,
-    concept: "Two things happening close together is not the same as one causing the other. Saying which it is, and being willing to be wrong, is the core of the work.",
-    next: "Next operation, once two findings have confirmed stages, select them in the evidence workspace and decide whether one plausibly enabled the other before you run another procedure.",
+    gap: msg("engine.review.youConfirmedStages", { evidence: game.evidence.filter(item => item.supports).length }),
+    concept: msg("engine.review.twoThingsHappening"),
+    next: msg("engine.review.nextOperationOnce"),
   };
   // Empty checks of the reading's own sources are the reading being ruled out,
   // and telling that player to "prefer a source the reading predicts" told them
@@ -139,16 +144,16 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const keptAgainst = game.turns.filter((turn, index) => turn.hypothesis && ["weakening", "unsupported"].includes(getHypothesisStanding({ ...recordBefore(game, index), hypothesis: turn.hypothesis }).level)).length;
   if (emptySuccesses >= 3 && (emptyOffReading * 2 >= emptySuccesses || (revisions < 2 && keptAgainst > 0))) return emptyOffReading * 2 >= emptySuccesses ? {
     strength,
-    gap: `${emptySuccesses} of your successful checks produced no new stage, and ${emptyOffReading} of them used a source your reading did not predict.`,
-    concept: "A check that succeeds but finds nothing has still cost a turn. Choosing where to look matters more than how hard you look.",
-    next: "Next operation, prefer a source your current reading actually predicts over whichever tool is available; the card says so before you commit.",
+    gap: msg("engine.review.ofYourSuccessful", { emptySuccesses, emptyOffReading }),
+    concept: msg("engine.review.aCheckThat"),
+    next: msg("engine.review.nextOperationPrefer"),
   } : {
     strength,
-    gap: `${emptySuccesses} of your successful checks produced no new stage, most of them from your reading's own sources.`,
-    concept: "An empty check of the reading's own source is not wasted: it is the evidence that the reading is wrong. The turns are lost when the reading is kept after it.",
+    gap: msg("engine.review.ofYourSuccessful2", { emptySuccesses }),
+    concept: msg("engine.review.anEmptyCheck"),
     next: game.mode === "expert"
-      ? "Next operation, change the reading after its own sources have come back empty twice at the same stage, before you spend another turn."
-      : "Next operation, when the reading's own sources come back empty, open the comparison of all four and move to one that is not marked as ruled out before you spend another turn.",
+      ? msg("engine.review.nextOperationChange")
+      : msg("engine.review.nextOperationWhen2"),
   };
   // Only a completed response has a cost to judge. A run that never reached it
   // would otherwise be told its response was too expensive.
@@ -156,9 +161,9 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     strength,
     // It told a player to "pick the cheapest" beside a decision record naming the
     // costlier option as the stronger one in every phase.
-    gap: `The response scored ${breakdown.response} of 20: in at least one phase another option closed more of the confirmed risk.`,
-    concept: "Containment, assurance and recovery each trade disruption against certainty. The option that closes the risk you confirmed scores highest, even when it costs more service, unless that cost would end the operation.",
-    next: "Next operation, read each response option's confidence and residual risk before its cost, and where it leaves service integrity: the stronger option raises the response score, and service integrity is scored too, so weigh the two. The decision record below names the stronger option in each phase.",
+    gap: msg("engine.review.theResponseScored", { response: breakdown.response }),
+    concept: msg("engine.review.containmentAssuranceAnd"),
+    next: msg("engine.review.nextOperationRead"),
   };
   // Picking sources that find things and reading the route correctly are two
   // different skills, and a run can do the first well while getting the second
@@ -166,9 +171,12 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   // right when the score already said they were not.
   if (tested.length && aligned < tested.length && breakdown.hypothesis < 8) return {
     strength,
-    gap: `Your evidence selection worked, but the reading you were testing matched the route the stage actually used on only ${aligned} of ${tested.length} turns${turnCredits(game).filter(item => item.reason === "tested").length ? `, though ${turnCredits(game).filter(item => item.reason === "tested").length === 1 ? "one of the others was a wrong reading" : `${turnCredits(game).filter(item => item.reason === "tested").length} of the others were wrong readings`} you tested properly` : ""}.`,
-    concept: "Finding a stage and classifying it are separate skills. A source can turn one up while the route you named for it is wrong, which is why the score counts them apart.",
-    next: `Next operation, when a stage is confirmed, ${game.difficulty === "training" ? "read what the team is seeing at the next one" : "read what you know so far again"} and choose its reading afresh: routes change from stage to stage${revisions === 0 ? ", and you kept one reading for the whole of this operation" : ""}.`,
+    gap: (() => {
+      const wrong = turnCredits(game).filter(item => item.reason === "tested").length;
+      return wrong === 0 ? msg("engine.review.selectionWorked", { aligned, tested: tested.length }) : wrong === 1 ? msg("engine.review.selectionWorkedOneWrong", { aligned, tested: tested.length }) : msg("engine.review.selectionWorkedWrong", { aligned, tested: tested.length, count: wrong });
+    })(),
+    concept: msg("engine.review.findingAStage"),
+    next: msg(game.difficulty === "training" ? revisions === 0 ? "engine.review.afreshTeamKept" : "engine.review.afreshTeam" : revisions === 0 ? "engine.review.afreshKnownKept" : "engine.review.afreshKnown"),
   };
   // The decisions are fifteen points of the score and a playtest was told
   // nothing stood out beside calls graded one and two out of five. The weakest
@@ -176,15 +184,15 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const weakest = [...game.decisions].sort((a, b) => a.quality - b.quality)[0];
   if (weakest && weakest.quality <= 2) return {
     strength,
-    gap: `Your weakest call was “${say(weakest.title)}” on ${attacks.find(item => item.id === weakest.stage)?.title.toLowerCase() ?? "a confirmed stage"}: ${say(weakest.rationale).charAt(0).toLowerCase()}${say(weakest.rationale).slice(1)}`,
-    concept: "No response is right in every incident. What decides it is the pressure at that moment: how high business impact is, how fast the actor is moving, and how much margin the service and the sector have left.",
-    next: "Next operation, before choosing a response, look at business impact and the actor's pace, which the Training decision states and the hypothesis board shows. Above about half, or once the actor is accelerating, act or contain; while both are low, watching or attributing is affordable.",
+    gap: msg("engine.review.weakestCall", { title: weakest.title, stage: attacks.find(item => item.id === weakest.stage) ? lit(attacks.find(item => item.id === weakest.stage)!.title, "lower") : msg("engine.review.aConfirmedStage"), rationale: withForm(weakest.rationale, "lowerFirst") }),
+    concept: msg("engine.review.noResponseIs"),
+    next: msg("engine.review.nextOperationBefore2"),
   };
   if (game.status === "lost") return {
     strength,
-    gap: "The operation was lost: the investigation window closed before the chain was complete.",
-    concept: "The window is where a misread stage runs out: each turn spent on a reading the record has already turned against is a turn the last stage does not get.",
-    next: "Next operation, revise as soon as the reading weakens, and spend each turn on a source that can still settle the stage under test.",
+    gap: msg("engine.review.theOperationWas2"),
+    concept: msg("engine.review.theWindowIs"),
+    next: msg("engine.review.nextOperationRevise"),
   };
   // A slow but sound operation was told nothing stood out beside an
   // investigation score of 13 of 25. The advice names what the turns went on:
@@ -195,25 +203,25 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     const failed = game.turns.filter(turn => !turn.success).length;
     const blind = turnCredits(game).filter(item => item.reason === "absent" || item.reason === "excluded").length;
     const empty = game.turns.filter(turn => turn.success && !turn.revealed && !turn.injectReveal).length;
-    const counted = [failed && `${failed} failed roll${failed === 1 ? "" : "s"}`, empty && `${empty} completed check${empty === 1 ? "" : "s"} that found no stage`].filter(Boolean).join(" and ");
+    const counted = both([failed ? msg("engine.review.failedRolls", { count: failed }) : null, empty ? msg("engine.review.emptyChecks", { count: empty }) : null]);
     return {
       strength,
-      gap: `The reasoning held, but the investigation took ${game.turns.length} turns where ${freeTurns(game)} are free at ${difficulties[game.difficulty].title}, and the score charged 3 for each one after that${counted ? `; the extra turns went on ${counted}` : ""}.`,
-      concept: "Empty checks are how routes are ruled out, so some are the work itself. Failed rolls are the dice; an established source, map focus and a carried bonus are what shift the odds.",
+      gap: msg(failed || empty ? "engine.review.reasoningHeldSpent" : "engine.review.reasoningHeld", { turns: game.turns.length, free: freeTurns(game), difficulty: difficulties[game.difficulty].title, counted }),
+      concept: msg("engine.review.emptyChecksAre"),
       next: blind
         ? game.mode === "expert"
-          ? "Next operation, keep your own note of which sources your reading predicts and which have already come back empty at this stage; when none is left, revise the reading rather than spend the turn."
-          : "Next operation, before each action, check the card can test your reading here; when none of its own sources can, revise the reading or use a card marked as able to test it."
+          ? msg("engine.review.nextOperationKeep3")
+          : msg("engine.review.nextOperationBefore3")
         : game.mode === "expert"
-          ? "Next operation, before a procedure, look for a bonus you can add: a monitored node, map focus on the source's system, or an established source."
-          : "Next operation, before a procedure, look for a bonus you can add (a monitored node, map focus on the source's system, an established source) and skip a route the comparison of the four readings marks ruled out: it marks one once your completed checks have excluded every way it could explain the stage.",
+          ? msg("engine.review.nextOperationBefore4")
+          : msg("engine.review.nextOperationBefore5"),
     };
   }
   return {
     strength,
-    gap: "Nothing stands out as a misunderstanding in this operation.",
-    concept: "The habit to keep is the one you just used: predict, test with a source that can settle it, then revise when it cannot.",
-    next: "Next operation, try a harder difficulty or a sector you have not commanded, and see whether the same reasoning holds when the pressure is different.",
+    gap: msg("engine.review.nothingStandsOut"),
+    concept: msg("engine.review.theHabitTo"),
+    next: msg("engine.review.nextOperationTry"),
   };
 }
 
@@ -267,10 +275,10 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
 
 export function getOutcome(game: Game) {
   const breakdown = getScoreBreakdown(game);
-  if (breakdown.total >= 82) return { grade: "A", title: "Controlled recovery", detail: "You balanced evidence, disruption and service continuity with strong operational judgement.", breakdown };
-  if (breakdown.total >= 68) return { grade: "B", title: "Stable, with residual risk", detail: "The incident is contained, but the review identifies avoidable exposure or disruption.", breakdown };
-  if (breakdown.total >= 52) return { grade: "C", title: "Costly stabilisation", detail: "Services are recovering, but uncertainty and operational cost remain high.", breakdown };
-  return { grade: "D", title: "Fragile recovery", detail: "The immediate crisis passed, but the response left significant residual risk.", breakdown };
+  if (breakdown.total >= 82) return { grade: "A", title: msg("engine.review.controlledRecovery"), detail: msg("engine.review.youBalancedEvidence"), breakdown };
+  if (breakdown.total >= 68) return { grade: "B", title: msg("engine.review.stableWithResidual"), detail: msg("engine.review.theIncidentIs"), breakdown };
+  if (breakdown.total >= 52) return { grade: "C", title: msg("engine.review.costlyStabilisation"), detail: msg("engine.review.servicesAreRecovering"), breakdown };
+  return { grade: "D", title: msg("engine.review.fragileRecovery"), detail: msg("engine.review.theImmediateCrisis"), breakdown };
 }
 
 // Each part of the score, with the rule that produced it in the player's own
@@ -280,62 +288,63 @@ export function getOutcome(game: Game) {
 // and the four points each for the sector's preferred call and for fitting the
 // adversary's objective. Three phases each read "the strongest option this
 // sector offered" beside 17 of 20, and nothing said where the rest went.
-function responseRule(game: Game) {
+function responseRule(game: Game): Message {
   const phases = ["containment", "assurance", "recovery"] as const;
   const options = responseOptionsFor(game);
   const own = game.responseChoices.reduce((sum, choice, index) => sum + (options[phases[index]].find(item => item.id === choice)?.score ?? 0), 0);
   const fits = game.responseChoices.map((choice, index) => responseFit(game, index, choice));
   const preferred = fits.filter(fit => fit.preferred).length;
   const aligned = fits.filter(fit => fit.objectiveAligned).length;
-  return `Your three options scored ${own}; ${preferred} of 3 were the sector's preferred call (+4 each) and ${aligned} of 3 fitted the adversary's objective (+4 each), making ${own + 4 * preferred + 4 * aligned}${own + 4 * preferred + 4 * aligned > 55 ? ", counted as the 55 maximum" : " of 55"}, scaled to 20.`;
+  const total = own + 4 * preferred + 4 * aligned;
+  return msg(total > 55 ? "engine.review.responseRuleCapped" : "engine.review.responseRule", { own, preferred, aligned, total });
 }
 
 export function getScoreRows(game: Game) {
   const breakdown = getScoreBreakdown(game);
   const turns = game.turns.length;
   const decided = game.decisions.length + game.commandHistory.length + game.setPieceHistory.length;
-  const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+  // Each row has an id, so a caller can tell them apart without its words.
   return [
-    { label: "Investigation", value: breakdown.investigation, maximum: 25, rule: `Full marks for ${freeTurns(game)} turns or fewer at ${difficulties[game.difficulty].title}, then 3 fewer for each turn after that. You took ${plural(turns, "turn")}.` },
-    { label: "Impact control", value: breakdown.impact, maximum: 15, rule: `Rises as final business impact falls towards zero. It finished at ${game.impact}.` },
-    { label: "Continuity", value: breakdown.continuity, maximum: 15, rule: `${scenarioDynamics[game.scenario].label} and the sector's margin at the end, averaged: ${game.continuity} and ${game.sectorHealth}.` },
-    { label: "Operational decisions", value: breakdown.decisions, maximum: 15, rule: decided ? `The average quality of your ${plural(decided, "evidence, command and sector decision")}; the review's decision record grades each one.` : "No decisions were taken, so there was nothing to score." },
-    { label: "Containment & recovery", value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? responseRule(game) : game.status === "exercise" ? "Not scored: the drill stood down before the response phase, so the other five parts are scaled up to make the total out of 100." : "The response phase was not reached, so nothing was scored. It opens once all four stages are confirmed." },
-    { label: "Hypothesis accuracy", value: breakdown.hypothesis, maximum: 10, rule: "Full credit for each turn whose reading named the route under test, half for a wrong reading tested properly once. The ledger below goes turn by turn." },
+    { id: "investigation", label: msg("engine.review.investigation"), value: breakdown.investigation, maximum: 25, rule: msg("engine.review.fullMarksFor", { freeTurns: freeTurns(game), difficultiesTitle: difficulties[game.difficulty].title, count: turns }) },
+    { id: "impact", label: msg("engine.review.impactControl"), value: breakdown.impact, maximum: 15, rule: msg("engine.review.risesAsFinal", { impact: game.impact }) },
+    { id: "continuity", label: msg("engine.review.continuity"), value: breakdown.continuity, maximum: 15, rule: msg("engine.review.andTheSector", { scenarioDynamicsLabel: scenarioDynamics[game.scenario].label, continuity: game.continuity, sectorHealth: game.sectorHealth }) },
+    { id: "decisions", label: msg("engine.review.operationalDecisions"), value: breakdown.decisions, maximum: 15, rule: decided ? msg("engine.review.averageQuality", { count: decided }) : msg("engine.review.noDecisionsWere") },
+    { id: "response", label: msg("engine.review.containmentRecovery"), value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? responseRule(game) : game.status === "exercise" ? msg("engine.review.notScoredThe") : msg("engine.review.theResponsePhase") },
+    { id: "hypothesis", label: msg("engine.review.hypothesisAccuracy"), value: breakdown.hypothesis, maximum: 10, rule: msg("engine.review.fullCreditFor") },
   ];
 }
 
 // A result a player can paste anywhere. It carries counts, never the techniques,
 // so it spoils nothing for someone about to play the same code.
-export function getResultSummary(game: Game): string[] {
+export function getResultSummary(game: Game): Message[] {
   const scenario = scenarios[game.scenario];
-  const heading = `Breach Command · ${scenario.title} · ${difficulties[game.difficulty].title} · ${gameModes[game.mode].title}`;
-  const record = `${game.revealed.length} of 4 stages confirmed in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}`;
+  const heading = msg("engine.review.breachCommand", { scenarioTitle: scenario.title, difficultiesTitle: difficulties[game.difficulty].title, gameModesTitle: gameModes[game.mode].title });
+  const record = msg("engine.review.of4Stages", { revealed: game.revealed.length, count: game.turns.length });
   const outcome = getOutcome(game);
   const result = game.status === "won"
-    ? `Stood down: grade ${outcome.grade}, ${outcome.breakdown.total}/100`
+    ? msg("engine.review.stoodDownGrade", { grade: outcome.grade, total: outcome.breakdown.total })
     : game.status === "exercise"
-      ? `Authorised exercise concluded, ${outcome.breakdown.total}/100`
-      : `Operation lost: ${getLossReason(game).title.toLowerCase()}, ${outcome.breakdown.total}/100`;
+      ? msg("engine.review.authorisedExerciseConcluded", { total: outcome.breakdown.total })
+      : msg("engine.review.operationLost100", { getLossReasonTitle: withForm(getLossReason(game).title, "lower"), total: outcome.breakdown.total });
   const code = game.seed === null ? null : encodeChallenge({ scenario: game.scenario, difficulty: game.difficulty, mode: game.mode, specialist: game.specialist, seed: game.seed });
-  return [heading, `${result} · ${record}`, ...(code ? [`Play the same operation: ${code}`] : [])];
+  return [heading, msg("engine.review.resultAndRecord", { result, record }), ...(code ? [msg("engine.review.playTheSame", { code })] : [])];
 }
 
 // The share image's text, under the same rule as the copied result: the case,
 // the outcome, counts and the code, never a technique. The image is drawn from
 // this and nothing else, so the rule is tested here.
-export type ShareCard = { form: string; title: string; meta: string; result: string; score: string; stages: string; code: string | null; expert: boolean };
+export type ShareCard = { form: Message; title: string; meta: Message; result: Message; score: Message; stages: Message; code: string | null; expert: boolean };
 export function getShareCard(game: Game): ShareCard {
   const scenario = scenarios[game.scenario];
   const outcome = getOutcome(game);
   const code = game.seed === null ? null : encodeChallenge({ scenario: game.scenario, difficulty: game.difficulty, mode: game.mode, specialist: game.specialist, seed: game.seed });
   return {
-    form: "Form BC-310 / Result",
+    form: msg("engine.review.formBc310"),
     title: scenario.title,
-    meta: `Case ${game.scenario + 1}, ${scenario.sector}, ${difficulties[game.difficulty].title}, ${gameModes[game.mode].title}`,
-    result: game.status === "won" ? `Stood down, grade ${outcome.grade}` : game.status === "exercise" ? "Authorised exercise concluded" : `Lost: ${getLossReason(game).title}`,
-    score: `${outcome.breakdown.total} of 100`,
-    stages: `${game.revealed.length} of 4 stages confirmed in ${game.turns.length} turn${game.turns.length === 1 ? "" : "s"}`,
+    meta: msg("engine.review.case", { scenario: game.scenario + 1, sector: scenario.sector, difficultiesTitle: difficulties[game.difficulty].title, gameModesTitle: gameModes[game.mode].title }),
+    result: game.status === "won" ? msg("engine.review.stoodDownGrade2", { grade: outcome.grade }) : game.status === "exercise" ? msg("engine.review.authorisedExerciseConcluded2") : msg("engine.review.lost", { getLossReasonTitle: getLossReason(game).title }),
+    score: msg("engine.review.scoreOf100", { total: outcome.breakdown.total }),
+    stages: msg("engine.review.of4Stages", { revealed: game.revealed.length, count: game.turns.length }),
     code,
     expert: game.mode === "expert" && game.status === "won",
   };
@@ -375,30 +384,28 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
   return game.turns.map((turn, index) => {
     const target = turn.hypothesisTarget;
     const targetAttack = target ? attacks.find(item => item.id === target)! : null;
-    const stage = targetAttack ? stages[targetAttack.stage].name : "Every stage was already confirmed";
+    const stage: Message = targetAttack ? lit(stages[targetAttack.stage].name) : msg("engine.review.everyStageWas");
     const actualRoute = targetAttack ? hypotheses.find(item => item.id === targetAttack.vector)!.title : null;
     const predicted = turn.hypothesis ? hypotheses.find(item => item.id === turn.hypothesis)!.title : null;
     const found = turn.revealed ? attacks.find(item => item.id === turn.revealed)!.title : null;
-    const windfallNote = turn.windfall
-      ? ` You did expose ${found}, further along the chain. That source is shared between routes, so it was a find rather than a correct prediction.`
-      : "";
-    const missNote: Record<TurnCredit["reason"], string> = {
-      none: "",
-      matched: "",
-      tested: "You tested it with one of its own sources and the check completed, which is testing it properly: half credit.",
-      failed: "The roll failed, so the check settled nothing and the wrong prediction scored nothing.",
-      "other-source": "The procedure was not one of that reading's own sources and could not see any technique it could still be using here, so it could not rule the reading out, and the prediction scored nothing.",
-      repeated: "The half credit for testing a wrong reading properly is paid once at each stage, and this reading had already earned it here; the check still narrowed the search.",
-      excluded: "Your earlier checks had already ruled that route out at this stage, so testing it scored nothing.",
-      absent: "None of the techniques this incident could use at this stage travels that route, which the board showed as \"cannot explain this stage\", so testing it scored nothing.",
+    const windfallNote = turn.windfall ? msg("engine.review.youDidExpose", { found: found ?? "" }) : lit("");
+    const missNote: Record<TurnCredit["reason"], Message> = {
+      none: lit(""),
+      matched: lit(""),
+      tested: msg("engine.review.youTestedIt"),
+      failed: msg("engine.review.theRollFailed"),
+      "other-source": msg("engine.review.theProcedureWas"),
+      repeated: msg("engine.review.theHalfCredit"),
+      excluded: msg("engine.review.yourEarlierChecks"),
+      absent: msg("engine.review.noneOfThe"),
     };
-    const verdict = !target ? "No stage left to predict, so this turn could not score."
-      : !turn.hypothesis ? "No working hypothesis was recorded, so this turn could not score."
+    const verdict = !target ? msg("engine.review.noStageLeft")
+      : !turn.hypothesis ? msg("engine.review.noWorkingHypothesis")
       : turn.hypothesisMatched
         ? (turn.planningBonus > 0
-          ? `Correct: ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route, and the procedure was one of that reading's own sources. Full credit, and the own-source bonus on the roll.${windfallNote}`
-          : `Correct about the route: ${inSentence(stage)} was on the ${actualRoute!.toLowerCase()} route, but the procedure was not one of that reading's sources, so it earned no own-source bonus.${windfallNote}`)
-        : `${stage} was on the ${actualRoute!.toLowerCase()} route, not ${predicted!.toLowerCase()}. ${credits[index].reason === "tested" && !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure) ? "You tested it with a source that could see it here, though not one of its own, and the check completed, which is testing it properly: half credit." : missNote[credits[index].reason]}${windfallNote}`;
+          ? msg("engine.review.correctWasOn", { stage: withForm(stage, "inSentence"), actualRoute: lit(actualRoute!, "lower"), windfallNote })
+          : msg("engine.review.correctAboutThe", { stage: withForm(stage, "inSentence"), actualRoute: lit(actualRoute!, "lower"), windfallNote }))
+        : msg("engine.review.wrongRoute", { stage, actualRoute: lit(actualRoute!, "lower"), predicted: lit(predicted!, "lower"), note: credits[index].reason === "tested" && !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure) ? msg("engine.review.youTestedIt2") : missNote[credits[index].reason], windfallNote });
     return {
       turn: turn.number,
       procedure: procedureById(game, turn.procedure)!.title,
@@ -416,19 +423,19 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
   });
 }
 
-export function getCounterfactuals(game: Game) {
-  const items = game.decisions.slice(-3).map(decision => `${say(decision.title)}: ${say(decision.counterfactual)} ${say(decision.rationale)}`);
+export function getCounterfactuals(game: Game): Message[] {
+  const items = game.decisions.slice(-3).map(decision => msg("engine.review.decisionCounterfactual", { title: decision.title, counterfactual: decision.counterfactual, rationale: decision.rationale }));
   const dynamics = scenarioDynamics[game.scenario];
   const responseProfile = responseOptionsFor(game);
   if (game.responseChoices.length) {
     const containment = responseProfile.containment.find(option => option.id === game.responseChoices[0]);
-    items.push(`Containment: ${containment?.title} prioritised ${containment?.disruption.toLowerCase()} disruption and left ${containment?.residual.toLowerCase()} residual risk. ${dynamics.countermeasure}`);
+    items.push(msg("engine.review.containmentChoice", { title: lit(containment!.title), disruption: lit(containment!.disruption, "lower"), residual: lit(containment!.residual, "lower"), countermeasure: lit(dynamics.countermeasure) }));
   }
   if (game.responseChoices.length > 1) {
     const assurance = responseProfile.assurance.find(option => option.id === game.responseChoices[1]);
-    items.push(`Assurance: ${assurance?.title} established ${assurance?.confidence.toLowerCase()} confidence before restoration.`);
+    items.push(msg("engine.review.assuranceChoice", { title: lit(assurance!.title), confidence: lit(assurance!.confidence, "lower") }));
   }
-  if (game.mapHistory.some(record => record.action === "isolate")) items.push("Infrastructure isolation reduced actor opportunity, but every isolated dependency had to be justified and restored deliberately.");
+  if (game.mapHistory.some(record => record.action === "isolate")) items.push(msg("engine.review.isolationReduced"));
   // Revising when a completed check has turned against the reading is the
   // habit the review teaches; only a change with no completed result since the
   // last one is worth a counterfactual. Counting every change told a player who
@@ -437,13 +444,13 @@ export function getCounterfactuals(game: Game) {
     if (index === 0 || history[index - 1].id === entry.id) return false;
     return !game.turns.some(turn => turn.number >= history[index - 1].turn && turn.number < entry.turn && turn.success);
   }).length;
-  if (unprompted >= 2) items.push(`The working hypothesis changed ${unprompted} times with no completed check in between. A reading is worth changing once a result has turned against it, not before.`);
-  else if (!game.hypothesisHistory.length) items.push("No working hypothesis was recorded, so the team could not compare its assumptions with the final chain.");
+  if (unprompted >= 2) items.push(msg("engine.review.unpromptedChanges", { count: unprompted }));
+  else if (!game.hypothesisHistory.length) items.push(msg("engine.review.noHypothesisRecorded"));
   // A pair correctly called coincidental was a right call, not a missed link.
   const weakCorrelations = game.correlations.filter(record => !record.valid && !record.correct).length;
-  if (weakCorrelations) items.push(`${weakCorrelations} tested evidence relationship${weakCorrelations === 1 ? " was" : "s were"} temporal rather than causal. A stronger system-to-identity link would have reduced analytical noise.`);
-  if (readyToCorrelate(game)) items.push("Multiple findings were preserved but never correlated. The team left potential causal relationships untested.");
-  if (game.setPieceHistory.some(record => record.quality <= 2)) items.push("The sector crisis decision protected short-term convenience but increased strategic exposure.");
+  if (weakCorrelations) items.push(msg("engine.review.weakCorrelations", { count: weakCorrelations }));
+  if (readyToCorrelate(game)) items.push(msg("engine.review.neverCorrelated"));
+  if (game.setPieceHistory.some(record => record.quality <= 2)) items.push(msg("engine.review.crisisConvenience"));
   return items;
 }
 
@@ -468,7 +475,7 @@ export function recommendNext(game: Game, nextOpen: number): Recommendation {
         : `The window closed with ${game.revealed.length} of 4 stages confirmed. One rung down, ${difficulties[easier].title} gives a longer window${easier === "training" ? " and the observation behind each stage" : ""}, so the reading has room to be revised.`;
       return { scenario: game.scenario, difficulty: easier, title: title(game.scenario, easier), reason };
     }
-    return { scenario: game.scenario, difficulty: game.difficulty, title: title(game.scenario, game.difficulty), reason: `${loss.title}. Play it again at the same rung and watch that readout: the investigation was not what ended it.` };
+    return { scenario: game.scenario, difficulty: game.difficulty, title: title(game.scenario, game.difficulty), reason: `${say(loss.title)}. Play it again at the same rung and watch that readout: the investigation was not what ended it.` };
   }
   const score = getOutcome(game).breakdown.total;
   if (score >= 74 && rung < rungs.length - 1 && (rung === 0 || score >= 88)) {

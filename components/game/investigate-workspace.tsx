@@ -87,7 +87,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   // The map is offered as an aside to the ordinary next step, never in place of
   // it, and not alongside a note that is already sending the player elsewhere.
   const mapHint = !evidenceReady ? getMapHint(game) : null;
-  const mapAside = mapHint && <small className="prompt-aside">{mapHint}<button className="compare-findings" onClick={() => jumpTo(".infrastructure-console")}>{t("investigateWorkspace.openTheMap")}<ArrowDown size={14} /></button></small>;
+  const mapAside = mapHint && <small className="prompt-aside">{say(mapHint)}<button className="compare-findings" onClick={() => jumpTo(".infrastructure-console")}>{t("investigateWorkspace.openTheMap")}<ArrowDown size={14} /></button></small>;
 
   // The prompt's longer explanation folds away where the board already carries
   // it — the reading's standing says why to test or revise — and stays inline
@@ -96,9 +96,9 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   const trainingNote = trainingPrompt && (
     <div className={`guide-nudge training-prompt step-${trainingPrompt.step}`}>
             <span>
-        <strong>{trainingPrompt.title}{/[?.!]$/.test(trainingPrompt.title) ? "" : "."}</strong>{foldWhy
-          ? <> <details className="prompt-why"><summary>{t("investigateWorkspace.why")}</summary>{trainingPrompt.detail}</details></>
-          : <> {trainingPrompt.detail}</>}
+        <strong>{say(trainingPrompt.title)}{/[?.!]$/.test(say(trainingPrompt.title)) ? "" : "."}</strong>{foldWhy
+          ? <> <details className="prompt-why"><summary>{t("investigateWorkspace.why")}</summary>{say(trainingPrompt.detail)}</details></>
+          : <> {say(trainingPrompt.detail)}</>}
         {trainingPrompt.clue && <b className="prompt-clue">{t("investigateWorkspace.whatTheTeam")}<Glossed text={trainingPrompt.clue} /></b>}
         {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(", ")}</b>}
         {(trainingPrompt.step === "theory" || trainingPrompt.step === "correlate") && evidenceButton}
@@ -173,7 +173,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
               ? <div className="guide-nudge hypothesis-gate" role="status"><span>{rich("investigateWorkspace.strongRecordA", {  }, { strong: chunk => <strong>{chunk}</strong> })}{game.difficulty === "training" ? t("investigateWorkspace.whatTheTeam2") : t("investigateWorkspace.whatYouKnow")}{t("investigateWorkspace.itsOwnSources2", { ownSourceBonus: OWN_SOURCE_BONUS })}</span></div>
               : trainingNote
                 ? trainingNote
-                : guidance !== "off" && <div className="guide-nudge"><span><strong>{t("investigateWorkspace.captainPrompt")}</strong> {getCoachPrompt(game, guided)}{latestObservation && <b className="prompt-clue">{t("investigateWorkspace.latestFromThe")}<Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}
+                : guidance !== "off" && <div className="guide-nudge"><span><strong>{t("investigateWorkspace.captainPrompt")}</strong> {say(getCoachPrompt(game, guided))}{latestObservation && <b className="prompt-clue">{t("investigateWorkspace.latestFromThe")}<Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}

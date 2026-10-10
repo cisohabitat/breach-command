@@ -5,6 +5,7 @@ import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { useMessages } from "@/hooks/use-messages";
 import { endStateMessages } from "@/lib/i18n/en/end-state";
 import { register } from "@/lib/i18n";
+import { withForm } from "@/lib/i18n/message";
 
 register(endStateMessages);
 
@@ -14,7 +15,7 @@ register(endStateMessages);
 // debrief opens on request in every case so the resolution lands first.
 export function EndState({ session }: { session: GameSession }) {
   const { game, outcome, setDebrief } = session;
-  const { t } = useMessages();
+  const { t, say } = useMessages();
   // A choice that ends the operation removes the control that made it.
   const heading = useRef<HTMLHeadingElement>(null);
   useRecoverFocus(heading, game?.status);
@@ -30,8 +31,8 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-won" data-resolution="won" data-expert={expert || undefined}>
         <div className="end-banner end-won">
           <div>
-            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{expert ? t("endState.clearedInExpert2", { outcomeTitle: String(outcome?.title.toLowerCase()) }) : outcome?.title}</h2>
-            <p>{expert ? t("endState.noClueStanding") : ""}{outcome?.detail}{t("endState.impactIsAnd", { impact: game.impact, getOperationalLabel: getOperationalLabel(game).toLowerCase(), continuity: game.continuity })}</p>
+            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{expert ? t("endState.clearedInExpert2", { outcomeTitle: outcome ? say(withForm(outcome.title, "lower")) : "undefined" }) : outcome && say(outcome.title)}</h2>
+            <p>{expert ? t("endState.noClueStanding") : ""}{outcome && say(outcome.detail)}{t("endState.impactIsAnd", { impact: game.impact, getOperationalLabel: getOperationalLabel(game).toLowerCase(), continuity: game.continuity })}</p>
           </div>
           <button className="primary-button" onClick={openDebrief}>{t("ending.openReview")}</button>
         </div>
@@ -53,8 +54,8 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-lost" data-resolution="lost">
         <div className="end-banner end-lost">
           <div>
-            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{loss.title}.</h2>
-            <p>{loss.detail} {loss.cause === "window" ? "" : t("endState.of4Stages", { revealed: game.revealed.length })}{t("endState.impactStandsAt2", { impact: game.impact })}</p>
+            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{say(loss.title)}.</h2>
+            <p>{say(loss.detail)} {loss.cause === "window" ? "" : t("endState.of4Stages", { revealed: game.revealed.length })}{t("endState.impactStandsAt2", { impact: game.impact })}</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewRecord")}</button>
         </div>
@@ -87,10 +88,10 @@ export function EndState({ session }: { session: GameSession }) {
 // technique, so it spoils nothing. Where the clipboard is refused, the text is
 // shown to copy by hand.
 function ShareResult({ game }: { game: Game }) {
-  const { t } = useMessages();
+  const { t, say } = useMessages();
   const [state, setState] = useState<{ status: "idle" | "copied" | "manual"; text: string }>({ status: "idle", text: "" });
   const copy = () => {
-    const text = [...getResultSummary(game), window.location.origin].join("\n");
+    const text = [...getResultSummary(game).map(line => say(line)), window.location.origin].join("\n");
     const manual = () => setState({ status: "manual", text });
     if (!navigator.clipboard?.writeText) return manual();
     navigator.clipboard.writeText(text).then(() => setState({ status: "copied", text }), manual);

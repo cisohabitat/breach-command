@@ -41,7 +41,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
             marked by its rule and its link in the text. A boxed "Next action" with
             a button on the right was the stock empty-state call to action. */}
         <section className="situation-log lead-log" aria-label={t("commandWorkspace.currentIntelligence")}>
-          <div className="sit-entry"><span className="sit-label">{t("commandWorkspace.currentIntelligence")}</span><div className="sit-body"><p className="sit-lead">{getLead(game)}</p></div></div>
+          <div className="sit-entry"><span className="sit-label">{t("commandWorkspace.currentIntelligence")}</span><div className="sit-body"><p className="sit-lead">{say(getLead(game))}</p></div></div>
           {!tutorial && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <div className="sit-entry sit-order"><span className="sit-label">{t("commandWorkspace.nextAction")}</span><div className="sit-body"><p>{rich("commandWorkspace.strongBuildAnd", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p><button className="sit-link" onClick={() => setActiveWorkspace("investigate")}>{t("commandWorkspace.openInvestigate")}<ArrowRight size={15} /></button></div></div>}
         </section>
       </>))}

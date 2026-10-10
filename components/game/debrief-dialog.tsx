@@ -12,7 +12,7 @@ import { objectiveTheory } from "@/lib/phase9";
 import { useMessages } from "@/hooks/use-messages";
 import { debriefDialogMessages } from "@/lib/i18n/en/debrief-dialog";
 import { register } from "@/lib/i18n";
-import { sameMessage } from "@/lib/i18n/message";
+import { sameMessage, withForm } from "@/lib/i18n/message";
 
 register(debriefDialogMessages);
 
@@ -44,8 +44,8 @@ export function DebriefDialog({ session }: { session: GameSession }) {
         {game && <FacilitatorSheet game={game} />}
         <DialogHeader>
           <div className="eyebrow">{rich("debriefDialog.formBc3002", {  }, { span: chunk => <span className="separator">{chunk}</span>, span2: chunk => <span>{chunk}</span> })}</div>
-          <DialogTitle>{game?.status === "won" ? outcome?.title : game?.status === "exercise" ? t("debriefDialog.exerciseConcluded") : game ? `${getLossReason(game).title}.` : ""}</DialogTitle>
-          <DialogDescription>{game?.status === "won" ? outcome?.detail : game ? <>{game.status === "lost" ? `${getLossReason(game).detail} ` : ""}{game.status === "lost" && getLossReason(game).cause === "window" ? "" : t("debriefDialog.stagesFoundIn", { found: game.revealed.length, count: game.turns.length })}{t("debriefDialog.thisIsA")}</> : ""}</DialogDescription>
+          <DialogTitle>{game?.status === "won" ? outcome && say(outcome.title) : game?.status === "exercise" ? t("debriefDialog.exerciseConcluded") : game ? `${say(getLossReason(game).title)}.` : ""}</DialogTitle>
+          <DialogDescription>{game?.status === "won" ? outcome && say(outcome.detail) : game ? <>{game.status === "lost" ? `${say(getLossReason(game).detail)} ` : ""}{game.status === "lost" && getLossReason(game).cause === "window" ? "" : t("debriefDialog.stagesFoundIn", { found: game.revealed.length, count: game.turns.length })}{t("debriefDialog.thisIsA")}</> : ""}</DialogDescription>
           {/* The grade and the score are the review's headline. Below four other
               blocks, the score sat under the fold of a laptop screen. A grade is
               only given to a completed response. */}
@@ -64,10 +64,10 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               const review = getBeginnerReview(game);
               return (
                 <dl>
-                  <div><dt>{t("debriefDialog.whatWentWell")}</dt><dd>{review.strength}</dd></div>
-                  <div><dt>{t("debriefDialog.whatToLook")}</dt><dd>{review.gap}</dd></div>
-                  <div><dt>{t("debriefDialog.theIdeaBehind")}</dt><dd>{review.concept}</dd></div>
-                  <div><dt>{t("debriefDialog.oneThingTo")}</dt><dd>{review.next}</dd></div>
+                  <div><dt>{t("debriefDialog.whatWentWell")}</dt><dd>{say(review.strength)}</dd></div>
+                  <div><dt>{t("debriefDialog.whatToLook")}</dt><dd>{say(review.gap)}</dd></div>
+                  <div><dt>{t("debriefDialog.theIdeaBehind")}</dt><dd>{say(review.concept)}</dd></div>
+                  <div><dt>{t("debriefDialog.oneThingTo")}</dt><dd>{say(review.next)}</dd></div>
                 </dl>
               );
             })()}
@@ -91,7 +91,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           </div>
           <section className="score-card" id="debrief-score">
             <div className="score-breakdown">
-              {getScoreRows(game).map(row => <div key={row.label}><span>{row.label}</span><strong>{game.status === "exercise" && row.label === "Containment & recovery" ? t("debriefDialog.notScored") : `${row.value}/${row.maximum}`}</strong><small>{row.rule}</small></div>)}
+              {getScoreRows(game).map(row => <div key={row.id}><span>{say(row.label)}</span><strong>{game.status === "exercise" && row.id === "response" ? t("debriefDialog.notScored") : `${row.value}/${row.maximum}`}</strong><small>{say(row.rule)}</small></div>)}
             </div>
           </section>
           <section className="hypothesis-ledger" id="debrief-hypothesis">
@@ -103,8 +103,8 @@ export function DebriefDialog({ session }: { session: GameSession }) {
                 <span>{String(row.turn)}</span>
                 <p>
                   <strong>{row.predicted ? t("debriefDialog.predicted", { predicted: row.predicted }) : t("debriefDialog.noHypothesisRecorded")}</strong>
-                  <small>{t("debriefDialog.testedAgainst2", { testedAgainst: inSentence(row.testedAgainst), procedure: row.procedure })}{row.discriminating ? t("debriefDialog.couldHaveExposed") : t("debriefDialog.couldNotHave")}{row.bonus > 0 ? t("debriefDialog.ownSourceTo", { bonus: row.bonus }) : ""}</small>
-                  <em>{row.verdict}</em>
+                  <small>{t("debriefDialog.testedAgainst2", { testedAgainst: say(withForm(row.testedAgainst, "inSentence")), procedure: row.procedure })}{row.discriminating ? t("debriefDialog.couldHaveExposed") : t("debriefDialog.couldNotHave")}{row.bonus > 0 ? t("debriefDialog.ownSourceTo", { bonus: row.bonus }) : ""}</small>
+                  <em>{say(row.verdict)}</em>
                 </p>
                 <b>{row.credit === 1 ? t("debriefDialog.fullCredit") : row.credit > 0 ? t("debriefDialog.halfCredit") : t("debriefDialog.noCredit")}</b>
               </div>
@@ -166,7 +166,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               </details>
             </div>
           )}
-          <section className="counterfactuals"><details className="debrief-fold"><summary>{rich("debriefDialog.whatMightHave2", { getCounterfactuals: getCounterfactuals(game).length }, { span: chunk => <span>{chunk}</span> })}</summary>{getCounterfactuals(game).map((item, index) => <p key={index}>{item}</p>)}</details></section>
+          <section className="counterfactuals"><details className="debrief-fold"><summary>{rich("debriefDialog.whatMightHave2", { getCounterfactuals: getCounterfactuals(game).length }, { span: chunk => <span>{chunk}</span> })}</summary>{getCounterfactuals(game).map((item, index) => <p key={index}>{say(item)}</p>)}</details></section>
           <section className="evidence-review"><details className="debrief-fold"><summary>{t("debriefDialog.evidenceReconstruction")}<span>{t("debriefDialog.finding2Plural", { count: game.evidence.length })}{t("debriefDialog.confirmedAStage", { count: game.evidence.filter(item => item.supports).length })}</span></summary>{game.evidence.map(item => <div key={item.id}><strong>{t("debriefDialog.turn2", { turn: item.turn, itemTitle: say(item.title) })}</strong><span>{t("debriefDialog.atConfidence", { source: say(item.source), system: say(item.system), confidence: item.confidence.toLowerCase() })}</span><p>{say(item.detail)}</p></div>)}</details></section>
           <details className="debrief-fold debrief-chain-fold" id="debrief-chain">
             <summary>{rich("debriefDialog.theAttackChain2", { revealed: game.revealed.length }, { span: chunk => <span>{chunk}</span> })}</summary>

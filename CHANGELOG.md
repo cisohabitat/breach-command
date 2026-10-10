@@ -4,6 +4,21 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.7, 10 October 2026
+
+- **The board and the review in any language.** What the game says as you
+  play (the reads on the board, the reading's standing, the lead, the map's
+  offer) and the review's verdicts, ledger and score rules are messages
+  rather than English sentences, with real plurals where the English used to
+  add an "s"; the engine's catalogue now holds 334 messages. English is unchanged, word for word, across 120
+  seeded operations and 12 campaigns (443,880 lines, now checked by
+  `pnpm prose:check` on every test run).
+- **Fixed before release:** two places the change broke, both caught by the
+  browser suite. The copied result read "[object Object]", and the
+  Investigate workspace failed to open on a Training prompt. The type test
+  that guards messages now also checks JSX and `join()`, which would have
+  caught both.
+
 ## 0.9.6, 10 October 2026
 
 - **Saves in any language.** What the game writes into a saved operation

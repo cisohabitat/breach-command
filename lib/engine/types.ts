@@ -103,9 +103,9 @@ export type DecisionOption = {
   id: DecisionChoice;
   title: string;
   description: string;
-  service: string;
-  evidence: string;
-  risk: string;
+  service: Message;
+  evidence: Message;
+  risk: Message;
 };
 
 export type GameStatus = "playing" | "response" | "won" | "lost" | "exercise";
@@ -199,30 +199,31 @@ export type ResponseOption = { id: string; title: string; description: string; d
 
 export type ResponseProfile = { constraint: string; containment: ResponseOption[]; assurance: ResponseOption[]; recovery: ResponseOption[] };
 
+// Content as the overlay has it: already in the reader's language.
 export type KnownFacts = { timeline: string; observations: string[]; confirmed: string[]; unverified: string | null };
 
-export type SectorRead = { headline: string; detail: string; diverged: boolean };
+export type SectorRead = { headline: Message; detail: Message; diverged: boolean };
 
 export type GuidanceLevel = "off" | "reflection" | "training";
 
-export type BeginnerReview = { strength: string; gap: string; concept: string; next: string };
+export type BeginnerReview = { strength: Message; gap: Message; concept: Message; next: Message };
 
 export type TrainingPrompt = {
   step: "declare" | "revise" | "theory" | "correlate" | "test" | "decide";
-  title: string;
-  detail: string;
+  title: Message;
+  detail: Message;
   sources: { id: string; title: string }[];
   clue: string | null;
 };
 
 // `shown` keeps a named part on screen at zero: two carried sources that cancel
 // still explain the total.
-export type ModifierPart = { label: Message; value: number; detail: string; suppressed?: boolean; shown?: boolean; sources?: CarriedSource[] };
+export type ModifierPart = { label: Message; value: number; detail: Message; suppressed?: boolean; shown?: boolean; sources?: CarriedSource[] };
 
 export type HypothesisStanding = {
   level: "none" | "untested" | "holding" | "weakening" | "unsupported";
-  label: string;
-  detail: string;
+  label: Message;
+  detail: Message;
   // Of the techniques the declared route could be using at the stage under
   // test, how many completed checks have ruled out, and how many there are.
   spent: number;
@@ -239,7 +240,7 @@ export type ReadingOdds = {
   prior: Record<HypothesisId, number>;
 };
 
-export type DiscriminatingRead = { level: "high" | "moderate" | "broad"; label: string; detail: string; spent: number; inconclusive: number };
+export type DiscriminatingRead = { level: "high" | "moderate" | "broad"; label: Message; detail: Message; spent: number; inconclusive: number };
 
 // Why the operation ended, in its own terms. The investigation window is only
 // one of five ways to lose and was previously named for all of them.
@@ -259,7 +260,7 @@ export type HypothesisLedgerRow = {
   turn: number;
   procedure: string;
   predicted: string | null;
-  testedAgainst: string;
+  testedAgainst: Message;
   actualRoute: string | null;
   found: string | null;
   windfall: boolean;
@@ -268,5 +269,5 @@ export type HypothesisLedgerRow = {
   bonus: number;
   // 1 for the right route, 0.5 for a wrong one ruled out by its own source, else 0.
   credit: number;
-  verdict: string;
+  verdict: Message;
 };

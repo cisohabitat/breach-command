@@ -165,7 +165,7 @@ export function chooseBotAction(game: Game): BotAction {
 
   const objectiveRead = getObjectiveRead(game);
   if (!game.caseTheory && objectiveRead.confidence !== "LOW") {
-    return { type: "case-theory", objective: game.objective, reason: `Recording ${objectiveRead.title.toLowerCase()} as the visible case theory.` };
+    return { type: "case-theory", objective: game.objective, reason: `Recording ${say(objectiveRead.title).toLowerCase()} as the visible case theory.` };
   }
 
   const correlation = nextCorrelation(game);

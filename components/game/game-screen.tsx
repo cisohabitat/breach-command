@@ -12,6 +12,7 @@ import { gameModes, getAdversaryState, getLossReason, getOperationalLabel, getSe
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
 import { gameScreenMessages } from "@/lib/i18n/en/game-screen";
 import { register, type MessageKey } from "@/lib/i18n";
+import { withForm } from "@/lib/i18n/message";
 
 register(gameScreenMessages);
 
@@ -27,7 +28,7 @@ const lossStatus: Record<LossCause, MessageKey> = {
 };
 
 export function GameScreen({ session }: { session: GameSession }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say } = useMessages();
   const {
     game, activeScenario, config, ended, activeWorkspace, setActiveWorkspace,
     tutorial, dismissTutorial, setRules, meterPulse,
@@ -116,7 +117,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             <Progress value={game.objectiveProgress} aria-label={t("gameScreen.adversaryProgress")} />
             {/* The caption carries the pace as well, so "PACE: PRESSING HARD" beside a low
                 number reads as one picture: little done so far, rising fast. */}
-            <small>{game.objectiveProgress < 40 ? t("gameScreen.early") : game.objectiveProgress < OBJECTIVE_IMMINENT ? t("gameScreen.advancing") : t("gameScreen.imminent")}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? `, pace ${getAdversaryState(game).toLowerCase()}` : ""}</small>
+            <small>{game.objectiveProgress < 40 ? t("gameScreen.early") : game.objectiveProgress < OBJECTIVE_IMMINENT ? t("gameScreen.advancing") : t("gameScreen.imminent")}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? `, pace ${say(withForm(getAdversaryState(game), "lower"))}` : ""}</small>
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
@@ -127,7 +128,7 @@ export function GameScreen({ session }: { session: GameSession }) {
         </div>
         {/* On a phone the sector's rule folds behind "What moves it"; written out,
             the alert was a hundred and seventy pixels above the procedures. */}
-        {sectorAlert && <div className="sector-alert" role="status"><TriangleAlert size={16} aria-hidden="true" /><span><strong>{sectorAlert.title}.</strong> {sectorAlert.detail} <span className="sector-rule">{sectorAlert.rule}</span><details className="sector-rule-fold"><summary>{t("gameScreen.whatMovesIt")}</summary>{sectorAlert.rule}</details></span></div>}
+        {sectorAlert && <div className="sector-alert" role="status"><TriangleAlert size={16} aria-hidden="true" /><span><strong>{say(sectorAlert.title)}.</strong> {say(sectorAlert.detail)} <span className="sector-rule">{sectorAlert.rule}</span><details className="sector-rule-fold"><summary>{t("gameScreen.whatMovesIt")}</summary>{sectorAlert.rule}</details></span></div>}
       </section>
 
       <BotControl session={session} />

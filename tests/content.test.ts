@@ -7,6 +7,7 @@ import {hypothesisSources, proceduresFor, sectorProcedures} from "../lib/advance
 import {adversaryObjectives} from "../lib/command-systems.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
 import { legacy, say } from "../lib/i18n/message.ts";
+import { en } from "./english.ts";
 
 
 test("explains what each objective's outbound stage is for", () => {
@@ -205,7 +206,7 @@ test("makes each evidence decision a call in the sector's own terms", () => {
   // and watching is cheapest where the sector has instruments to watch with.
   const effects = scenarios.map((_, scenario) => {
     const game = { ...newGame(scenario, "operational"), pendingDecision: scenarios[scenario].choices[0][0], sectorHealth: 80 };
-    const options = getDecisionOptions(game)!;
+    const options = en(getDecisionOptions(game))!;
     assert.ok(options.options.some(option => option.id === "notify" && !/service owners/.test(option.title)) || scenario === 0, `scenario ${scenario} names who it notifies`);
     for (const option of options.options) assert.ok(!/\{(owners|service)\}/.test(option.title + option.description + option.service), `scenario ${scenario} fills every term`);
     return { act: resolveDecision(game, "act").sectorHealth - 80, observe: resolveDecision(game, "observe").sectorHealth - 80 };

@@ -155,3 +155,13 @@ both once, in one script that every lazy part awaits (`lib/i18n/shared-text.ts`)
 brought it to 1,146,408 B by the time play starts, and the first load to
 845,618 B, 3,754 B less than before the step, because the glossary no longer
 rides on it. No budget moved.
+
+The engine's reads and review as messages (0.9.7) moved 243 sentences out of
+the engine, which is on the first load, into the engine's catalogue, which
+loads with the game: the first load fell to 836,461 B (9,157 B less), and all
+script by the time play starts rose to 1,174,282 B (1,164,468 B on the
+assignment screen), 24,282 B over the 1,150,000 B budget. As in 0.9.1 and
+0.9.2 the cause is the keys, written once in the catalogue and again where
+the engine uses them, and the plurals, which write a sentence once for each
+form. The all-script budget moved to 1,190,000 B, leaving the periphery of
+step 4 room in the lazy part; the first-load budget did not move.

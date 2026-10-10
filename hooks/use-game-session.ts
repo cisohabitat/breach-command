@@ -375,7 +375,7 @@ export function useGameSession() {
     setPendingUndo(null);
     playFeedback(next.status === "won" ? "complete" : next.status === "lost" ? "lost" : "decision", soundEnabled, hapticsEnabled);
     setAnnouncement(next.status === "won" ? "Response complete. The incident is standing down. The after-action review is ready when you are."
-      : next.status === "lost" ? `The operation is lost. ${getLossReason(next).title}. The after-action review is ready when you are.`
+      : next.status === "lost" ? `The operation is lost. ${say(getLossReason(next).title, activeLocale())}. The after-action review is ready when you are.`
       : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
     // The stand-down panel is the player's arrival point. The review opens on
     // request so the resolution is seen before the analysis.
@@ -422,7 +422,7 @@ export function useGameSession() {
     const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
     setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? "Isolation" : "Monitoring", game: current } : null);
     playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "lost" ? `The operation is lost. ${getLossReason(next).title}.` : (next.mapHistory.at(-1) ? say(next.mapHistory.at(-1)!.effect, activeLocale()) : "Infrastructure action recorded."));
+    setAnnouncement(next.status === "lost" ? `The operation is lost. ${say(getLossReason(next).title, activeLocale())}.` : (next.mapHistory.at(-1) ? say(next.mapHistory.at(-1)!.effect, activeLocale()) : "Infrastructure action recorded."));
     afterStep(next);
   }
 
@@ -444,7 +444,7 @@ export function useGameSession() {
     setPendingUndo(null);
     const correct = next.correlations.at(-1)?.correct;
     playFeedback(correct ? "success" : "failure", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "lost" ? `Evidence assessment challenged. The operation is lost. ${getLossReason(next).title}.` : correct ? "Evidence assessment supported." : "Evidence assessment challenged.");
+    setAnnouncement(next.status === "lost" ? `Evidence assessment challenged. The operation is lost. ${say(getLossReason(next).title, activeLocale())}.` : correct ? "Evidence assessment supported." : "Evidence assessment challenged.");
     afterStep(next);
   }
 
@@ -535,7 +535,7 @@ export function useGameSession() {
     if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice("This browser is not allowing saved data, so campaign progress was not kept.");
     // What the review suggests next, kept so a returning player is met with it.
     const next = recommendNext(result, nextCase(updated, scenarios.length));
-    const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? getLossReason(result).title : result.status === "exercise" ? "Authorised exercise" : "Stood down", score, endedAt: Date.now(), next };
+    const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? say(getLossReason(result).title) : result.status === "exercise" ? "Authorised exercise" : "Stood down", score, endedAt: Date.now(), next };
     writeLastOperation(record);
     setLastOperation(record);
     const entry: LedgerEntry = { at: Date.now(), scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, outcome: result.status as LedgerEntry["outcome"], score, hypothesis: getOutcome(result).breakdown.hypothesis, stages: result.revealed.length, turns: result.turns.length, code: result.seed === null ? null : encodeChallenge({ scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, specialist: result.specialist, seed: result.seed }) };
@@ -783,8 +783,8 @@ export function useGameSession() {
   const answer = game && question === "scope" ? activeScenario.scope
     : question === "constraints" ? activeScenario.constraints
     : question === "impact" ? activeScenario.impact
-    : question === "known" ? `${activeScenario.timeline} ${getLead(game!)} ${game!.revealed.length ? `Confirmed so far: ${game!.revealed.map(id => attacks.find(attack => attack.id === id)!.title).join(", ")}.` : "No stage is confirmed yet."}`
-    : question === "adversary" ? `${getObjectiveRead(game!).title}: ${getObjectiveRead(game!).detail} Current behaviour: ${getAdversaryState(game!)}. ${getAdversaryRead(game!)}`
+    : question === "known" ? `${activeScenario.timeline} ${say(getLead(game!), activeLocale())} ${game!.revealed.length ? `Confirmed so far: ${game!.revealed.map(id => attacks.find(attack => attack.id === id)!.title).join(", ")}.` : "No stage is confirmed yet."}`
+    : question === "adversary" ? `${say(getObjectiveRead(game!).title, activeLocale())}: ${say(getObjectiveRead(game!).detail, activeLocale())} Current behaviour: ${say(getAdversaryState(game!), activeLocale())}. ${say(getAdversaryRead(game!), activeLocale())}`
     : question === "assumptions" ? "Treat alerts, valid credentials and successful procedures as evidence, not conclusions. Record one working hypothesis for each turn and revise it only when evidence no longer fits."
     : "";
 

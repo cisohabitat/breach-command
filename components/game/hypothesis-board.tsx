@@ -15,6 +15,7 @@ import { Glossed } from "@/components/game/glossed";
 import { useMessages } from "@/hooks/use-messages";
 import { hypothesisBoardMessages } from "@/lib/i18n/en/hypothesis-board";
 import { register } from "@/lib/i18n";
+import { withForm } from "@/lib/i18n/message";
 
 register(hypothesisBoardMessages);
 
@@ -25,7 +26,7 @@ export function HypothesisBoard({
   game: Game;
   onChoose: (id: HypothesisId) => void;
 }) {
-  const { t } = useMessages();
+  const { t, say } = useMessages();
   const attribution = getAttributionRead(game);
   // Expert operations withhold every read, this one included.
   const standing = game.mode === "expert" ? null : getHypothesisStanding(game);
@@ -49,8 +50,8 @@ export function HypothesisBoard({
         </div>
         <span
           className={`adversary-state tempo-${game.adversaryTempo}`}
-          title={attribution.detail}
-        >{t("hypothesisBoard.adversaryPace2", { getAdversaryState: getAdversaryState(game).toLowerCase() })}
+          title={say(attribution.detail)}
+        >{t("hypothesisBoard.adversaryPace2", { getAdversaryState: say(withForm(getAdversaryState(game), "lower")) })}
         </span>
       </div>
       {standing && standing.level !== "none" && (
@@ -60,11 +61,11 @@ export function HypothesisBoard({
               not see why "Holding" became "Untested" after a find. */}
           <span className="eyebrow">{underTest ? <span><span className="reading-for">{t("hypothesisBoard.readingForStage")}</span><span className="stage-only">{t("facilitatorSheet.stage")}</span> {underTest.index + 1}, {underTest.name}</span> : t("hypothesisBoard.currentReading")}</span>
           {active && <b className="standing-reading">{active.title}</b>}
-          <strong>{standing.label}</strong>
+          <strong>{say(standing.label)}</strong>
           <span className="standing-meter" aria-hidden="true">
             {Array.from({ length: standing.sources }).map((_, index) => <i key={index} className={index < standing.spent ? "spent" : ""} />)}
           </span>
-          <p>{standing.detail}</p>
+          <p>{say(standing.detail)}</p>
         </div>
       )}
       {/* Expert withholds the standing, not the reading itself: without this the

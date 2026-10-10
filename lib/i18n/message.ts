@@ -12,11 +12,17 @@ export type Param = string | number | Message;
 // lower-cases a title's words but not its acronyms ("Found by endpoint
 // analysis"), "lower" lower-cases it all. Other languages case their own words,
 // so a translation is used as it is.
-export type Form = "inSentence" | "lower";
-export type Message = { key: MessageKey; params?: Record<string, Param> } | { ref: string; params?: Record<string, Param>; form?: Form };
+export type Form = "inSentence" | "lower" | "lowerFirst" | "capital";
+// A message may also be text already in the reader's language (content the
+// overlay has translated, said at once rather than stored), kept as text so it
+// can still take an English form.
+export type Message = ({ key: MessageKey; params?: Record<string, Param> } | { ref: string; params?: Record<string, Param> } | { text: string }) & { form?: Form };
 
 export const msg = (key: MessageKey, params?: Record<string, Param>): Message => params ? { key, params } : { key };
 export const ref = (path: string, params?: Record<string, Param>, form?: Form): Message => ({ ref: path, ...(params ? { params } : {}), ...(form ? { form } : {}) });
+export const lit = (text: string, form?: Form): Message => form ? { text, form } : { text };
+// The same message in an English form: "lower" for a title inside a sentence.
+export const withForm = (message: Message, form: Form): Message => ({ ...message, form });
 // A sentence from a save made before messages (session version 18 and
 // earlier), kept as the player read it.
 export const legacy = (text: string): Message => ({ key: "legacy.text", params: { text } });
@@ -34,16 +40,17 @@ export function resolveRef(path: string): string | undefined {
 }
 
 export function say(message: Message, locale: Locale = "en"): string {
-  const params = Object.fromEntries(Object.entries(message.params ?? {}).map(([name, value]) => [name, typeof value === "object" ? say(value, locale) : value]));
-  if ("ref" in message) {
-    const text = interpolate(locale, resolveRef(message.ref) ?? message.ref, params);
-    if (!message.form || (locale !== "en" && locale !== "en-XA")) return text;
-    return message.form === "lower" ? text.toLowerCase() : text.split(" ").map(word => /[A-Z].*[A-Z0-9]|\d/.test(word) ? word : word.toLowerCase()).join(" ");
-  }
-  return translate(locale, message.key, params);
+  const params = "params" in message ? Object.fromEntries(Object.entries(message.params ?? {}).map(([name, value]) => [name, typeof value === "object" ? say(value, locale) : value])) : {};
+  const text = "text" in message ? message.text : "ref" in message ? interpolate(locale, resolveRef(message.ref) ?? message.ref, params) : translate(locale, message.key, params);
+  if (!message.form || (locale !== "en" && locale !== "en-XA")) return text;
+  if (message.form === "capital") return text.charAt(0).toUpperCase() + text.slice(1);
+  if (message.form === "lowerFirst") return text.charAt(0).toLowerCase() + text.slice(1);
+  return message.form === "lower" ? text.toLowerCase() : text.split(" ").map(word => /[A-Z].*[A-Z0-9]|\d/.test(word) ? word : word.toLowerCase()).join(" ");
 }
 
 export const sameMessage = (a: Message | null | undefined, b: Message | null | undefined) => JSON.stringify(a) === JSON.stringify(b);
 // An older save's sentence, as the player read it; null for a message.
 export const legacyText = (message: Message | null | undefined) => message && "key" in message && message.key === "legacy.text" ? String(message.params?.text ?? "") : null;
-export const isMessage = (value: unknown): value is Message => !!value && typeof value === "object" && ("key" in value || "ref" in value);
+// A message's key, if it is one.
+export const keyOf = (message: Message | null | undefined) => message && "key" in message ? message.key : null;
+export const isMessage = (value: unknown): value is Message => !!value && typeof value === "object" && ("key" in value || "ref" in value || ("text" in value && Object.keys(value).every(key => key === "text" || key === "form")));

@@ -9,13 +9,13 @@ register(operationsMapMessages);
 const icons = [Globe2, UserRound, Server, Cloud];
 
 export function OperationsMap({ game }: { game: Game }) {
-  const { t } = useMessages();
+  const { t, say } = useMessages();
   const activeIndex = Math.min(3, game.revealed.length);
   return (
     <section className="operations-map" aria-label={t("operationsMap.liveIncidentOperations")}>
       <div className="map-heading">
         <div><span className="eyebrow"><Network size={15} />{t("operationsMap.liveOperationsMap")}</span><h2>{t("operationsMap.observedAttackPath")}</h2></div>
-        <span className={`map-tempo tempo-${game.adversaryTempo}`}><ShieldAlert size={14} /> {getAdversaryState(game)}</span>
+        <span className={`map-tempo tempo-${game.adversaryTempo}`}><ShieldAlert size={14} /> {say(getAdversaryState(game))}</span>
       </div>
       <div className="map-path">
         {stages.map((stage, index) => {

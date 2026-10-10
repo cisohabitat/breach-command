@@ -42,8 +42,8 @@ export function ActionSheet({ session }: { session: GameSession }) {
           <div className="action-note"><span className="eyebrow">{t("actionSheet.hypothesisCheck")}</span><p><Glossed text={proc.question} /></p></div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
             <span>
-              {read && <strong>{read.label}. </strong>}
-              {read ? read.detail : procedureAligned ? t("actionSheet.thisProcedureTests") : t("actionSheet.thisProcedureDoes")}
+              {read && <strong>{say(read.label)}. </strong>}
+              {read ? say(read.detail) : procedureAligned ? t("actionSheet.thisProcedureTests") : t("actionSheet.thisProcedureDoes")}
             </span>
           </div>
           {/* What the roll needs sits above the plan that changes it: below the
@@ -55,7 +55,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
               <summary>{t("actionSheet.howThisModifier")}<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => say(describePart(part))).join(", ") || (breakdown.parts.some(part => part.suppressed) ? t("actionSheet.oneBonusIs") : t("actionSheet.nothingApplies"))}</span></summary>
               <ul className="modifier-breakdown">
                 {breakdown.parts.filter(part => part.value !== 0 || part.suppressed || part.shown).map(part => (
-                  <li key={say(part.label)} className={part.suppressed ? "suppressed" : ""}><span>{say(part.label)}</span><strong>{part.suppressed ? "—" : `${part.value < 0 ? "−" : "+"}${Math.abs(part.value)}`}</strong><small>{part.detail}</small></li>
+                  <li key={say(part.label)} className={part.suppressed ? "suppressed" : ""}><span>{say(part.label)}</span><strong>{part.suppressed ? "—" : `${part.value < 0 ? "−" : "+"}${Math.abs(part.value)}`}</strong><small>{say(part.detail)}</small></li>
                 ))}
                 {breakdown.parts.every(part => part.value === 0 && !part.suppressed && !part.shown) && <li><span>{t("actionSheet.noModifiersApply")}</span><strong>0</strong><small>{t("actionSheet.thisIsPlain")}</small></li>}
               </ul>

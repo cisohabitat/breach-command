@@ -6,6 +6,7 @@ import { plainLanguage, glossaryParts } from "../lib/glossary.ts";
 import {parseSession,serialiseSession} from "../lib/session.ts";
 import { legacy, msg, say } from "../lib/i18n/message.ts";
 import "../lib/i18n/engine-messages.ts";
+import { en } from "./english.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
 let g:Game=baseline();
@@ -35,13 +36,13 @@ test("reports how the declared reading is holding up", () => {
   // against it is a genuine empty result rather than a discovery.
   const blindChain=[0,1,2,3].map(stage=>attacks.find(attack=>attack.stage===stage&&!attack.detect.some(source=>identitySources.includes(source)))!.id);
   let standingRun=(()=>{const b=baseline();b.established=[];b.injectDeck=[];b.chain=blindChain;return setHypothesis(b,"identity");})();
-  assert.equal(getHypothesisStanding(baseline()).level,"none","no declared reading, nothing under test");
-  assert.equal(getHypothesisStanding(standingRun).level,"untested","a fresh reading starts untested");
+  assert.equal(en(getHypothesisStanding(baseline())).level,"none","no declared reading, nothing under test");
+  assert.equal(en(getHypothesisStanding(standingRun)).level,"untested","a fresh reading starts untested");
 
   // A roll that failed settles nothing about the source, so it must not count
   // against the reading. Absence is only evidence when the check completed.
   const unlucky=playTurn({...standingRun,injectDeck:[]},identitySources[0],1);
-  const unluckyStanding=getHypothesisStanding(unlucky);
+  const unluckyStanding=en(getHypothesisStanding(unlucky));
   assert.equal(unluckyStanding.spent,0,"a failed roll is not a negative result");
   assert.equal(unluckyStanding.inconclusive,1,"it is reported as inconclusive instead");
   assert.equal(unluckyStanding.level,"untested","and it cannot weaken the reading");
@@ -53,12 +54,12 @@ test("reports how the declared reading is holding up", () => {
     if(standingRun.pendingCommand)standingRun=resolveCommand(standingRun,"a");
     if(standingRun.pendingSetPiece)standingRun=resolveSetPiece(standingRun,"a");
   }
-  const spentStanding=getHypothesisStanding(standingRun);
+  const spentStanding=en(getHypothesisStanding(standingRun));
   assert.ok(spentStanding.sources>0,"the reading has techniques it could be using at this stage");
   assert.equal(spentStanding.spent,spentStanding.sources,"completed empty checks ruled out every one of them");
   assert.equal(spentStanding.level,"unsupported","a route with nothing left open is poorly supported");
   assert.ok(spentStanding.detail.length>40,"and the reason is stated");
-  assert.deepEqual(getHypothesisStanding({...standingRun,chain:["token","role","vault","apikey"]}),spentStanding,"the standing never consults the hidden chain");
+  assert.deepEqual(en(getHypothesisStanding({...standingRun,chain:["token","role","vault","apikey"]})),spentStanding,"the standing never consults the hidden chain");
   // Crisis re-routes the stage after the one under test, so evidence about the
   // stage under test survives it...
   const reaction=scenarioDynamics[standingRun.scenario].reaction;
@@ -82,7 +83,7 @@ test("reports how the declared reading is holding up", () => {
   let correct=setHypothesis({...baseline(),injectDeck:[]},"endpoint");
   correct=playTurn(correct,"cloud",20);
   assert.equal(correct.revealed.length,0,"the cloud audit completed and found nothing");
-  assert.notEqual(getHypothesisStanding(correct).level,"unsupported","a source that could not see the technique does not count against the right reading");
+  assert.notEqual(en(getHypothesisStanding(correct)).level,"unsupported","a source that could not see the technique does not count against the right reading");
   assert.ok(getReadingOdds(correct).candidates.endpoint.open>0,"its technique is still open");
 });
 
@@ -97,7 +98,7 @@ test("calls a route the incident cannot use at this stage poorly supported", () 
       const odds=getReadingOdds(fresh);
       for(const route of ["identity","endpoint","application","cloud"] as const){
         if(odds.candidates[route].total)continue;
-        const standing=getHypothesisStanding(setHypothesis(fresh,route));
+        const standing=en(getHypothesisStanding(setHypothesis(fresh,route)));
         assert.equal(standing.level,"unsupported",`${route} has nothing to test in scenario ${scenario}`);
         assert.ok(!/untested/i.test(standing.label));
         found++;
@@ -117,10 +118,10 @@ test("asks for a comparison once two findings have confirmed stages", () => {
   const finding=(id:string,supports:string|null)=>({id,turn:1,title:legacy(id),source:legacy("Identity"),system:legacy("Admin plane"),confidence:"HIGH" as const,supports,detail:legacy("x")});
   const empty={...setHypothesis(baseline(),"identity"),evidence:[finding("E1",null),finding("E2",null)]};
   assert.equal(readyToCorrelate(empty),false,"two empty results are not worth comparing");
-  assert.ok(!/compare them/.test(getCoachPrompt(empty,true)));
+  assert.ok(!/compare them/.test(en(getCoachPrompt(empty,true))));
   const two={...empty,evidence:[finding("E1","phish"),finding("E2","spray")]};
   assert.equal(readyToCorrelate(two),true);
-  assert.ok(/compare them/.test(getCoachPrompt(two,true)),"the captain asks for the comparison at any guided difficulty");
+  assert.ok(/compare them/.test(en(getCoachPrompt(two,true))),"the captain asks for the comparison at any guided difficulty");
   assert.equal(readyToCorrelate(correlateEvidence(two,["E1","E2"],"causal")),false,"and stops once one has been tested");
 });
 
@@ -130,27 +131,27 @@ test("offers the case theory and the map when they can help, and not before", ()
   assert.equal(readyForTheory(declared),false,"with nothing confirmed the objective cannot be assessed");
   const twoStages={...declared,revealed:declared.chain.slice(0,2)};
   assert.equal(readyForTheory(twoStages),true,"two confirmed stages make it assessable");
-  assert.ok(/case theory/.test(getCoachPrompt(twoStages,true)));
-  assert.equal(getTrainingPrompt({...twoStages,difficulty:"training"},true)?.step,"theory","Training names the step");
+  assert.ok(/case theory/.test(en(getCoachPrompt(twoStages,true))));
+  assert.equal(en(getTrainingPrompt({...twoStages,difficulty:"training"},true))?.step,"theory","Training names the step");
   // A reading carried over the confirmation is questioned first: under a theory
   // prompt a phone playtest kept a "Holding" reading into stage 3 unasked.
   const played=playTurn(declared,"identity",20).turns[0];
   const carried={...twoStages,difficulty:"training" as const,hypothesisHistory:[{turn:1,id:"identity" as const}],turns:[{...played,number:1,revealed:declared.chain[0]},{...played,number:2,revealed:declared.chain[1]}]};
-  assert.match(getTrainingPrompt(carried,true)?.title??"",/^New stage: does identity-led intrusion still fit\?/,"a carried reading is questioned before the theory");
+  assert.match(en(getTrainingPrompt(carried,true))?.title??"",/^New stage: does identity-led intrusion still fit\?/,"a carried reading is questioned before the theory");
   const retested={...carried,turns:[...carried.turns,{...played,number:3,revealed:null,success:false,hypothesis:"identity" as const}]};
-  assert.equal(getTrainingPrompt(retested,true)?.step,"theory","once it has been tested at the new stage, the theory prompt returns");
+  assert.equal(en(getTrainingPrompt(retested,true))?.step,"theory","once it has been tested at the new stage, the theory prompt returns");
   assert.equal(readyForTheory(setCaseTheory(twoStages,"exfiltration")),false,"and stops once a theory is recorded");
-  assert.ok(!/exfiltration|data theft/i.test(getCoachPrompt(twoStages,true)),"the prompt never names the objective");
+  assert.ok(!/exfiltration|data theft/i.test(en(getCoachPrompt(twoStages,true))),"the prompt never names the objective");
 
   // The map is offered early, once, and only while actions remain.
-  assert.equal(getMapHint(declared),null,"not on the first turn, before anything has happened");
+  assert.equal(en(getMapHint(declared)),null,"not on the first turn, before anything has happened");
   const early={...declared,turns:[0,1].map(index=>({...playTurn(declared,"endpoint",2).turns[0],number:index+1}))} as Game;
-  assert.ok(/takes no turn/.test(getMapHint(early) ?? ""),"by the second turn the player is told the map costs no turn");
+  assert.ok(/takes no turn/.test(en(getMapHint(early)) ?? ""),"by the second turn the player is told the map costs no turn");
   const node=Object.keys(early.nodePosture)[0];
-  assert.equal(getMapHint(resolveMapAction(early,node,"monitor")),null,"a player who has used it is not asked again");
-  assert.equal(getMapHint({...early,mapActionsRemaining:0}),null,"nor one with nothing left to spend");
+  assert.equal(en(getMapHint(resolveMapAction(early,node,"monitor"))),null,"a player who has used it is not asked again");
+  assert.equal(en(getMapHint({...early,mapActionsRemaining:0})),null,"nor one with nothing left to spend");
   const late={...early,turns:Array.from({length:5},(_,index)=>({...early.turns[0],number:index+1}))} as Game;
-  assert.equal(getMapHint(late),null,"and the offer lapses after the opening turns");
+  assert.equal(en(getMapHint(late)),null,"and the offer lapses after the opening turns");
 });
 
 test("shows the modifier it will resolve with", () => {
@@ -190,19 +191,19 @@ test("shows the modifier it will resolve with", () => {
   // The pre-action read is built from declared state only. Rewriting the hidden
   // chain underneath it must not change a single word of it.
   const readBase=(()=>{const b=baseline();return setHypothesis(b,"identity");})();
-  const readA=getDiscriminatingRead(readBase,"identity");
-  const readB=getDiscriminatingRead({...readBase,chain:["token","role","vault","apikey"]},"identity");
+  const readA=en(getDiscriminatingRead(readBase,"identity"));
+  const readB=en(getDiscriminatingRead({...readBase,chain:["token","role","vault","apikey"]},"identity"));
   assert.deepEqual(readA,readB,"the read never consults the hidden chain");
   assert.equal(readA.level,"high","a source the declared hypothesis predicts tests that hypothesis");
-  assert.equal(getDiscriminatingRead(readBase,"server").level,"moderate","a source it does not predict collects without testing");
-  assert.equal(getDiscriminatingRead(baseline(),"identity").level,"broad","with no hypothesis declared nothing is under test");
+  assert.equal(en(getDiscriminatingRead(readBase,"server")).level,"moderate","a source it does not predict collects without testing");
+  assert.equal(en(getDiscriminatingRead(baseline(),"identity")).level,"broad","with no hypothesis declared nothing is under test");
   const checkedRun=playTurn({...readBase,injectDeck:[]},"dns",20);
-  assert.equal(getDiscriminatingRead(checkedRun,"dns").spent,1,"a completed check that found nothing is counted");
-  assert.equal(getDiscriminatingRead(checkedRun,"dns").inconclusive,0);
+  assert.equal(en(getDiscriminatingRead(checkedRun,"dns")).spent,1,"a completed check that found nothing is counted");
+  assert.equal(en(getDiscriminatingRead(checkedRun,"dns")).inconclusive,0);
   const failedRun=playTurn({...readBase,injectDeck:[]},"dns",1);
-  assert.equal(getDiscriminatingRead(failedRun,"dns").spent,0,"a failed roll is not a result");
-  assert.equal(getDiscriminatingRead(failedRun,"dns").inconclusive,1,"it is reported as an inconclusive attempt");
-  assert.ok(getDiscriminatingRead(failedRun,"dns").detail.includes("settles nothing"));
+  assert.equal(en(getDiscriminatingRead(failedRun,"dns")).spent,0,"a failed roll is not a result");
+  assert.equal(en(getDiscriminatingRead(failedRun,"dns")).inconclusive,1,"it is reported as an inconclusive attempt");
+  assert.ok(en(getDiscriminatingRead(failedRun,"dns")).detail.includes("settles nothing"));
 
   // The planning bonus and the hypothesis score answer to the same fact, so a turn
   // that earned the bonus can never be scored as a wrong prediction.
@@ -210,7 +211,7 @@ test("shows the modifier it will resolve with", () => {
   ledgerRun=playTurn(ledgerRun,"email",12);
   if(ledgerRun.pendingDecision)ledgerRun=resolveDecision(ledgerRun,"observe");
   for(const turn of ledgerRun.turns)if(turn.planningBonus>0)assert.equal(turn.hypothesisMatched,true,"the planning bonus implies a matched prediction");
-  const ledger=getHypothesisLedger(ledgerRun);
+  const ledger=en(getHypothesisLedger(ledgerRun));
   assert.equal(ledger.length,ledgerRun.turns.length,"the ledger accounts for every turn");
   assert.ok(ledger.every(row=>row.verdict.length>20),"every turn is given a reason");
   assert.equal(ledger[0].matched,ledgerRun.turns[0].hypothesisMatched);
@@ -223,7 +224,7 @@ test("shows the modifier it will resolve with", () => {
   const legacyTurn=parseSession(JSON.stringify({version:11,savedAt:new Date().toISOString(),game:{...ledgerRun,turns:ledgerRun.turns.map(turn=>{const legacy={...turn} as Record<string,unknown>;delete legacy.hypothesisTarget;delete legacy.hypothesisMatched;delete legacy.discriminating;return legacy;})},guided:true,fastResolve:false}));
   assert.equal(legacyTurn?.game.turns[0].hypothesisTarget,null,"a legacy turn carries no hypothesis test");
   assert.equal(legacyTurn?.game.turns[0].hypothesisMatched,false);
-  g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);assert.ok(g.pendingDecision);g=resolveDecision(g,"act");assert.equal(g.status,"response");g=resolveResponse(g,"credential");assert.equal(g.status,"response");g=resolveResponse(g,"verify");assert.equal(g.status,"response");g=resolveResponse(g,"rebuild");assert.equal(g.status,"won");assert.ok(getOutcome(g).grade);assert.ok(getCounterfactuals(g).length);
+  g=baseline();g.revealed=["phish","spray","task"];g=playTurn(g,"network",11);assert.ok(g.pendingDecision);g=resolveDecision(g,"act");assert.equal(g.status,"response");g=resolveResponse(g,"credential");assert.equal(g.status,"response");g=resolveResponse(g,"verify");assert.equal(g.status,"response");g=resolveResponse(g,"rebuild");assert.equal(g.status,"won");assert.ok(en(getOutcome(g)).grade);assert.ok(en(getCounterfactuals(g)).length);
 });
 
 test("speaks plainly to a player who is new to the subject", () => {
@@ -255,12 +256,12 @@ test("speaks plainly to a player who is new to the subject", () => {
     { id: "E1", turn: 1, title: legacy("Initial access"), source: legacy("Email"), system: legacy("User access"), confidence: "HIGH", supports: "phish", detail: legacy("A") },
     { id: "E2", turn: 2, title: legacy("Movement"), source: legacy("Identity"), system: legacy("Admin plane"), confidence: "HIGH", supports: "spray", detail: legacy("B") },
   ];
-  const uncorrelated = getBeginnerReview(run);
+  const uncorrelated = en(getBeginnerReview(run));
   for (const line of [uncorrelated.strength, uncorrelated.gap, uncorrelated.concept, uncorrelated.next]) {
     assert.ok(line.length > 30, "every line says something");
   }
   assert.ok(/never tested how any two/.test(uncorrelated.gap), "it names the correlation that was never tested");
-  const correlated = getBeginnerReview(correlateEvidence(run, ["E1", "E2"], "causal"));
+  const correlated = en(getBeginnerReview(correlateEvidence(run, ["E1", "E2"], "causal")));
   assert.notEqual(correlated.gap, uncorrelated.gap, "and moves on once the player has done it");
 
   // A run can pick good sources and still label the route wrong. Telling that
@@ -274,12 +275,12 @@ test("speaks plainly to a player who is new to the subject", () => {
     return b;
   })();
   const oneTurn = playTurn(baseline(), "endpoint", 20).turns[0];
-  const graded = (matched: boolean[]) => getBeginnerReview({
+  const graded = (matched: boolean[]) => en(getBeginnerReview({
     ...clean,
     turns: matched.map((hypothesisMatched, index) => ({
       ...oneTurn, number: index + 1, hypothesis: "identity", hypothesisTarget: "phish", hypothesisMatched, success: true, revealed: "phish",
     })),
-  });
+  }));
   assert.ok(/only 3 of 5 turns/.test(graded([true, true, true, false, false]).gap), "a partly correct reading is named, not waved through");
   assert.ok(/separate skills/.test(graded([true, true, true, false, false]).concept), "and the two skills are told apart");
   assert.ok(/Nothing stands out/.test(graded([true, true, true]).gap), "while a clean record still gets the all-clear");
@@ -313,7 +314,7 @@ test("explains a score the player can check against what they saw", () => {
   assert.equal(windfall.turns[0].revealed, "spray", "identity exposed the movement stage");
   assert.notEqual(windfall.turns[0].revealed, windfall.turns[0].hypothesisTarget, "which was not the stage under test");
   assert.equal(windfall.turns[0].windfall, true, "so the turn is recorded as a windfall");
-  const row = getHypothesisLedger(windfall)[0];
+  const row = en(getHypothesisLedger(windfall))[0];
   assert.ok(row.actualRoute, "the ledger names the route the stage under test actually used");
   assert.ok(row.verdict.includes(row.actualRoute!.toLowerCase()), "and says it in the verdict");
   assert.ok(row.verdict.includes("further along the chain"), "and does not leave the find unexplained");
@@ -324,7 +325,7 @@ test("explains a score the player can check against what they saw", () => {
   const direct = playTurn(run, "email", 20);
   assert.equal(direct.turns[0].windfall, false);
   const miss = playTurn(setHypothesis(run, "cloud"), "email", 20);
-  const missRow = getHypothesisLedger(miss)[0];
+  const missRow = en(getHypothesisLedger(miss))[0];
   assert.ok(!missRow.matched);
   assert.ok(missRow.verdict.includes("not cloud control-plane abuse"), "the verdict names the prediction that failed");
 
@@ -402,7 +403,7 @@ test("sums up a result without spoiling the operation", () => {
   let run=setHypothesis({...baseline(),injectDeck:[]},"identity");
   run=playTurn(run,"identity",20);
   const lost={...run,status:"lost" as const,objectiveProgress:100};
-  const lines=getResultSummary(lost);
+  const lines=en(getResultSummary(lost));
   assert.ok(/The quiet intrusion/.test(lines[0]),"it names the operation");
   assert.ok(/Operation lost/.test(lines[1])&&/1 of 4 stages confirmed in 1 turn\b/.test(lines[1]),"and what happened, in counts");
   for(const id of lost.chain){
@@ -410,7 +411,7 @@ test("sums up a result without spoiling the operation", () => {
     assert.ok(!lines.join(" ").includes(title),`it never names ${title}`);
   }
   assert.equal(lines.length,2,"an ordinary operation has no code to share");
-  const seeded=getResultSummary({...lost,seed:4242});
+  const seeded=en(getResultSummary({...lost,seed:4242}));
   assert.ok(/BC\d+-\d+-\d+-\d+-\d+-4242-\d{2}/.test(seeded[2]),"a reproducible one carries its challenge code");
 });
 
@@ -422,7 +423,7 @@ test("explains each part of the score in the player's own numbers", () => {
     if(run.pendingSetPiece)run=resolveSetPiece(run,"b");
     if(run.pendingCommand)run=resolveCommand(run,"b");
   }
-  const rows=getScoreRows(run);
+  const rows=en(getScoreRows(run));
   const breakdown=getScoreBreakdown(run);
   assert.equal(rows.reduce((sum,row)=>sum+row.value,0),breakdown.total,"the rows add up to the score");
   assert.equal(rows.reduce((sum,row)=>sum+row.maximum,0),100);
@@ -432,7 +433,7 @@ test("explains each part of the score in the player's own numbers", () => {
 
 test("tells a run that confirmed nothing what it did earn, and revises only on the standing", () => {
   // "You confirmed 0 of 4 stages under real pressure" was praise for nothing.
-  const lost=(turns:Game["turns"])=>getBeginnerReview({...baseline(),status:"lost",impact:100,revealed:[],evidence:[],turns});
+  const lost=(turns:Game["turns"])=>en(getBeginnerReview({...baseline(),status:"lost",impact:100,revealed:[],evidence:[],turns}));
   const empty=playTurn(setHypothesis({...baseline(),injectDeck:[]},"cloud"),"cloud",20).turns[0];
   const failed=playTurn(setHypothesis({...baseline(),injectDeck:[]},"cloud"),"cloud",2).turns[0];
   assert.ok(!empty.revealed&&empty.success,"the fixture is a completed check that found nothing");
@@ -444,24 +445,24 @@ test("tells a run that confirmed nothing what it did earn, and revises only on t
   // empty check has ever been made.
   const holding=setHypothesis({...baseline(),injectDeck:[]},"identity");
   const afterEmpty={...holding,turns:[{...empty,hypothesis:"identity"}]} as Game;
-  assert.ok(["untested","holding"].includes(getHypothesisStanding(afterEmpty).level));
-  assert.ok(!/Revise/.test(getCoachPrompt(afterEmpty,true)),"a reading that is holding is not told to revise");
+  assert.ok(["untested","holding"].includes(en(getHypothesisStanding(afterEmpty)).level));
+  assert.ok(!/Revise/.test(en(getCoachPrompt(afterEmpty,true))),"a reading that is holding is not told to revise");
 });
 
 test("warns while the sector margin can still be saved", () => {
   // It ended two in five Training losses from a board most turns never show.
   const g=baseline();
-  assert.equal(getSectorAlert({...g,sectorHealth:SECTOR_ALERT_AT+1}),null,"quiet while there is room");
-  const alert=getSectorAlert({...g,sectorHealth:SECTOR_ALERT_AT});
+  assert.equal(en(getSectorAlert({...g,sectorHealth:SECTOR_ALERT_AT+1})),null,"quiet while there is room");
+  const alert=en(getSectorAlert({...g,sectorHealth:SECTOR_ALERT_AT}));
   assert.ok(alert&&alert.title.includes(String(SECTOR_ALERT_AT))&&/ends if it reaches zero/.test(alert.detail)&&alert.rule.length>40,"it says how low and what happens at zero");
-  assert.equal(getSectorAlert({...g,sectorHealth:10,status:"lost"}),null,"and says nothing once the operation is over");
+  assert.equal(en(getSectorAlert({...g,sectorHealth:10,status:"lost"})),null,"and says nothing once the operation is over");
 });
 
 test("gives an Expert player advice that does not lean on a withheld read", () => {
   // Expert hides the reading's standing, so "watch the standing" pointed at
   // nothing on screen.
   const oneTurn=playTurn(baseline(),"endpoint",20).turns[0];
-  const misread=(mode:Game["mode"])=>getBeginnerReview({...baseline(),mode,correlations:[{id:"C1",turn:1,evidence:["E1","E2"],assessment:"causal",correct:true,verdict:"x"}] as never,turns:[1,2,3].map(number=>({...oneTurn,number,hypothesis:"cloud",hypothesisTarget:"phish",hypothesisMatched:false}))});
+  const misread=(mode:Game["mode"])=>en(getBeginnerReview({...baseline(),mode,correlations:[{id:"C1",turn:1,evidence:["E1","E2"],assessment:"causal",correct:true,verdict:"x"}] as never,turns:[1,2,3].map(number=>({...oneTurn,number,hypothesis:"cloud",hypothesisTarget:"phish",hypothesisMatched:false}))}));
   assert.ok(/standing/.test(misread("campaign").next),"a guided player is pointed at the standing");
   assert.ok(!/standing/.test(misread("expert").next)&&/tally/.test(misread("expert").next),"an Expert player is given the habit without it");
 });
@@ -472,7 +473,7 @@ test("does not tell a player who revised to revise", () => {
   const oneTurn=playTurn(baseline(),"endpoint",20).turns[0];
   const later=attacks.find(attack=>attack.stage===1&&attack.vector!=="endpoint")!.id;
   const turn=(number:number,hypothesis:Game["hypothesis"],procedure:string,extra:Partial<Game["turns"][number]>={})=>({...oneTurn,number,hypothesis,procedure,hypothesisTarget:"phish",hypothesisMatched:false,success:true,revealed:null,injectReveal:null,...extra});
-  const review=(turns:Game["turns"],history:Game["hypothesisHistory"])=>getBeginnerReview({...baseline(),turns,hypothesisHistory:history});
+  const review=(turns:Game["turns"],history:Game["hypothesisHistory"])=>en(getBeginnerReview({...baseline(),turns,hypothesisHistory:history}));
   const opening=[turn(1,"cloud","cloud"),turn(2,"identity","identity")];
   const carried=review([...opening,turn(3,"endpoint","endpoint",{hypothesisMatched:true,revealed:"phish"}),...[4,5,6].map(number=>turn(number,"endpoint","endpoint",{hypothesisTarget:later}))],[{turn:1,id:"cloud"},{turn:2,id:"identity"},{turn:3,id:"endpoint"}]);
   assert.ok(!/When it says weakening/.test(carried.next),"a player who revised is not told to start revising");
@@ -503,12 +504,12 @@ test("the ledger pays each turn what the score pays it", () => {
   const stage=attacks.find(attack=>attack.id===game.chain[0])!;
   const start=game;
   const pairs=hypotheses.filter(item=>item.id!==stage.vector).flatMap(item=>hypothesisSources(start,item.id).map(source=>({reading:item.id,source})));
-  game=pairs.map(pair=>playTurn(setHypothesis(start,pair.reading),pair.source,20)).find(next=>!next.turns[0].revealed&&getHypothesisLedger(next)[0].credit>0)!;
-  const row=getHypothesisLedger(game)[0];
+  game=pairs.map(pair=>playTurn(setHypothesis(start,pair.reading),pair.source,20)).find(next=>!next.turns[0].revealed&&en(getHypothesisLedger(next))[0].credit>0)!;
+  const row=en(getHypothesisLedger(game))[0];
   assert.ok(!row.matched&&!game.turns[0].revealed,"the fixture is a wrong reading tested with its own source and found nothing");
   assert.equal(row.credit,0.5,"it is paid half");
   assert.ok(/half credit/.test(row.verdict),"and says so");
-  const total=getHypothesisLedger(game).reduce((sum,item)=>sum+item.credit,0);
+  const total=en(getHypothesisLedger(game)).reduce((sum,item)=>sum+item.credit,0);
   assert.equal(getScoreBreakdown(game).hypothesis,Math.round(total/game.turns.length*10),"the rows add up to the score");
 });
 
@@ -517,9 +518,9 @@ test("names the weakest decision rather than giving the all-clear", () => {
   const run=resolveDecision(playTurn({...baseline(),injectDeck:[]},"endpoint",20),"attribute");
   const done={...run,correlations:[{id:"C1",turn:1,evidence:["E1","E2"],assessment:"causal",correct:true,verdict:"x"}],responseScore:50,turns:run.turns.map(turn=>({...turn,hypothesis:turn.hypothesisTarget?"endpoint" as const:null,hypothesisMatched:true}))} as unknown as Game;
   const weak={...done,decisions:done.decisions.map(item=>({...item,quality:1}))};
-  assert.ok(/weakest call/.test(getBeginnerReview(weak).gap),"a weak call is named");
-  assert.ok(/actor's pace/.test(getBeginnerReview(weak).next),"with what to look at next time");
-  assert.ok(!/weakest call/.test(getBeginnerReview({...done,decisions:done.decisions.map(item=>({...item,quality:5}))}).gap),"and a sound one is not");
+  assert.ok(/weakest call/.test(en(getBeginnerReview(weak)).gap),"a weak call is named");
+  assert.ok(/actor's pace/.test(en(getBeginnerReview(weak)).next),"with what to look at next time");
+  assert.ok(!/weakest call/.test(en(getBeginnerReview({...done,decisions:done.decisions.map(item=>({...item,quality:5}))})).gap),"and a sound one is not");
 });
 
 test("says when an own source cannot see the stage, from the published pool alone", () => {
@@ -529,7 +530,7 @@ test("says when an own source cannot see the stage, from the published pool alon
   const verdicts=Object.fromEntries(hypothesisSources(game,"endpoint").map(id=>[id,sourceSeesReading(game,id)]));
   assert.ok(Object.values(verdicts).some(value=>value===true),"some of the reading's own sources can see the stage");
   assert.deepEqual(Object.fromEntries(hypothesisSources(game,"endpoint").map(id=>[id,sourceSeesReading({...game,chain:["token","role","vault","apikey"]},id)])),verdicts,"it never consults the hidden chain");
-  for(const [id,sees] of Object.entries(verdicts)) if(sees===false) assert.equal(getDiscriminatingRead(game,id).level,"moderate","a blind own source is not offered as a test of the reading");
+  for(const [id,sees] of Object.entries(verdicts)) if(sees===false) assert.equal(en(getDiscriminatingRead(game,id)).level,"moderate","a blind own source is not offered as a test of the reading");
 });
 
 test("names what set the bonus waiting for the next roll", () => {
@@ -555,13 +556,13 @@ test("pays half credit once per reading at a stage, whatever else a turn reveals
     const played = playTurn(setHypothesis(start, reading), source, 19);
     // A reading still open after the first check, so only the once-per-stage rule
     // stands between it and a second half.
-    if (getHypothesisLedger(played)[0].credit === 0.5 && getReadingOdds(played).candidates[reading].open > 0) paid = played;
+    if (en(getHypothesisLedger(played))[0].credit === 0.5 && getReadingOdds(played).candidates[reading].open > 0) paid = played;
   }
   assert.ok(paid, "some wrong reading tested with its own source earns half credit and stays open");
   const first = paid.turns[0];
   const disclosed = attacks.find(item => item.id !== first.hypothesisTarget && paid!.chain.includes(item.id))!.id;
   const twice = { ...paid, turns: [first, { ...first, number: 2, injectReveal: disclosed }] };
-  assert.deepEqual(getHypothesisLedger(twice).map(row => row.credit), [0.5, 0], "the second identical check earns nothing, disclosure or not");
+  assert.deepEqual(en(getHypothesisLedger(twice)).map(row => row.credit), [0.5, 0], "the second identical check earns nothing, disclosure or not");
 });
 
 test("suggests the next operation from the record, and says why", async () => {
@@ -594,7 +595,7 @@ test("suggests the next operation from the record, and says why", async () => {
     game = play(game, procedure, 20);
   }
   if (game.status === "won") {
-    const score = getOutcome(game).breakdown.total;
+    const score = en(getOutcome(game)).breakdown.total;
     const next = recommendNext(game, 3);
     assert.equal(next.scenario, 3, "a clear moves on to the next open case");
     assert.equal(next.difficulty, score >= 74 ? "operational" : "training");

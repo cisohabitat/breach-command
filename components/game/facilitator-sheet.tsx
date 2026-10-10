@@ -17,7 +17,7 @@ export function FacilitatorSheet({ game }: { game: Game }) {
   const ledger = getHypothesisLedger(game);
   const questions = questionsFor(game.status);
   const routeTitle = (id: string | null) => hypotheses.find(item => item.id === id)?.title ?? "none";
-  const result = game.status === "won" ? t("facilitatorSheet.stoodDownGrade", { grade: outcome.grade }) : game.status === "exercise" ? t("facilitatorSheet.authorisedExerciseConcluded") : getLossReason(game).title;
+  const result = game.status === "won" ? t("facilitatorSheet.stoodDownGrade", { grade: outcome.grade }) : game.status === "exercise" ? t("facilitatorSheet.authorisedExerciseConcluded") : say(getLossReason(game).title);
   return (
     <section className="facilitator-sheet" aria-hidden="true">
       <p className="facilitator-form">{t("facilitatorSheet.formBc320Facilitator")}</p>
@@ -35,7 +35,7 @@ export function FacilitatorSheet({ game }: { game: Game }) {
       <h3>{t("facilitatorSheet.turnByTurn")}</h3>
       <table>
         <thead><tr><th>{t("captainReportDialog.turn")}</th><th>{t("facilitatorSheet.reading")}</th><th>{t("facilitatorSheet.routeUnderTest")}</th><th>{t("facilitatorSheet.check")}</th><th>{t("facilitatorSheet.credit")}</th></tr></thead>
-        <tbody>{ledger.map(row => <tr key={row.turn}><td>{row.turn}</td><td>{row.predicted ?? t("facilitatorSheet.noneDeclared")}</td><td>{row.actualRoute ?? row.testedAgainst}</td><td>{procedureById(game, row.procedure)?.title ?? row.procedure}{row.found ? `, found ${row.found}` : ""}</td><td>{row.credit === 1 ? t("facilitatorSheet.full") : row.credit ? t("facilitatorSheet.half") : t("facilitatorSheet.none")}</td></tr>)}</tbody>
+        <tbody>{ledger.map(row => <tr key={row.turn}><td>{row.turn}</td><td>{row.predicted ?? t("facilitatorSheet.noneDeclared")}</td><td>{row.actualRoute ?? say(row.testedAgainst)}</td><td>{procedureById(game, row.procedure)?.title ?? row.procedure}{row.found ? `, found ${row.found}` : ""}</td><td>{row.credit === 1 ? t("facilitatorSheet.full") : row.credit ? t("facilitatorSheet.half") : t("facilitatorSheet.none")}</td></tr>)}</tbody>
       </table>
       {(game.decisions.length > 0 || game.commandHistory.length > 0 || game.setPieceHistory.length > 0) && <>
         <h3>{t("facilitatorSheet.decisions")}</h3>
@@ -46,7 +46,7 @@ export function FacilitatorSheet({ game }: { game: Game }) {
         </ul>
       </>}
       <h3>{t("debriefDialog.whatMightHave")}</h3>
-      <ul>{getCounterfactuals(game).slice(0, 4).map(item => <li key={item}>{item}</li>)}</ul>
+      <ul>{getCounterfactuals(game).slice(0, 4).map((item, index) => <li key={index}>{say(item)}</li>)}</ul>
       <h3>{t("facilitatorSheet.questionsForThe2", { questionsTitle: questions.title.toLowerCase() })}</h3>
       <ol>{questions.questions.map(question => <li key={question}>{question}</li>)}</ol>
     </section>

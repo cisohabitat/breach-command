@@ -4,7 +4,7 @@ import { procedureIntensities, procedureScopes, sectorSystems, specialists, type
 import { infrastructureTopologies } from "../phase8.ts";
 import { adversaryProfiles, meterDirection, meterNames, responseProfiles } from "./content.ts";
 import { type CarriedSource, type DecisionChoice, type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
-import { msg, ref, type Message } from "../i18n/message.ts";
+import { lit, msg, ref, type Message } from "../i18n/message.ts";
 
 // The fatigue at which a specialist's bonus stops applying. The roll, its
 // preview and the deployment screen all read it here.
@@ -27,7 +27,7 @@ export const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(m
 
 // The actor's pace, not its progress: "Executing objective" beside an
 // adversary progress of 19 read as a contradiction.
-export const state = (tempo: number) => tempo <= 0 ? "Covert" : tempo === 1 ? "Maneuvering" : tempo === 2 ? "Accelerating" : "Pressing hard";
+export const state = (tempo: number) => tempo <= 0 ? msg("engine.rules.covert") : tempo === 1 ? msg("engine.rules.maneuvering") : tempo === 2 ? msg("engine.rules.accelerating") : msg("engine.rules.pressingHard");
 
 export function getAdversaryState(game: Game) {
   return state(game.adversaryTempo);
@@ -133,6 +133,8 @@ export function describeChange(meter: keyof typeof meterDirection | string, valu
   return effectText(changeEffect(meter, value, label));
 }
 
+// i18n: maintainer English. An effect in English, for the tests that read what
+// a player read; the interface lays effects out with EffectList.
 export function effectText(effect: Effect): string {
   switch (effect.kind) {
     case "change": return `${effect.label} ${signed(effect.amount)} ${effect.good ? "better" : "worse"}`;
@@ -235,17 +237,17 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
   let consecutiveFailures = 0;
   for (let index = game.turns.length - 1; index >= 0 && !game.turns[index].success; index--) consecutiveFailures++;
   const parts: ModifierPart[] = [
-    { label: msg("engine.part.established"), value: game.established.includes(procedure) ? 2 : 0, detail: "This evidence source is already established for the team." },
-    { label: msg("engine.part.ownSource"), value: ownSourceBonus(game, procedure), detail: "One of the declared reading's own evidence sources. Testing the explanation you have committed to earns this; it says nothing about whether the explanation is right." },
-    { label: carriedLabel(game.nextModifierSources, game.nextModifier), value: game.nextModifier, shown: game.nextModifierSources.length > 0, sources: game.nextModifierSources, detail: "Set up by something since your last roll: monitoring a node on the map, an evidence decision, a command event, a correct comparison of two findings, or an inject. It applies to this roll only." },
-    { label: msg("engine.part.afterFailures"), value: consecutiveFailures >= 2 ? 2 : 0, detail: `The last ${consecutiveFailures} procedures failed their roll. A run of failures adds +2 until one succeeds.` },
+    { label: msg("engine.part.established"), value: game.established.includes(procedure) ? 2 : 0, detail: msg("engine.rules.thisEvidenceSource") },
+    { label: msg("engine.part.ownSource"), value: ownSourceBonus(game, procedure), detail: msg("engine.rules.oneOfThe") },
+    { label: carriedLabel(game.nextModifierSources, game.nextModifier), value: game.nextModifier, shown: game.nextModifierSources.length > 0, sources: game.nextModifierSources, detail: msg("engine.rules.setUpBy") },
+    { label: msg("engine.part.afterFailures"), value: consecutiveFailures >= 2 ? 2 : 0, detail: msg("engine.rules.theLastProcedures", { consecutiveFailures }) },
     specialist.procedures.includes(procedure as never) && game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT
-      ? { label: msg("engine.part.specialist"), value: 0, suppressed: true, detail: `${specialist.title} works this source, but at fatigue ${game.specialistFatigue} of 6 the bonus no longer applies. Rest comes from finishing the operation.` }
-      : { label: msg("engine.part.specialist"), value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: `${specialist.title} works this source directly and is not fatigued.` },
-    { label: msg("engine.part.mapFocus"), value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: `The system selected on the infrastructure map is one this source examines${focusNode ? `: ${focusNode.label}.` : "."}` },
-    { label: ref(`procedureScopes.${plan.scope}.title`), value: procedureScopes[plan.scope].modifier, detail: procedureScopes[plan.scope].description },
-    { label: ref(`procedureIntensities.${plan.intensity}.title`), value: procedureIntensities[plan.intensity].modifier, detail: procedureIntensities[plan.intensity].description },
-    { label: msg("engine.part.expert"), value: game.mode === "expert" ? -1 : 0, detail: "Expert operations resolve every procedure one harder." },
+      ? { label: msg("engine.part.specialist"), value: 0, suppressed: true, detail: msg("engine.rules.worksThisSource", { specialistTitle: specialist.title, specialistFatigue: game.specialistFatigue }) }
+      : { label: msg("engine.part.specialist"), value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: msg("engine.rules.worksThisSource2", { specialistTitle: specialist.title }) },
+    { label: msg("engine.part.mapFocus"), value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: focusNode ? msg("engine.rules.mapFocusOn", { node: focusNode.label }) : msg("engine.rules.mapFocus") },
+    { label: ref(`procedureScopes.${plan.scope}.title`), value: procedureScopes[plan.scope].modifier, detail: lit(procedureScopes[plan.scope].description) },
+    { label: ref(`procedureIntensities.${plan.intensity}.title`), value: procedureIntensities[plan.intensity].modifier, detail: lit(procedureIntensities[plan.intensity].description) },
+    { label: msg("engine.part.expert"), value: game.mode === "expert" ? -1 : 0, detail: msg("engine.rules.expertOperationsResolve") },
   ];
   return { parts, total: parts.reduce((sum, part) => sum + part.value, 0) };
 }

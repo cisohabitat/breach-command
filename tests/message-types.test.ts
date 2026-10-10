@@ -1,5 +1,6 @@
 // A message (lib/i18n/message.ts) is an object, and TypeScript lets an object
-// into a template literal, a string concatenation or String() without a word:
+// into a template literal, a string concatenation, String(), an array's
+// join() or JSX (as a child, or an attribute of an HTML element) without a word:
 // the review once read "[object Object]: [object Object]". This reads every
 // file with the type checker and fails where a message is turned into a string
 // any way but through say(). A legacy message's own text is the one exception.
@@ -24,6 +25,16 @@ test("no message becomes a string except through say()", () => {
       if (ts.isTemplateSpan(node)) flag(node.expression);
       if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) { flag(node.left); flag(node.right); }
       if (ts.isCallExpression(node) && node.expression.getText() === "String" && node.arguments[0]) flag(node.arguments[0]);
+      if (ts.isJsxExpression(node) && node.expression) {
+        const parent = node.parent;
+        const child = ts.isJsxElement(parent) || ts.isJsxFragment(parent);
+        const htmlAttribute = ts.isJsxAttribute(parent) && /^[a-z]/.test(parent.parent.parent.tagName.getText());
+        if (child || htmlAttribute) flag(node.expression);
+      }
+      if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "join") {
+        const element = checker.getIndexTypeOfType(checker.getTypeAtLocation(node.expression.expression), ts.IndexKind.Number);
+        if (element && isMessage(element)) found.push(`${file.fileName.slice(root.length)}:${file.getLineAndCharacterOfPosition(node.getStart()).line + 1}: ${node.getText().slice(0, 60)}`);
+      }
       ts.forEachChild(node, visit);
     };
     visit(file);

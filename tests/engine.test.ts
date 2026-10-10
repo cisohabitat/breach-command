@@ -8,6 +8,7 @@ import {CHALLENGE_VERSION,decodeChallenge,encodeChallenge,isOutdatedChallenge,se
 import {incidentVariant} from "../lib/phase9.ts";
 import { legacy, msg, say } from "../lib/i18n/message.ts";
 import "../lib/i18n/engine-messages.ts";
+import { en } from "./english.ts";
 const cardOf=(turn:{inject:{id:string}|null})=>turn.inject?injectCard(turn.inject.id):undefined;
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
@@ -25,7 +26,7 @@ test("resolves a turn, its decision and its cooldown", () => {
   assert.equal(cooldownWindow(trained),3,"training uses the shorter window");
   assert.equal(availableIn(trained,"endpoint"),2,"which skips two turns, not three");
   assert.throws(()=>playTurn(n,"identity",20),/decision/);
-  assert.equal(getDecisionOptions(n)?.observe.title,"Trace the access path");
+  assert.equal(en(getDecisionOptions(n))?.observe.title,"Trace the access path");
   n=resolveDecision(n,"observe");assert.equal(n.nextModifier,2);assert.equal(n.impact,30);assert.equal(n.pendingDecision,null);
   n=playTurn(n,"dns",9);assert.equal(n.turns[1].total,12);assert.equal(n.nextModifier,0);n=resolveSetPiece(n,"a");assert.throws(()=>playTurn(n,"endpoint",15),/cooling/);
   g=baseline();g=setHypothesis(g,"endpoint");g=playTurn(g,"endpoint",7);assert.equal(g.turns[0].planningBonus,OWN_SOURCE_BONUS);assert.equal(g.turns[0].total,7+2+OWN_SOURCE_BONUS,"established and own source");
@@ -116,14 +117,14 @@ test("leaves nothing outstanding when an operation ends", () => {
   }
 
   // The loss banner names the cause, not the investigation window every time.
-  assert.equal(getLossReason(edge({objectiveProgress:99})).title,"The adversary completed its objective");
-  assert.equal(getLossReason(edge({impact:99})).title,"Business impact reached its limit");
-  assert.equal(getLossReason(edge({turnLimit:1})).title,"The investigation window closed");
-  assert.ok(getLossReason(edge({turnLimit:1})).detail.includes("1 turn."),"the reason counts turns in plain English");
+  assert.equal(en(getLossReason(edge({objectiveProgress:99}))).title,"The adversary completed its objective");
+  assert.equal(en(getLossReason(edge({impact:99}))).title,"Business impact reached its limit");
+  assert.equal(en(getLossReason(edge({turnLimit:1}))).title,"The investigation window closed");
+  assert.ok(en(getLossReason(edge({turnLimit:1}))).detail.includes("1 turn."),"the reason counts turns in plain English");
   const continuityLoss={...baseline(),continuity:1,established:[],injectDeck:[]} as Game;
-  assert.equal(getLossReason(playTurn(continuityLoss,"dns",2)).title,"The essential service stopped");
+  assert.equal(en(getLossReason(playTurn(continuityLoss,"dns",2))).title,"The essential service stopped");
   const sectorLoss={...baseline(),sectorHealth:1,established:[],injectDeck:[]} as Game;
-  assert.match(getLossReason(playTurn(sectorLoss,"dns",2)).title,/reached zero$/);
+  assert.match(en(getLossReason(playTurn(sectorLoss,"dns",2))).title,/reached zero$/);
 
   // A sound action the dice refused does not hand the actor tempo it did not earn.
   const soundBase=(()=>{const b=baseline();b.established=[];b.injectDeck=[];return setHypothesis(b,"endpoint");})();
@@ -138,7 +139,7 @@ test("leaves nothing outstanding when an operation ends", () => {
 
 test("holds the turn limit, modes, specialists and map actions", () => {
   g=baseline();for(let i=0;i<14&&g.status==="playing";i++){if(g.pendingSetPiece){g=resolveSetPiece(g,"a");continue;}if(g.pendingCommand){g=resolveCommand(g,"a");continue;}const action=nextEvidenceSource(g);assert.ok(action);g=playTurn(g,action.id,2);}assert.equal(g.status,"lost");
-  assert.equal(getAdversaryState(newGame(0,"crisis",()=>0)),"Maneuvering");assert.equal(difficulties.crisis.maxTurns,10);
+  assert.equal(en(getAdversaryState(newGame(0,"crisis",()=>0))),"Maneuvering");assert.equal(difficulties.crisis.maxTurns,10);
   assert.throws(()=>playTurn(baseline(),"unknown",10),/Unknown/);assert.throws(()=>playTurn(baseline(),"endpoint",21),/Invalid/);assert.throws(()=>newGame(-1),/Unknown/);
   const ironman=newGame(0,"operational",()=>0,{mode:"ironman",specialist:"forensics"});assert.equal(getTurnLimit(ironman),difficulties.operational.maxTurns-1);
   const escalation=newGame(0,"operational",()=>0,{mode:"escalation",specialist:"hunter"});assert.ok(escalation.impact>newGame(0,"operational",()=>0).impact);assert.ok(escalation.objectiveProgress>5);
@@ -159,8 +160,8 @@ test("holds the turn limit, modes, specialists and map actions", () => {
     {id:"E2",turn:2,title:legacy("Unrelated exception"),source:legacy("Cloud"),system:legacy("Admin plane"),confidence:"MODERATE",supports:null,detail:legacy("B")},
   ];
   g=correlateEvidence(g,["E1","E2"],"causal");assert.equal(g.correlations[0].correct,false);assert.equal(g.impact,26);
-  assert.equal(getAttributionRead(baseline()).title,"Unknown operator");
-  const attributed=baseline();attributed.revealed=[...attributed.chain];assert.equal(getAttributionRead(attributed).confidence,"ATTRIBUTED");
+  assert.equal(en(getAttributionRead(baseline())).title,"Unknown operator");
+  const attributed=baseline();attributed.revealed=[...attributed.chain];assert.equal(en(getAttributionRead(attributed)).confidence,"ATTRIBUTED");
   const challenge=encodeChallenge({scenario:4,difficulty:"crisis",mode:"expert",specialist:"identity",seed:74219});assert.deepEqual(decodeChallenge(challenge),{scenario:4,difficulty:"crisis",mode:"expert",specialist:"identity",seed:74219});assert.equal(decodeChallenge(challenge.replace(/\d{2}$/, "00")),null);
   // A code carries its content version. An older one is refused and named as
   // outdated, because it would decode to a different incident than it was shared for.
@@ -245,24 +246,24 @@ test("teaches the reasoning instead of handing over the answer", () => {
   // any difficulty, because following it produced a complete attack chain and a
   // hypothesis score of three out of ten: it taught which button to press.
   const ordinary=baseline();
-  assert.equal(getTrainingPrompt(ordinary),null,"normal play receives no training aid");
-  assert.equal(getTrainingPrompt(ordinary,true),null,"guided reflection is not the training path");
+  assert.equal(en(getTrainingPrompt(ordinary)),null,"normal play receives no training aid");
+  assert.equal(en(getTrainingPrompt(ordinary,true)),null,"guided reflection is not the training path");
   assert.equal(guidanceLevel(ordinary,false),"off");
   assert.equal(guidanceLevel(ordinary,true),"reflection");
   assert.ok(nextEvidenceSource(ordinary),"the solver still resolves a source for the simulations");
   const expertGame=newGame(0,"operational",()=>0,{mode:"expert"});
   assert.equal(guidanceLevel(expertGame,true),"off","expert mode never receives guidance");
-  assert.equal(getTrainingPrompt(expertGame,true),null);
+  assert.equal(en(getTrainingPrompt(expertGame,true)),null);
 
   const training=newGame(0,"training",()=>0);
   assert.equal(guidanceLevel(training,true),"training");
-  assert.equal(getTrainingPrompt(training,false),null,"the aid still requires guidance to be enabled");
-  assert.equal(getTrainingPrompt(training,true)?.step,"declare","with no reading recorded it asks for one");
+  assert.equal(en(getTrainingPrompt(training,false)),null,"the aid still requires guidance to be enabled");
+  assert.equal(en(getTrainingPrompt(training,true))?.step,"declare","with no reading recorded it asks for one");
 
   // Once a reading is declared the aid names that reading's own sources, so it
   // can never contradict the discriminating read shown on the same cards.
   const declared=setHypothesis({...training,chain:["phish","spray","task","https"],established:[]} as Game,"identity");
-  const testing=getTrainingPrompt(declared,true)!;
+  const testing=en(getTrainingPrompt(declared,true))!;
   assert.equal(testing.step,"test");
   // The reading's own sources include this sector's procedure when it tests the
   // same route, so read them from the game rather than the static route list.
@@ -270,13 +271,13 @@ test("teaches the reasoning instead of handing over the answer", () => {
   assert.ok(testing.sources.length>0,"it names sources to try");
   for(const source of testing.sources){
     assert.ok(identitySources.includes(source.id),`${source.id} is one of the declared reading's own sources`);
-    assert.equal(getDiscriminatingRead(declared,source.id).level,"high","every suggested source tests the declared reading");
+    assert.equal(en(getDiscriminatingRead(declared,source.id)).level,"high","every suggested source tests the declared reading");
   }
   // Training discloses exactly one thing the player could not derive: the
   // observation pointing at the next unconfirmed stage. Everything else in the
   // prompt is built from declared state, so rewriting the chain moves the clue
   // and nothing besides.
-  const rewritten=getTrainingPrompt({...declared,chain:["token","role","vault","apikey"]} as Game,true)!;
+  const rewritten=en(getTrainingPrompt({...declared,chain:["token","role","vault","apikey"]} as Game,true))!;
   assert.deepEqual({...rewritten,clue:null},{...testing,clue:null},"only the observation depends on the chain");
   assert.ok(testing.clue,"training surfaces the observation behind the next stage");
   assert.notEqual(rewritten.clue,testing.clue,"and it follows the chain it describes");
@@ -286,7 +287,7 @@ test("teaches the reasoning instead of handing over the answer", () => {
   }
   // Outside training there is no aid at all, so no observation leaks with it.
   const operational=setHypothesis(newGame(0,"operational",()=>0),"identity");
-  assert.equal(getTrainingPrompt(operational,true),null,"only the training path receives the observation");
+  assert.equal(en(getTrainingPrompt(operational,true)),null,"only the training path receives the observation");
 
   // When the reading's own sources come back empty, the aid asks for a revision
   // rather than walking the player to the next stage.
@@ -297,9 +298,9 @@ test("teaches the reasoning instead of handing over the answer", () => {
     if(failing.pendingCommand)failing=resolveCommand(failing,"a");
     if(failing.pendingSetPiece)failing=resolveSetPiece(failing,"a");
   }
-  const standing=getHypothesisStanding(failing);
+  const standing=en(getHypothesisStanding(failing));
   if(standing.level==="weakening"||standing.level==="unsupported"){
-    assert.equal(getTrainingPrompt(failing,true)?.step,"revise","a reading its own sources cannot support prompts a revision");
+    assert.equal(en(getTrainingPrompt(failing,true))?.step,"revise","a reading its own sources cannot support prompts a revision");
   }
 });
 
@@ -338,7 +339,7 @@ test("moves each decision verb by its own terms", () => {
   assert.deepEqual([notifyVerb.impact,notifyVerb.continuity,notifyVerb.adversaryTempo,notifyVerb.sectorHealth,notifyVerb.objectiveProgress,notifyVerb.nextModifier],[24,63,1,97,10,1]);
   assert.equal(notifyVerb.decisions[0].quality,4,"notify scores well when continuity is the binding constraint");
   assert.deepEqual([notifyVerb.decisions[0].continuityChange,notifyVerb.decisions[0].sectorChange,notifyVerb.decisions[0].tempoChange,notifyVerb.decisions[0].objectiveChange],[3,-3,1,5]);
-  const verbOptions=getDecisionOptions(verbBase());
+  const verbOptions=en(getDecisionOptions(verbBase()));
   assert.ok(verbOptions);
   assert.deepEqual(verbOptions.options.map(option=>option.id),decisionChoices,"every decision verb is offered");
   assert.equal(new Set(verbOptions.options.map(option=>option.title)).size,decisionChoices.length,"each verb has its own title and description");
@@ -369,7 +370,7 @@ test("moves each decision verb by its own terms", () => {
   assert.equal(recovered.status,"won");
   assert.equal(recovered.continuity,77);
   // The review's response row names its parts, and they add up to the score kept.
-  const rule=getScoreRows(recovered).find(row=>row.label==="Containment & recovery")!.rule;
+  const rule=en(getScoreRows(recovered)).find(row=>row.label==="Containment & recovery")!.rule;
   const [own,preferred,aligned]=[/options scored (\d+)/,/(\d) of 3 were the sector's preferred/,/(\d) of 3 fitted/].map(pattern=>Number(rule.match(pattern)![1]));
   assert.equal(own+4*preferred+4*aligned,recovered.responseScore,"the parts named add up to the response score");
 });
@@ -380,8 +381,8 @@ test("ends the operation whichever step takes a meter to its limit", () => {
   // correct correlation could take a lost operation back.
   const isolated=resolveMapAction({...baseline(),sectorHealth:4},"service","isolate");
   assert.equal(isolated.status,"lost","isolating the critical node with no sector margin left loses");
-  assert.match(getLossReason(isolated).title,/reached zero$/);
-  assert.equal(getLossReason(isolated).cause,"sector","the cause is named without comparing titles");
+  assert.match(en(getLossReason(isolated)).title,/reached zero$/);
+  assert.equal(en(getLossReason(isolated)).cause,"sector","the cause is named without comparing titles");
   const midway={...baseline(),objectiveProgress:50};
   const effect=getMapActionEffect(midway,"service","isolate");
   const paid=resolveMapAction(midway,"service","isolate");
@@ -397,14 +398,14 @@ test("ends the operation whichever step takes a meter to its limit", () => {
   const respondTo=(over:Partial<Game>)=>({...baseline(),revealed:[...baseline().chain],status:"response",...over} as Game);
   const drained=resolveResponse(respondTo({continuity:5}),"isolate");
   assert.equal(drained.status,"lost","a response option that spends the last of the service loses");
-  assert.equal(getLossReason(drained).title,"The essential service stopped");
-  assert.ok(!/response cost more/.test(getBeginnerReview(drained).gap),"an unfinished response is not judged on its cost");
+  assert.equal(en(getLossReason(drained)).title,"The essential service stopped");
+  assert.ok(!/response cost more/.test(en(getBeginnerReview(drained)).gap),"an unfinished response is not judged on its cost");
   const won=resolveResponse(resolveResponse(resolveResponse(respondTo({}),"credential"),"verify"),"rebuild");
   assert.equal(won.status,"won");assert.equal(won.pendingDecision,null);
   const lostEarly=playTurn({...baseline(),turnLimit:1,injectDeck:[]},"email",2);
   assert.equal(lostEarly.status,"lost");
-  assert.ok(!/response cost more/.test(getBeginnerReview(lostEarly).gap),"a run that never reached the response is not told its response cost too much");
-  assert.ok(/lost/.test(getBeginnerReview(lostEarly).gap),"and is told what ended it rather than that nothing stands out");
+  assert.ok(!/response cost more/.test(en(getBeginnerReview(lostEarly)).gap),"a run that never reached the response is not told its response cost too much");
+  assert.ok(/lost/.test(en(getBeginnerReview(lostEarly)).gap),"and is told what ended it rather than that nothing stands out");
 });
 
 test("keeps the deck, the grace and the decisions honest", () => {
@@ -448,7 +449,7 @@ test("keeps the deck, the grace and the decisions honest", () => {
   assert.deepEqual(both.decisions.map(item=>item.stage),[found,disclosed]);
   // The assessed objective waits for two confirmed stages, however many turns pass.
   const slow={...baseline(),turns:Array.from({length:6},(_,index)=>({...playTurn(baseline(),"email",2).turns[0],number:index+1}))} as Game;
-  assert.equal(getObjectiveRead(slow).title,"Objective unconfirmed","turns alone do not disclose the objective");
+  assert.equal(en(getObjectiveRead(slow)).title,"Objective unconfirmed","turns alone do not disclose the objective");
 });
 
 test("draws a command event the operation has not met", () => {

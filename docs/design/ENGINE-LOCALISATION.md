@@ -1,6 +1,6 @@
 # Localising the engine's prose
 
-Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026); steps 4 and 5 follow. The interface around it is
+Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026), step 4's engine half built (0.9.7); its periphery and step 5 follow. The interface around it is
 catalogued (`lib/i18n/`, 0.9.1 to 0.9.3); this is the plan for the rest, so
 that the work can start when a first locale has a translator and a reviewer
 (Phase 7, `docs/ROADMAP.md`).
@@ -156,6 +156,30 @@ exact.
    migration fixture.
 4. **Reads and the review** (two sessions). The composed prose that is not
    stored: `reads.ts`, `review.ts`, `rules.ts`.
+   *Amended 10 October 2026, when its first half was built (0.9.7).* It is two
+   steps. **4a, the engine:** every read, standing, prompt, decision option,
+   loss reason, score rule, ledger verdict and counterfactual in `reads.ts`,
+   `review.ts` and `rules.ts` returns messages (the engine's catalogue went
+   from 66 keys to 334, plurals as plural messages rather than an "s" passed
+   in); `effectText` stays English for
+   maintainers. What proves English unchanged is `scripts/prose-check.ts`
+   (`pnpm prose:check`, run by `tests/prose.test.ts`): it plays 120 seeded
+   operations and 12 campaigns, calls every text function the engine exports
+   at every state, says the result in English and compares one hash of all
+   443,880 lines with the record. The only change it recorded was a
+   structural `id` on each score row. `tests/message-types.test.ts` gained
+   `join()` and JSX (a child, or an HTML element's attribute), because
+   TypeScript accepts a message as a React child and the browser suite found
+   two such crashes the 56 screens had not reached. **4b, the periphery:**
+   the composed prose outside the engine's three files, which 4a leaves
+   saying English through `say()`: the campaign's sentences (`campaign.ts`,
+   on the first load, so its keys go in a catalogue the first load carries),
+   `phase9.ts`'s composed lines, the Bot Commander's reasons
+   (`lib/game-bot.ts`), the session hook's announcements, the share card's
+   caller (which says it in the player's locale), `describeWhen`, and
+   `recommendNext`, whose title and reason `last-operation` stores, so a
+   stored English recommendation needs a legacy path. It is done when
+   `grep "say(" lib/engine lib/game-bot.ts` finds nothing.
 5. **A ratchet like the components'.** `tests/i18n.test.ts` gains a pass over
    `lib/` that allows prose only in content tables, and the pseudo-locale
    sweep gains a check that no seeded screen in `en-XA` shows a run of four
@@ -165,7 +189,9 @@ exact.
 
 - **Bundle.** Descriptor keys replace sentences in the engine, which is about
   even; the engine catalogue (about 380 messages) adds roughly 25 KB to the
-  game screen's chunk, which is lazy. The first load carries none of it: it
+  game screen's chunk, which is lazy. *Measured at 4a (0.9.7):* the first load
+  fell 9,157 B, to 836,461 B, and all script by the time play starts rose
+  27,874 B, to 1,174,282 B; the all-script budget moved to 1,190,000 B. The first load carries none of it: it
   has 2,214 B of headroom under 850,000 B, so nothing here may land on it.
 - **Tests.** Engine tests that assert sentences assert descriptors instead,
   or render them with `translate("en", …)`.

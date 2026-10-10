@@ -8,6 +8,7 @@
 // Below about 3,000 per difficulty, differences of two or three points are noise.
 import { correlateEvidence, getLossReason, getScoreBreakdown, newGame, playTurn, resolveCommand, resolveDecision, resolveMapAction, resolveResponse, resolveSetPiece, scenarios, setCaseTheory, setHypothesis, setInfrastructureFocus, type Difficulty, type Game } from "../lib/advanced-game.ts";
 import { chooseBotAction, type BotAction } from "../lib/game-bot.ts";
+import { say } from "../lib/i18n/message.ts";
 import { seededChallengeRandom } from "../lib/phase8.ts";
 
 const perScenario = Number(process.argv[2] ?? 300);
@@ -50,7 +51,7 @@ for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) 
       if (game.status === "won") cell.won++;
       if (game.status === "won" || game.status === "lost" || game.status === "exercise") tally[game.status]++;
       if (game.status === "lost") {
-        const reason = getLossReason(game).title;
+        const reason = say(getLossReason(game).title, "en");
         tally.reasons[reason] = (tally.reasons[reason] ?? 0) + 1;
       }
       const breakdown = getScoreBreakdown(game);

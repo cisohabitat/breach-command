@@ -652,6 +652,18 @@ today's engine storing messages that read exactly as its 110 sentences did. The
 glossary and the engine's catalogue load once for every part that shows them,
 which took 3.7 KB off the first load.
 
+10 October 2026 (0.9.7), step 4a: the engine's reads, review and rules return
+messages; the engine's catalogue went from 66 keys to 334, with plurals as
+plural messages. `pnpm prose:check` plays
+120 seeded operations and 12 campaigns through every text function and holds
+English to one recorded hash of 443,880 lines; it is unchanged but for a
+structural id on each score row. Text and pixels identical on all 56 screens,
+balance fingerprint 1826729440 with and without the pseudo-locale, first load
+836,461 B (9.2 KB less), all script by the time play starts 1,174,282 B
+(budget moved to 1,190,000 B). Step 4b, the periphery (campaign, set pieces,
+the Bot Commander's reasons, announcements, the stored recommendation),
+follows.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

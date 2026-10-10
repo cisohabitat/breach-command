@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
+import { say } from "@/lib/i18n/message";
 import { attacks, availableIn, getAdversaryState, getLead, getTurnLimit, proceduresFor, scenarios, type Game } from "@/lib/advanced-game";
 
 // Registers a read-only tool for browser agents that support document.modelContext.
@@ -31,9 +32,9 @@ export function useIncidentStateTool(stateRef: RefObject<Game | null>) {
             impact: current.impact,
             operationalCondition: current.continuity,
             hypothesis: current.hypothesis,
-            adversaryState: getAdversaryState(current),
+            adversaryState: say(getAdversaryState(current), "en"),
             discovered: current.revealed.map(id => attacks.find(attack => attack.id === id)?.title),
-            lead: getLead(current),
+            lead: say(getLead(current), "en"),
             procedures: proceduresFor(current).map(procedure => ({
               id: procedure.id,
               title: procedure.title,

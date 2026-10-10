@@ -9,7 +9,7 @@ import { EffectList } from "@/components/game/effect-list";
 import { useMessages, type Translate } from "@/hooks/use-messages";
 import { captainReportDialogMessages } from "@/lib/i18n/en/captain-report-dialog";
 import { register, type Locale, type MessageKey } from "@/lib/i18n";
-import { legacyText, say as sayIn } from "@/lib/i18n/message";
+import { legacyText, say as sayIn, withForm } from "@/lib/i18n/message";
 
 register(captainReportDialogMessages);
 
@@ -84,8 +84,8 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
           {ended && report.number === game.turns.length && game.status !== "won" && (
             <div className={`report-ending ending-${game.status}`} role="status">
               <span className="eyebrow">{game.status === "exercise" ? t("captainReportDialog.exerciseConcluded") : t("captainReportDialog.operationLost")}</span>
-              <strong>{game.status === "exercise" ? t("captainReportDialog.theControllerStood") : `${getLossReason(game).title}.`}</strong>
-              {game.status === "lost" && <p>{getLossReason(game).detail}</p>}
+              <strong>{game.status === "exercise" ? t("captainReportDialog.theControllerStood") : `${say(getLossReason(game).title)}.`}</strong>
+              {game.status === "lost" && <p>{say(getLossReason(game).detail)}</p>}
             </div>
           )}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
@@ -115,8 +115,8 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               {settled && standing && (
                 <div className={`report-standing level-${standing.level}`}>
                   <span className="eyebrow">{t("captainReportDialog.whereTheReading")}</span>
-                  <strong>{standing.label}</strong>
-                  <p>{standing.detail}</p>
+                  <strong>{say(standing.label)}</strong>
+                  <p>{say(standing.detail)}</p>
                 </div>
               )}
               {/* Once a response is chosen, the report says what it did there and
@@ -162,7 +162,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {/* At every difficulty but Expert: the review grades every decision by this,
                       and an Operational playtest was graded on a rule it was never shown. */}
                   {game.mode !== "expert" && (
-                    <p className="decision-pressure">{t("captainReportDialog.pressureNowBusiness2", { impact: game.impact, objectiveProgress: game.objectiveProgress, getAdversaryState: getAdversaryState(game).toLowerCase() })}{game.impact >= 55 ? t("captainReportDialog.highImpact", { impact: game.impact, act: optionTitle(decision.options, "act"), contain: optionTitle(decision.options, "contain") }) : game.adversaryTempo >= 2 ? t("captainReportDialog.highPace", { pace: getAdversaryState(game).toLowerCase(), progress: game.objectiveProgress, act: optionTitle(decision.options, "act"), contain: optionTitle(decision.options, "contain") }) : t("captainReportDialog.lowPressure", { observe: optionTitle(decision.options, "observe"), attribute: optionTitle(decision.options, "attribute") })}</p>
+                    <p className="decision-pressure">{t("captainReportDialog.pressureNowBusiness2", { impact: game.impact, objectiveProgress: game.objectiveProgress, getAdversaryState: say(withForm(getAdversaryState(game), "lower")) })}{game.impact >= 55 ? t("captainReportDialog.highImpact", { impact: game.impact, act: optionTitle(decision.options, "act"), contain: optionTitle(decision.options, "contain") }) : game.adversaryTempo >= 2 ? t("captainReportDialog.highPace", { pace: say(withForm(getAdversaryState(game), "lower")), progress: game.objectiveProgress, act: optionTitle(decision.options, "act"), contain: optionTitle(decision.options, "contain") }) : t("captainReportDialog.lowPressure", { observe: optionTitle(decision.options, "observe"), attribute: optionTitle(decision.options, "attribute") })}</p>
                   )}
                   <div ref={optionList}>
                     {/* Lettered ruled entries on the report, like the readings: the
@@ -173,7 +173,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                       <button key={option.id} onClick={() => decide(option.id)}>
                         <b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b>
                         <strong>{option.title}</strong>
-                        <span>{option.description}<span className="option-signals"><span>{option.evidence}</span><span>{option.risk}</span><span>{option.service}</span></span><EffectList className="decision-effect" items={previewDecision(game, option.id) ?? []} /></span>
+                        <span>{option.description}<span className="option-signals"><span>{say(option.evidence)}</span><span>{say(option.risk)}</span><span>{say(option.service)}</span></span><EffectList className="decision-effect" items={previewDecision(game, option.id) ?? []} /></span>
                       </button>
                     ))}
                   </div>

@@ -12,7 +12,7 @@ register(sectorBoardMessages);
 // others. Six blocks of kicker, bold title and grey paragraph read as a
 // dashboard of stat cards.
 export function SectorBoard({ game }: { game: Game }) {
-  const { t, rich } = useMessages();
+  const { t, rich, say } = useMessages();
   const sector = sectorSystems[game.scenario];
   const objective = getObjectiveRead(game);
   const specialist = specialists[game.specialist];
@@ -24,7 +24,7 @@ export function SectorBoard({ game }: { game: Game }) {
     <>
       <div className="sit-entry compact">
         <span className="sit-label">{t("missionBriefingDialog.attribution")}<small>{t("sectorBoard.confidence")}{attribution.confidence === "ATTRIBUTED" ? t("sectorBoard.attributed") : attribution.confidence.toLowerCase()}</small></span>
-        <div className="sit-body"><p><strong>{attribution.title}.</strong> {attribution.detail}</p></div>
+        <div className="sit-body"><p><strong>{say(attribution.title)}.</strong> {say(attribution.detail)}</p></div>
       </div>
       <div className="sit-entry">
         {/* One name for the meter everywhere: a second name in capitals above it read
@@ -36,17 +36,17 @@ export function SectorBoard({ game }: { game: Game }) {
           {/* The headline stays in view; why the two meters differ and what moves
               the margin are one tap down, open by default when they diverge. A
               paragraph under every entry read as an interface explaining itself. */}
-          <p className={`sector-read ${read.diverged ? "diverged" : ""}`}><strong>{read.headline}.</strong></p>
-          <details className="sit-more" open={read.diverged}><summary>{t("sectorBoard.whyAndWhat")}</summary><p className="sit-note">{read.detail}</p><p className="sit-note">{sector.rule}</p></details>
+          <p className={`sector-read ${read.diverged ? "diverged" : ""}`}><strong>{say(read.headline)}.</strong></p>
+          <details className="sit-more" open={read.diverged}><summary>{t("sectorBoard.whyAndWhat")}</summary><p className="sit-note">{say(read.detail)}</p><p className="sit-note">{sector.rule}</p></details>
         </div>
         <b className="sit-figure">{game.sectorHealth}</b>
       </div>
       <div className="sit-entry adversary">
         <span className="sit-label">{rich("sectorBoard.adversaryObjectiveSmall", { confidence: objective.confidence.toLowerCase() }, { small: chunk => <small>{chunk}</small> })}</span>
         <div className="sit-body">
-          <p><strong>{objective.title}</strong></p>
-          <Progress value={game.objectiveProgress} aria-label={t("sectorBoard.adversaryProgress", { objectiveTitle: objective.title })} />
-          <p className="sit-note">{objective.detail}</p>
+          <p><strong>{say(objective.title)}</strong></p>
+          <Progress value={game.objectiveProgress} aria-label={t("sectorBoard.adversaryProgress", { objectiveTitle: say(objective.title) })} />
+          <p className="sit-note">{say(objective.detail)}</p>
         </div>
         <b className="sit-figure">{game.objectiveProgress}</b>
       </div>

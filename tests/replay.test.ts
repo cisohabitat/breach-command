@@ -8,6 +8,7 @@ import { weeklyOperation } from "../lib/command-systems.ts";
 import { chooseBotAction, type BotAction } from "../lib/game-bot.ts";
 import { hypothesisTrend, ledgerCsv, parseLedger, type LedgerEntry } from "../lib/ledger.ts";
 import { decodeChallenge, encodeChallenge, seededChallengeRandom } from "../lib/phase8.ts";
+import { en } from "./english.ts";
 
 function apply(game: Game, action: BotAction): Game {
   switch (action.type) {
@@ -90,7 +91,7 @@ test("the share card names no technique, whatever the operation found", () => {
   const forbidden = attacks.map(attack => attack.title.toLowerCase());
   for (let scenario = 0; scenario < scenarios.length; scenario++) for (const seed of [11, 22, 33]) {
     for (const game of [played(scenario, seed), played(scenario, seed, "crisis", "expert")]) {
-      const card = getShareCard(game);
+      const card = en(getShareCard(game));
       const text = Object.values(card).filter(value => typeof value === "string").join(" | ").toLowerCase();
       for (const word of forbidden) assert.ok(!new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(text), `${word} appears on the card for scenario ${scenario}: ${text}`);
       assert.ok(card.code?.startsWith("BC"), "a reproducible operation carries its code");
