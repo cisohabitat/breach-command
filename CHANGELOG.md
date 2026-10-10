@@ -4,6 +4,19 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.14, 10 October 2026
+
+- **Shared codes play the same for everyone.** A Daily, Weekly or loaded
+  challenge operation now starts from a neutral command (no rank, fatigue,
+  doctrine, readiness, trust or unresolved access carried from this
+  device's campaign), so the same code is the same operation on any device.
+  Codes move to `BC7`; an earlier code is named as outdated.
+- **A newer version's save is never overwritten.** If it cannot be moved
+  aside, the new operation is played from memory and the save is kept; the
+  move is tried again before anything replaces it.
+- **Backups include an operation waiting to be resumed**, with its own
+  settings, even before it is reopened.
+
 ## 0.9.13, 10 October 2026
 
 - **Lighter still.** The attack tables, the map's topologies, the sector
