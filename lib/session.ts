@@ -49,6 +49,14 @@ export function serialiseSession(game: Game, guided: boolean, fastResolve: boole
   return JSON.stringify(session);
 }
 
+// The assignment screen has not resumed its save into `game`, but that
+// operation still belongs in the backup, with its own saved preferences.
+export function serialiseBackupSession(game: Game | null, savedSession: SavedSession | null, guided: boolean, fastResolve: boolean, botRun: boolean): string | null {
+  const current = game ? { game, guided, fastResolve } : savedSession;
+  if (!current || botRun || current.game.mode === "ironman" || !["playing", "response"].includes(current.game.status)) return null;
+  return serialiseSession(current.game, current.guided, current.fastResolve);
+}
+
 // A save is only ever written by this device, but it is plain text in local
 // storage: it can be hand-edited, truncated, or restored from a backup written
 // by a newer build. Anything that would put the engine into a state its own

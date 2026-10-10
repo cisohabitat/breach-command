@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { newGame, type Game } from "../../lib/advanced-game";
 import { PARKED_SESSION_KEY, SESSION_KEY, SESSION_VERSION, serialiseSession } from "../../lib/session";
+import { CAMPAIGN_KEY, defaultCampaign } from "../../lib/campaign";
+import { encodeChallenge } from "../../lib/challenge";
+import { say } from "../../lib/i18n/message";
 
 const PREFERENCES = "breach-command.preferences";
 
@@ -127,6 +130,55 @@ test.describe("local persistence", () => {
     await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
     expect(await page.evaluate(key => localStorage.getItem(key), PARKED_SESSION_KEY), "it leaves the parking slot").toBeNull();
   });
+
+  test("failed parking protects the original save through play and retries when storage recovers", async ({ page }) => {
+    const newer = JSON.stringify({ version: SESSION_VERSION + 1, game: newGame(0, "operational", () => 0) });
+    await page.addInitScript(([key, value, parkedKey]) => {
+      localStorage.clear();
+      localStorage.setItem("breach-command.tutorial-complete", "true");
+      localStorage.setItem(key, value);
+      const original = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (name, content) {
+        if (name === parkedKey && !localStorage.getItem("breach-command.parking-recovered")) throw new DOMException("Full quota", "QuotaExceededError");
+        return original.call(this, name, content);
+      };
+    }, [SESSION_KEY, newer, PARKED_SESSION_KEY] as const);
+    await page.goto("/", { waitUntil: "networkidle" });
+    await expect(page.getByText(/written by a newer version/)).toBeVisible();
+    await page.getByRole("button", { name: /Begin investigation/ }).click();
+    await page.getByRole("button", { name: /Assume command/ }).click();
+    await expect(page.getByText(/being played from memory only/)).toBeVisible();
+    expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toEqual(newer);
+    expect(await page.evaluate(key => localStorage.getItem(key), PARKED_SESSION_KEY)).toBeNull();
+    await page.getByRole("button", { name: "New incident", exact: true }).click();
+    await page.getByRole("button", { name: "Choose a new incident" }).click();
+    await expect(page.locator(".briefing-screen")).toBeVisible();
+    expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toEqual(newer);
+    await page.getByRole("button", { name: /Begin investigation/ }).click();
+    await page.getByRole("button", { name: /Assume command/ }).click();
+    await page.evaluate(() => localStorage.setItem("breach-command.parking-recovered", "true"));
+    await page.keyboard.press("g");
+    await expect.poll(() => page.evaluate(key => localStorage.getItem(key), PARKED_SESSION_KEY)).toEqual(newer);
+    await expect.poll(() => page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).not.toEqual(newer);
+  });
+
+  test("exporting before resume carries the saved operation into the backup", async ({ page }) => {
+    const saved = serialiseSession(newGame(4, "crisis", () => 0), false, true);
+    await page.addInitScript(([key, value]) => {
+      localStorage.clear();
+      localStorage.setItem("breach-command.tutorial-complete", "true");
+      localStorage.setItem(key, value);
+    }, [SESSION_KEY, saved] as const);
+    await page.goto("/", { waitUntil: "networkidle" });
+    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Game settings" }).click();
+    await page.getByRole("button", { name: "Export", exact: true }).click();
+    const backup = JSON.parse(await page.getByRole("textbox", { name: "Progress backup" }).inputValue());
+    const operation = JSON.parse(backup.session);
+    expect(operation.game).toEqual(JSON.parse(saved).game);
+    expect(operation.guided).toBe(false);
+    expect(operation.fastResolve).toBe(true);
+  });
   test("the first operation's record survives a reload and travels in the backup", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
     await page.addInitScript(() => {
@@ -151,6 +203,39 @@ test.describe("local persistence", () => {
 });
 
 test.describe("replayability records", () => {
+  test("the same Daily or Weekly code starts the same operation regardless of campaign history", async ({ page }) => {
+    const veteran = { ...defaultCampaign, xp: 900, operations: 10, completed: [0, 1, 2], readiness: 20, leadershipTrust: 25, unresolvedThreads: 5, specialistFatigue: { hunter: 6 }, commandPosture: { observe: 0, act: 8 } };
+    for (const mode of ["daily", "weekly"] as const) {
+      const code = encodeChallenge({ scenario: 0, difficulty: "operational", mode, specialist: "hunter", seed: 4242 });
+      const states: Game[] = [];
+      for (const campaign of [defaultCampaign, veteran]) {
+        await page.goto("/", { waitUntil: "networkidle" });
+        await page.evaluate(([key, value]) => {
+          localStorage.clear();
+          localStorage.setItem("breach-command.tutorial-complete", "true");
+          localStorage.setItem(key, value);
+        }, [CAMPAIGN_KEY, JSON.stringify(campaign)] as const);
+        await page.reload({ waitUntil: "networkidle" });
+        await page.locator(".advanced-setup > summary").click();
+        await page.getByRole("textbox", { name: "Challenge code" }).fill(code);
+        await page.getByRole("button", { name: "Load", exact: true }).click();
+        await expect(page.locator(".specialist-roster button.active")).toContainText("fatigue 0 of 6");
+        const variant = await page.locator(".variant-brief").innerText();
+        await page.getByRole("button", { name: /Begin investigation/ }).click();
+        await page.getByRole("button", { name: /Assume command/ }).click();
+        await expect.poll(() => page.evaluate(key => JSON.parse(localStorage.getItem(key) ?? "null")?.game.mode, SESSION_KEY)).toBe(mode);
+        const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).game as Game, SESSION_KEY);
+        states.push(saved);
+        await page.getByRole("button", { name: "Game settings" }).click();
+        await page.getByRole("button", { name: "Export", exact: true }).click();
+        const backup = JSON.parse(await page.getByRole("textbox", { name: "Progress backup" }).inputValue());
+        expect(JSON.parse(backup.session).game).toEqual(saved);
+        expect(variant).toContain(say(saved.variant.title));
+      }
+      expect(states[0]).toEqual(states[1]);
+    }
+  });
+
   test("the ladder, the personal record and the weekly code survive a reload and travel in the backup", async ({ page }) => {
     const entry = { at: 1_790_000_000_000, scenario: 0, difficulty: "operational", mode: "campaign", outcome: "won", score: 74, hypothesis: 6, stages: 4, turns: 8, code: null };
     await page.addInitScript(([recorded]) => {

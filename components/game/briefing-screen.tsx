@@ -21,7 +21,7 @@ const stageQuestions: readonly MessageKey[] = ["briefingScreen.howTheyGot", "bri
 export function BriefingScreen({ session }: { session: GameSession }) {
   const { t, rich, say, locale } = useMessages();
   const {
-    campaign, currentAct, currentStory, currentRoute, finalEnding,
+    campaign, assignmentCampaign, currentAct, currentStory, currentRoute, finalEnding,
     scenarioChoice, setScenarioChoice, activeScenario, previewVariant,
     difficulty, setDifficulty, specialist, setSpecialist, mode, setMode,
     challengeCode, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed,
@@ -124,13 +124,13 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           {/* A ruled list with a radio mark, set as the difficulty is: a boxed
               select with the platform's chevron was the one stock control left
               on the slip. */}
-          <div className="specialist-head"><span className="field-label">{t("briefingScreen.specialistOnCall")}</span><small id="specialist-fatigue">{(campaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
-            ? t("briefingScreen.isAtFatigue", { namedSpecialistsName: namedSpecialists[specialist].name, specialistFatigue: campaign.specialistFatigue[specialist] })
+          <div className="specialist-head"><span className="field-label">{t("briefingScreen.specialistOnCall")}</span><small id="specialist-fatigue">{(assignmentCampaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
+            ? t("briefingScreen.isAtFatigue", { namedSpecialistsName: namedSpecialists[specialist].name, specialistFatigue: assignmentCampaign.specialistFatigue[specialist] })
             : t("briefingScreen.fatigueCarriesBetween", { specialistExhaustedAt: SPECIALIST_EXHAUSTED_AT })}</small></div>
           <div className="difficulty-picker specialist-roster">
-            <div role="group" aria-label={t("briefingScreen.deploySpecialist")} aria-describedby="specialist-fatigue">{(Object.keys(specialists) as SpecialistId[]).map(id => <button key={id} className={specialist === id ? "active" : ""} aria-pressed={specialist === id} onClick={() => setSpecialist(id)}><strong>{namedSpecialists[id].name}</strong><small>{specialists[id].title}{t("briefingScreen.fatigueOf6", { specialistFatigue: campaign.specialistFatigue[id] ?? 0 })}</small></button>)}</div>
+            <div role="group" aria-label={t("briefingScreen.deploySpecialist")} aria-describedby="specialist-fatigue">{(Object.keys(specialists) as SpecialistId[]).map(id => <button key={id} className={specialist === id ? "active" : ""} aria-pressed={specialist === id} onClick={() => setSpecialist(id)}><strong>{namedSpecialists[id].name}</strong><small>{specialists[id].title}{t("briefingScreen.fatigueOf6", { specialistFatigue: assignmentCampaign.specialistFatigue[id] ?? 0 })}</small></button>)}</div>
           </div>
-          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}{t("briefingScreen.fatigueOf62", { specialistFatigue: campaign.specialistFatigue[specialist] ?? 0 })}{specialists[specialist].ability}{t("briefingScreen.rapportWithOf", { namedSpecialistsName: namedSpecialists[specialist].name, specialistBonds: campaign.specialistBonds[specialist] ?? 35 })}</p>
+          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}{t("briefingScreen.fatigueOf62", { specialistFatigue: assignmentCampaign.specialistFatigue[specialist] ?? 0 })}{specialists[specialist].ability}{t("briefingScreen.rapportWithOf", { namedSpecialistsName: namedSpecialists[specialist].name, specialistBonds: assignmentCampaign.specialistBonds[specialist] ?? 35 })}</p>
         </div>
         <details className="advanced-setup">
           <summary>{rich("briefingScreen.advancedOperationSettings2", { gameModesTitle: gameModes[mode].title }, { span: chunk => <span>{chunk}</span> })}</summary>

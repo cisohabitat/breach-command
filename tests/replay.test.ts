@@ -9,6 +9,7 @@ import { chooseBotAction, type BotAction } from "../lib/game-bot.ts";
 import { hypothesisTrend, ledgerCsv, parseLedger, type LedgerEntry } from "../lib/ledger.ts";
 import { decodeChallenge, encodeChallenge, seededChallengeRandom } from "../lib/phase8.ts";
 import { en } from "./english.ts";
+import { operationSetup } from "../lib/operation-setup.ts";
 
 function apply(game: Game, action: BotAction): Game {
   switch (action.type) {
@@ -35,6 +36,34 @@ function played(scenario: number, seed: number, difficulty: Game["difficulty"] =
   }
   return game;
 }
+
+test("shared operations play identically across different campaign records", () => {
+  const veteran = { ...defaultCampaign, xp: 900, completed: [0, 1, 2], readiness: 20, leadershipTrust: 25, unresolvedThreads: 5, specialistFatigue: { hunter: 6 }, commandPosture: { observe: 0, act: 8 }, recentCommands: ["board"], recentInjects: ["partner"], recentCrises: ["sector-0-b"] };
+  for (const scenario of [0, 4]) for (const mode of ["campaign", "daily", "weekly", "ironman", "escalation", "expert"] as const) {
+    const setup = { scenario, mode, specialist: "hunter" as const, difficulty: "operational" as const, seed: 4242 };
+    const decoded = decodeChallenge(encodeChallenge(setup))!;
+    const start = (campaign: typeof defaultCampaign) => newGame(decoded.scenario, decoded.difficulty, seededChallengeRandom(decoded.seed), operationSetup(decoded.scenario, decoded.mode, decoded.specialist, decoded.seed, true, campaign));
+    let a = start(defaultCampaign), b = start(veteran);
+    assert.deepEqual(a, b, `${mode}: the code includes every input to the initial state`);
+    for (let step = 0; step < 200 && (a.status === "playing" || a.status === "response"); step++) {
+      a = apply(a, chooseBotAction(a));
+      b = apply(b, chooseBotAction(b));
+      assert.deepEqual(a, b, `${mode}: campaign history cannot change a seeded transition`);
+    }
+    assert.ok(["won", "lost", "exercise"].includes(a.status), `${mode}: the shared operation terminates`);
+  }
+  const ordinary = operationSetup(0, "campaign", "hunter", 4242, false, veteran);
+  assert.equal(ordinary.seed, null);
+  assert.equal(ordinary.campaignTier, 3);
+  assert.equal(ordinary.inheritedFatigue, 6);
+  assert.equal(ordinary.campaignRoute, "breakwater");
+  assert.equal(ordinary.readiness, 20);
+  assert.equal(ordinary.unresolvedThreads, 5);
+  const variant = newGame(0, "operational", () => 0).variant;
+  const replay = operationSetup(0, "daily", "hunter", 4242, true, veteran, { campaignRoute: "watchtower", variant });
+  assert.equal(replay.campaignRoute, "watchtower", "an existing operation's replay keeps its recorded route");
+  assert.deepEqual(replay.variant, variant);
+});
 
 test("the weekly operation holds one case and seed from Monday to Sunday, and moves on", () => {
   const monday = weeklyOperation(new Date("2026-10-05T00:00:00Z"), scenarios.length);

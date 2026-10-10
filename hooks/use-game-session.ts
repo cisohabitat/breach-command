@@ -21,7 +21,8 @@ import { countRevisions } from "@/lib/engine/revisions";
 import { loadGame, loadedGame } from "@/lib/game-loader";
 import { PARKED_SESSION_KEY, SESSION_KEY } from "@/lib/session-keys";
 import type { SavedSession } from "@/lib/session";
-import { campaignAct, campaignChanges, campaignEnding, campaignStory, campaignReadable, campaignTier, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { campaignAct, campaignChanges, campaignEnding, campaignStory, campaignReadable, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { operationCampaign, operationSetup } from "@/lib/operation-setup";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
@@ -146,8 +147,9 @@ export function useGameSession() {
   const currentRouteId = routeForCampaign(campaign);
   const currentRoute = campaignRoutes[currentRouteId];
   const currentStory = campaignStory(campaign, currentRouteId);
-  const previewSeed = seedFor(mode).seed;
-  const previewVariant = previewSeed === null ? null : incidentVariant(scenarioChoice, currentRouteId, previewSeed);
+  const { seed: previewSeed, reproducible: previewReproducible } = seedFor(mode);
+  const assignmentCampaign = operationCampaign(campaign, previewReproducible);
+  const previewVariant = previewSeed === null ? null : incidentVariant(scenarioChoice, routeForCampaign(assignmentCampaign), previewSeed);
   const finalEnding = campaignEnding(campaign);
   const challengeCode = codeFor(scenarioChoice, difficulty, mode, specialist);
 
@@ -155,14 +157,15 @@ export function useGameSession() {
   // before anything else is written to the save slot.
   const newerSaveRef = useRef<string | null>(null);
   function parkNewerSave() {
-    if (!newerSaveRef.current) return;
-    writeStored(PARKED_SESSION_KEY, newerSaveRef.current);
+    if (!newerSaveRef.current) return true;
+    if (!writeStored(PARKED_SESSION_KEY, newerSaveRef.current)) return false;
     newerSaveRef.current = null;
+    return true;
   }
 
   function clearStoredSession() {
-    parkNewerSave();
-    removeStored(SESSION_KEY);
+    if (parkNewerSave()) removeStored(SESSION_KEY);
+    else setStorageNotice(msg("session.storageMemory"));
     setSavedSession(null);
   }
 
@@ -180,13 +183,11 @@ export function useGameSession() {
     const { seed: nextSeed, reproducible } = seedFor(mode);
     const seed = nextSeed ?? todaySeed();
     const random = reproducible ? seededChallengeRandom(seed) : undefined;
-    const posture = campaign.commandPosture.observe > campaign.commandPosture.act + 2 ? "observe" : campaign.commandPosture.act > campaign.commandPosture.observe + 2 ? "act" : "balanced";
     const replaying = replayRef.current?.scenario === index ? replayRef.current : null;
     replayRef.current = null;
     setReplay(null);
-    const route = replaying?.campaignRoute ?? routeForCampaign(campaign);
     const automated = botEnabled;
-    const next = engine().newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: replaying?.variant ?? incidentVariant(index, route, seed), seed: reproducible ? seed : null, recentCommands: campaign.recentCommands, recentInjects: campaign.recentInjects, recentCrises: campaign.recentCrises });
+    const next = engine().newGame(index, difficulty, random, operationSetup(index, mode, specialist, seed, reproducible, campaign, replaying ?? undefined));
     spendChallenge();
     setGame(next);
     // A new operation starts on the default plan; Exhaustive carried over from
@@ -438,7 +439,7 @@ export function useGameSession() {
   }
 
   function exportProgress() {
-    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), ledger: readLedger(scenarios.length), session: game && game.mode !== "ironman" && !botRun ? loadedGame().session.serialiseSession(game, guided, fastResolve) : null });
+    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), ledger: readLedger(scenarios.length), session: loadedGame().session.serialiseBackupSession(game, savedSession, guided, fastResolve, botRun) });
     setBackupInput(payload);
     navigator.clipboard?.writeText(payload).then(() => setBackupMessage(msg("session.backupCopied")), () => setBackupMessage(msg("session.backupPrepared")));
   }
@@ -474,7 +475,8 @@ export function useGameSession() {
         setLedger(restoredLedger);
       }
       if (restoredSession) {
-        writeStored(SESSION_KEY, loadedGame().session.serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
+        if (parkNewerSave()) writeStored(SESSION_KEY, loadedGame().session.serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
+        else setStorageNotice(msg("session.storageMemory"));
         setSavedSession(restoredSession);
         // While an operation is in play its own saves would overwrite the restored
         // one, and returning to assignments would delete it. Hold it until then.
@@ -556,7 +558,8 @@ export function useGameSession() {
     const imported = importedRef.current;
     importedRef.current = null;
     if (imported) {
-      writeStored(SESSION_KEY, loadedGame().session.serialiseSession(imported.game, imported.guided, imported.fastResolve));
+      if (parkNewerSave()) writeStored(SESSION_KEY, loadedGame().session.serialiseSession(imported.game, imported.guided, imported.fastResolve));
+      else setStorageNotice(msg("session.storageMemory"));
       setSavedSession(imported);
     } else clearStoredSession();
     setGame(null);
@@ -720,13 +723,18 @@ export function useGameSession() {
 
   useEffect(() => {
     if (!game || game.mode === "ironman" || botRunRef.current || importedRef.current) return;
+    // If parking failed, neither saving nor finishing the in-memory operation
+    // may replace the protected slot. Keep the reference so a later write retries.
+    if (!parkNewerSave()) {
+      const notice = setTimeout(() => setStorageNotice(msg("session.storageMemory")), 0);
+      return () => clearTimeout(notice);
+    }
     // A finished operation has nothing to resume, so its save is cleared rather
     // than offered on the next visit.
     if (game.status === "won" || game.status === "lost" || game.status === "exercise") {
       removeStored(SESSION_KEY);
       return;
     }
-    parkNewerSave();
     if (writeStored(SESSION_KEY, loadedGame().session.serialiseSession(game, guided, fastResolve))) return;
     const notice = setTimeout(() => setStorageNotice(msg("session.storageMemory")), 0);
     return () => clearTimeout(notice);
@@ -845,6 +853,7 @@ export function useGameSession() {
     currentStory,
     currentRouteId,
     currentRoute,
+    assignmentCampaign,
     previewVariant,
     finalEnding,
     challengeCode,

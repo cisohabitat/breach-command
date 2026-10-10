@@ -2,13 +2,34 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {newGame,attacks,procedures,sectorProcedures,scenarios,infrastructureTopologies} from "../lib/advanced-game.ts";
-import {parseSession,serialiseSession,sessionFromNewerBuild,SESSION_VERSION} from "../lib/session.ts";
+import {parseSession,serialiseSession,serialiseBackupSession,sessionFromNewerBuild,SESSION_VERSION} from "../lib/session.ts";
 import {clearTelemetry,describeFirstSession,emptyTelemetry,formatElapsed,parseTelemetry,readTelemetry,recordTelemetry} from "../lib/telemetry.ts";
 import { register } from "../lib/i18n/index.ts";
 import { settingsDialogMessages } from "../lib/i18n/en/settings-dialog.ts";
 import { en } from "./english.ts";
 
 register(settingsDialogMessages);
+
+test("a backup includes an unresumed operation and keeps its saved preferences", () => {
+  const game = newGame(4, "crisis", () => 0);
+  const saved = parseSession(serialiseSession(game, false, true))!;
+  const backup = serialiseBackupSession(null, saved, true, false, false);
+  assert.ok(backup);
+  const restored = parseSession(backup)!;
+  assert.deepEqual(restored.game, saved.game);
+  assert.equal(restored.guided, false);
+  assert.equal(restored.fastResolve, true);
+
+  const active = newGame(1, "training", () => 0);
+  const activeBackup = parseSession(serialiseBackupSession(active, saved, true, false, false)!)!;
+  assert.deepEqual(activeBackup.game, active);
+  assert.equal(activeBackup.guided, true);
+  assert.equal(activeBackup.fastResolve, false);
+  assert.equal(serialiseBackupSession(null, null, true, false, false), null);
+  assert.equal(serialiseBackupSession({ ...active, mode: "ironman" }, saved, true, false, false), null);
+  assert.equal(serialiseBackupSession(active, saved, true, false, true), null);
+  assert.equal(serialiseBackupSession({ ...active, status: "lost" }, saved, true, false, false), null);
+});
 
 
 test("refuses a save that no playthrough could produce", () => {
