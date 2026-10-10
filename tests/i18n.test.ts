@@ -11,8 +11,8 @@ import { catalogueFiles } from "../lib/i18n/keys.ts";
 // The shared base and each component's catalogue, by file stem.
 const catalogues: Record<string, Record<string, unknown>> = {};
 for (const stem of catalogueFiles) {
-  const module: Record<string, Record<string, unknown>> = await import(`../lib/i18n/en/${stem}.ts`);
-  catalogues[stem] = Object.values(module)[0];
+  const loaded: Record<string, Record<string, unknown>> = await import(`../lib/i18n/en/${stem}.ts`);
+  catalogues[stem] = Object.values(loaded)[0];
   register(catalogues[stem] as Parameters<typeof register>[0]);
 }
 const every = [en, ...Object.values(catalogues)].flatMap(catalogue => Object.entries(catalogue)) as [string, string | Record<string, string>][];
