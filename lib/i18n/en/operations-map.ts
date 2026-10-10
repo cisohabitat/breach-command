@@ -4,4 +4,6 @@ export const operationsMapMessages = {
   "operationsMap.liveOperationsMap": " Live operations map",
   "operationsMap.observedAttackPath": "Observed attack path",
   "operationsMap.protectedService": "Protected service",
+  "operationsMap.suspectedActivity": "Suspected activity",
+  "operationsMap.unmapped": "Unmapped",
 } as const;

@@ -26,7 +26,7 @@ export function OperationsMap({ game }: { game: Game }) {
             <div className={`map-step ${revealed ? "confirmed" : index === activeIndex ? "active" : "unknown"}`} key={stage.name} style={{ "--stage-color": stage.color } as React.CSSProperties}>
               <span className="map-node"><Icon size={20} /></span>
               <small>{stage.short}</small>
-              <strong>{revealed ? attack.title : index === activeIndex ? "Suspected activity" : "Unmapped"}</strong>
+              <strong>{revealed ? attack.title : index === activeIndex ? t("operationsMap.suspectedActivity") : t("operationsMap.unmapped")}</strong>
               {index < stages.length - 1 && <span className="map-link" aria-hidden="true" />}
             </div>
           );

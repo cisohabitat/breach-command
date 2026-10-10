@@ -17,7 +17,9 @@ function readLocale(): Locale {
   }
 }
 
-export function useMessages() {
+export type Translate = (key: MessageKey, params?: Record<string, string | number>) => string;
+
+export function useMessages(): { locale: Locale; t: Translate } {
   const locale = useSyncExternalStore(noSubscription, readLocale, () => "en" as Locale);
   return { locale, t: (key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params) };
 }

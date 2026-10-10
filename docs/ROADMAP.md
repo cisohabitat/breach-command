@@ -602,6 +602,20 @@ strings are fragments joined in English order (`" of 6"`), which a
 translator cannot reorder; whole-sentence messages with placeholders are
 the work before a first locale.
 
+10 October 2026 (0.9.2): the strings 0.9.1 left inside JSX expressions are
+catalogued too (318: ternary branches, templates, the tables of loss causes,
+sector moments and response trades, which now hold keys translated at
+render), and 110 runs of fragments became whole messages with placeholders,
+so "{revealed} of 4 stages, {count} revisions" reaches a translator as one
+sentence with its plural. `tests/i18n.test.ts` now reads every string literal
+in the components, excluding only positions that are not text, and fails on
+any it finds, on a key a component reads that its catalogue lacks, and on a
+key nothing reads. The text of all 56 seeded screens is identical to before,
+character for character. Left: a run broken by an element (a bold figure
+inside a sentence) is still two or three messages, since the catalogue has
+no rich-text markup; single lowercase words that look like ids are caught by
+review rather than by the test; and the engine's prose.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

@@ -12,10 +12,10 @@ export function BotControl({ session }: { session: GameSession }) {
   if (!botRun) return null;
 
   const title = ended
-    ? "Practice operation complete"
+    ? t("botControl.practiceOperationComplete")
     : botActive
-      ? botPaused ? "Bot commander paused" : "Bot commander operating"
-      : "Manual control resumed";
+      ? botPaused ? t("botControl.botCommanderPaused") : t("botControl.botCommanderOperating")
+      : t("botControl.manualControlResumed");
 
   return (
     <section className={`bot-control ${botPaused ? "paused" : ""}`} aria-live="polite" aria-label={t("botControl.botCommanderStatus")}>
@@ -23,12 +23,12 @@ export function BotControl({ session }: { session: GameSession }) {
       <div className="bot-control-copy">
         <span className="eyebrow">{t("botControl.practiceOperation")}</span>
         <strong>{title}</strong>
-        <small>{botStatus}{t("botControl.noCampaignRewards")}</small>
+        <small>{t("botControl.noCampaignRewards2", { botStatus })}</small>
       </div>
       {!ended && <div className="bot-control-actions">
-        {botActive && <button onClick={toggleBotPause} aria-label={botPaused ? "Resume Bot Commander" : "Pause Bot Commander"}>
+        {botActive && <button onClick={toggleBotPause} aria-label={botPaused ? t("botControl.resumeBotCommander") : t("botControl.pauseBotCommander")}>
           {botPaused ? <Play size={16} /> : <Pause size={16} />}
-          {botPaused ? "Resume" : "Pause"}
+          {botPaused ? t("botControl.resume") : t("botControl.pause")}
         </button>}
         {botActive && <button onClick={takeControl}><Hand size={16} />{t("botControl.takeControl")}</button>}
       </div>}

@@ -27,22 +27,22 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
       {/* The sequence is a line of text with the current phase marked, not a
           stepper of three boxes; a phase already chosen says so in words. */}
       <ol className="response-sequence" aria-label={t("responsePanel.responseSequence")}>
-        {(["Contain", "Assure", "Recover"] as const).map((name, index) => <li key={name} className={index < game.responseChoices.length ? "done" : index === game.responseChoices.length ? "current" : ""} aria-current={index === game.responseChoices.length ? "step" : undefined}>{name}{index < game.responseChoices.length && <small>{t("responsePanel.recorded")}</small>}</li>)}
+        {([t("responsePanel.contain"), t("responsePanel.assure"), t("responsePanel.recover")] as const).map((name, index) => <li key={name} className={index < game.responseChoices.length ? "done" : index === game.responseChoices.length ? "current" : ""} aria-current={index === game.responseChoices.length ? "step" : undefined}>{name}{index < game.responseChoices.length && <small>{t("responsePanel.recorded")}</small>}</li>)}
       </ol>
       {/* Each phase swaps the animation on this wrapper, so the beat restarts without remounting the controls. */}
       <div className="response-stage">
         <div className="response-heading">
-          <div><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? "Containment decision" : assurance ? "Assurance gate" : "Recovery decision"}</h2><p><strong>{containment ? "Stop the confirmed activity." : assurance ? "Prove the boundary is ready for restoration." : "Restore trusted service."}</strong> {containment ? "Balance attacker access, evidence and operational continuity." : assurance ? "Decide what must be validated or preserved before systems change again." : "Choose how much confidence, time and disruption the organisation can accept."}</p>{containment
+          <div><h2 ref={heading} tabIndex={-1} data-awaiting-heading>{containment ? t("responsePanel.containmentDecision") : assurance ? t("responsePanel.assuranceGate") : t("responsePanel.recoveryDecision")}</h2><p><strong>{containment ? t("responsePanel.stopTheConfirmed") : assurance ? t("responsePanel.proveTheBoundary") : t("responsePanel.restoreTrustedService")}</strong> {containment ? t("responsePanel.balanceAttackerAccess") : assurance ? t("responsePanel.decideWhatMust") : t("responsePanel.chooseHowMuch")}</p>{containment
             ? <p className="muted small"><strong>{t("responsePanel.sectorConstraint")}</strong> {profile.constraint}</p>
             // Each later phase opens on what the one before it did, in place of the
             // constraint already read: a playtest saw no result between choices.
-            : previous && <p className="response-recorded"><strong>{assurance ? "Containment" : "Assurance"}{t("responsePanel.recorded2")}</strong> {previous.title}{t("responsePanel.leavingBusinessImpact")}{game.impact}{t("actionSheet.and")}{getOperationalLabel(game).toLowerCase()}{t("debriefDialog.at")}{game.continuity}.</p>}</div>
+            : previous && <p className="response-recorded"><strong>{assurance ? t("responsePanel.containment") : t("responsePanel.assurance")}{t("responsePanel.recorded2")}</strong> {t("responsePanel.leavingBusinessImpact2", { previousTitle: previous.title, impact: game.impact, getOperationalLabel: getOperationalLabel(game).toLowerCase(), continuity: game.continuity })}</p>}</div>
         </div>
         <div className="response-options">
           {/* Numbered ruled rows: the option and what it does on the left, its
               terms and its exact effect in a column on the right. Three equal
               cards with an arrow in the corner read as a feature grid. */}
-          {options.map((option, index) => <button key={option.id} onClick={() => onChoose(option.id)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{option.title}</strong><span>{option.description}</span><span className="option-terms-line">{option.disruption}{t("responsePanel.disruption")}{option.confidence.toLowerCase()}{t("debriefDialog.confidence")}{option.residual.toLowerCase()}{t("responsePanel.residualRisk")}</span></span><span className="option-effects"><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /></span></button>)}
+          {options.map((option, index) => <button key={option.id} onClick={() => onChoose(option.id)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{option.title}</strong><span>{option.description}</span><span className="option-terms-line">{t("responsePanel.disruptionConfidenceResidual", { disruption: option.disruption, confidence: option.confidence.toLowerCase(), residual: option.residual.toLowerCase() })}</span></span><span className="option-effects"><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /></span></button>)}
         </div>
       </div>
     </section>
@@ -63,7 +63,7 @@ function OptionEffect({ game, impact, continuity }: { game: Game; impact: number
     <span className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
       {/* The change the meter will actually show: "−22 better" at an impact of 0 promised nothing. */}
       <EffectList items={[describeMeterChange(game, "impact", after.impact - game.impact), describeMeterChange(game, "continuity", after.continuity - game.continuity)]} />
-      <small>{getOperationalLabel(game)}{t("responsePanel.endsAt")}{after.continuity}{ends && <b>{t("responsePanel.whichEndsThe")}</b>}{atRisk && <b>{t("responsePanel.atRisk")}</b>}</small>
+      <small>{t("responsePanel.endsAt2", { getOperationalLabel: getOperationalLabel(game), continuity: after.continuity })}{ends && <b>{t("responsePanel.whichEndsThe")}</b>}{atRisk && <b>{t("responsePanel.atRisk")}</b>}</small>
     </span>
   );
 }

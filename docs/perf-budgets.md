@@ -127,3 +127,12 @@ included, rose from 1,060,546 B to 1,103,369 B by the time play starts
 each written once in its catalogue and again at every `t()` call, which the
 minifier cannot shorten. Fragments shared by more than one catalogue account
 for 1,722 B of it. The all-script budget moved to 1,120,000 B.
+
+Whole sentences (0.9.2) catalogued the strings that 0.9.1 left inside JSX
+expressions and module tables, 318 of them, and merged 110 runs of fragments
+into single messages with placeholders, which removed 166 fragment keys: 865
+keys where there were 605. All script by the time play starts rose from
+1,103,369 B to 1,127,431 B (1,117,617 B on the assignment screen), and the
+all-script budget moved to 1,150,000 B. The first load is 847,482 B, 2,518 B
+under its 850,000 B budget: the next change that adds to it has to take
+something out.

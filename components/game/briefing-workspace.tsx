@@ -27,16 +27,16 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
         <div className="brief-label">{t("briefingWorkspace.questionsForThe")}<span>{t("briefingWorkspace.freeAction")}</span></div>
         <div className="question-list">
           {[
-            { id: "scope", label: "What is in scope?" },
-            { id: "known", label: "What is confirmed?" },
-            { id: "adversary", label: "What is the actor doing?" },
-            { id: "impact", label: "What is at risk?" },
-            { id: "constraints", label: "What limits us?" },
-            { id: "assumptions", label: "What should we challenge?" },
+            { id: "scope", label: t("briefingWorkspace.whatIsIn") },
+            { id: "known", label: t("briefingWorkspace.whatIsConfirmed") },
+            { id: "adversary", label: t("briefingWorkspace.whatIsThe") },
+            { id: "impact", label: t("briefingWorkspace.whatIsAt") },
+            { id: "constraints", label: t("briefingWorkspace.whatLimitsUs") },
+            { id: "assumptions", label: t("briefingWorkspace.whatShouldWe") },
           ].map(item => <button key={item.id} className={question === item.id ? "active" : ""} aria-pressed={question === item.id} onClick={() => setQuestion(question === item.id ? null : item.id)}>{item.label}</button>)}
         </div>
         {question && <div className="captain-answer" aria-live="polite">{answer}</div>}
-        <div className="guided-inline"><label htmlFor="guided-game">{game.mode === "expert" ? "Guidance disabled in Expert" : "Guided reflection"}</label><Switch id="guided-game" checked={guided} disabled={game.mode === "expert"} onCheckedChange={setGuided} /></div>
+        <div className="guided-inline"><label htmlFor="guided-game">{game.mode === "expert" ? t("briefingWorkspace.guidanceDisabledIn") : t("briefingWorkspace.guidedReflection")}</label><Switch id="guided-game" checked={guided} disabled={game.mode === "expert"} onCheckedChange={setGuided} /></div>
         <div className="guided-inline"><label htmlFor="fast-game">{t("briefingScreen.fastResolution")}</label><Switch id="fast-game" checked={fastResolve} onCheckedChange={setFastResolve} /></div>
         <div className="adversary-read"><span className="eyebrow">{t("briefingWorkspace.actorModel")}</span><p>{getAdversaryRead(game)}</p></div>
       </section>
@@ -50,14 +50,14 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
             {[...game.turns].reverse().map(turn => (
               <button className="log-entry" key={turn.number} onClick={() => setReport(turn)}>
                 <span className={`log-number ${turn.revealed ? "found" : turn.success ? "passed" : "failed"}`}>{String(turn.number)}</span>
-                <div><strong>{procedureById(game, turn.procedure)?.title}</strong><span>{turn.revealed ? "Stage revealed" : turn.adversaryEvent ? "Actor advanced" : turn.success ? "No new evidence" : "Action unsuccessful"}{t("briefingScreen.impact")}{turn.impactChange >= 0 ? "+" : ""}{turn.impactChange}</span></div>
+                <div><strong>{procedureById(game, turn.procedure)?.title}</strong><span>{turn.revealed ? t("briefingWorkspace.stageRevealed") : turn.adversaryEvent ? t("briefingWorkspace.actorAdvanced") : turn.success ? t("briefingWorkspace.noNewEvidence") : t("briefingWorkspace.actionUnsuccessful")}{t("briefingScreen.impact")}{turn.impactChange >= 0 ? "+" : ""}{turn.impactChange}</span></div>
                 <span className="roll-total">{turn.total}</span>
               </button>
             ))}
           </div>
         )}
       </section>
-      <div className="rules-reminder"><p>{t("briefingWorkspace.aD20Roll")}{config.threshold}{t("briefingWorkspace.toSucceedOne")}{OWN_SOURCE_BONUS}{t("briefingWorkspace.rightOrWrong")}</p></div>
+      <div className="rules-reminder"><p>{t("briefingWorkspace.aD20Roll2", { threshold: config.threshold, ownSourceBonus: OWN_SOURCE_BONUS })}</p></div>
     </aside>
   );
 }

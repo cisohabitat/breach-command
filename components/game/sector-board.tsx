@@ -42,10 +42,10 @@ export function SectorBoard({ game }: { game: Game }) {
         <b className="sit-figure">{game.sectorHealth}</b>
       </div>
       <div className="sit-entry adversary">
-        <span className="sit-label">{t("sectorBoard.adversaryObjective")}<small>{t("sectorBoard.confidence")}{objective.confidence.toLowerCase()}</small></span>
+        <span className="sit-label">{t("sectorBoard.adversaryObjective")}<small>{t("sectorBoard.confidence2", { confidence: objective.confidence.toLowerCase() })}</small></span>
         <div className="sit-body">
           <p><strong>{objective.title}</strong></p>
-          <Progress value={game.objectiveProgress} aria-label={`Adversary progress: ${objective.title}`} />
+          <Progress value={game.objectiveProgress} aria-label={t("sectorBoard.adversaryProgress", { objectiveTitle: objective.title })} />
           <p className="sit-note">{objective.detail}</p>
         </div>
         <b className="sit-figure">{game.objectiveProgress}</b>
@@ -55,7 +55,7 @@ export function SectorBoard({ game }: { game: Game }) {
         <div className="sit-body"><p>{transmission}</p></div>
       </div>
       <div className="sit-entry compact">
-        <span className="sit-label">{t("sectorBoard.specialist")}<small><span className="sit-data">{person.callsign}</span>{t("briefingScreen.fatigue")}{game.specialistFatigue}{t("briefingScreen.of6")}</small></span>
+        <span className="sit-label">{t("sectorBoard.specialist")}<small><span className="sit-data">{person.callsign}</span>{t("sectorBoard.fatigueOf6", { specialistFatigue: game.specialistFatigue })}</small></span>
         <div className="sit-body"><p>{person.name}, {specialist.title}: “{person.voice}”</p></div>
       </div>
     </>

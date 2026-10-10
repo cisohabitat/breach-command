@@ -10,12 +10,12 @@ import { hypothesisTrend, ledgerCsv } from "@/lib/ledger";
 import { ladderRungs } from "@/lib/campaign";
 import type { GameSession } from "@/hooks/use-game-session";
 import { briefingScreenMessages } from "@/lib/i18n/en/briefing-screen";
-import { register } from "@/lib/i18n";
+import { register, type MessageKey } from "@/lib/i18n";
 
 register(briefingScreenMessages);
 
 // What each stage of the chain answers, in the words a newcomer would ask it.
-const stageQuestions = ["How they got in", "Where they went, and as whom", "How they stay", "What leaves, and how"];
+const stageQuestions: readonly MessageKey[] = ["briefingScreen.howTheyGot", "briefingScreen.whereTheyWent", "briefingScreen.howTheyStay", "briefingScreen.whatLeavesAnd"];
 
 export function BriefingScreen({ session }: { session: GameSession }) {
   const { t } = useMessages();
@@ -37,7 +37,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <p className="intro">{t("briefingScreen.anIntruderHas")}</p>
         <ol className="briefing-chain" aria-label={t("briefingScreen.theFourStages")}>
           {stages.map((stage, index) => {
-            return <li key={stage.name} style={{ "--stage-color": stage.color } as CSSProperties}><span className="chain-index">{String(index + 1)}</span><strong>{stage.short}</strong><small>{stageQuestions[index]}</small></li>;
+            return <li key={stage.name} style={{ "--stage-color": stage.color } as CSSProperties}><span className="chain-index">{String(index + 1)}</span><strong>{stage.short}</strong><small>{t(stageQuestions[index])}</small></li>;
           })}
         </ol>
         {/* On a phone the assignment panel, and the start button inside it, sit two
@@ -47,20 +47,20 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             and hide the strip. */}
         <section className="phone-quick-start" aria-label={t("briefingScreen.quickStart")}>
           {savedSession ? (
-            <button className="primary-button" onClick={() => resume(savedSession)}>{t("briefingScreen.resume")}{scenarios[savedSession.game.scenario].title}”</button>
+            <button className="primary-button" onClick={() => resume(savedSession)}>{t("briefingScreen.resume3", { scenariosTitle: scenarios[savedSession.game.scenario].title })}</button>
           ) : (
-            <button className="primary-button" onClick={() => start()}>{t("briefingScreen.start")}{activeScenario.title}”</button>
+            <button className="primary-button" onClick={() => start()}>{t("briefingScreen.start2", { activeScenarioTitle: activeScenario.title })}</button>
           )}
-          <small>{savedSession ? `Turn ${savedSession.game.turns.length} saved` : `${difficulties[difficulty].title}, ${namedSpecialists[specialist].name}`}{t("briefingScreen.orChooseThe")}</small>
+          <small>{savedSession ? t("briefingScreen.turnSaved", { turns: savedSession.game.turns.length }) : `${difficulties[difficulty].title}, ${namedSpecialists[specialist].name}`}{t("briefingScreen.orChooseThe")}</small>
         </section>
         {/* Where a returning player left off and what the review suggested, as a
             line of the record with the way to set it up. A save in progress is
             the first move instead, so this waits until there is none. */}
         {lastOperation && !savedSession && (
           <section className="last-operation" aria-label={t("briefingScreen.lastOperation")}>
-            <span className="field-label">{t("briefingScreen.lastOperation2")}{describeWhen(lastOperation.endedAt)}</span>
-            <p>{t("briefingScreen.case")}{lastOperation.scenario + 1}, {scenarios[lastOperation.scenario].title}{t("briefingScreen.at")}{difficulties[lastOperation.difficulty].title}: {lastOperation.ending.toLowerCase()}{lastOperation.outcome === "lost" ? "" : `, ${lastOperation.score} of 100`}.</p>
-            <p><strong>{t("briefingScreen.suggestedNext")}{lastOperation.next.title}.</strong> {lastOperation.next.reason}</p>
+            <span className="field-label">{t("briefingScreen.lastOperation3", { describeWhen: describeWhen(lastOperation.endedAt) })}</span>
+            <p>{t("briefingScreen.caseAt", { scenario: lastOperation.scenario + 1, scenariosTitle: scenarios[lastOperation.scenario].title, difficultiesTitle: difficulties[lastOperation.difficulty].title, ending: lastOperation.ending.toLowerCase() })}{lastOperation.outcome === "lost" ? "" : `, ${lastOperation.score} of 100`}.</p>
+            <p><strong>{t("briefingScreen.suggestedNext2", { nextTitle: lastOperation.next.title })}</strong> {lastOperation.next.reason}</p>
             {(scenarioChoice !== lastOperation.next.scenario || difficulty !== lastOperation.next.difficulty) && <button className="text-action" onClick={() => playRecommended(lastOperation.next)}>{t("briefingScreen.setUpThe")}</button>}
           </section>
         )}
@@ -68,7 +68,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         {replay && (
           <section className="last-operation" aria-label={t("briefingScreen.replaySetUp")}>
             <span className="field-label">{t("briefingScreen.replaySetUp")}</span>
-            <p>{t("briefingScreen.theBotCommander")}{replay.scenario + 1}, {scenarios[replay.scenario].title}{t("briefingScreen.at")}{difficulties[replay.difficulty].title}{t("briefingScreen.onTheSame")}</p>
+            <p>{t("briefingScreen.theBotCommander2", { scenario: replay.scenario + 1, scenariosTitle: scenarios[replay.scenario].title, difficultiesTitle: difficulties[replay.difficulty].title })}</p>
           </section>
         )}
         {/* The personal record: every operation this device played to an end,
@@ -78,18 +78,18 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           return (
             <section className="last-operation" aria-label={t("briefingScreen.yourRecord")}>
               <span className="field-label">{t("briefingScreen.yourRecord")}</span>
-              <p>{ledger.length}{t("briefingScreen.operation")}{ledger.length === 1 ? "" : "s"}{t("briefingScreen.recorded")}{ledger.filter(entry => entry.outcome !== "lost").length}{t("briefingScreen.wonOrStood")}{trend.recentCount === 1 ? "operation" : `${trend.recentCount}`}: {trend.recent}{t("briefingScreen.of10")}{trend.before === null ? "" : `, against ${trend.before} over the ten before`}.</p>
+              <p>{t("briefingScreen.operation2Plural", { count: ledger.length })}{t("briefingScreen.recordedWonOr", { count: ledger.filter(entry => entry.outcome !== "lost").length })}{trend.recentCount === 1 ? "operation" : `${trend.recentCount}`}: {trend.recent}{t("briefingScreen.of10")}{trend.before === null ? "" : t("briefingScreen.againstOverThe", { before: trend.before })}.</p>
               <button className="text-action" onClick={() => downloadText("breach-command-record.csv", ledgerCsv(ledger, index => scenarios[index].title), "text/csv")}>{t("briefingScreen.downloadRecord")}</button>
             </section>
           );
         })()}
         <section className="career-card" aria-label={t("briefingScreen.commandCareerProgression")}>
-          <div><span className="field-label">{t("briefingScreen.yourCommandRecord")}</span><strong>{campaignRank(campaign.xp)}</strong><small>{campaign.completed.length}/{scenarios.length}{t("briefingScreen.incidentsTrust")}{campaign.leadershipTrust}{t("briefingScreen.readiness")}{campaign.readiness}</small><details className="standing-effects"><summary>{t("briefingScreen.whatTrustAnd")}</summary><small>{standingEffects(campaign).join(" ")}</small></details></div>
+          <div><span className="field-label">{t("briefingScreen.yourCommandRecord")}</span><strong>{campaignRank(campaign.xp)}</strong><small>{t("briefingScreen.incidentsTrustReadiness", { completed: campaign.completed.length, scenarios: scenarios.length, leadershipTrust: campaign.leadershipTrust, readiness: campaign.readiness })}</small><details className="standing-effects"><summary>{t("briefingScreen.whatTrustAnd")}</summary><small>{standingEffects(campaign).join(" ")}</small></details></div>
           <b><small>{t("briefingScreen.experience")}</small>{campaign.xp}</b>
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
-        <section className="campaign-act-card"><span className="act-number">{t("briefingScreen.act")}{currentAct.number}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p>{!finalEnding && <p className="act-briefing">{t("briefingScreen.director")}{currentStory.briefing}</p>}{!finalEnding && currentStory.development && <p className="act-briefing">{t("briefingScreen.sinceThen")}{currentStory.development}</p>}<small>{campaign.unresolvedThreads}{t("briefingScreen.unresolvedAccess")}{campaign.unresolvedThreads ? " — each starts later operations under more pressure" : ""}</small></div></section>
-        <section className="campaign-route-card"><div><span className="field-label">{t("briefingScreen.campaignRoute")}{currentRoute.title}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
+        <section className="campaign-act-card"><span className="act-number">{t("briefingScreen.act2", { number: currentAct.number })}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p>{!finalEnding && <p className="act-briefing">{t("briefingScreen.director2", { briefing: currentStory.briefing })}</p>}{!finalEnding && currentStory.development && <p className="act-briefing">{t("briefingScreen.sinceThen2", { development: currentStory.development })}</p>}<small>{t("briefingScreen.unresolvedAccess2", { unresolvedThreads: campaign.unresolvedThreads })}{campaign.unresolvedThreads ? t("briefingScreen.eachStartsLater") : ""}</small></div></section>
+        <section className="campaign-route-card"><div><span className="field-label">{t("briefingScreen.campaignRoute2", { currentRouteTitle: currentRoute.title })}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
         {finalEnding && <section className="campaign-ending"><div><span className="field-label">{t("briefingScreen.campaignConclusion")}</span><strong>{finalEnding.title}</strong><p>{finalEnding.detail}</p></div></section>}
       </div>
       <section className="mission-panel">
@@ -98,9 +98,9 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             note, not a hero. */}
         <div className="eyebrow slip-form">{t("briefingScreen.formBc001")}<span className="separator">/</span>{t("briefingScreen.assignment")}</div>
         <dl className="form-row on-desk">
-          <div><dt>{t("briefingScreen.case2")}</dt><dd>{scenarioChoice + 1}{t("briefingScreen.of")}{scenarios.length}</dd></div>
+          <div><dt>{t("briefingScreen.case2")}</dt><dd>{t("briefingScreen.of2", { scenarioChoice: scenarioChoice + 1, scenarios: scenarios.length })}</dd></div>
           <div><dt>{t("briefingScreen.sector")}</dt><dd>{activeScenario.sector}</dd></div>
-          <div><dt>{t("briefingScreen.status")}</dt><dd className={campaign.completed.includes(scenarioChoice) ? "" : "open"}>{campaign.completed.includes(scenarioChoice) ? "Cleared" : "Open"}</dd></div>
+          <div><dt>{t("briefingScreen.status")}</dt><dd className={campaign.completed.includes(scenarioChoice) ? "" : "open"}>{campaign.completed.includes(scenarioChoice) ? t("briefingScreen.cleared") : t("briefingScreen.open")}</dd></div>
         </dl>
         <h2>{activeScenario.title}</h2>
         <p>{activeScenario.summary}</p>
@@ -108,15 +108,15 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           // The case's mastery ladder: the rungs climbed and the next one to try.
           const climbed = ladderRungs.filter(rung => (campaign.ladder?.[String(scenarioChoice)] ?? []).includes(rung.id));
           const nextRung = ladderRungs.find(rung => !climbed.includes(rung));
-          return <p className="slip-ladder">{t("briefingScreen.masteryLadder")}{climbed.length}{t("briefingScreen.of")}{ladderRungs.length}{climbed.length ? `: ${climbed.map(rung => lowerFirst(rung.title)).join(", ")}` : ""}.{nextRung ? ` Next: ${lowerFirst(nextRung.detail)}` : " Every rung climbed."}</p>;
+          return <p className="slip-ladder">{t("briefingScreen.masteryLadderOf", { climbed: climbed.length, ladderRungs: ladderRungs.length })}{climbed.length ? `: ${climbed.map(rung => lowerFirst(rung.title)).join(", ")}` : ""}.{nextRung ? t("briefingScreen.next", { nextRungDetail: lowerFirst(nextRung.detail) }) : t("briefingScreen.everyRungClimbed")}</p>;
         })()}
         {previewVariant && <div className="variant-brief"><p className="variant-line"><span className="variant-label">{t("briefingScreen.amended")}</span> <strong>{previewVariant.title}.</strong> <small>{previewVariant.modifier}</small></p><p>{previewVariant.briefing}</p></div>}
         <div className="mission-selector" aria-label={t("briefingScreen.selectIncident")}>
-          {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={`${scenario.title}${campaign.completed.includes(index) ? `, completed, ${campaign.mastery[String(index)] ?? 0} mastery star${(campaign.mastery[String(index)] ?? 0) === 1 ? "" : "s"}` : ""}`} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1)}</span>{campaign.completed.includes(index) && <small aria-hidden="true">{"|".repeat(campaign.mastery[String(index)] ?? 0)}</small>}</button>)}
+          {scenarios.map((scenario, index) => <button key={scenario.id} aria-label={campaign.completed.includes(index) ? t("briefingScreen.completedMastery", { title: scenario.title, count: campaign.mastery[String(index)] ?? 0 }) : scenario.title} aria-pressed={scenarioChoice === index} className={`${scenarioChoice === index ? "active" : ""} ${campaign.completed.includes(index) ? "completed" : ""}`} onClick={() => setScenarioChoice(index)}><span>{String(index + 1)}</span>{campaign.completed.includes(index) && <small aria-hidden="true">{"|".repeat(campaign.mastery[String(index)] ?? 0)}</small>}</button>)}
         </div>
         <div className="difficulty-picker">
           <span className="field-label">{t("briefingScreen.difficulty")}</span>
-          <div>{(Object.keys(difficulties) as Difficulty[]).map(id => <button key={id} className={difficulty === id ? "active" : ""} aria-pressed={difficulty === id} onClick={() => setDifficulty(id)}><strong>{difficulties[id].title}</strong><small>{difficulties[id].maxTurns}{t("briefingScreen.turnsRollsNeed")}{difficulties[id].threshold}+</small></button>)}</div>
+          <div>{(Object.keys(difficulties) as Difficulty[]).map(id => <button key={id} className={difficulty === id ? "active" : ""} aria-pressed={difficulty === id} onClick={() => setDifficulty(id)}><strong>{difficulties[id].title}</strong><small>{t("briefingScreen.turnsRollsNeed2", { maxTurns: difficulties[id].maxTurns, threshold: difficulties[id].threshold })}</small></button>)}</div>
           <p>{difficulties[difficulty].description}</p>
         </div>
         <div className="specialist-picker">
@@ -124,12 +124,12 @@ export function BriefingScreen({ session }: { session: GameSession }) {
               select with the platform's chevron was the one stock control left
               on the slip. */}
           <div className="specialist-head"><span className="field-label">{t("briefingScreen.specialistOnCall")}</span><small id="specialist-fatigue">{(campaign.specialistFatigue[specialist] ?? 0) >= SPECIALIST_EXHAUSTED_AT
-            ? `${namedSpecialists[specialist].name} is at fatigue ${campaign.specialistFatigue[specialist]} of 6, where the specialist bonus no longer applies. Deploying someone else lets them rest.`
-            : `Fatigue carries between campaign operations; a rested specialist recovers faster than one on duty. At ${SPECIALIST_EXHAUSTED_AT} of 6 the specialist's +1 on their own sources no longer applies.`}</small></div>
+            ? t("briefingScreen.isAtFatigue", { namedSpecialistsName: namedSpecialists[specialist].name, specialistFatigue: campaign.specialistFatigue[specialist] })
+            : t("briefingScreen.fatigueCarriesBetween", { specialistExhaustedAt: SPECIALIST_EXHAUSTED_AT })}</small></div>
           <div className="difficulty-picker specialist-roster">
-            <div role="group" aria-label={t("briefingScreen.deploySpecialist")} aria-describedby="specialist-fatigue">{(Object.keys(specialists) as SpecialistId[]).map(id => <button key={id} className={specialist === id ? "active" : ""} aria-pressed={specialist === id} onClick={() => setSpecialist(id)}><strong>{namedSpecialists[id].name}</strong><small>{specialists[id].title}{t("briefingScreen.fatigue")}{campaign.specialistFatigue[id] ?? 0}{t("briefingScreen.of6")}</small></button>)}</div>
+            <div role="group" aria-label={t("briefingScreen.deploySpecialist")} aria-describedby="specialist-fatigue">{(Object.keys(specialists) as SpecialistId[]).map(id => <button key={id} className={specialist === id ? "active" : ""} aria-pressed={specialist === id} onClick={() => setSpecialist(id)}><strong>{namedSpecialists[id].name}</strong><small>{specialists[id].title}{t("briefingScreen.fatigueOf6", { specialistFatigue: campaign.specialistFatigue[id] ?? 0 })}</small></button>)}</div>
           </div>
-          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}{t("briefingScreen.fatigue")}{campaign.specialistFatigue[specialist] ?? 0}{t("briefingScreen.of62")}{specialists[specialist].ability}{t("briefingScreen.rapportWith")}{namedSpecialists[specialist].name} {campaign.specialistBonds[specialist] ?? 35}{t("briefingScreen.of100ItGrows")}</p>
+          <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}{t("briefingScreen.fatigueOf62", { specialistFatigue: campaign.specialistFatigue[specialist] ?? 0 })}{specialists[specialist].ability}{t("briefingScreen.rapportWithOf", { namedSpecialistsName: namedSpecialists[specialist].name, specialistBonds: campaign.specialistBonds[specialist] ?? 35 })}</p>
         </div>
         <details className="advanced-setup">
           <summary>{t("briefingScreen.advancedOperationSettings")}<span>{gameModes[mode].title}</span></summary>
@@ -139,12 +139,12 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             {/* Whether a mode counts toward the campaign, and whether the campaign
                 reaches into it, was nowhere on screen. */}
             <p className="muted small mode-campaign-note">{mode === "campaign"
-              ? "Campaign standing — leadership trust, readiness, unresolved access and the route — shapes this operation, and its result counts toward the campaign."
-              : `This operation's result counts toward the campaign, with ${gameModes[mode].reward}× the experience. Your unlocked capabilities and team carry into it; trust, readiness, unresolved access and the route's modifiers do not.${mode === "daily" ? " Daily operation is today's case, the same for every commander." : ""}`}</p>
+              ? t("briefingScreen.campaignStandingLeadership")
+              : <>{t("briefingScreen.thisOperationS", { reward: gameModes[mode].reward })}{mode === "daily" ? t("briefingScreen.dailyOperationIs") : ""}</>}</p>
           </div>
           <div className="challenge-console">
             <div><span className="eyebrow">{t("briefingScreen.scenarioCode")}</span><button onClick={generateSeed}><RefreshCw size={14} />{t("briefingScreen.newSeed")}</button></div>
-            <code>{challengeCode ?? "Preparing code"}</code>
+            <code>{challengeCode ?? t("briefingScreen.preparingCode")}</code>
             <p className="muted small">{t("briefingScreen.aCodeReproduces")}</p>
             <div className="challenge-load"><input aria-label={t("briefingScreen.challengeCode")} value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder={t("briefingScreen.enterBcChallenge")} /><button onClick={loadChallengeCode}>{t("briefingScreen.load")}</button></div>
             {challengeMessage && <p aria-live="polite">{challengeMessage}</p>}
@@ -167,7 +167,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </details>
         {savedSession && (
           <section className="resume-card">
-            <div><span><strong>{t("briefingScreen.investigationSaved")}</strong><small>{scenarios[savedSession.game.scenario].title}{t("briefingScreen.turn")}{savedSession.game.turns.length}{t("briefingScreen.impact")}{savedSession.game.impact}</small></span></div>
+            <div><span><strong>{t("briefingScreen.investigationSaved")}</strong><small>{t("briefingScreen.turnImpact", { scenariosTitle: scenarios[savedSession.game.scenario].title, turns: savedSession.game.turns.length, impact: savedSession.game.impact })}</small></span></div>
             <div className="resume-actions">
               <button onClick={() => resume(savedSession)}>{t("briefingScreen.resume2")}</button>
               <button onClick={clearStoredSession}>{t("briefingScreen.discard")}</button>
@@ -178,7 +178,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             laptop the saved card sat under the sticky Begin button, which replaced
             the save without a word. */}
         {savedSession ? <>
-          <button className="primary-button start-button" onClick={() => resume(savedSession)}>{t("briefingScreen.resume")}{scenarios[savedSession.game.scenario].title}”</button>
+          <button className="primary-button start-button" onClick={() => resume(savedSession)}>{t("briefingScreen.resume3", { scenariosTitle: scenarios[savedSession.game.scenario].title })}</button>
           <button className="secondary-button begin-instead" onClick={() => start()}>{t("briefingScreen.beginNewInvestigation")}</button>
           <p className="replace-note">{t("briefingScreen.beginningNewInvestigation")}</p>
         </> : <button className="primary-button start-button" onClick={() => start()}>{t("briefingScreen.beginInvestigation")}</button>}

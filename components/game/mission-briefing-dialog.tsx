@@ -16,14 +16,14 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
   return (
     <Dialog open={missionBriefing} onOpenChange={setMissionBriefing}>
       <DialogContent className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false}>
-        <DialogHeader><div className="eyebrow">{t("missionBriefingDialog.formBc100")}<span className="separator">/</span>{t("missionBriefingDialog.missionBriefCase")}{(game?.scenario ?? 0) + 1}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">{t("missionBriefingDialog.formBc100")}<span className="separator">/</span>{t("missionBriefingDialog.missionBriefCase2", { scenario: (game?.scenario ?? 0) + 1 })}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
         {game && <>
           {/* What shapes the first decisions stays open: the sector's condition,
               the specialist on hand and what is known of the operator. The rest
               is context, and six readouts put the button a screen and a half down
               on a phone. */}
           <div className="briefing-readouts">
-            <div><span>{t("fieldGuideDialog.sectorCondition")}</span><strong>{sectorSystems[game.scenario].title}</strong><small>{sectorSystems[game.scenario].plain}{t("missionBriefingDialog.theOperationEnds")}</small><details className="brief-rule-fold"><summary>{t("gameScreen.whatMovesIt")}</summary><small>{sectorSystems[game.scenario].rule}</small></details></div>
+            <div><span>{t("fieldGuideDialog.sectorCondition")}</span><strong>{sectorSystems[game.scenario].title}</strong><small>{t("missionBriefingDialog.theOperationEnds2", { plain: sectorSystems[game.scenario].plain })}</small><details className="brief-rule-fold"><summary>{t("gameScreen.whatMovesIt")}</summary><small>{sectorSystems[game.scenario].rule}</small></details></div>
             <div><span>{t("missionBriefingDialog.deployedSpecialist")}</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
             <div><span>{t("missionBriefingDialog.attribution")}</span><strong>{getAttributionRead(game).title}</strong><small>{getAttributionRead(game).detail}</small></div>
           </div>

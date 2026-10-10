@@ -11,19 +11,19 @@ import { BotControl } from "@/components/game/bot-control";
 import { gameModes, getAdversaryState, getLossReason, getOperationalLabel, getSectorAlert, getTurnLimit, SECTOR_ALERT_AT, sectorSystems, type LossCause } from "@/lib/advanced-game";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
 import { gameScreenMessages } from "@/lib/i18n/en/game-screen";
-import { register } from "@/lib/i18n";
+import { register, type MessageKey } from "@/lib/i18n";
 
 register(gameScreenMessages);
 
 
 // The final status names what ended a lost operation. It said "Window closed"
 // for all five endings, under a banner that said impact had reached its limit.
-const lossStatus: Record<LossCause, string> = {
-  objective: "Adversary objective reached",
-  impact: "Impact limit reached",
-  continuity: "Essential service stopped",
-  sector: "Sector margin exhausted",
-  window: "Window closed",
+const lossStatus: Record<LossCause, MessageKey> = {
+  objective: "gameScreen.adversaryObjectiveReached",
+  impact: "gameScreen.impactLimitReached",
+  continuity: "gameScreen.essentialServiceStopped",
+  sector: "gameScreen.sectorMarginExhausted",
+  window: "gameScreen.windowClosed",
 };
 
 export function GameScreen({ session }: { session: GameSession }) {
@@ -78,8 +78,8 @@ export function GameScreen({ session }: { session: GameSession }) {
               context under the title rather than competing with the three
               pressures that do. */}
           <div className="operation-status">
-            <span className="mono">{game.status === "response" ? "Response phase" : ended ? "Final status" : "Investigation window"}</span>
-            <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> {t("window.remaining", { limit: getTurnLimit(game) })}</> : game.status === "response" ? "Contain, assure and recover" : game.status === "won" ? "Response complete" : game.status === "exercise" ? "Exercise concluded" : lossStatus[getLossReason(game).cause]}</span>
+            <span className="mono">{game.status === "response" ? t("gameScreen.responsePhase") : ended ? t("gameScreen.finalStatus") : t("gameScreen.investigationWindow")}</span>
+            <span>{!ended && game.status !== "response" ? <><strong>{Math.max(0, getTurnLimit(game) - game.turns.length)}</strong> {t("gameScreen.ofTurnsRemaining", { limit: getTurnLimit(game) })}</> : game.status === "response" ? t("gameScreen.containAssureAnd") : game.status === "won" ? t("gameScreen.responseComplete") : game.status === "exercise" ? t("gameScreen.exerciseConcluded") : t(lossStatus[getLossReason(game).cause])}</span>
             <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label={t("window.label")} />
           </div>
           {/* The sector's own margin ends an operation at zero like the three
@@ -92,7 +92,7 @@ export function GameScreen({ session }: { session: GameSession }) {
           <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : game.impact >= 40 ? "rising" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>
             <span className="mono">{t("gameScreen.businessImpact")}</span><strong>{game.impact}</strong>
             <Progress value={game.impact} aria-label={t("gameScreen.businessImpact")} />
-            <small>{game.impact < 40 ? "Contained" : game.impact < IMPACT_CRITICAL ? "Rising" : "Critical"}</small>
+            <small>{game.impact < 40 ? t("gameScreen.contained") : game.impact < IMPACT_CRITICAL ? t("gameScreen.rising") : t("gameScreen.critical")}</small>
             {meterPulse?.impactCritical && <span key={`impact-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.impact !== 0 && (
               <span key={`impact-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.impact > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
@@ -103,7 +103,7 @@ export function GameScreen({ session }: { session: GameSession }) {
           <div className={`continuity-meter ${game.continuity <= CONTINUITY_AT_RISK ? "critical" : ""} ${meterPulse?.continuityAtRisk ? "crossing" : ""}`}>
             <span className="mono">{getOperationalLabel(game)}</span><strong>{game.continuity}</strong>
             <Progress value={game.continuity} aria-label={getOperationalLabel(game)} />
-            <small>{game.continuity > 75 ? "Stable" : game.continuity > CONTINUITY_AT_RISK ? "Degraded" : "At risk"}</small>
+            <small>{game.continuity > 75 ? t("gameScreen.stable") : game.continuity > CONTINUITY_AT_RISK ? t("gameScreen.degraded") : t("gameScreen.atRisk")}</small>
             {meterPulse?.continuityAtRisk && <span key={`continuity-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.continuity !== 0 && (
               <span key={`continuity-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.continuity < 0 ? "adverse" : "favourable"}`} aria-hidden="true">
@@ -116,7 +116,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             <Progress value={game.objectiveProgress} aria-label={t("gameScreen.adversaryProgress")} />
             {/* The caption carries the pace as well, so "PACE: PRESSING HARD" beside a low
                 number reads as one picture: little done so far, rising fast. */}
-            <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? `, pace ${getAdversaryState(game).toLowerCase()}` : ""}</small>
+            <small>{game.objectiveProgress < 40 ? t("gameScreen.early") : game.objectiveProgress < OBJECTIVE_IMMINENT ? t("gameScreen.advancing") : t("gameScreen.imminent")}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? `, pace ${getAdversaryState(game).toLowerCase()}` : ""}</small>
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">

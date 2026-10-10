@@ -44,7 +44,7 @@ export function ProcedureGrid({
             className={`procedure-card ${established ? "established" : ""} ${cooldown ? "cooling" : ""} ${aligned ? "hypothesis-aligned" : ""}`}
             disabled={disabled || cooldown > 0 || !!game.pendingDecision}
             onClick={() => onChoose(procedure.id)}
-            aria-label={`${procedure.title}${established ? ", established, plus 2" : ""}${aligned ? ", supports current hypothesis" : ""}${aligned && blind ? ", cannot see this stage for the current hypothesis" : ""}${seesOther ? ", can also test the current hypothesis" : ""}${read && read.spent ? `, checked ${read.spent} times with no stage found` : read && read.inconclusive ? `, ${read.inconclusive} attempts failed without a result` : ""}${cooldown ? `, available in ${cooldown} turns` : ""}`}
+            aria-label={`${procedure.title}${established ? t("procedureGrid.establishedPlus2") : ""}${aligned ? t("procedureGrid.supportsCurrentHypothesis") : ""}${aligned && blind ? t("procedureGrid.cannotSeeThis") : ""}${seesOther ? t("procedureGrid.canAlsoTest2") : ""}${read && read.spent ? t("procedureGrid.checkedTimesWith", { spent: read.spent }) : read && read.inconclusive ? t("procedureGrid.attemptsFailedWithout", { inconclusive: read.inconclusive }) : ""}${cooldown ? t("procedureGrid.availableInTurns", { cooldown }) : ""}`}
           >
             <div className="procedure-top">
               {/* A procedure's number in the manual, not an icon: a glyph on every
@@ -52,7 +52,7 @@ export function ProcedureGrid({
               <span className="procedure-code">{String(index + 1)}</span>
               {/* The badge carries the cooldown only. The established bonus is stated
                   once, in the footer; a "+2" badge said it a second time. */}
-              {cooldown > 0 && <span className="procedure-badge">{cooldown}{t("debriefDialog.turn")}{cooldown === 1 ? "" : "s"}</span>}
+              {cooldown > 0 && <span className="procedure-badge">{t("procedureGrid.turnPlural", { count: cooldown })}</span>}
             </div>
             <h3>{procedure.title}</h3>
             <p>{procedure.short}</p>
@@ -65,11 +65,11 @@ export function ProcedureGrid({
               ? <small className="alignment-label blind">{t("procedureGrid.ownSource")}<span className="nowrap">+{OWN_SOURCE_BONUS}</span>{t("procedureGrid.canTestThis")}</small>
               : <small className="alignment-label">{t("procedureGrid.ownSource")}<span className="nowrap">+{OWN_SOURCE_BONUS}</span></small>)}
             {seesOther && !cooldown && <small className="alignment-label other-sees">{t("procedureGrid.canAlsoTest")}</small>}
-            {read && !cooldown && read.spent > 0 && <small className="spent-label">{t("procedureGrid.checked")}{read.spent}{t("procedureGrid.noStageFound")}</small>}
-            {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive}{t("procedureGrid.attempt")}{read.inconclusive === 1 ? "" : "s"}{t("procedureGrid.failedInconclusive")}</small>}
+            {read && !cooldown && read.spent > 0 && <small className="spent-label">{t("procedureGrid.checkedNoStage", { spent: read.spent })}</small>}
+            {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{t("procedureGrid.attempt2Plural", { count: read.inconclusive })}{t("procedureGrid.failedInconclusive")}</small>}
             <div className="procedure-bottom">
               {/* An ordinary source carries no label: "STANDARD" told a newcomer nothing. */}
-              <span>{cooldown ? "On cooldown" : null}</span>
+              <span>{cooldown ? t("procedureGrid.onCooldown") : null}</span>
             </div>
           </button>
         );

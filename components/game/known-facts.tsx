@@ -10,7 +10,7 @@ export function KnownFacts({ game }: { game: Game }) {
   const facts = getKnownFacts(game);
   return (
     <details className="known-facts" open={!facts.confirmed.length}>
-      <summary>{t("knownFacts.whatWeAlready")}<span>{facts.observations.length}{t("knownFacts.observation")}{facts.observations.length === 1 ? "" : "s"}, {facts.confirmed.length}{t("knownFacts.of4StagesConfirmed")}</span>
+      <summary>{t("knownFacts.whatWeAlready")}<span>{t("knownFacts.observation2Plural", { count: facts.observations.length })}{t("knownFacts.of4Stages", { confirmed: facts.confirmed.length })}</span>
       </summary>
       <p className="known-timeline">{facts.timeline}</p>
       <ul className="known-observations">{facts.observations.map(item => <li key={item}>{item}</li>)}</ul>

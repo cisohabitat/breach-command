@@ -30,15 +30,15 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-won" data-resolution="won" data-expert={expert || undefined}>
         <div className="end-banner end-won">
           <div>
-            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{expert ? `Cleared in Expert: ${outcome?.title.toLowerCase()}` : outcome?.title}</h2>
-            <p>{expert ? "No clue, standing, ruled-out mark or prompt was offered, and every roll was one harder. " : ""}{outcome?.detail}{t("endState.impactIs")}{game.impact}{t("actionSheet.and")}{getOperationalLabel(game).toLowerCase()}{t("endState.is")}{game.continuity}{t("endState.theCaptainHas")}</p>
+            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{expert ? t("endState.clearedInExpert2", { outcomeTitle: String(outcome?.title.toLowerCase()) }) : outcome?.title}</h2>
+            <p>{expert ? t("endState.noClueStanding") : ""}{outcome?.detail}{t("endState.impactIsAnd", { impact: game.impact, getOperationalLabel: getOperationalLabel(game).toLowerCase(), continuity: game.continuity })}</p>
           </div>
           <button className="primary-button" onClick={openDebrief}>{t("ending.openReview")}</button>
         </div>
         <ol className="resolution-steps">
           {/* What closed the case, as lines of the record with their status in
               the margin, not a checklist of ticks. */}
-          <li><b>{t("endState.confirmed")}</b><span>{t("endState.attackChain")}{game.revealed.length}{t("endState.of4StagesIdentified")}</span></li>
+          <li><b>{t("endState.confirmed")}</b><span>{t("endState.attackChainOf", { revealed: game.revealed.length })}</span></li>
           <li><b>{t("endState.recorded")}</b><span>{t("endState.responseContainmentAssurance")}</span></li>
           <li><b>{t("endState.scored")}</b><span>{t("endState.outcomeGrade")}{outcome?.grade}, {outcome?.breakdown.total}{t("endState.of100")}</span></li>
           {expert && <li><b>{t("endState.marked")}</b><span>{t("endState.clearedInExpert")}</span></li>}
@@ -54,7 +54,7 @@ export function EndState({ session }: { session: GameSession }) {
         <div className="end-banner end-lost">
           <div>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{loss.title}.</h2>
-            <p>{loss.detail} {loss.cause === "window" ? "" : `${game.revealed.length} of 4 stages were confirmed. `}{t("endState.impactStandsAt")}{game.impact}{t("endState.noStandDown")}</p>
+            <p>{loss.detail} {loss.cause === "window" ? "" : t("endState.of4Stages", { revealed: game.revealed.length })}{t("endState.impactStandsAt2", { impact: game.impact })}</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewRecord")}</button>
         </div>
@@ -70,7 +70,7 @@ export function EndState({ session }: { session: GameSession }) {
         <div className="end-banner end-exercise">
           <div>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{t("endState.exerciseConcludedAt")}</h2>
-            <p>{game.revealed.length}{t("endState.of4StagesWere")}</p>
+            <p>{t("endState.of4Stages2", { revealed: game.revealed.length })}</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewDrill")}</button>
         </div>

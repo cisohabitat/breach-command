@@ -83,7 +83,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   // Command to read what they were reasoning from. The latest observation is
   // already on the record, so it is quoted where the reading is chosen.
   const latestObservation = game.difficulty !== "training" ? getKnownFacts(game).observations.at(-1) ?? null : null;
-  const evidenceButton = evidenceReady && <button className="compare-findings" onClick={() => jumpTo(".evidence-workspace")}>{readyForTheory(game) ? "Record a case theory" : "Compare findings"} <ArrowDown size={14} /></button>;
+  const evidenceButton = evidenceReady && <button className="compare-findings" onClick={() => jumpTo(".evidence-workspace")}>{readyForTheory(game) ? t("investigateWorkspace.recordACase") : t("investigateWorkspace.compareFindings")} <ArrowDown size={14} /></button>;
   // The map is offered as an aside to the ordinary next step, never in place of
   // it, and not alongside a note that is already sending the player elsewhere.
   const mapHint = !evidenceReady ? getMapHint(game) : null;
@@ -126,11 +126,11 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {/* The board and the procedures step aside while a decision waits, and the
             column was left empty with only a tab badge saying why. */}
         {(game.pendingCommand || game.pendingSetPiece) && (
-          <div className="guide-nudge decision-waiting" role="status"><span><strong>A {game.pendingSetPiece ? "sector decision" : "command event"}{t("investigateWorkspace.isWaitingOn")}</strong>{t("investigateWorkspace.resolveItThere")}<button className="compare-findings" onClick={() => setActiveWorkspace("command")}>{t("investigateWorkspace.goToCommand")}<ArrowRight size={14} /></button></span></div>
+          <div className="guide-nudge decision-waiting" role="status"><span><strong>A {game.pendingSetPiece ? t("investigateWorkspace.sectorDecision") : t("investigateWorkspace.commandEvent")}{t("investigateWorkspace.isWaitingOn")}</strong>{t("investigateWorkspace.resolveItThere")}<button className="compare-findings" onClick={() => setActiveWorkspace("command")}>{t("investigateWorkspace.goToCommand")}<ArrowRight size={14} /></button></span></div>
         )}
       </div>
       <details className="investigation-context reference-fold" open={!phone || referenceOpen} onToggle={event => phone && setReferenceOpen(event.currentTarget.open)}>
-        <summary>{t("investigateWorkspace.mapEvidenceAnd")}<span>{game.mapActionsRemaining}{t("infrastructureConsole.mapAction")}{game.mapActionsRemaining === 1 ? "" : "s"}, {game.evidence.length ? `${game.evidence.filter(item => item.supports).length} of ${game.evidence.length} findings confirmed a stage` : "no findings yet"}, {game.correlations.length}{t("investigateWorkspace.compared")}</span></summary>
+        <summary>{t("investigateWorkspace.mapEvidenceAnd")}<span>{t("investigateWorkspace.mapActionPlural", { count: game.mapActionsRemaining })}, {game.evidence.length ? t("investigateWorkspace.ofFindingsConfirmed", { count: game.evidence.filter(item => item.supports).length, evidence: game.evidence.length }) : t("investigateWorkspace.noFindingsYet")}{t("investigateWorkspace.compared2", { correlations: game.correlations.length })}</span></summary>
         {!game.pendingCommand && !game.pendingSetPiece && <KnownFacts game={game} />}
         <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
         <SpecialistTransmission game={game} />
@@ -140,8 +140,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {inlineReport && (
           <section className={`inline-result ${inlineReport.success ? "success" : "failure"}`} aria-live="polite">
             <div>
-              <span className="eyebrow">{t("evidenceWorkspace.turn")}{inlineReport.number}{t("investigateWorkspace.quickResult")}</span>
-              <strong>{inlineReport.success ? "Procedure succeeded" : "Procedure unsuccessful"}{t("investigateWorkspace.total")}{inlineReport.total}</strong>
+              <span className="eyebrow">{t("investigateWorkspace.turnQuickResult", { number: inlineReport.number })}</span>
+              <strong>{inlineReport.success ? t("investigateWorkspace.procedureSucceeded") : t("investigateWorkspace.procedureUnsuccessful")}{t("investigateWorkspace.total2", { total: inlineReport.total })}</strong>
               <p>{inlineReport.narrative}</p>
             </div>
             <button onClick={() => setInlineReport(null)} aria-label={t("investigateWorkspace.dismissQuickResult")}><X size={18} /></button>
@@ -157,8 +157,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
           <section className="procedure-section">
             <div className="section-heading">
               <div><h2>{t("investigateWorkspace.investigationProcedures")}</h2>{/* The rule is read once; after the first turn the cards' countdowns carry it,
-                  and on a laptop its four lines held the first card below the panel's edge. */}{game.turns.length === 0 && <p>{t("investigateWorkspace.oneActionPer")}{cooldownWindow(game) === 3 ? "two turns" : "three turns"}{t("investigateWorkspace.itsCardCounts")}</p>}</div>
-              <span className="established-key">{t("captainReportDialog.plan")}{procedureScopes[actionScope].title.toLowerCase()}{t("captainReportDialog.scope")}{procedureIntensities[actionIntensity].title.toLowerCase()}</span>
+                  and on a laptop its four lines held the first card below the panel's edge. */}{game.turns.length === 0 && <p>{t("investigateWorkspace.oneActionPer")}{cooldownWindow(game) === 3 ? t("investigateWorkspace.twoTurns") : t("investigateWorkspace.threeTurns")}{t("investigateWorkspace.itsCardCounts")}</p>}</div>
+              <span className="established-key">{t("investigateWorkspace.planScope", { procedureScopesTitle: procedureScopes[actionScope].title.toLowerCase(), procedureIntensitiesTitle: procedureIntensities[actionIntensity].title.toLowerCase() })}</span>
             </div>
             {/* A sector decision sends the player straight back here; without a line
                 saying it was recorded, a playtest compared the meters to find out.
@@ -170,7 +170,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
                 or the Captain's prompt. Stacked, they put the first card below the
                 fold on a desktop. */}
             {!game.hypothesis
-              ? <div className="guide-nudge hypothesis-gate" role="status"><span><strong>{t("investigateWorkspace.recordWorkingHypothesis")}</strong>{t("investigateWorkspace.chooseTheExplanation")}{game.difficulty === "training" ? "what the team is seeing" : "what you know so far"}{t("investigateWorkspace.itsOwnSources")}{OWN_SOURCE_BONUS}{t("investigateWorkspace.ownSourceBonus")}</span></div>
+              ? <div className="guide-nudge hypothesis-gate" role="status"><span><strong>{t("investigateWorkspace.recordWorkingHypothesis")}</strong>{t("investigateWorkspace.chooseTheExplanation")}{game.difficulty === "training" ? t("investigateWorkspace.whatTheTeam2") : t("investigateWorkspace.whatYouKnow")}{t("investigateWorkspace.itsOwnSources2", { ownSourceBonus: OWN_SOURCE_BONUS })}</span></div>
               : trainingNote
                 ? trainingNote
                 : guidance !== "off" && <div className="guide-nudge"><span><strong>{t("investigateWorkspace.captainPrompt")}</strong> {getCoachPrompt(game, guided)}{latestObservation && <b className="prompt-clue">{t("investigateWorkspace.latestFromThe")}<Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}

@@ -2,7 +2,7 @@ import { carryModifier, commandEvents, describeMeterChange, describeRollShift, t
 import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { EffectList } from "@/components/game/effect-list";
-import { useMessages } from "@/hooks/use-messages";
+import { useMessages, type Translate } from "@/hooks/use-messages";
 import { commandEventMessages } from "@/lib/i18n/en/command-event";
 import { register } from "@/lib/i18n";
 
@@ -20,7 +20,7 @@ export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice
       <div className="command-options">
         {/* Numbered ruled rows with the exact effect in a column, as the response
             and the sector decision are set; two cards with corner arrows were not. */}
-        {(["a", "b"] as const).map((choice, index) => <button key={choice} onClick={() => onChoose(choice)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{event[choice].title}</strong><span>{event[choice].description}</span><span className="option-signals">{signalParts(game, event[choice]).map(part => <span key={part}>{part}</span>)}</span></span><span className="option-effects"><EffectList className="command-effect" items={effectLine(game, event[choice])} /></span></button>)}
+        {(["a", "b"] as const).map((choice, index) => <button key={choice} onClick={() => onChoose(choice)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{event[choice].title}</strong><span>{event[choice].description}</span><span className="option-signals">{signalParts(game, event[choice]).map(part => <span key={part}>{part}</span>)}</span></span><span className="option-effects"><EffectList className="command-effect" items={effectLine(t, game, event[choice])} /></span></button>)}
       </div>
     </section>
   );
@@ -28,7 +28,7 @@ export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice
 
 // The exact effect, as sector decisions and map actions state theirs: "Faster
 // action · Greater blind-spot risk" was followed by a cost no one had been shown.
-function effectLine(game: Game, option: { impact: number; continuity: number; modifier: number; tempo: number }) {
+function effectLine(t: Translate, game: Game, option: { impact: number; continuity: number; modifier: number; tempo: number }) {
   return [
     describeMeterChange(game, "impact", option.impact),
     describeMeterChange(game, "continuity", option.continuity),
@@ -36,8 +36,8 @@ function effectLine(game: Game, option: { impact: number; continuity: number; mo
     // Pace runs from 0 to 3; a step past either end changes nothing, and said
     // "one step faster" beside a pace already at "pressing hard".
     option.tempo && Math.min(3, Math.max(0, game.adversaryTempo + option.tempo)) !== game.adversaryTempo
-      ? `adversary pace one step ${option.tempo > 0 ? "faster" : "slower"}: about ${Math.abs(option.tempo) * 3} ${option.tempo > 0 ? "more" : "less"} adversary progress each turn`
-      : option.tempo ? `adversary pace unchanged (already ${option.tempo > 0 ? "at its fastest" : "at its slowest"})` : "",
+      ? option.tempo > 0 ? t("commandEvent.paceFaster", { amount: Math.abs(option.tempo) * 3 }) : t("commandEvent.paceSlower", { amount: Math.abs(option.tempo) * 3 })
+      : option.tempo ? option.tempo > 0 ? t("commandEvent.paceAtFastest") : t("commandEvent.paceAtSlowest") : "",
   ];
 }
 

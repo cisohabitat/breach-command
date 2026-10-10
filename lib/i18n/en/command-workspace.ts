@@ -6,8 +6,10 @@ export const commandWorkspaceMessages = {
   "commandWorkspace.selectAnExplanation": " Select an explanation, focus the relevant infrastructure and run one evidence procedure.",
   "commandWorkspace.openInvestigate": "Open Investigate ",
   "commandWorkspace.attackChain": "Attack chain",
-  "commandWorkspace.of4Revealed": " of 4 revealed",
   "commandWorkspace.unknownTechnique": "Unknown technique",
   "briefingWorkspace.situation": "Situation",
   "commandWorkspace.campaignRoute": "Campaign route",
+  "commandWorkspace.confirmed": "Confirmed",
+  "commandWorkspace.awaitingEvidence": "Awaiting evidence",
+  "commandWorkspace.of4Revealed2": "{revealed} of 4 revealed",
 } as const;

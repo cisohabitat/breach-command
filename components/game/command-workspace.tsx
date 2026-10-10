@@ -47,7 +47,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       </>))}
 
       <section className={`attack-section ${game.status === "won" ? "resolved" : ""}`} hidden={activeWorkspace !== "command"}>
-        <div className="section-heading"><h2>{t("commandWorkspace.attackChain")}</h2><span className="muted">{game.revealed.length}{t("commandWorkspace.of4Revealed")}</span></div>
+        <div className="section-heading"><h2>{t("commandWorkspace.attackChain")}</h2><span className="muted">{t("commandWorkspace.of4Revealed2", { revealed: game.revealed.length })}</span></div>
         {/* The chain as an evidence sheet: what is confirmed is typed in, what is
             not is redacted. Four equal cards with coloured tops and a centred icon
             read as a feature grid. */}
@@ -60,7 +60,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
                 <span className="chain-no">{String(index + 1)}</span>
                 <span className="chain-stage">{stage.name}</span>
                 {revealed ? <strong className="chain-technique">{attack.title}</strong> : <span className="chain-redacted"><span className="sr-only">{t("commandWorkspace.unknownTechnique")}</span></span>}
-                <span className="chain-status">{revealed ? "Confirmed" : "Awaiting evidence"}</span>
+                <span className="chain-status">{revealed ? t("commandWorkspace.confirmed") : t("commandWorkspace.awaitingEvidence")}</span>
               </li>
             );
           })}

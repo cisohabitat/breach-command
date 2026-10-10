@@ -4,14 +4,14 @@ import { describeMeterChange, describePart, getDiscriminatingRead, getModifierBr
 import type { GameSession } from "@/hooks/use-game-session";
 import { Glossed } from "@/components/game/glossed";
 import { EffectList } from "@/components/game/effect-list";
-import { useMessages } from "@/hooks/use-messages";
+import { useMessages, type Translate } from "@/hooks/use-messages";
 import { actionSheetMessages } from "@/lib/i18n/en/action-sheet";
 import { register } from "@/lib/i18n";
 
 register(actionSheetMessages);
 
 // A plan's change to this roll, in the words EffectList reads.
-const rollLine = (modifier: number) => modifier === 0 ? "this roll unchanged" : `this roll ${modifier > 0 ? "+" : "−"}${Math.abs(modifier)}`;
+const rollLine = (t: Translate, modifier: number) => modifier === 0 ? t("actionSheet.thisRollUnchanged") : t("actionSheet.thisRoll", { change: `${modifier > 0 ? "+" : "−"}${Math.abs(modifier)}` });
 
 export function ActionSheet({ session }: { session: GameSession }) {
   const { t } = useMessages();
@@ -37,13 +37,13 @@ export function ActionSheet({ session }: { session: GameSession }) {
         onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
       >
         <SheetHeader><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc && <Glossed text={proc.description} />}</SheetDescription></SheetHeader>
-        {proc && game && <p className="carried-plan" role="status">{game.turns.length ? "Carried from your last action: " : "Starting plan: "}<strong>{procedureScopes[actionScope].title}{t("actionSheet.scope")}</strong>{t("actionSheet.and")}<strong>{procedureIntensities[actionIntensity].title}{t("actionSheet.analysis")}</strong>. {game.turns.length ? "These stay selected until you change them in the plan options in this sheet." : "Change them in the plan options in this sheet; whatever you choose stays selected for later turns until you change it."}</p>}
+        {proc && game && <p className="carried-plan" role="status">{game.turns.length ? t("actionSheet.carriedFromYour") : t("actionSheet.startingPlan")}<strong>{procedureScopes[actionScope].title}{t("actionSheet.scope")}</strong>{t("actionSheet.and")}<strong>{procedureIntensities[actionIntensity].title}{t("actionSheet.analysis")}</strong>. {game.turns.length ? t("actionSheet.theseStaySelected") : t("actionSheet.changeThemIn")}</p>}
         {proc && game && <>
           <div className="action-note"><span className="eyebrow">{t("actionSheet.hypothesisCheck")}</span><p><Glossed text={proc.question} /></p></div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
             <span>
               {read && <strong>{read.label}. </strong>}
-              {read ? read.detail : procedureAligned ? "This procedure tests your working hypothesis and earns the own-source bonus shown below." : "This procedure does not directly test your working hypothesis. It may still collect useful evidence, but earns no own-source bonus."}
+              {read ? read.detail : procedureAligned ? t("actionSheet.thisProcedureTests") : t("actionSheet.thisProcedureDoes")}
             </span>
           </div>
           {/* What the roll needs sits above the plan that changes it: below the
@@ -52,7 +52,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
           <p className="roll-preview">{t("actionSheet.roll")}<b>d20 {(breakdown?.total ?? 0) < 0 ? "−" : "+"} {Math.abs(breakdown?.total ?? 0)}</b>{t("actionSheet.need")}<b>{config.threshold}</b>{t("actionSheet.orBetter")}</p>
           {breakdown && (
             <details className="modifier-details">
-              <summary>{t("actionSheet.howThisModifier")}<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => describePart(part.label, part.value)).join(", ") || (breakdown.parts.some(part => part.suppressed) ? "One bonus is unavailable — see why" : "Nothing applies")}</span></summary>
+              <summary>{t("actionSheet.howThisModifier")}<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => describePart(part.label, part.value)).join(", ") || (breakdown.parts.some(part => part.suppressed) ? t("actionSheet.oneBonusIs") : t("actionSheet.nothingApplies"))}</span></summary>
               <ul className="modifier-breakdown">
                 {breakdown.parts.filter(part => part.value !== 0 || part.suppressed || part.shown).map(part => (
                   <li key={part.label} className={part.suppressed ? "suppressed" : ""}><span>{part.label}</span><strong>{part.suppressed ? "—" : `${part.value < 0 ? "−" : "+"}${Math.abs(part.value)}`}</strong><small>{part.detail}</small></li>
@@ -62,8 +62,8 @@ export function ActionSheet({ session }: { session: GameSession }) {
             </details>
           )}
           <div className="procedure-planner">
-            <div role="group" aria-label={t("actionSheet.scope2")}><span className="eyebrow">{t("actionSheet.scope2")}</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureScopes[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureScopes[id].modifier), describeMeterChange(game, "impact", procedureScopes[id].impact), describeMeterChange(game, "objective", procedureScopes[id].objective)]} /></button>)}</div></div>
-            <div role="group" aria-label={t("actionSheet.intensity")}><span className="eyebrow">{t("actionSheet.intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureIntensities[id].modifier), describeMeterChange(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && `the source rests ${procedureIntensities[id].cooldown} turn longer`]} /></button>)}</div></div>
+            <div role="group" aria-label={t("actionSheet.scope2")}><span className="eyebrow">{t("actionSheet.scope2")}</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureScopes[id].description}</small><EffectList className="plan-effects" items={[rollLine(t, procedureScopes[id].modifier), describeMeterChange(game, "impact", procedureScopes[id].impact), describeMeterChange(game, "objective", procedureScopes[id].objective)]} /></button>)}</div></div>
+            <div role="group" aria-label={t("actionSheet.intensity")}><span className="eyebrow">{t("actionSheet.intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(t, procedureIntensities[id].modifier), describeMeterChange(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && `the source rests ${procedureIntensities[id].cooldown} turn longer`]} /></button>)}</div></div>
           </div>
           <p className="muted small">{t("actionSheet.successRevealsStage")}</p>
           <button className="primary-button full" onClick={() => run(proc.id)}>{t("actionSheet.runProcedure")}</button>

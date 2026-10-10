@@ -19,6 +19,7 @@ type State = { error: Error | null; copied: boolean };
 
 const BUILD = process.env.NEXT_PUBLIC_BUILD_ID ?? "local";
 
+// i18n: maintainer English, read by whoever fixes the fault.
 export function faultDiagnostic(name: string, error: Error) {
   const agent = typeof navigator === "undefined" ? "unknown" : navigator.userAgent;
   return [`Breach Command fault in ${name}`, `Build: ${BUILD}`, `Browser: ${agent}`, `Error: ${error.name}: ${error.message}`].join("\n");
@@ -55,7 +56,7 @@ export class FaultBoundary extends Component<Props, State> {
         <p>{textFor("faultBoundary.yourOperationIs")}</p>
         <div>
           <button className="secondary-button" onClick={this.reset}>{textFor("faultBoundary.tryAgain")}</button>
-          <button className="text-action" onClick={this.copy}>{copied ? "Diagnostic copied" : "Copy diagnostic"}</button>
+          <button className="text-action" onClick={this.copy}>{copied ? textFor("faultBoundary.diagnosticCopied") : textFor("faultBoundary.copyDiagnostic")}</button>
         </div>
         <pre aria-label={textFor("faultBoundary.diagnostic")}>{faultDiagnostic(this.props.name, error)}</pre>
       </section>

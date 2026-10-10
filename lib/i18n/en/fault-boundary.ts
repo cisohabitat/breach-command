@@ -5,4 +5,6 @@ export const faultBoundaryMessages = {
   "faultBoundary.yourOperationIs": "Your operation is saved after every step, so nothing has been lost. Try again, or reload the page and resume from the assignment screen.",
   "faultBoundary.tryAgain": "Try again",
   "faultBoundary.diagnostic": "Diagnostic",
+  "faultBoundary.diagnosticCopied": "Diagnostic copied",
+  "faultBoundary.copyDiagnostic": "Copy diagnostic",
 } as const;

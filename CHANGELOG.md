@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.2, 10 October 2026
+
+- **Whole sentences.** The interface strings that were still written inside
+  expressions (318, from ternaries, templates and tables of labels) are in the
+  catalogue, and 110 sentences that were assembled from fragments are now one
+  message each with placeholders and plurals, so a translator can reorder
+  them. The text on every seeded screen is unchanged; glyphs may sit a
+  fraction of a pixel differently where the browser now kerns across what were
+  separate text nodes. The all-script budget moved to 1,150,000 B.
+
 ## 0.9.1, 10 October 2026
 
 - **Message catalogue.** Every piece of interface text written in the
