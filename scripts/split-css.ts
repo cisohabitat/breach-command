@@ -142,6 +142,8 @@ const browser = await chromium.launch(executablePath ? { executablePath } : {});
 for (const width of [320, 390, 820, 1280]) {
   for (const state of states) {
     const page = await browser.newPage({ viewport: { width, height: 900 } });
+    page.setDefaultTimeout(15000);
+    console.log(`assignment screen: ${state.name} at ${width}`);
     await page.addInitScript(storage => { try { localStorage.clear(); for (const [key, value] of Object.entries(storage)) localStorage.setItem(key, value); } catch { /* storage refused */ } }, state.storage);
     await page.goto(base + (state.path ?? "/"), { waitUntil: "networkidle" });
     await page.waitForTimeout(400);
@@ -183,6 +185,7 @@ async function collectGame(page: Page) {
   }
 }
 async function openGame(page: Page, game: Game) {
+  page.setDefaultTimeout(15000);
   await page.addInitScript(save => { try { localStorage.clear(); localStorage.setItem("breach-command.tutorial-complete", "true"); localStorage.setItem("breach-command.session", save); } catch { /* storage refused */ } }, serialiseSession(game, false, false));
   await page.goto(`${base}/`, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Resume", exact: true }).click();
@@ -190,7 +193,9 @@ async function openGame(page: Page, game: Game) {
 }
 const pause = (page: Page) => page.waitForTimeout(400);
 for (const width of [390, 1280]) {
+  console.log(`game screens at ${width}`);
   let page = await browser.newPage({ viewport: { width, height: 900 } });
+  page.setDefaultTimeout(15000);
   await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem("breach-command.tutorial-complete", "true"); } catch { /* storage refused */ } });
   await page.goto(`${base}/`, { waitUntil: "networkidle" });
   for (const name of ["Game settings", "Field guide"]) { await page.getByRole("button", { name }).click(); await pause(page); await collectGame(page); await page.keyboard.press("Escape"); await pause(page); }
