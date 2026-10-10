@@ -1,0 +1,22 @@
+// The strings of components/game/end-state.tsx (app/page.tsx for page), loaded with it.
+export const endStateMessages = {
+  "endState.impactIs": " Impact is ",
+  "actionSheet.and": " and ",
+  "endState.is": " is ",
+  "endState.theCaptainHas": ". The captain has closed the active response.",
+  "endState.confirmed": "Confirmed",
+  "endState.attackChain": "Attack chain: ",
+  "endState.of4StagesIdentified": " of 4 stages identified.",
+  "endState.recorded": "Recorded",
+  "endState.responseContainmentAssurance": "Response: containment, assurance and recovery.",
+  "endState.scored": "Scored",
+  "endState.outcomeGrade": "Outcome: grade ",
+  "endState.of100": " of 100.",
+  "endState.marked": "Marked",
+  "endState.clearedInExpert": "Cleared in Expert, on this case’s mastery ladder.",
+  "endState.impactStandsAt": "Impact stands at ",
+  "endState.noStandDown": ". No stand-down was issued.",
+  "endState.unresolvedStagesRemain": "Unresolved stages remain open questions, not conclusions. The record is preserved for the next shift.",
+  "endState.exerciseConcludedAt": "Exercise concluded at the boundary.",
+  "endState.of4StagesWere": " of 4 stages were identified before the controller confirmed the activity as an authorised exercise. No response phase was run, so containment and recovery are not scored; the decisions you made along the way still are. The case counts as cleared in the campaign: the investigation earned this conclusion.",
+} as const;

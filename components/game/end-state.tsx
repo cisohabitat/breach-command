@@ -3,6 +3,10 @@ import { getLossReason, getOperationalLabel, getResultSummary, getShareCard, typ
 import type { GameSession } from "@/hooks/use-game-session";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { useMessages } from "@/hooks/use-messages";
+import { endStateMessages } from "@/lib/i18n/en/end-state";
+import { register } from "@/lib/i18n";
+
+register(endStateMessages);
 
 // Three end states, three different beats. A win is a stand-down that the
 // incident visibly settles out of; a loss is a quiet closure with nothing
@@ -27,17 +31,17 @@ export function EndState({ session }: { session: GameSession }) {
         <div className="end-banner end-won">
           <div>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{expert ? `Cleared in Expert: ${outcome?.title.toLowerCase()}` : outcome?.title}</h2>
-            <p>{expert ? "No clue, standing, ruled-out mark or prompt was offered, and every roll was one harder. " : ""}{outcome?.detail} Impact is {game.impact} and {getOperationalLabel(game).toLowerCase()} is {game.continuity}. The captain has closed the active response.</p>
+            <p>{expert ? "No clue, standing, ruled-out mark or prompt was offered, and every roll was one harder. " : ""}{outcome?.detail}{t("endState.impactIs")}{game.impact}{t("actionSheet.and")}{getOperationalLabel(game).toLowerCase()}{t("endState.is")}{game.continuity}{t("endState.theCaptainHas")}</p>
           </div>
           <button className="primary-button" onClick={openDebrief}>{t("ending.openReview")}</button>
         </div>
         <ol className="resolution-steps">
           {/* What closed the case, as lines of the record with their status in
               the margin, not a checklist of ticks. */}
-          <li><b>Confirmed</b><span>Attack chain: {game.revealed.length} of 4 stages identified.</span></li>
-          <li><b>Recorded</b><span>Response: containment, assurance and recovery.</span></li>
-          <li><b>Scored</b><span>Outcome: grade {outcome?.grade}, {outcome?.breakdown.total} of 100.</span></li>
-          {expert && <li><b>Marked</b><span>Cleared in Expert, on this case’s mastery ladder.</span></li>}
+          <li><b>{t("endState.confirmed")}</b><span>{t("endState.attackChain")}{game.revealed.length}{t("endState.of4StagesIdentified")}</span></li>
+          <li><b>{t("endState.recorded")}</b><span>{t("endState.responseContainmentAssurance")}</span></li>
+          <li><b>{t("endState.scored")}</b><span>{t("endState.outcomeGrade")}{outcome?.grade}, {outcome?.breakdown.total}{t("endState.of100")}</span></li>
+          {expert && <li><b>{t("endState.marked")}</b><span>{t("endState.clearedInExpert")}</span></li>}
         </ol>
         <ShareResult game={game} />
       </section>
@@ -50,11 +54,11 @@ export function EndState({ session }: { session: GameSession }) {
         <div className="end-banner end-lost">
           <div>
             <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{loss.title}.</h2>
-            <p>{loss.detail} {loss.cause === "window" ? "" : `${game.revealed.length} of 4 stages were confirmed. `}Impact stands at {game.impact}. No stand-down was issued.</p>
+            <p>{loss.detail} {loss.cause === "window" ? "" : `${game.revealed.length} of 4 stages were confirmed. `}{t("endState.impactStandsAt")}{game.impact}{t("endState.noStandDown")}</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewRecord")}</button>
         </div>
-        <p className="resolution-note">Unresolved stages remain open questions, not conclusions. The record is preserved for the next shift.</p>
+        <p className="resolution-note">{t("endState.unresolvedStagesRemain")}</p>
         <ShareResult game={game} />
       </section>
     );
@@ -65,8 +69,8 @@ export function EndState({ session }: { session: GameSession }) {
       <section className="resolution resolution-exercise" data-resolution="exercise">
         <div className="end-banner end-exercise">
           <div>
-            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>Exercise concluded at the boundary.</h2>
-            <p>{game.revealed.length} of 4 stages were identified before the controller confirmed the activity as an authorised exercise. No response phase was run, so containment and recovery are not scored; the decisions you made along the way still are. The case counts as cleared in the campaign: the investigation earned this conclusion.</p>
+            <h2 ref={heading} tabIndex={-1} data-awaiting-heading>{t("endState.exerciseConcludedAt")}</h2>
+            <p>{game.revealed.length}{t("endState.of4StagesWere")}</p>
           </div>
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewDrill")}</button>
         </div>

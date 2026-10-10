@@ -2,6 +2,11 @@
 
 import { Component, type ReactNode } from "react";
 import { recordLastError } from "@/lib/diagnostics";
+import { textFor } from "@/hooks/use-messages";
+import { faultBoundaryMessages } from "@/lib/i18n/en/fault-boundary";
+import { register } from "@/lib/i18n";
+
+register(faultBoundaryMessages);
 
 // A fault in one part of the game stays in that part. Before, a render error in
 // the review or a workspace took the whole page to the last-resort error
@@ -46,13 +51,13 @@ export class FaultBoundary extends Component<Props, State> {
     if (!error) return this.props.children;
     return (
       <section className="fault-notice" role="alert">
-        <strong>The {this.props.name} could not be shown.</strong>
-        <p>Your operation is saved after every step, so nothing has been lost. Try again, or reload the page and resume from the assignment screen.</p>
+        <strong>{textFor("faultBoundary.the")}{this.props.name}{textFor("faultBoundary.couldNotBe")}</strong>
+        <p>{textFor("faultBoundary.yourOperationIs")}</p>
         <div>
-          <button className="secondary-button" onClick={this.reset}>Try again</button>
+          <button className="secondary-button" onClick={this.reset}>{textFor("faultBoundary.tryAgain")}</button>
           <button className="text-action" onClick={this.copy}>{copied ? "Diagnostic copied" : "Copy diagnostic"}</button>
         </div>
-        <pre aria-label="Diagnostic">{faultDiagnostic(this.props.name, error)}</pre>
+        <pre aria-label={textFor("faultBoundary.diagnostic")}>{faultDiagnostic(this.props.name, error)}</pre>
       </section>
     );
   }

@@ -36,6 +36,3 @@ export const en = {
   "settings.diagnosticsManual": "Copy the text above into your report.",
   "footer.version": "Version {version}, build {build}.",
 } as const;
-
-export type Catalogue = typeof en;
-export type MessageKey = keyof Catalogue;

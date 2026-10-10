@@ -1,19 +1,23 @@
 import { getKnownFacts, type Game } from "@/lib/advanced-game";
+import { useMessages } from "@/hooks/use-messages";
+import { knownFactsMessages } from "@/lib/i18n/en/known-facts";
+import { register } from "@/lib/i18n";
+
+register(knownFactsMessages);
 
 export function KnownFacts({ game }: { game: Game }) {
+  const { t } = useMessages();
   const facts = getKnownFacts(game);
   return (
     <details className="known-facts" open={!facts.confirmed.length}>
-      <summary>
-                What we already know
-        <span>{facts.observations.length} observation{facts.observations.length === 1 ? "" : "s"}, {facts.confirmed.length} of 4 stages confirmed</span>
+      <summary>{t("knownFacts.whatWeAlready")}<span>{facts.observations.length}{t("knownFacts.observation")}{facts.observations.length === 1 ? "" : "s"}, {facts.confirmed.length}{t("knownFacts.of4StagesConfirmed")}</span>
       </summary>
       <p className="known-timeline">{facts.timeline}</p>
       <ul className="known-observations">{facts.observations.map(item => <li key={item}>{item}</li>)}</ul>
       {!!facts.confirmed.length && (
-        <ul className="known-confirmed">{facts.confirmed.map(item => <li key={item}><b>Confirmed</b> {item}</li>)}</ul>
+        <ul className="known-confirmed">{facts.confirmed.map(item => <li key={item}><b>{t("endState.confirmed")}</b> {item}</li>)}</ul>
       )}
-      {facts.unverified && <p className="known-unverified"><b>Unverified</b> {facts.unverified}</p>}
+      {facts.unverified && <p className="known-unverified"><b>{t("knownFacts.unverified")}</b> {facts.unverified}</p>}
     </details>
   );
 }

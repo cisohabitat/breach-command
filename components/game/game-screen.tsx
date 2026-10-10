@@ -10,6 +10,10 @@ import { FaultBoundary } from "@/components/game/fault-boundary";
 import { BotControl } from "@/components/game/bot-control";
 import { gameModes, getAdversaryState, getLossReason, getOperationalLabel, getSectorAlert, getTurnLimit, SECTOR_ALERT_AT, sectorSystems, type LossCause } from "@/lib/advanced-game";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSession } from "@/hooks/use-game-session";
+import { gameScreenMessages } from "@/lib/i18n/en/game-screen";
+import { register } from "@/lib/i18n";
+
+register(gameScreenMessages);
 
 
 // The final status names what ended a lost operation. It said "Window closed"
@@ -68,7 +72,7 @@ export function GameScreen({ session }: { session: GameSession }) {
         <div className="game-identity">
           {/* Each separator travels with the segment after it, so a breadcrumb that
               wraps on a narrow phone never ends a line on a bare "/". */}
-          <div className="eyebrow case-line"><span>Case <span className="mono">{String(game.scenario + 1)}</span></span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
+          <div className="eyebrow case-line"><span>{t("briefingScreen.case")}<span className="mono">{String(game.scenario + 1)}</span></span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
           <h1>{activeScenario.title}</h1>
           {/* The investigation window rarely decides an operation, so it reads as
               context under the title rather than competing with the three
@@ -82,12 +86,12 @@ export function GameScreen({ session }: { session: GameSession }) {
               readouts, and a Crisis playtest lost to it having never seen it:
               it lived on Command's board until the alert at 35. It stays in
               view here, in the readout's own name. */}
-          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono"><span className="margin-prefix">Sector </span><span className="margin-word">margin</span></span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
+          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono"><span className="margin-prefix">{t("gameScreen.sector")}</span><span className="margin-word">{t("gameScreen.margin")}</span></span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
         </div>
         <div className="case-meters" ref={meters}>
           <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : game.impact >= 40 ? "rising" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>
-            <span className="mono">Business impact</span><strong>{game.impact}</strong>
-            <Progress value={game.impact} aria-label="Business impact" />
+            <span className="mono">{t("gameScreen.businessImpact")}</span><strong>{game.impact}</strong>
+            <Progress value={game.impact} aria-label={t("gameScreen.businessImpact")} />
             <small>{game.impact < 40 ? "Contained" : game.impact < IMPACT_CRITICAL ? "Rising" : "Critical"}</small>
             {meterPulse?.impactCritical && <span key={`impact-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.impact !== 0 && (
@@ -108,8 +112,8 @@ export function GameScreen({ session }: { session: GameSession }) {
             )}
           </div>
           <div className={`objective-meter ${game.objectiveProgress >= OBJECTIVE_IMMINENT ? "critical" : ""} ${meterPulse?.objectiveImminent ? "crossing" : ""}`}>
-            <span className="mono">Adversary progress</span><strong>{game.objectiveProgress}</strong>
-            <Progress value={game.objectiveProgress} aria-label="Adversary progress" />
+            <span className="mono">{t("gameScreen.adversaryProgress")}</span><strong>{game.objectiveProgress}</strong>
+            <Progress value={game.objectiveProgress} aria-label={t("gameScreen.adversaryProgress")} />
             {/* The caption carries the pace as well, so "PACE: PRESSING HARD" beside a low
                 number reads as one picture: little done so far, rising fast. */}
             <small>{game.objectiveProgress < 40 ? "Early" : game.objectiveProgress < OBJECTIVE_IMMINENT ? "Advancing" : "Imminent"}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? `, pace ${getAdversaryState(game).toLowerCase()}` : ""}</small>
@@ -123,22 +127,22 @@ export function GameScreen({ session }: { session: GameSession }) {
         </div>
         {/* On a phone the sector's rule folds behind "What moves it"; written out,
             the alert was a hundred and seventy pixels above the procedures. */}
-        {sectorAlert && <div className="sector-alert" role="status"><TriangleAlert size={16} aria-hidden="true" /><span><strong>{sectorAlert.title}.</strong> {sectorAlert.detail} <span className="sector-rule">{sectorAlert.rule}</span><details className="sector-rule-fold"><summary>What moves it</summary>{sectorAlert.rule}</details></span></div>}
+        {sectorAlert && <div className="sector-alert" role="status"><TriangleAlert size={16} aria-hidden="true" /><span><strong>{sectorAlert.title}.</strong> {sectorAlert.detail} <span className="sector-rule">{sectorAlert.rule}</span><details className="sector-rule-fold"><summary>{t("gameScreen.whatMovesIt")}</summary>{sectorAlert.rule}</details></span></div>}
       </section>
 
       <BotControl session={session} />
 
-      <nav className="workspace-tabs" aria-label="Command workspace" ref={tabs}>
+      <nav className="workspace-tabs" aria-label={t("gameScreen.commandWorkspace")} ref={tabs}>
         <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><span><strong>{t("tabs.command")}</strong></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>{t("tabs.decisionWaiting")}</b>}</button>
         <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><span><strong>{t("tabs.investigate")}</strong></span><b>{t("tabs.stages", { found: game.revealed.length })}</b></button>
         <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><span><strong>{t("tabs.briefing")}</strong></span><b>{t("tabs.turns", { count: game.turns.length })}</b></button>
         {/* A copy for sighted players who have scrolled past the readouts; the
             readouts themselves stay the accessible source. */}
         <div className={`pinned-readouts ${metersAway ? "shown" : ""}`} aria-hidden="true">
-          <span>Business impact <em>{game.impact}</em></span>
+          <span>{t("gameScreen.businessImpact2")}<em>{game.impact}</em></span>
           <span>{getOperationalLabel(game)} <em>{game.continuity}</em></span>
-          <span>Adversary progress <em>{game.objectiveProgress}</em></span>
-          <span>Sector margin <em>{game.sectorHealth}</em></span>
+          <span>{t("gameScreen.adversaryProgress2")}<em>{game.objectiveProgress}</em></span>
+          <span>{t("gameScreen.sectorMargin")}<em>{game.sectorHealth}</em></span>
         </div>
       </nav>
 
@@ -152,7 +156,7 @@ export function GameScreen({ session }: { session: GameSession }) {
         <FaultBoundary name="Briefing workspace"><BriefingWorkspace session={session} /></FaultBoundary>
       </div>
 
-      <footer className="game-footer"><span><span className="nowrap">Breach Command</span> <span className="separator">/</span> <span className="nowrap">Single-player tabletop</span></span><button onClick={() => setRules(true)}>Rules &amp; attribution <CircleHelp size={14} /></button></footer>
+      <footer className="game-footer"><span><span className="nowrap">{t("gameScreen.breachCommand")}</span> <span className="separator">/</span> <span className="nowrap">{t("gameScreen.singlePlayerTabletop")}</span></span><button onClick={() => setRules(true)}>{t("gameScreen.rulesAttribution")}<CircleHelp size={14} /></button></footer>
     </main>
   );
 }

@@ -4,10 +4,14 @@ import Link from "next/link";
 import { BookOpen, RotateCcw, Settings2, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { useMessages } from "@/hooks/use-messages";
+import { useMessages, textFor } from "@/hooks/use-messages";
 import { BriefingScreen } from "@/components/game/briefing-screen";
 import { FaultBoundary } from "@/components/game/fault-boundary";
 import { useGameSession } from "@/hooks/use-game-session";
+import { pageMessages } from "@/lib/i18n/en/page";
+import { register } from "@/lib/i18n";
+
+register(pageMessages);
 
 // The assignment screen is all a first visit needs. The game screen and every
 // dialog load on demand, so the script parsed before the page answers is the
@@ -30,7 +34,7 @@ const parts = {
 // what it is doing, rather than showing nothing between the click and the case.
 const GameScreen = dynamic(() => parts.game().then(m => m.GameScreen), {
   ssr: false,
-  loading: () => <main className="game-screen game-loading" id="main-content" aria-busy="true"><h1>Opening the operation</h1></main>,
+  loading: () => <main className="game-screen game-loading" id="main-content" aria-busy="true"><h1>{textFor("page.openingTheOperation")}</h1></main>,
 });
 const ActionSheet = dynamic(() => parts.actionSheet().then(m => m.ActionSheet), { ssr: false });
 const RollDialog = dynamic(() => parts.roll().then(m => m.RollDialog), { ssr: false });
@@ -103,14 +107,14 @@ export default function Home() {
         <div className="storage-notice" role="status">
           {/* Each notice says what happened to which data in its own words; a fixed
               heading claimed an unreadable save and a reset campaign for all of them. */}
-          <strong>Saved data</strong>
+          <strong>{t("page.savedData")}</strong>
           <span>{storageNotice}</span>
           <button onClick={() => setStorageNotice("")} aria-label={t("shell.dismissStorage")}><X size={16} /></button>
         </div>
       )}
       <header className="topbar">
         <Link href="/" className="brand" aria-label={t("shell.home")}>
-          <span className="brand-name">Breach Command</span><span className="brand-light">{t("shell.desk")}</span>
+          <span className="brand-name">{t("gameScreen.breachCommand")}</span><span className="brand-light">{t("shell.desk")}</span>
         </Link>
         <div className="top-actions">
           <button className="quiet-button" onClick={() => setRules(true)} aria-label={t("shell.fieldGuide")}><BookOpen size={17} /><span>{t("shell.fieldGuide")}</span></button>

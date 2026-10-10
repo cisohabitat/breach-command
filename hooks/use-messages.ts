@@ -21,3 +21,9 @@ export function useMessages() {
   const locale = useSyncExternalStore(noSubscription, readLocale, () => "en" as Locale);
   return { locale, t: (key: MessageKey, params?: Record<string, string | number>) => translate(locale, key, params) };
 }
+
+// For a class component or a helper outside a component, which cannot call a
+// hook: the same messages, read for the locale at the moment of the call.
+export function textFor(key: MessageKey, params?: Record<string, string | number>) {
+  return translate(typeof window === "undefined" ? "en" : readLocale(), key, params);
+}

@@ -4,6 +4,17 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.1, 10 October 2026
+
+- **Message catalogue.** Every piece of interface text written in the
+  components (572 strings) now comes from the catalogue, one file per
+  component in `lib/i18n/en/` that loads with its component, so the first
+  load stays under its budget. English is unchanged to the pixel on all 56
+  seeded screens, and the pseudo-locale (`?locale=en-XA`) now reaches every
+  dialog. Strings built inside expressions and the engine's prose are still
+  English-only. The all-script budget moved to 1,120,000 B
+  (`docs/perf-budgets.md`).
+
 ## 0.9.0, 9 October 2026
 
 The roadmap's eight phases (`docs/ROADMAP.md`), the parts an agent can do.

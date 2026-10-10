@@ -2,6 +2,11 @@ import { ArrowUp } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { attacks, describeMeterChange, procedureById, describeRollShift, getMapActionEffect, infrastructureTopologies, type Game, type MapAction } from "@/lib/advanced-game";
 import { EffectList } from "@/components/game/effect-list";
+import { useMessages } from "@/hooks/use-messages";
+import { infrastructureConsoleMessages } from "@/lib/i18n/en/infrastructure-console";
+import { register } from "@/lib/i18n";
+
+register(infrastructureConsoleMessages);
 
 const reachable = (current: number, change: number) => Math.min(100, Math.max(0, current + change)) - current;
 
@@ -21,14 +26,15 @@ function costLine(game: Game, nodeId: string, action: MapAction) {
 }
 
 export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
+  const { t } = useMessages();
   const topology = infrastructureTopologies[game.scenario];
   const activeStage = Math.min(4, game.revealed.length);
   const focused = topology.nodes.find(node => node.id === game.focusedNode) ?? topology.nodes[0];
   const posture = game.nodePosture[focused.id] ?? "normal";
   const criticalFocus = focused.id === topology.critical;
   return (
-    <section className="infrastructure-console" aria-label="Interactive infrastructure map" tabIndex={-1}>
-      <div className="map-heading"><div><h2>{topology.title}</h2></div><span className="focus-instruction">{game.mapActionsRemaining} map action{game.mapActionsRemaining === 1 ? "" : "s"} left</span></div>
+    <section className="infrastructure-console" aria-label={t("infrastructureConsole.interactiveInfrastructureMap")} tabIndex={-1}>
+      <div className="map-heading"><div><h2>{topology.title}</h2></div><span className="focus-instruction">{game.mapActionsRemaining}{t("infrastructureConsole.mapAction")}{game.mapActionsRemaining === 1 ? "" : "s"}{t("infrastructureConsole.left")}</span></div>
       <div className="incident-flow" aria-hidden="true"><span style={{ width: `${Math.max(8, activeStage / 4 * 100)}%` }} /></div>
       <div className="topology-shell">
         <div className="topology-nodes">
@@ -46,8 +52,8 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
           })}
         </div>
         <details className="topology-detail">
-          <summary>Trust relationships<span>{topology.edges.length} paths, {topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length} blocked</span></summary>
-          <div className="topology-routes" role="group" aria-label="Trust relationships">{topology.edges.map((edge, index) => {
+          <summary>{t("infrastructureConsole.trustRelationships")}<span>{topology.edges.length}{t("infrastructureConsole.paths")}{topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length}{t("infrastructureConsole.blocked")}</span></summary>
+          <div className="topology-routes" role="group" aria-label={t("infrastructureConsole.trustRelationships")}>{topology.edges.map((edge, index) => {
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
           return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>
             <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
@@ -59,15 +65,15 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
         </details>
       </div>
       <div className="map-command-bar">
-        <div><span><small>Selected node</small><strong>{focused.label}</strong><em>{criticalFocus ? "Critical dependency. " : ""}{posture === "normal" ? "No active control" : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
-            roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">Map focus adds +1 to {focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(", ").replace(/, ([^,]*)$/, " and $1")}.</small></span></div>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><span><strong>Monitor</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? "Monitored: its bonus is waiting for your next roll" : "Already monitored: its bonus went to the roll after it was set") : posture === "isolated" ? "Isolated: nothing left to monitor here" : <EffectList className="map-cost" items={costLine(game, focused.id, "monitor")} />}</small></span></button>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><span><strong>Isolate</strong><small>{posture === "isolated" ? "Already isolated" : <EffectList className="map-cost" items={costLine(game, focused.id, "isolate")} />}</small></span></button>
+        <div><span><small>{t("infrastructureConsole.selectedNode")}</small><strong>{focused.label}</strong><em>{criticalFocus ? "Critical dependency. " : ""}{posture === "normal" ? "No active control" : posture}</em>{/* Map focus applies only to the sources that examine the selected system, so a
+            roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">{t("infrastructureConsole.mapFocusAdds1")}{focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(", ").replace(/, ([^,]*)$/, " and $1")}.</small></span></div>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><span><strong>{t("infrastructureConsole.monitor")}</strong><small>{posture === "monitored" ? (game.nextModifierSource?.includes(`Monitored ${focused.label}`) ? "Monitored: its bonus is waiting for your next roll" : "Already monitored: its bonus went to the roll after it was set") : posture === "isolated" ? "Isolated: nothing left to monitor here" : <EffectList className="map-cost" items={costLine(game, focused.id, "monitor")} />}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><span><strong>{t("infrastructureConsole.isolate")}</strong><small>{posture === "isolated" ? "Already isolated" : <EffectList className="map-cost" items={costLine(game, focused.id, "isolate")} />}</small></span></button>
       </div>
-      {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>Back to the procedures <ArrowUp size={14} /></button>}
+      {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>{t("evidenceWorkspace.backToThe")}<ArrowUp size={14} /></button>}
       <details className="map-intel-detail">
-        <summary>Dependency and control notes<span>{game.revealed.length ? `${game.revealed.length} technique${game.revealed.length === 1 ? "" : "s"} confirmed` : "no techniques confirmed"}</span></summary>
-        <p className="map-intel">Critical dependency: {topology.criticalRule} Confirmed techniques: {game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(", ") : "none"}. Map actions are optional, limited and immediate. Monitoring improves the next procedure; isolation reduces actor opportunity but removes service capacity until recovery.</p>
+        <summary>{t("infrastructureConsole.dependencyAndControl")}<span>{game.revealed.length ? `${game.revealed.length} technique${game.revealed.length === 1 ? "" : "s"} confirmed` : "no techniques confirmed"}</span></summary>
+        <p className="map-intel">{t("infrastructureConsole.criticalDependency")}{topology.criticalRule}{t("infrastructureConsole.confirmedTechniques")}{game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(", ") : "none"}{t("infrastructureConsole.mapActionsAre")}</p>
       </details>
     </section>
   );

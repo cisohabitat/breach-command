@@ -1,4 +1,5 @@
-import { en, type Catalogue, type MessageKey } from "./en.ts";
+import { en } from "./en.ts";
+import type { MessageKey } from "./keys.ts";
 
 // The message catalogue. English is the source of truth; another locale is a
 // catalogue of the same keys, and a missing key falls back to English. Plurals
@@ -6,11 +7,22 @@ import { en, type Catalogue, type MessageKey } from "./en.ts";
 // locale needs no code of its own. "en-XA" is a pseudo-locale generated from
 // English at runtime: accented and a third longer, as German runs, to show
 // where a layout would break before a translator is involved.
-export type { MessageKey } from "./en.ts";
+export type { MessageKey } from "./keys.ts";
 export type Locale = "en" | "en-XA";
 export const locales: Locale[] = ["en", "en-XA"];
 
-type Value = Catalogue[MessageKey];
+type Value = string | Readonly<Partial<Record<Intl.LDMLPluralRule, string>>>;
+
+// The messages loaded so far: the shared base, and each component's own
+// catalogue, which registers itself when the component's module loads, so a
+// lazily loaded dialog carries its strings with it.
+const registry: Record<string, Value> = { ...en };
+export function register(catalogue: Readonly<Record<string, Value>>) {
+  Object.assign(registry, catalogue);
+}
+export function registered(key: string) {
+  return key in registry;
+}
 type Params = Record<string, string | number>;
 
 const accents: Record<string, string> = { a: "á", e: "é", i: "î", o: "ö", u: "ü", c: "ç", n: "ñ", s: "š", y: "ý", A: "Å", E: "É", I: "Î", O: "Ö", U: "Ü", C: "Ç", N: "Ñ", S: "Š" };
@@ -22,7 +34,9 @@ export function pseudo(text: string) {
 }
 
 function lookup(locale: Locale, key: MessageKey): Value {
-  const value = en[key];
+  // A key whose catalogue has not loaded shows itself rather than nothing;
+  // tests/i18n.test.ts checks each component registers what it reads.
+  const value = registry[key] ?? key;
   if (locale !== "en-XA") return value;
   if (typeof value === "string") return pseudo(value) as Value;
   return Object.fromEntries(Object.entries(value).map(([category, text]) => [category, pseudo(text as string)])) as unknown as Value;

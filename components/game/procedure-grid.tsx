@@ -7,6 +7,11 @@ import {
   type Game,
   OWN_SOURCE_BONUS,
 } from "@/lib/advanced-game";
+import { useMessages } from "@/hooks/use-messages";
+import { procedureGridMessages } from "@/lib/i18n/en/procedure-grid";
+import { register } from "@/lib/i18n";
+
+register(procedureGridMessages);
 
 export function ProcedureGrid({
   game,
@@ -17,6 +22,7 @@ export function ProcedureGrid({
   disabled: boolean;
   onChoose: (id: string) => void;
 }) {
+  const { t } = useMessages();
   const routeSources = game.hypothesis ? hypothesisSources(game, game.hypothesis) : [];
   return (
     <div className="procedure-grid">
@@ -46,7 +52,7 @@ export function ProcedureGrid({
               <span className="procedure-code">{String(index + 1)}</span>
               {/* The badge carries the cooldown only. The established bonus is stated
                   once, in the footer; a "+2" badge said it a second time. */}
-              {cooldown > 0 && <span className="procedure-badge">{cooldown} turn{cooldown === 1 ? "" : "s"}</span>}
+              {cooldown > 0 && <span className="procedure-badge">{cooldown}{t("debriefDialog.turn")}{cooldown === 1 ? "" : "s"}</span>}
             </div>
             <h3>{procedure.title}</h3>
             <p>{procedure.short}</p>
@@ -54,13 +60,13 @@ export function ProcedureGrid({
                 applies, but the source cannot test the reading at this stage. */}
             {/* An established source says so where the own-source tag does, under
                 the description: one sat beside it and the other below. */}
-            {established && !cooldown && <small className="alignment-label established-label">Established source <span className="nowrap">+2</span></small>}
+            {established && !cooldown && <small className="alignment-label established-label">{t("procedureGrid.establishedSource")}<span className="nowrap">+2</span></small>}
             {aligned && !cooldown && (blind
-              ? <small className="alignment-label blind">Own source <span className="nowrap">+{OWN_SOURCE_BONUS}</span>, can&apos;t test this reading here</small>
-              : <small className="alignment-label">Own source <span className="nowrap">+{OWN_SOURCE_BONUS}</span></small>)}
-            {seesOther && !cooldown && <small className="alignment-label other-sees">Can also test this reading</small>}
-            {read && !cooldown && read.spent > 0 && <small className="spent-label">Checked {read.spent}×, no stage found</small>}
-            {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive} attempt{read.inconclusive === 1 ? "" : "s"} failed, inconclusive</small>}
+              ? <small className="alignment-label blind">{t("procedureGrid.ownSource")}<span className="nowrap">+{OWN_SOURCE_BONUS}</span>{t("procedureGrid.canTestThis")}</small>
+              : <small className="alignment-label">{t("procedureGrid.ownSource")}<span className="nowrap">+{OWN_SOURCE_BONUS}</span></small>)}
+            {seesOther && !cooldown && <small className="alignment-label other-sees">{t("procedureGrid.canAlsoTest")}</small>}
+            {read && !cooldown && read.spent > 0 && <small className="spent-label">{t("procedureGrid.checked")}{read.spent}{t("procedureGrid.noStageFound")}</small>}
+            {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{read.inconclusive}{t("procedureGrid.attempt")}{read.inconclusive === 1 ? "" : "s"}{t("procedureGrid.failedInconclusive")}</small>}
             <div className="procedure-bottom">
               {/* An ordinary source carries no label: "STANDARD" told a newcomer nothing. */}
               <span>{cooldown ? "On cooldown" : null}</span>

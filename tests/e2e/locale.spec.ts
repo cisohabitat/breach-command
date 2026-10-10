@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { pseudo } from "../../lib/i18n/index.ts";
 import { openWithSave, responsePhaseGame, twoStagesGame } from "./fixtures";
 
 // The pseudo-locale makes every catalogued string a third longer, as German
@@ -16,7 +17,7 @@ test("the catalogued interface holds its layout with strings a third longer", as
     expect(await overflow(), `assignment at ${width}`).toBeLessThanOrEqual(0);
 
     await openWithSave(page, twoStagesGame(), false, null, "/?locale=en-XA");
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
     await page.waitForTimeout(400);
     await page.keyboard.press("Escape");
     await page.waitForTimeout(300);
@@ -26,7 +27,7 @@ test("the catalogued interface holds its layout with strings a third longer", as
     expect(new Set(tabs).size, `tabs on one line at ${width}`).toBe(1);
 
     await openWithSave(page, responsePhaseGame(), false, null, "/?locale=en-XA");
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
     await page.waitForTimeout(400);
     for (let phase = 0; phase < 3; phase++) {
       await page.locator(".response-options > button").first().click();

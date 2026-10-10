@@ -3,8 +3,14 @@ import { ArrowUp, Check, Link2, X } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { adversaryObjectives, attacks, getObjectiveRead, hypotheses, stages, type AdversaryObjectiveId, type Game } from "@/lib/advanced-game";
 import { objectiveTheory } from "@/lib/phase9";
+import { useMessages } from "@/hooks/use-messages";
+import { evidenceWorkspaceMessages } from "@/lib/i18n/en/evidence-workspace";
+import { register } from "@/lib/i18n";
+
+register(evidenceWorkspaceMessages);
 
 export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void }) {
+  const { t } = useMessages();
   const [selected, setSelected] = useState<string[]>([]);
   // Nothing is chosen until the player chooses: preselected, "Causal sequence"
   // was tested by players who had not yet decided anything.
@@ -24,37 +30,37 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
     return attack ? `${stages[attack.stage].name}, ${hypotheses.find(item => item.id === attack.vector)!.title.toLowerCase()} route` : null;
   };
   return (
-    <section className="evidence-workspace" aria-label="Evidence correlation workspace" tabIndex={-1}>
-      <div className="map-heading"><div><h2>Evidence workspace</h2></div><span className="focus-instruction">{game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"} tested</span></div>
+    <section className="evidence-workspace" aria-label={t("evidenceWorkspace.evidenceCorrelationWorkspace")} tabIndex={-1}>
+      <div className="map-heading"><div><h2>{t("evidenceWorkspace.evidenceWorkspace")}</h2></div><span className="focus-instruction">{game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"}{t("evidenceWorkspace.tested")}</span></div>
       <div className="case-theory">
-        <div><span><strong>Case theory</strong><small>Declare intent, then test it against causal evidence. {objective.confidence === "LOW" ? "The objective can be assessed once two stages are confirmed." : `Current assessment: ${objectiveTheory[game.objective].title.toLowerCase()}, ${objective.confidence.toLowerCase()} confidence.`}</small></span></div>
-        <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">Recorded</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
+        <div><span><strong>{t("evidenceWorkspace.caseTheory")}</strong><small>{t("evidenceWorkspace.declareIntentThen")}{objective.confidence === "LOW" ? "The objective can be assessed once two stages are confirmed." : `Current assessment: ${objectiveTheory[game.objective].title.toLowerCase()}, ${objective.confidence.toLowerCase()} confidence.`}</small></span></div>
+        <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">{t("endState.recorded")}</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
       </div>
-      {!game.evidence.length ? <div className="evidence-empty"><p><strong>No findings filed.</strong> Successful procedures will place findings here. A check can succeed and still settle nothing — that is recorded too. Select two findings to test whether they form a causal sequence.</p></div> : <>
+      {!game.evidence.length ? <div className="evidence-empty"><p><strong>{t("evidenceWorkspace.noFindingsFiled")}</strong>{t("evidenceWorkspace.successfulProceduresWill")}</p></div> : <>
         <details className="evidence-detail" open={game.evidence.length <= 3}>
           {/* A finding is not a stage. A check that succeeds without exposing one is
               kept because it still narrows the search, so the count has to say which
               kind each is or a beginner reads every row as a technique they found. */}
-          <summary>Findings<span>{confirmed} confirmed a stage, {game.evidence.length - confirmed} found no stage, {selected.length} selected</span></summary>
-          <div className="evidence-timeline" role="group" aria-label="Evidence timeline">{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
+          <summary>{t("evidenceWorkspace.findings")}<span>{confirmed}{t("evidenceWorkspace.confirmedStage")}{game.evidence.length - confirmed}{t("evidenceWorkspace.foundNoStage")}{selected.length}{t("evidenceWorkspace.selected")}</span></summary>
+          <div className="evidence-timeline" role="group" aria-label={t("evidenceWorkspace.evidenceTimeline")}>{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
           <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
-            <span>Turn {item.turn}</span><strong>{item.title}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{item.source} at {item.system}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? "Confirmed a stage" : "Found no stage"}, {item.confidence.toLowerCase()} confidence</em>
+            <span>{t("evidenceWorkspace.turn")}{item.turn}</span><strong>{item.title}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{item.source}{t("debriefDialog.at")}{item.system}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? "Confirmed a stage" : "Found no stage"}, {item.confidence.toLowerCase()}{t("debriefDialog.confidence2")}</em>
           </button>)}</div>
         </details>
-        <div className="relationship-assessment" role="group" aria-label="Relationship assessment">
-          <span>Your assessment</span>
-          <button className={assessment === "causal" ? "active" : ""} aria-pressed={assessment === "causal"} onClick={() => setAssessment("causal")}>Causal sequence</button>
-          <button className={assessment === "coincidental" ? "active" : ""} aria-pressed={assessment === "coincidental"} onClick={() => setAssessment("coincidental")}>Coincidental overlap</button>
+        <div className="relationship-assessment" role="group" aria-label={t("evidenceWorkspace.relationshipAssessment")}>
+          <span>{t("evidenceWorkspace.yourAssessment")}</span>
+          <button className={assessment === "causal" ? "active" : ""} aria-pressed={assessment === "causal"} onClick={() => setAssessment("causal")}>{t("evidenceWorkspace.causalSequence")}</button>
+          <button className={assessment === "coincidental" ? "active" : ""} aria-pressed={assessment === "coincidental"} onClick={() => setAssessment("coincidental")}>{t("evidenceWorkspace.coincidentalOverlap")}</button>
         </div>
-        <p className="relationship-helper">{selected.length === 0 ? "Select two findings to compare." : selected.length === 1 ? "One finding selected. Choose one more." : assessment ? "Two findings selected. Test your assessment." : "Two findings selected. Choose whether the relationship is causal or coincidental, then test it."} One finding enabled the other only if they are consecutive stages or on the same route. A right call: business impact −3, adversary progress −6 and next roll +2; a right causal call made with a case theory that names the objective earns −5, −10 and +3 instead. A wrong call: business impact +4 and adversary progress +3.</p>
-        <button className="correlate-button" disabled={selected.length !== 2 || !assessment || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { if (!assessment) return; onCorrelate(selected as [string, string], assessment); setSelected([]); setAssessment(null); }}><Link2 size={17} /> Test assessment</button>
+        <p className="relationship-helper">{selected.length === 0 ? "Select two findings to compare." : selected.length === 1 ? "One finding selected. Choose one more." : assessment ? "Two findings selected. Test your assessment." : "Two findings selected. Choose whether the relationship is causal or coincidental, then test it."}{t("evidenceWorkspace.oneFindingEnabled")}</p>
+        <button className="correlate-button" disabled={selected.length !== 2 || !assessment || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { if (!assessment) return; onCorrelate(selected as [string, string], assessment); setSelected([]); setAssessment(null); }}><Link2 size={17} />{t("evidenceWorkspace.testAssessment")}</button>
       </>}
       {!!game.correlations.length && <div className="correlation-results">{game.correlations.slice(-2).reverse().map((record, index) => <div key={`${record.evidence.join("-")}-${index}`} className={record.correct ? "valid" : "invalid"}>{record.correct ? <Check size={16} /> : <X size={16} />}<p><strong>{record.correct ? "Assessment supported" : "Assessment challenged"}</strong><span>{record.finding}</span><small className="correlation-effect">{!record.correct ? "Business impact +4 worse and adversary progress +3 worse." : record.valid ? "Business impact −3, adversary progress −6 and next roll +2, or −5, −10 and +3 when your case theory names the objective; the readouts show which." : "Business impact −3 better, adversary progress −6 better and next roll +2."}</small></p></div>)}</div>}
       {/* The prompts bring a player down here, three screens below the cards on a
           phone; this takes them back to where the next turn starts. */}
       {/* A recorded case theory left a phone playtest at the foot of the page as
           a comparison did, with no way back but three screens of scrolling. */}
-      {(!!game.correlations.length || !!game.caseTheory) && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>Back to the procedures <ArrowUp size={14} /></button>}
+      {(!!game.correlations.length || !!game.caseTheory) && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>{t("evidenceWorkspace.backToThe")}<ArrowUp size={14} /></button>}
     </section>
   );
 }

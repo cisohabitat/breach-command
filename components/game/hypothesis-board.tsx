@@ -12,6 +12,11 @@ import {
   type HypothesisId,
 } from "@/lib/advanced-game";
 import { Glossed } from "@/components/game/glossed";
+import { useMessages } from "@/hooks/use-messages";
+import { hypothesisBoardMessages } from "@/lib/i18n/en/hypothesis-board";
+import { register } from "@/lib/i18n";
+
+register(hypothesisBoardMessages);
 
 export function HypothesisBoard({
   game,
@@ -20,6 +25,7 @@ export function HypothesisBoard({
   game: Game;
   onChoose: (id: HypothesisId) => void;
 }) {
+  const { t } = useMessages();
   const attribution = getAttributionRead(game);
   // Expert operations withhold every read, this one included.
   const standing = game.mode === "expert" ? null : getHypothesisStanding(game);
@@ -31,21 +37,20 @@ export function HypothesisBoard({
   // standing still says so for a reading that is declared.
   const stageIndex = [0, 1, 2, 3].find(index => !game.revealed.some(id => attacks.find(attack => attack.id === id)?.stage === index));
   const underTest = stageIndex === undefined ? null : { index: stageIndex, name: stages[stageIndex].name };
-  const outMark = (id: HypothesisId) => ruledOut?.reason[id] === "excluded" && <em className="route-ruled-out">Ruled out at the {ruledOut.stage} stage</em>;
+  const outMark = (id: HypothesisId) => ruledOut?.reason[id] === "excluded" && <em className="route-ruled-out">{t("hypothesisBoard.ruledOutAt")}{ruledOut.stage}{t("hypothesisBoard.stage")}</em>;
   return (
     <section className={`hypothesis-board ${active ? "has-reading" : ""}`} aria-labelledby="hypothesis-heading">
       <div className="hypothesis-heading">
         <div>
                     <span>
-            <strong id="hypothesis-heading">Working hypothesis</strong>
-            <small>Select the explanation you are testing. One hypothesis is recorded per turn.</small>
+            <strong id="hypothesis-heading">{t("hypothesisBoard.workingHypothesis")}</strong>
+            <small>{t("hypothesisBoard.selectTheExplanation")}</small>
           </span>
         </div>
         <span
           className={`adversary-state tempo-${game.adversaryTempo}`}
           title={attribution.detail}
-        >
-          Adversary pace: {getAdversaryState(game).toLowerCase()}
+        >{t("hypothesisBoard.adversaryPace")}{getAdversaryState(game).toLowerCase()}
         </span>
       </div>
       {standing && standing.level !== "none" && (
@@ -53,7 +58,7 @@ export function HypothesisBoard({
           {/* A reading is tested one stage at a time, and the label says which: a
               playtest read the premise as covering the whole incident and could
               not see why "Holding" became "Untested" after a find. */}
-          <span className="eyebrow">{underTest ? <span><span className="reading-for">Reading for stage</span><span className="stage-only">Stage</span> {underTest.index + 1}, {underTest.name}</span> : "Current reading"}</span>
+          <span className="eyebrow">{underTest ? <span><span className="reading-for">{t("hypothesisBoard.readingForStage")}</span><span className="stage-only">{t("facilitatorSheet.stage")}</span> {underTest.index + 1}, {underTest.name}</span> : "Current reading"}</span>
           {active && <b className="standing-reading">{active.title}</b>}
           <strong>{standing.label}</strong>
           <span className="standing-meter" aria-hidden="true">
@@ -66,7 +71,7 @@ export function HypothesisBoard({
           board named the declared route nowhere but a small "change from" line. */}
       {!standing && active && (
         <div className="hypothesis-standing level-none" role="status">
-          <span className="eyebrow">{underTest ? <span><span className="reading-for">Reading for stage</span><span className="stage-only">Stage</span> {underTest.index + 1}, {underTest.name}</span> : "Current reading"}</span>
+          <span className="eyebrow">{underTest ? <span><span className="reading-for">{t("hypothesisBoard.readingForStage")}</span><span className="stage-only">{t("facilitatorSheet.stage")}</span> {underTest.index + 1}, {underTest.name}</span> : "Current reading"}</span>
           <b className="standing-reading">{active.title}</b>
         </div>
       )}
@@ -87,7 +92,7 @@ export function HypothesisBoard({
               <strong>{hypothesis.title}</strong>
               {outMark(hypothesis.id)}
               <span>{hypothesis.premise}</span>
-              <small>Evidence: {evidenceSources}</small>
+              <small>{t("hypothesisBoard.evidence")}{evidenceSources}</small>
             </button>
           );
         })}
@@ -100,11 +105,11 @@ export function HypothesisBoard({
         <div className="hypothesis-detail">
           <strong>{active.title}</strong>
           <span><Glossed text={active.premise} /></span>
-          <small>Evidence: {hypothesisSources(game, active.id).map(id => procedureById(game, id)?.title).filter(Boolean).join(", ")}</small>
+          <small>{t("hypothesisBoard.evidence")}{hypothesisSources(game, active.id).map(id => procedureById(game, id)?.title).filter(Boolean).join(", ")}</small>
         </div>
       )}
       <details className="hypothesis-compare">
-        <summary>Compare all four readings<span>{active ? "change from " + active.title.toLowerCase() : "none recorded"}</span></summary>
+        <summary>{t("hypothesisBoard.compareAllFour")}<span>{active ? "change from " + active.title.toLowerCase() : "none recorded"}</span></summary>
         <div className="hypothesis-compare-options">
           {hypotheses.map(hypothesis => (
             <button
@@ -120,7 +125,7 @@ export function HypothesisBoard({
               {/* Each reading's own sources and whether they are ready, so a player
                   can see which reading they could test this turn without declaring
                   each in turn to find out. */}
-              <small className="compare-sources">Sources: {hypothesisSources(game, hypothesis.id).map(id => `${procedureById(game, id)?.title ?? id}${availableIn(game, id) ? ` (back in ${availableIn(game, id)})` : ""}`).join(", ")}</small>
+              <small className="compare-sources">{t("hypothesisBoard.sources")}{hypothesisSources(game, hypothesis.id).map(id => `${procedureById(game, id)?.title ?? id}${availableIn(game, id) ? ` (back in ${availableIn(game, id)})` : ""}`).join(", ")}</small>
             </button>
           ))}
         </div>

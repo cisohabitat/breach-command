@@ -1,5 +1,10 @@
 import { getAttributionRead, getOperationalLabel, infrastructureTopologies, readyToCorrelate, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
+import { useMessages } from "@/hooks/use-messages";
+import { livingIncidentMessages } from "@/lib/i18n/en/living-incident";
+import { register } from "@/lib/i18n";
+
+register(livingIncidentMessages);
 
 const sectorMoments = [
   ["Payroll window open", "Privileged administration is being watched against a fixed processing deadline."],
@@ -15,13 +20,14 @@ const sectorMoments = [
 ] as const;
 
 export function SectorSituation({ game }: { game: Game }) {
+  const { t } = useMessages();
   const [title, detail] = sectorMoments[game.scenario];
   const severity = game.continuity <= 45 ? "critical" : game.continuity <= 75 ? "degraded" : "stable";
   return <div className={`sit-entry sector-condition ${severity}`}>
-    <span className="sit-label">Sector condition</span>
+    <span className="sit-label">{t("fieldGuideDialog.sectorCondition")}</span>
     {/* The figure is the continuity readout's, already in the top row; here the
         condition is said in words. */}
-    <div className="sit-body"><p><strong>{title}.</strong> {detail}</p><small>{getOperationalLabel(game)} is {severity === "critical" ? "at risk" : severity}.</small></div>
+    <div className="sit-body"><p><strong>{title}.</strong> {detail}</p><small>{getOperationalLabel(game)}{t("endState.is")}{severity === "critical" ? "at risk" : severity}.</small></div>
   </div>;
 }
 

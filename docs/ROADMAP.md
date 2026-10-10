@@ -587,8 +587,20 @@ that holds every layout at 320 to 1280 px (`tests/e2e/locale.spec.ts`).
 
 Not met: the screen-reader (VoiceOver, NVDA) and keyboard-only playthroughs;
 a first real locale, which needs a translator and reviewer; and "no string
-outside the catalogue", where 441 strings remain in components, held as a
-ceiling by `tests/i18n.test.ts`, plus the engine's prose.
+outside the catalogue", in part.
+
+10 October 2026 (0.9.1): every JSX text and every `aria-label`,
+`placeholder`, `title` and `alt` literal in `components/game` and the page
+shell is in the catalogue, 572 strings in one catalogue per component under
+`lib/i18n/en/`, and `tests/i18n.test.ts` now asserts there are none left
+rather than holding a ceiling. English is pixel-identical on all 56 seeded
+screens at four widths, and the pseudo-locale still holds every layout. Still
+outside the catalogue: strings built inside JSX expressions (a ternary's
+words, a template literal, a plural's "s"), and all the engine's prose
+(`lib/game.ts`, `lib/advanced-game.ts`, the content tables). Many catalogued
+strings are fragments joined in English order (`" of 6"`), which a
+translator cannot reorder; whole-sentence messages with placeholders are
+the work before a first locale.
 
 ## Phase 8: release engineering
 

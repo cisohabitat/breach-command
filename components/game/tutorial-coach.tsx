@@ -1,7 +1,13 @@
 import { ArrowRight, Check, X } from "lucide-react";
 import type { Game } from "@/lib/advanced-game";
+import { useMessages } from "@/hooks/use-messages";
+import { tutorialCoachMessages } from "@/lib/i18n/en/tutorial-coach";
+import { register } from "@/lib/i18n";
+
+register(tutorialCoachMessages);
 
 export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game: Game; workspace: "command" | "investigate" | "briefing"; onNavigate: () => void; onDismiss: () => void }) {
+  const { t } = useMessages();
   const steps = [
     { done: !!game.hypothesis, title: "Form a working hypothesis", detail: "Choose the access path that best explains the current intelligence." },
     { done: game.turns.length > 0, title: "Plan an evidence action", detail: "Select a procedure, its scope and how intensively to run it." },
@@ -26,16 +32,16 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
   // held a row above the procedures for the rest of the operation.
   if (workspace === "investigate" && current < 0) return null;
   if (workspace === "investigate") return (
-    <section className="tutorial-coach compact" aria-label="Command academy tutorial">
-            <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>Academy, step {current + 1} of {steps.length}</span><strong>{steps[current].title}</strong></p>
-      <button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button>
+    <section className="tutorial-coach compact" aria-label={t("tutorialCoach.commandAcademyTutorial")}>
+            <p><span className="eyebrow" aria-label={`Command academy, step ${current + 1} of ${steps.length}`}>{t("tutorialCoach.academyStep")}{current + 1}{t("briefingScreen.of")}{steps.length}</span><strong>{steps[current].title}</strong></p>
+      <button onClick={onDismiss} aria-label={t("tutorialCoach.dismissTutorial")}><X size={17} /></button>
     </section>
   );
   return (
-    <section className="tutorial-coach" aria-label="Command academy tutorial">
-      <div className="tutorial-head"><div><span className="eyebrow">Command academy</span><strong>{current < 0 ? "Field qualification complete" : `Step ${current + 1} of ${steps.length}`}</strong></div><button onClick={onDismiss} aria-label="Dismiss tutorial"><X size={17} /></button></div>
+    <section className="tutorial-coach" aria-label={t("tutorialCoach.commandAcademyTutorial")}>
+      <div className="tutorial-head"><div><span className="eyebrow">{t("tutorialCoach.commandAcademy")}</span><strong>{current < 0 ? "Field qualification complete" : `Step ${current + 1} of ${steps.length}`}</strong></div><button onClick={onDismiss} aria-label={t("tutorialCoach.dismissTutorial")}><X size={17} /></button></div>
       <div className="tutorial-steps">{steps.map((step, index) => <div key={step.title} className={step.done ? "done" : index === current ? "current" : ""}><span>{step.done ? <Check size={14} /> : index + 1}</span><p><strong>{step.title}</strong><small>{step.detail}</small></p></div>)}</div>
-      <div className="tutorial-next"><div><span className="eyebrow">Your next move</span><p>{nextMove}</p></div>{actionLabel && <button onClick={current < 0 ? onDismiss : onNavigate}>{actionLabel} <ArrowRight size={16} /></button>}</div>
+      <div className="tutorial-next"><div><span className="eyebrow">{t("tutorialCoach.yourNextMove")}</span><p>{nextMove}</p></div>{actionLabel && <button onClick={current < 0 ? onDismiss : onNavigate}>{actionLabel} <ArrowRight size={16} /></button>}</div>
     </section>
   );
 }

@@ -2,15 +2,21 @@ import { carryModifier, commandEvents, describeMeterChange, describeRollShift, t
 import { useRef } from "react";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { EffectList } from "@/components/game/effect-list";
+import { useMessages } from "@/hooks/use-messages";
+import { commandEventMessages } from "@/lib/i18n/en/command-event";
+import { register } from "@/lib/i18n";
+
+register(commandEventMessages);
 
 export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice: "a" | "b") => void }) {
+  const { t } = useMessages();
   const heading = useRef<HTMLHeadingElement>(null);
   useRecoverFocus(heading, game.pendingCommand);
   if (!game.pendingCommand) return null;
   const event = commandEvents[game.pendingCommand as CommandEventId];
   return (
     <section className="command-event" aria-labelledby="command-event-title">
-      <div className="command-event-heading"><div><h2 id="command-event-title" ref={heading} tabIndex={-1} data-awaiting-heading><span className="heading-kind">Command event:</span> {event.title}</h2><p>{event.prompt}</p></div></div>
+      <div className="command-event-heading"><div><h2 id="command-event-title" ref={heading} tabIndex={-1} data-awaiting-heading><span className="heading-kind">{t("commandEvent.commandEvent")}</span> {event.title}</h2><p>{event.prompt}</p></div></div>
       <div className="command-options">
         {/* Numbered ruled rows with the exact effect in a column, as the response
             and the sector decision are set; two cards with corner arrows were not. */}

@@ -6,6 +6,11 @@ import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { Glossed } from "@/components/game/glossed";
 import { EffectList } from "@/components/game/effect-list";
+import { useMessages } from "@/hooks/use-messages";
+import { captainReportDialogMessages } from "@/lib/i18n/en/captain-report-dialog";
+import { register } from "@/lib/i18n";
+
+register(captainReportDialogMessages);
 
 // The business impact an inject added to the turn's movement, so a protected
 // failed check beside "Business impact +16 worse" says where the rest came from.
@@ -27,6 +32,7 @@ function rollParts(report: Game["turns"][number]) {
 }
 
 export function CaptainReportDialog({ session }: { session: GameSession }) {
+  const { t } = useMessages();
   const { report, game, ended, config, dismissReport, decide } = session;
   // The turn that ends an operation is headed by how it ended: "Evidence
   // confirmed." with a green tick sat above "OPERATION LOST".
@@ -42,7 +48,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   const settled = !!report && !!game && report.number === game.turns.length && report.success && (!report.revealed || report.windfall) && !report.injectReveal && !!game.hypothesis;
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
-  const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">Inject <span className="separator">/</span> {report.inject.reason}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>;
+  const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">{t("captainReportDialog.inject")}<span className="separator">/</span> {report.inject.reason}</span><h3>{report.inject.title}</h3><p>{report.inject.text}</p><strong>{report.inject.effectLabel}</strong></div>;
 
   return (
     <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
@@ -58,16 +64,16 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
         onCloseAutoFocus={returnFocusToAwaiting}
       >
         <DialogHeader>
-          <div className="eyebrow">Form BC-201 <span className="separator">/</span> Captain’s report</div>
+          <div className="eyebrow">{t("captainReportDialog.formBc201")}<span className="separator">/</span>{t("captainReportDialog.captainReport")}</div>
           <DialogTitle>{lostHere ? (game?.status === "exercise" ? "The operation stood down." : "The operation is lost.") : report?.revealed ? (report.windfall ? "A later stage was found." : "Evidence confirmed.") : report?.injectReveal ? "A partner disclosed a stage." : report?.success ? "The check came back empty." : "The action was unsuccessful."}</DialogTitle>
           <DialogDescription className="sr-only">{report && game && procedureById(game, report.procedure)?.title}</DialogDescription>
           {/* The report's header is a row of form fields, the result among them,
               not a rotated rubber stamp: a stamp had become a stock case-file
               ornament. */}
           {report && game && <dl className="form-row report-fields">
-            <div><dt>Turn</dt><dd>{report.number}</dd></div>
-            <div><dt>Source</dt><dd>{procedureById(game, report.procedure)?.title}</dd></div>
-            <div><dt>Result</dt><dd className={lostHere ? "failed" : report.revealed || report.injectReveal ? "confirmed" : report.success ? "" : "failed"}>{lostHere ? (game.status === "exercise" ? "Stood down" : "Operation lost") : report.revealed || report.injectReveal ? "Stage confirmed" : report.success ? "No stage found" : "Check failed"}</dd></div>
+            <div><dt>{t("captainReportDialog.turn")}</dt><dd>{report.number}</dd></div>
+            <div><dt>{t("captainReportDialog.source")}</dt><dd>{procedureById(game, report.procedure)?.title}</dd></div>
+            <div><dt>{t("captainReportDialog.result")}</dt><dd className={lostHere ? "failed" : report.revealed || report.injectReveal ? "confirmed" : report.success ? "" : "failed"}>{lostHere ? (game.status === "exercise" ? "Stood down" : "Operation lost") : report.revealed || report.injectReveal ? "Stage confirmed" : report.success ? "No stage found" : "Check failed"}</dd></div>
           </dl>}
         </DialogHeader>
         {report && game && <>
@@ -81,16 +87,16 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             </div>
           )}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
-            <section className="report-summary" aria-label="Procedure result">
+            <section className="report-summary" aria-label={t("captainReportDialog.procedureResult")}>
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
-                <div><span>Rolled {report.raw} on the d20 {report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)} modifier{rollParts(report)}</span><strong>{report.total} <span>/ {config.threshold} needed, {report.success ? "a success" : "a failure"}</span></strong></div>
+                <div><span>{t("captainReportDialog.rolled")}{report.raw}{t("captainReportDialog.onTheD20")}{report.modifier >= 0 ? "+" : "−"} {Math.abs(report.modifier)}{t("captainReportDialog.modifier")}{rollParts(report)}</span><strong>{report.total} <span>/ {config.threshold}{t("captainReportDialog.needed")}{report.success ? "a success" : "a failure"}</span></strong></div>
               </div>
               {/* The plan and the turn's movement are told apart: a playtest read
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
                   game going back on its word. The reason says what moved them. */}
-              <p className="turn-plan">Plan: {procedureScopes[report.plan.scope].title.toLowerCase()} scope, {procedureIntensities[report.plan.intensity].title.toLowerCase()} analysis.</p>
-              <div className="turn-movement"><b>This turn</b><EffectList items={[describeMeterChange(game, "impact", report.impactChange), describeMeterChange(game, "continuity", report.continuityChange), describeMeterChange(game, "sector", report.sectorChange), describeMeterChange(game, "objective", report.objectiveChange)]} /><p>{report.revealed
+              <p className="turn-plan">{t("captainReportDialog.plan")}{procedureScopes[report.plan.scope].title.toLowerCase()}{t("captainReportDialog.scope")}{procedureIntensities[report.plan.intensity].title.toLowerCase()}{t("captainReportDialog.analysis")}</p>
+              <div className="turn-movement"><b>{t("captainReportDialog.thisTurn")}</b><EffectList items={[describeMeterChange(game, "impact", report.impactChange), describeMeterChange(game, "continuity", report.continuityChange), describeMeterChange(game, "sector", report.sectorChange), describeMeterChange(game, "objective", report.objectiveChange)]} /><p>{report.revealed
                 ? "Finding the stage slowed the adversary's gain, though the turn still gave it time."
                 : report.success
                   ? "The check completed and found no stage, which rules out what this source could see at this stage; the adversary used the time."
@@ -98,7 +104,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                     ? `The check failed, so it settled nothing. Because it was one of your reading's own sources, the ${report.objectiveChange >= 0 ? "+" : "−"}${Math.abs(report.objectiveChange)} adversary progress this turn is only what its pace and your plan gave it, without the extra 4 a failed check adds; business impact and the sector margin moved as on any turn that finds nothing.`
                     : "The check failed, so it settled nothing and gave the adversary the most time."}{injectImpact(report) ? ` The inject below accounts for ${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))} of the business impact change.` : ""}{report.adversaryEvent ? " The situation also escalated, below, which adds business impact and costs service." : ""}</p></div>
               <p className="report-narrative"><Glossed text={report.narrative} /></p>
-              {report.revealed && <div className="discovery"><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short}: {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>On the {hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()} route</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">Your reading was {hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase()}, so the stage was found but the route was not predicted.</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">This is stage {attacks.find(attack => attack.id === report.revealed)!.stage + 1}, further along the chain. The stage you were testing, stage {attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1}, is still open, and a find here says nothing about the route it used.</small>}</div></div>}
+              {report.revealed && <div className="discovery"><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short}: {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>{t("captainReportDialog.onThe")}{hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase()}{t("captainReportDialog.route")}</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">{t("captainReportDialog.yourReadingWas")}{hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase()}{t("captainReportDialog.soTheStage")}</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">{t("captainReportDialog.thisIsStage")}{attacks.find(attack => attack.id === report.revealed)!.stage + 1}{t("captainReportDialog.furtherAlongThe")}{attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1}{t("captainReportDialog.isStillOpen")}</small>}</div></div>}
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
                   is where the player is looking when it lands. A failed roll settles
@@ -106,7 +112,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   teach the wrong inference. */}
               {settled && standing && (
                 <div className={`report-standing level-${standing.level}`}>
-                  <span className="eyebrow">Where the reading stands now</span>
+                  <span className="eyebrow">{t("captainReportDialog.whereTheReading")}</span>
                   <strong>{standing.label}</strong>
                   <p>{standing.detail}</p>
                 </div>
@@ -115,46 +121,46 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   then rather than leaving it all to the debrief. */}
               {!decision && game.decisions.filter(item => item.stage === report.revealed || item.stage === report.injectReveal).map(item => (
                 <div key={item.stage} className="decision-recorded" role="status">
-                  <span className="eyebrow">Response recorded</span>
+                  <span className="eyebrow">{t("captainReportDialog.responseRecorded")}</span>
                   <strong>{item.title}</strong>
                   <p>{item.effect}</p>
                   <EffectList items={[describeMeterChange(game, "impact", item.impactChange), describeMeterChange(game, "continuity", item.continuityChange), describeMeterChange(game, "sector", item.sectorChange), describeMeterChange(game, "objective", item.objectiveChange), report.number === game.turns.length && game.nextModifierSource?.includes("Evidence decision") && `next roll ${game.nextModifier < 0 ? "−" : "+"}${Math.abs(game.nextModifier)}${game.nextModifierSource.includes(";") ? " with what was already carried" : ""}`]} />
-                  <p>How well it fitted the moment is judged in the review.</p>
+                  <p>{t("captainReportDialog.howWellIt")}</p>
                 </div>
               ))}
-              {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">Situation escalates</span><p>{report.adversaryEvent}</p></div></div>}
+              {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">{t("captainReportDialog.situationEscalates")}</span><p>{report.adversaryEvent}</p></div></div>}
               {/* With a decision waiting, the inject joins the result: beside four
                   options it pushed the last one under the fold and left this
                   column half empty. */}
               {decision && injectBox}
             </section>
-            {(report.inject || decision) && <section className="report-briefing" aria-label="Operational update">
+            {(report.inject || decision) && <section className="report-briefing" aria-label={t("captainReportDialog.operationalUpdate")}>
               {!decision && injectBox}
               {decision && (
                 <div className="evidence-decision">
-                  <span className="eyebrow">Operational decision required</span>
+                  <span className="eyebrow">{t("captainReportDialog.operationalDecisionRequired")}</span>
                   {/* The count says how many there are: the last of five sat below the fold
                       of a laptop screen with nothing saying it was there. */}
-                  <h3>{decision.attack.title}: choose one of {["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length} command responses.</h3>
+                  <h3>{decision.attack.title}{t("captainReportDialog.chooseOneOf")}{["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length}{t("captainReportDialog.commandResponses")}</h3>
                   {/* A newcomer meets five verbs described in costs they cannot yet
                       weigh. On a Training operation's first decision, one tap says
                       what each trades away, keyed to the icons on the options. */}
                   {game.difficulty === "training" && game.mode !== "expert" && game.decisions.length === 0 && (
                     <details className="decision-primer">
-                      <summary>How these responses differ</summary>
+                      <summary>{t("captainReportDialog.howTheseResponses")}</summary>
                       {/* In the options' own words: "Watch" and "Act" here beside
                           buttons titled "Trace" and "Revoke" read as two lists. */}
                       <ul>
                         {/* Keyed to the options' letters, as the four readings are lettered. */}
                         {decision.options.map((option, index) => <li key={option.id}><b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b><span><b>{option.title}</b> {primerTrade[option.id]}</span></li>)}
                       </ul>
-                      <p>No single answer is right. The review judges each against the pressure at the time: with business impact at 55 or more, or the actor&apos;s pace at Accelerating or Pressing hard, acting or containing fits; below that, watching or attributing is affordable.</p>
+                      <p>{t("captainReportDialog.noSingleAnswer")}</p>
                     </details>
                   )}
                   {/* At every difficulty but Expert: the review grades every decision by this,
                       and an Operational playtest was graded on a rule it was never shown. */}
                   {game.mode !== "expert" && (
-                    <p className="decision-pressure">Pressure now: business impact {game.impact}; adversary progress {game.objectiveProgress}, growing at a pace of “{getAdversaryState(game).toLowerCase()}” each turn. {game.impact >= 55 || game.adversaryTempo >= 2 ? `That is high, because ${game.impact >= 55 ? `business impact is ${game.impact}` : `its pace is ${getAdversaryState(game).toLowerCase()}, so its progress of ${game.objectiveProgress} will grow quickly`}: ${optionTitle(decision.options, "act")} fits best, with ${optionTitle(decision.options, "contain")} close behind.` : `That is low: ${optionTitle(decision.options, "observe")} or ${optionTitle(decision.options, "attribute")} is affordable.`}</p>
+                    <p className="decision-pressure">{t("captainReportDialog.pressureNowBusiness")}{game.impact}{t("captainReportDialog.adversaryProgress")}{game.objectiveProgress}{t("captainReportDialog.growingAtPace")}{getAdversaryState(game).toLowerCase()}{t("captainReportDialog.eachTurn")}{game.impact >= 55 || game.adversaryTempo >= 2 ? `That is high, because ${game.impact >= 55 ? `business impact is ${game.impact}` : `its pace is ${getAdversaryState(game).toLowerCase()}, so its progress of ${game.objectiveProgress} will grow quickly`}: ${optionTitle(decision.options, "act")} fits best, with ${optionTitle(decision.options, "contain")} close behind.` : `That is low: ${optionTitle(decision.options, "observe")} or ${optionTitle(decision.options, "attribute")} is affordable.`}</p>
                   )}
                   <div ref={optionList}>
                     {/* Lettered ruled entries on the report, like the readings: the
@@ -174,7 +180,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               )}
             </section>}
           </div>
-          {awaitingDecision ? <p className="report-gate" role="status">Resolve the operational decision above to continue. This report stays open until the choice is recorded.</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}</button>}
+          {awaitingDecision ? <p className="report-gate" role="status">{t("captainReportDialog.resolveTheOperational")}</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? "Enter response phase" : ended ? "Open debrief" : "Continue investigation"}</button>}
         </>}
       </DialogContent>
     </Dialog>

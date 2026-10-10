@@ -1,14 +1,20 @@
 import { attacks, getAdversaryState, getOperationalLabel, stages, type Game } from "@/lib/advanced-game";
 import { Cloud, Database, Globe2, Network, Server, ShieldAlert, UserRound } from "lucide-react";
+import { useMessages } from "@/hooks/use-messages";
+import { operationsMapMessages } from "@/lib/i18n/en/operations-map";
+import { register } from "@/lib/i18n";
+
+register(operationsMapMessages);
 
 const icons = [Globe2, UserRound, Server, Cloud];
 
 export function OperationsMap({ game }: { game: Game }) {
+  const { t } = useMessages();
   const activeIndex = Math.min(3, game.revealed.length);
   return (
-    <section className="operations-map" aria-label="Live incident operations map">
+    <section className="operations-map" aria-label={t("operationsMap.liveIncidentOperations")}>
       <div className="map-heading">
-        <div><span className="eyebrow"><Network size={15} /> Live operations map</span><h2>Observed attack path</h2></div>
+        <div><span className="eyebrow"><Network size={15} />{t("operationsMap.liveOperationsMap")}</span><h2>{t("operationsMap.observedAttackPath")}</h2></div>
         <span className={`map-tempo tempo-${game.adversaryTempo}`}><ShieldAlert size={14} /> {getAdversaryState(game)}</span>
       </div>
       <div className="map-path">
@@ -26,7 +32,7 @@ export function OperationsMap({ game }: { game: Game }) {
           );
         })}
       </div>
-      <div className="service-node"><Database size={17} /><span><small>Protected service</small><strong>{getOperationalLabel(game)}</strong></span><b>{game.continuity}</b></div>
+      <div className="service-node"><Database size={17} /><span><small>{t("operationsMap.protectedService")}</small><strong>{getOperationalLabel(game)}</strong></span><b>{game.continuity}</b></div>
     </section>
   );
 }

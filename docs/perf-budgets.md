@@ -115,3 +115,15 @@ facilitator sheet and the message catalogue) brought all script by the time
 play starts, warmed parts included, to 1,060,546 B, 546 B over its budget;
 the first load stayed under 850,000 B because the drawing code and the
 dialogs load on demand. The all-script budget moved to 1,080,000 B.
+
+Finishing the message catalogue (0.9.1) moved every interface string in the
+components into per-component catalogues under `lib/i18n/en/`, each loaded
+with its own component, so a lazily loaded dialog carries its strings with
+it. One catalogue for everything had put 879,146 B of script on the first
+load; split, the first load is 845,333 B, which leaves only 4,667 B under its
+850,000 B budget for the next phase to spend. All script, warmed parts
+included, rose from 1,060,546 B to 1,103,369 B by the time play starts
+(1,093,555 B on the assignment screen). The cause is the keys: 572 key names,
+each written once in its catalogue and again at every `t()` call, which the
+minifier cannot shorten. Fragments shared by more than one catalogue account
+for 1,722 B of it. The all-script budget moved to 1,120,000 B.
