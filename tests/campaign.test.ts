@@ -110,7 +110,7 @@ test("offers the next uncleared case and says what an operation changed", () => 
 
 test("the campaign tells its story: a director's briefing per act, a development keyed to route, and an ending in the record's numbers", async () => {
   const { campaignStory } = await import("../lib/campaign.ts");
-  const { specialistArc, ARC_THRESHOLDS } = await import("../lib/phase9.ts");
+  const { specialistArc, ARC_THRESHOLDS } = await import("../lib/specialist-notes.ts");
   const briefings = new Set([0, 3, 7].map(done => campaignStory({ ...defaultCampaign, completed: Array.from({ length: done }, (_, i) => i) }, "common-ground").briefing));
   assert.equal(briefings.size, 3, "each act opens with its own briefing");
   assert.equal(campaignStory({ ...defaultCampaign, completed: [0] }, "watchtower").development, null, "the development waits for the act's midpoint");

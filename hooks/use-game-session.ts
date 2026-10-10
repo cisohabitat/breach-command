@@ -15,7 +15,7 @@ import type {
   MapAction,
   SetPieceChoice,
 } from "@/lib/advanced-game";
-import { difficulties, hypotheses, scenarios } from "@/lib/game";
+import { difficulties, scenarios } from "@/lib/scenarios";
 import { adversaryObjectives } from "@/lib/command-systems";
 import { countRevisions } from "@/lib/engine/revisions";
 import { loadGame, loadedGame } from "@/lib/game-loader";
@@ -27,15 +27,13 @@ import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTe
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
 import { parseLedger, readLedger, writeLedger, type LedgerEntry } from "@/lib/ledger";
-import { encodeChallenge } from "@/lib/phase8";
+import { encodeChallenge, seededChallengeRandom } from "@/lib/challenge";
 import { lit, msg, type Message } from "@/lib/i18n/message";
-import { words } from "@/lib/engine/words";
 import { register } from "@/lib/i18n";
 import { sessionMessages } from "@/lib/i18n/en/session";
 
 register(sessionMessages);
 
-import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
 import { weeklyOperation } from "@/lib/command-systems";
 import type { BotAction } from "@/lib/game-bot";
@@ -142,7 +140,7 @@ export function useGameSession() {
   const trainingPrompt = game ? engine().getTrainingPrompt(game, guided) : null;
   const responseProfile = game ? engine().responseOptionsFor(game) : null;
   const outcome = game ? engine().getOutcome(game) : null;
-  const activeHypothesis = game ? hypotheses.find(item => item.id === game.hypothesis) : null;
+  const activeHypothesis = game ? engine().hypotheses.find(item => item.id === game.hypothesis) : null;
   const procedureAligned = !!proc && !!game && !!activeHypothesis && engine().hypothesisSources(game, activeHypothesis.id).includes(proc.id);
   const currentAct = campaignAct(campaign.completed.length);
   const currentRouteId = routeForCampaign(campaign);
@@ -346,7 +344,7 @@ export function useGameSession() {
       recordTelemetry("revision");
       setTelemetry(readTelemetry());
     }
-    setAnnouncement(msg("session.hypothesisSet", { title: lit(hypotheses.find(item => item.id === id)?.title ?? "") }));
+    setAnnouncement(msg("session.hypothesisSet", { title: lit(engine().hypotheses.find(item => item.id === id)?.title ?? "") }));
   }
 
   function respond(choice: string) {
@@ -775,7 +773,7 @@ export function useGameSession() {
   const answer: Message | null = game && question === "scope" ? lit(activeScenario.scope)
     : question === "constraints" ? lit(activeScenario.constraints)
     : question === "impact" ? lit(activeScenario.impact)
-    : question === "known" ? msg("session.known", { timeline: lit(activeScenario.timeline), lead: engine().getLead(game!), confirmed: game!.revealed.length ? msg("session.confirmedSoFar", { stages: game!.revealed.map(id => words.attack(id, "title")).reduceRight((rest, first) => msg("session.listComma", { first, rest })) }) : msg("session.noStageConfirmed") })
+    : question === "known" ? msg("session.known", { timeline: lit(activeScenario.timeline), lead: engine().getLead(game!), confirmed: game!.revealed.length ? msg("session.confirmedSoFar", { stages: game!.revealed.map(id => engine().words.attack(id, "title")).reduceRight((rest, first) => msg("session.listComma", { first, rest })) }) : msg("session.noStageConfirmed") })
     : question === "adversary" ? msg("session.adversary", { title: engine().getObjectiveRead(game!).title, detail: engine().getObjectiveRead(game!).detail, state: engine().getAdversaryState(game!), read: engine().getAdversaryRead(game!) })
     : question === "assumptions" ? msg("session.assumptions")
     : null;

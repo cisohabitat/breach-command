@@ -13,6 +13,7 @@ import * as campaign from "../lib/campaign.ts";
 import { chooseBotAction, type BotAction } from "../lib/game-bot.ts";
 import { seededChallengeRandom } from "../lib/phase8.ts";
 import * as phase9 from "../lib/phase9.ts";
+import * as notes from "../lib/specialist-notes.ts";
 import { describeWhen } from "../lib/last-operation.ts";
 import * as message from "../lib/i18n/message.ts";
 import "../lib/i18n/engine-messages.ts";
@@ -104,8 +105,8 @@ for (let run = 0; run < 12; run++) {
 }
 for (let xp = 0; xp <= 1200; xp += 25) { say("campaignRank", () => campaign.campaignRank(xp)); say("unlockedCapabilities", () => campaign.unlockedCapabilities(xp)); }
 for (const id of ["hunter", "forensics", "identity", "ot", "continuity", "communications"] as const) for (const bond of [0, 35, 50, 65, 80, 100]) {
-  say("specialistArc", () => phase9.specialistArc(id, bond));
-  for (const won of [false, true]) for (const score of [20, 55, 80, 95]) say("specialistReaction", () => phase9.specialistReaction(id, won, score, bond));
+  say("specialistArc", () => notes.specialistArc(id, bond));
+  for (const won of [false, true]) for (const score of [20, 55, 80, 95]) say("specialistReaction", () => notes.specialistReaction(id, won, score, bond));
 }
 const now = Date.UTC(2026, 9, 10, 12);
 for (const ago of [0, 30e3, 3600e3, 5 * 3600e3, 86400e3, 3 * 86400e3, 40 * 86400e3]) say("describeWhen", () => describeWhen(now - ago, now));

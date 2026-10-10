@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.13, 10 October 2026
+
+- **Lighter still.** The attack tables, the map's topologies, the sector
+  crises and the specialists' after-action notes now arrive with the game
+  too; the assignment screen keeps only the cases, difficulties, specialists
+  and campaign it shows. The script the page needs before it answers is
+  651 KB, down from 845 KB two releases ago. Nothing on screen changes.
+
 ## 0.9.12, 10 October 2026
 
 - **A lighter first visit.** The assignment screen no longer loads the

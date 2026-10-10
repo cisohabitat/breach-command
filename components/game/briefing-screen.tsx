@@ -1,10 +1,9 @@
 import type { CSSProperties } from "react";
 import { Bot, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { difficulties, scenarios, stages, type Difficulty } from "@/lib/game";
-import { SPECIALIST_EXHAUSTED_AT, gameModes, specialists, type GameMode, type SpecialistId } from "@/lib/command-systems";
+import { difficulties, scenarios, stages, type Difficulty } from "@/lib/scenarios";
+import { SPECIALIST_EXHAUSTED_AT, gameModes, namedSpecialists, specialists, type GameMode, type SpecialistId } from "@/lib/command-systems";
 import { campaignRank, standingEffects } from "@/lib/campaign";
-import { namedSpecialists } from "@/lib/phase8";
 import { describeWhen } from "@/lib/last-operation";
 import { withForm } from "@/lib/i18n/message";
 import { useMessages } from "@/hooks/use-messages";

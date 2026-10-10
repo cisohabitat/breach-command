@@ -2,10 +2,12 @@
 // importing the modules that hold them registers them (registry.ts). Add a
 // table to its module's registerContent() call when it holds text a player
 // reads; tests/content-overlay.test.ts names a table this file does not reach.
+import "../../scenarios.ts";
 import "../../game.ts";
 import "../../engine/content.ts";
 import "../../phase8.ts";
 import "../../phase9.ts";
+import "../../specialist-notes.ts";
 import "../../command-systems.ts";
 import "../../campaign.ts";
 import "../../educators.ts";

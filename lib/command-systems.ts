@@ -116,4 +116,14 @@ export function weeklyOperation(now: Date, cases: number) {
 }
 
 // The words of these tables are a locale's to replace (lib/i18n/content/).
-registerContent({ gameModes, specialists, procedureScopes, procedureIntensities, adversaryObjectives, sectorSystems });
+// The specialists by name, as the deployment screen and the debrief address them.
+export const namedSpecialists: Record<SpecialistId, { name: string; callsign: string; voice: string }> = {
+  hunter: { name: "Maya Chen", callsign: "TRACE", voice: "I will test behaviour across the evidence boundary." },
+  forensics: { name: "Elias Ward", callsign: "ARCHIVE", voice: "Preserve the sequence before the system changes again." },
+  identity: { name: "Noor Rahman", callsign: "TRUST", voice: "A valid credential is not the same as a valid action." },
+  ot: { name: "Daniel Koh", callsign: "RELAY", voice: "Keep cyber action inside the safe operating envelope." },
+  continuity: { name: "Sofia Reyes", callsign: "ANCHOR", voice: "Protect the service while the team reduces uncertainty." },
+  communications: { name: "Marcus Bell", callsign: "SIGNAL", voice: "I will keep decisions clear, factual and timely." },
+};
+
+registerContent({ gameModes, specialists, namedSpecialists, procedureScopes, procedureIntensities, adversaryObjectives, sectorSystems });

@@ -186,7 +186,14 @@ copies of what they share), the operation's layout shift 0.030 to 0.011;
 budgets lowered to 750,000 B and 1,170,000 B. What remains on the first load
 beyond the framework is the content tables the assignment screen reads from
 (`lib/game.ts` with every attack, `lib/phase8.ts`, `lib/phase9.ts`), the next
-cut. Not met: the stylesheet is 9,330 lines, down from 10,032
+cut. *0.9.13: made.* The cases, stages and difficulties moved to
+`lib/scenarios.ts`, challenge codes to `lib/challenge.ts`, the specialists'
+names to `lib/command-systems.ts` and their notes to
+`lib/specialist-notes.ts`; attacks, procedures, topologies and set pieces now
+load with the game. Initial script 650,872 B (budget 675,000 B); all script
+by play start 1,151,002 B. What the first load holds beyond React DOM and the
+Next.js runtime (about 540 KB) is the assignment screen, its catalogue, the
+campaign and the session hook. Not met: the stylesheet is 9,330 lines, down from 10,032
 by removing only what provably cannot apply. Reaching 6,000 means
 restructuring it by component, which is better done with Phase 3's type
 system than ahead of it. Open, because it needs a device: offline play on a

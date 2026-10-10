@@ -193,3 +193,10 @@ lazily loaded part had carried its own copy of the modules it shared with the
 others (the effect list in four scripts), and one bundle has one. Budgets
 lowered to 750,000 B initial and 1,170,000 B in all; `tests/first-load.test.ts`
 keeps the engine off the first load.
+
+The tables only the game plays with followed (0.9.13): attacks, procedures,
+routes, topologies, set pieces and the specialists' notes left the first load
+for the bundle, and the assignment screen reads its cases, stages,
+difficulties and challenge codes from leaf modules. Initial script fell to
+650,872 B and its budget to 675,000 B; all script by play start is
+1,151,002 B.

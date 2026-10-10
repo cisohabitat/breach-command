@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { decodeChallenge, encodeChallenge, isOutdatedChallenge } from "@/lib/phase8";
-import { scenarios } from "@/lib/game";
+import { decodeChallenge, encodeChallenge, isOutdatedChallenge } from "@/lib/challenge";
+import { scenarios } from "@/lib/scenarios";
 import type { GameMode } from "@/lib/command-systems";
 import { weeklyOperation } from "@/lib/command-systems";
 import { msg, type Message } from "@/lib/i18n/message";
