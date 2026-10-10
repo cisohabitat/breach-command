@@ -200,3 +200,14 @@ for the bundle, and the assignment screen reads its cases, stages,
 difficulties and challenge codes from leaf modules. Initial script fell to
 650,872 B and its budget to 675,000 B; all script by play start is
 1,151,002 B.
+
+The stylesheet split by when it is needed (0.9.15). The page linked one
+189,685 B stylesheet and waited for all of it before painting; it now links
+85,997 B, everything that can style the assignment screen, and the game's
+own rules load with the game bundle. A new measure, `initialStyleBytes` (the
+stylesheets the HTML links), has its own budget of 95,000 B. All style by the
+time the page is idle rose to 213,841 B, because 262 global rules are copied
+into the game's sheet to keep their place in the cascade; that budget moved
+from 190,000 B to 220,000 B, on purpose, for a render-blocking sheet less than
+half the size. FCP on the throttled profile went from about 1,250 ms to
+1,100 ms.

@@ -132,7 +132,7 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `hooks/use-preferences.ts` | Audio, haptics and contrast, loaded once and persisted after |
 | `hooks/use-challenge-code.ts` | Seed, challenge code and whether the operation is reproducible |
 | `lib/operation-setup.ts` | Starting resources and variants, neutral for shared challenges and campaign-derived for ordinary operations |
-| `app/globals.css` | Case-file visual system (ink, paper and bone; flat ruled panels; the report, brief and review as paper documents with ink stamps; the attack chain as a redacted evidence sheet), motion and responsive layouts |
+| `app/globals.css`, `components/game/game.css` | What the assignment screen needs, linked by the page, and the game's own styles, loaded with it. Case-file visual system (ink, paper and bone; flat ruled panels; the report, brief and review as paper documents with ink stamps; the attack chain as a redacted evidence sheet), motion and responsive layouts |
 | `app/fonts/` | Self-hosted IBM Plex Sans Condensed (headings, labels and figures), loaded through `next/font/local` |
 | `components/game/` | Workspaces, gameplay boards, maps, dialogs, end states and the tutorial |
 | `components/ui/` | The interface primitives the game actually imports |

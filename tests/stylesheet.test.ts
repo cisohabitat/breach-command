@@ -6,7 +6,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8").split("\n");
+// Both sheets: the page's and the game's (components/game/game.css).
+const css = ["../app/globals.css", "../components/game/game.css"].flatMap(path => readFileSync(new URL(path, import.meta.url), "utf8").split("\n"));
 
 test("the stylesheet uses logical properties for every inline-direction declaration", () => {
   const physical = /^\s*(margin-(left|right)|padding-(left|right)|border-(left|right)(-[a-z]+)?|left|right|border-(top|bottom)-(left|right)-radius)\s*:/;

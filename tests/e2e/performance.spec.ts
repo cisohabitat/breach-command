@@ -9,7 +9,7 @@ import { openWithSave, twoStagesGame } from "./fixtures";
 // paint timings come from its Performance APIs.
 // Initial script is what the HTML references, parsed before the page answers;
 // the rest is warmed when the browser is idle and counts only toward the total.
-type Measure = { initialScriptBytes: number; scriptBytes: number; styleBytes: number; fcp: number; lcp: number; cls: number };
+type Measure = { initialScriptBytes: number; scriptBytes: number; initialStyleBytes: number; styleBytes: number; fcp: number; lcp: number; cls: number };
 
 async function measure(page: Page, open: () => Promise<void>): Promise<Measure> {
   const sizes = { script: 0, style: 0 };
@@ -42,11 +42,15 @@ async function measure(page: Page, open: () => Promise<void>): Promise<Measure> 
   const html = await (await page.request.get("/")).text();
   const initial = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+\.js/g) ?? [])];
   const initialScriptBytes = initial.reduce((sum, path) => sum + (byUrl.get(path) ?? 0), 0);
-  return { initialScriptBytes, scriptBytes: sizes.script, styleBytes: sizes.style, ...vitals };
+  // The stylesheets the page links, which it waits for before it paints; the
+  // game's own load with the game bundle.
+  const linked = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+\.css/g) ?? [])];
+  const initialStyleBytes = linked.reduce((sum, path) => sum + (byUrl.get(path) ?? 0), 0);
+  return { initialScriptBytes, scriptBytes: sizes.script, initialStyleBytes, styleBytes: sizes.style, ...vitals };
 }
 
 function report(label: string, value: Measure) {
-  console.log(`${label}: initial script ${value.initialScriptBytes} B (${(value.initialScriptBytes / 1024).toFixed(0)} KB), all script ${value.scriptBytes} B (${(value.scriptBytes / 1024).toFixed(0)} KB), style ${value.styleBytes} B (${(value.styleBytes / 1024).toFixed(0)} KB), FCP ${value.fcp.toFixed(0)} ms, LCP ${value.lcp.toFixed(0)} ms, CLS ${value.cls.toFixed(3)}`);
+  console.log(`${label}: initial script ${value.initialScriptBytes} B (${(value.initialScriptBytes / 1024).toFixed(0)} KB), all script ${value.scriptBytes} B (${(value.scriptBytes / 1024).toFixed(0)} KB), linked style ${value.initialStyleBytes} B, all style ${value.styleBytes} B (${(value.styleBytes / 1024).toFixed(0)} KB), FCP ${value.fcp.toFixed(0)} ms, LCP ${value.lcp.toFixed(0)} ms, CLS ${value.cls.toFixed(3)}`);
 }
 
 test.describe("performance budgets", () => {
@@ -58,7 +62,8 @@ test.describe("performance budgets", () => {
     report("assignment", value);
     expect(value.initialScriptBytes, "decoded script the page needs before it answers").toBeLessThanOrEqual(budgets.assignment.initialScriptBytes);
     expect(value.scriptBytes, "decoded script including what is warmed when idle").toBeLessThanOrEqual(budgets.assignment.scriptBytes);
-    expect(value.styleBytes, "decoded style shipped on first load").toBeLessThanOrEqual(budgets.assignment.styleBytes);
+    expect(value.initialStyleBytes, "decoded style the page links and waits for before it paints").toBeLessThanOrEqual(budgets.assignment.initialStyleBytes);
+    expect(value.styleBytes, "decoded style by the time the page is idle, the game's included").toBeLessThanOrEqual(budgets.assignment.styleBytes);
     expect(value.lcp, "largest contentful paint on a throttled phone").toBeLessThanOrEqual(budgets.assignment.lcp);
     expect(value.cls, "cumulative layout shift").toBeLessThanOrEqual(budgets.assignment.cls);
   });

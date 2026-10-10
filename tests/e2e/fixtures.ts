@@ -2,8 +2,8 @@ import { expect, type Page } from "@playwright/test";
 import {
   attackVector, attacks, availableIn, newGame, nextEvidenceSource, playTurn, procedures,
   resolveCommand, resolveDecision, resolveSetPiece, setHypothesis, type Game,
-} from "../../lib/advanced-game";
-import { SESSION_KEY, serialiseSession } from "../../lib/session";
+} from "../../lib/advanced-game.ts";
+import { SESSION_KEY, serialiseSession } from "../../lib/session.ts";
 
 // Operations built from the engine with forced rolls, shared by the browser
 // suites so that nothing in them depends on the dice, and the page opened on one

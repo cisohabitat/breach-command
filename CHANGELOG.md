@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.15, 10 October 2026
+
+- **The first screen paints sooner.** The page now waits only for the styles
+  the assignment screen uses (86 KB, from 190 KB); the game screen's and the
+  dialogs' styles arrive with the game, warmed while the page is idle. First
+  paint on a throttled phone profile fell from about 1.25 s to 1.1 s.
+  Nothing on screen changes.
+
 ## 0.9.14, 10 October 2026
 
 - **Shared codes play the same for everyone.** A Daily, Weekly or loaded

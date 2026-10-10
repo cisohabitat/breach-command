@@ -193,7 +193,20 @@ names to `lib/command-systems.ts` and their notes to
 load with the game. Initial script 650,872 B (budget 675,000 B); all script
 by play start 1,151,002 B. What the first load holds beyond React DOM and the
 Next.js runtime (about 540 KB) is the assignment screen, its catalogue, the
-campaign and the session hook. Not met: the stylesheet is 9,330 lines, down from 10,032
+campaign and the session hook. *0.9.15, the stylesheet by when it is needed:*
+the page links only what can style the assignment screen, 3,501 lines and
+85,997 B decoded (from 9,506 lines and 189,685 B); the game screen's and the
+dialogs' rules load with the game bundle (`components/game/game.css`), split
+by `scripts/split-css.ts` with 262 global rules copied after the game rules
+they followed, so the cascade is unchanged. Text and pixels identical on all
+56 screens; the assignment screen is the same before and after the game's
+sheet arrives (`tests/e2e/first-paint-style.spec.ts`); FCP on the throttled
+profile about 1,250 ms to 1,100 ms. The 6,000-line criterion is met in letter
+only: the sheet the page waits for is under it, but the two sheets together
+are about 10,800 lines (the copies included) and 5,000 declarations, none
+provably dead. Consolidation by component, the criterion's intent, remains: 222
+selectors appear more than once and 98 declaration blocks are repeated under
+other selectors. Not met: the stylesheet is 9,330 lines, down from 10,032
 by removing only what provably cannot apply. Reaching 6,000 means
 restructuring it by component, which is better done with Phase 3's type
 system than ahead of it. Open, because it needs a device: offline play on a
