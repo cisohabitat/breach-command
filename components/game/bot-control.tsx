@@ -7,7 +7,7 @@ import { register } from "@/lib/i18n";
 register(botControlMessages);
 
 export function BotControl({ session }: { session: GameSession }) {
-  const { t } = useMessages();
+  const { t, say } = useMessages();
   const { botRun, botActive, botPaused, botStatus, ended, toggleBotPause, takeControl } = session;
   if (!botRun) return null;
 
@@ -23,7 +23,7 @@ export function BotControl({ session }: { session: GameSession }) {
       <div className="bot-control-copy">
         <span className="eyebrow">{t("botControl.practiceOperation")}</span>
         <strong>{title}</strong>
-        <small>{t("botControl.noCampaignRewards2", { botStatus })}</small>
+        <small>{t("botControl.noCampaignRewards2", { botStatus: say(botStatus) })}</small>
       </div>
       {!ended && <div className="bot-control-actions">
         {botActive && <button onClick={toggleBotPause} aria-label={botPaused ? t("botControl.resumeBotCommander") : t("botControl.pauseBotCommander")}>

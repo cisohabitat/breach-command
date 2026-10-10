@@ -91,9 +91,11 @@ function notInterface(node: ts.Node): boolean {
   return false;
 }
 const componentFiles = [...readdirSync(new URL("../components/game/", import.meta.url)).filter(name => name.endsWith(".tsx")).map(name => `../components/game/${name}`), "../app/page.tsx"];
+// The hooks say things too: announcements, notices, the Bot Commander's status.
+const hookFiles = readdirSync(new URL("../hooks/", import.meta.url)).filter(name => name.endsWith(".ts")).map(name => `../hooks/${name}`);
 function hardCoded() {
   const found: string[] = [];
-  for (const file of componentFiles) {
+  for (const file of [...componentFiles, ...hookFiles]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const where = (node: ts.Node) => `${file}:${tree.getLineAndCharacterOfPosition(node.getStart()).line + 1}`;
@@ -108,7 +110,7 @@ function hardCoded() {
   }
   return found;
 }
-test("no interface string is written into a component", () => {
+test("no interface string is written into a component or a hook", () => {
   assert.deepEqual(hardCoded(), [], "move it into the component's catalogue in lib/i18n/en/ and read it with t()");
 });
 

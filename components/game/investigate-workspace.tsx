@@ -149,7 +149,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         )}
         {pendingUndo && (
           <section className="undo-strip" role="status">
-            <div><span className="eyebrow">{t("investigateWorkspace.lastAction")}</span><strong>{pendingUndo.label}</strong></div>
+            <div><span className="eyebrow">{t("investigateWorkspace.lastAction")}</span><strong>{say(pendingUndo.label)}</strong></div>
             <button onClick={undo}>{t("investigateWorkspace.undo")}</button>
           </section>
         )}

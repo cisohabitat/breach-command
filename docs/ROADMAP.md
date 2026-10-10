@@ -677,6 +677,14 @@ record; text and pixels identical on all 56 screens; fingerprint 1826729440
 with and without the pseudo-locale; first load 840,379 B, all script
 1,181,390 B. The session hook's own sentences are next, then step 5.
 
+10 October 2026 (0.9.9): the hooks' own sentences (announcements, the Bot
+Commander's status, storage, backup and challenge notices, the briefing's
+answers) are 57 messages kept in state as messages, and the written-in
+English check reads `hooks/`. Text and pixels identical on all 56 screens;
+first load 844,296 B (5,704 B of headroom), all script 1,185,328 B. Step 4 is
+complete; step 5, the ratchet over `lib/` and the pseudo-locale sweep, is
+next.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

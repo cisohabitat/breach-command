@@ -2,7 +2,6 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
-  attacks,
   scenarios,
   hypotheses,
   difficulties,
@@ -55,8 +54,13 @@ import { readStored, removeStored, storageWritable, writeStored } from "@/lib/st
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
 import { parseLedger, readLedger, writeLedger, type LedgerEntry } from "@/lib/ledger";
 import { encodeChallenge } from "@/lib/phase8";
-import { msg, say, type Message } from "@/lib/i18n/message";
-import { activeLocale } from "@/hooks/use-messages";
+import { lit, msg, type Message } from "@/lib/i18n/message";
+import { words } from "@/lib/engine/words";
+import { register } from "@/lib/i18n";
+import { sessionMessages } from "@/lib/i18n/en/session";
+
+register(sessionMessages);
+
 import { seededChallengeRandom } from "@/lib/phase8";
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
 import { weeklyOperation } from "@/lib/command-systems";
@@ -95,7 +99,7 @@ export function useGameSession() {
   const [debrief, setDebrief] = useState(false);
   const [scenarioChoice, setScenarioChoice] = useState(0);
   const [savedSession, setSavedSession] = useState<SavedSession | null>(null);
-  const [announcement, setAnnouncement] = useState("");
+  const [announcement, setAnnouncement] = useState<Message | null>(null);
   const [settings, setSettings] = useState(false);
   const [mode, setMode] = useState<GameMode>("campaign");
   const [specialist, setSpecialist] = useState<SpecialistId>("hunter");
@@ -118,9 +122,9 @@ export function useGameSession() {
   // What the last finished operation did to the campaign, for the review.
   const [campaignChange, setCampaignChange] = useState<Message[]>([]);
   const [backupInput, setBackupInput] = useState("");
-  const [backupMessage, setBackupMessage] = useState("");
+  const [backupMessage, setBackupMessage] = useState<Message | null>(null);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
-  const [storageNotice, setStorageNotice] = useState("");
+  const [storageNotice, setStorageNotice] = useState<Message | null>(null);
   const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled } = usePreferences(setStorageNotice);
   const { todaySeed, seedFor, applyCode, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
     setScenarioChoice(setup.scenario);
@@ -129,13 +133,13 @@ export function useGameSession() {
     setSpecialist(setup.specialist);
   });
 
-  const [pendingUndo, setPendingUndo] = useState<{ label: string; game: Game } | null>(null);
+  const [pendingUndo, setPendingUndo] = useState<{ label: Message; game: Game } | null>(null);
   const { meterPulse, pulseMeters, clearMeterPulse } = useMeterPulse();
   const [botEnabled, setBotEnabled] = useState(false);
   const [botRun, setBotRun] = useState(false);
   const [botActive, setBotActive] = useState(false);
   const [botPaused, setBotPaused] = useState(false);
-  const [botStatus, setBotStatus] = useState("Waiting for the operation to begin.");
+  const [botStatus, setBotStatus] = useState<Message>(msg("session.botWaiting"));
   const stateRef = useRef(game);
   const campaignRef = useRef(campaign);
   const busyRef = useRef(false);
@@ -216,7 +220,7 @@ export function useGameSession() {
     setBotRun(automated);
     setBotActive(automated);
     setBotPaused(false);
-    setBotStatus(automated ? "Reviewing the mission briefing before the first move." : "Waiting for the operation to begin.");
+    setBotStatus(automated ? msg("session.botReviewing") : msg("session.botWaiting"));
     setGuided(mode === "expert" ? false : guided);
     const tutorialComplete = readStored("breach-command.tutorial-complete") === "true";
     setTutorial(automated ? false : !tutorialComplete);
@@ -229,7 +233,7 @@ export function useGameSession() {
     setNewConfirm(false);
     setPendingUndo(null);
     clearMeterPulse();
-    setAnnouncement("New investigation started.");
+    setAnnouncement(msg("session.newInvestigation"));
     setActiveWorkspace("command");
     playFeedback("open", soundEnabled, hapticsEnabled);
     setAdaptiveScore(musicEnabled, 0.15, index);
@@ -257,7 +261,7 @@ export function useGameSession() {
     setSavedSession(null);
     setPendingUndo(null);
     clearMeterPulse();
-    setAnnouncement(`Resumed ${scenarios[session.game.scenario].title}.`);
+    setAnnouncement(msg("session.resumed", { title: lit(scenarios[session.game.scenario].title) }));
     // A saved operation already in the response phase has no investigation left to
     // resume into — that workspace is disabled — so the response sequence, which is
     // itself a blocking decision, sends the player to Command like any other.
@@ -309,7 +313,7 @@ export function useGameSession() {
       // after seeing it would hand the player the answer or a free re-roll.
       setPendingUndo(null);
       setRolling(false);
-      setAnnouncement(`Turn ${result.number}. ${result.success ? "Procedure succeeded." : "Procedure unsuccessful."} Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}. Adversary progress is ${next.objectiveProgress}.`);
+      setAnnouncement(msg(result.success ? "session.turnSucceeded" : "session.turnUnsuccessful", { number: result.number, impact: next.impact, label: lit(getOperationalLabel(next)), continuity: next.continuity, progress: next.objectiveProgress }));
       playFeedback(next.status === "lost" ? "lost" : result.adversaryEvent ? "warning" : result.revealed ? "find" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
         procedure: result.procedure,
         success: result.success,
@@ -338,7 +342,7 @@ export function useGameSession() {
     setPendingUndo(null);
     afterStep(next, "investigate");
     playFeedback("decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(`Decision recorded. Business impact is ${next.impact}. ${getOperationalLabel(next)} is ${next.continuity}.`);
+    setAnnouncement(msg("session.decisionRecorded", { impact: next.impact, label: lit(getOperationalLabel(next)), continuity: next.continuity }));
   }
 
   // Where the player goes after a step, and the record of an operation that step
@@ -363,7 +367,7 @@ export function useGameSession() {
       recordTelemetry("revision");
       setTelemetry(readTelemetry());
     }
-    setAnnouncement(`Working hypothesis set to ${hypotheses.find(item => item.id === id)?.title}.`);
+    setAnnouncement(msg("session.hypothesisSet", { title: lit(hypotheses.find(item => item.id === id)?.title ?? "") }));
   }
 
   function respond(choice: string) {
@@ -374,9 +378,9 @@ export function useGameSession() {
     pulseMeters(current, next);
     setPendingUndo(null);
     playFeedback(next.status === "won" ? "complete" : next.status === "lost" ? "lost" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "won" ? "Response complete. The incident is standing down. The after-action review is ready when you are."
-      : next.status === "lost" ? `The operation is lost. ${say(getLossReason(next).title, activeLocale())}. The after-action review is ready when you are.`
-      : next.responseChoices.length === 1 ? "Containment recorded. Establish an assurance gate." : "Assurance recorded. Choose a recovery approach.");
+    setAnnouncement(next.status === "won" ? msg("session.responseWon")
+      : next.status === "lost" ? msg("session.responseLost", { loss: getLossReason(next).title })
+      : next.responseChoices.length === 1 ? msg("session.containmentRecorded") : msg("session.assuranceRecorded"));
     // The stand-down panel is the player's arrival point. The review opens on
     // request so the resolution is seen before the analysis.
     afterStep(next);
@@ -391,7 +395,7 @@ export function useGameSession() {
     setPendingUndo(null);
     afterStep(next, "investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
-    setAnnouncement(`Command decision recorded. Business impact is ${next.impact}.`);
+    setAnnouncement(msg("session.commandRecorded", { impact: next.impact }));
   }
 
   function sectorDecision(choice: SetPieceChoice) {
@@ -403,7 +407,7 @@ export function useGameSession() {
     setPendingUndo(null);
     afterStep(next, "investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
-    setAnnouncement(`Sector decision recorded. ${getOperationalLabel(next)} is ${next.continuity}.`);
+    setAnnouncement(msg("session.sectorRecorded", { label: lit(getOperationalLabel(next)), continuity: next.continuity }));
   }
 
   function focusInfrastructure(nodeId: string) {
@@ -420,9 +424,9 @@ export function useGameSession() {
     setGame(next);
     pulseMeters(current, next);
     const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
-    setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? "Isolation" : "Monitoring", game: current } : null);
+    setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? msg("session.undoIsolation") : msg("session.undoMonitoring"), game: current } : null);
     playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "lost" ? `The operation is lost. ${say(getLossReason(next).title, activeLocale())}.` : (next.mapHistory.at(-1) ? say(next.mapHistory.at(-1)!.effect, activeLocale()) : "Infrastructure action recorded."));
+    setAnnouncement(next.status === "lost" ? msg("session.lost", { loss: getLossReason(next).title }) : next.mapHistory.at(-1)?.effect ?? msg("session.mapRecorded"));
     afterStep(next);
   }
 
@@ -432,7 +436,7 @@ export function useGameSession() {
     setReport(null);
     setInlineReport(null);
     clearMeterPulse();
-    setAnnouncement(`Undid ${pendingUndo.label}.`);
+    setAnnouncement(msg("session.undid", { label: pendingUndo.label }));
     setPendingUndo(null);
   }
 
@@ -444,7 +448,7 @@ export function useGameSession() {
     setPendingUndo(null);
     const correct = next.correlations.at(-1)?.correct;
     playFeedback(correct ? "success" : "failure", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "lost" ? `Evidence assessment challenged. The operation is lost. ${say(getLossReason(next).title, activeLocale())}.` : correct ? "Evidence assessment supported." : "Evidence assessment challenged.");
+    setAnnouncement(next.status === "lost" ? msg("session.assessmentLost", { loss: getLossReason(next).title }) : correct ? msg("session.assessmentSupported") : msg("session.assessmentChallenged"));
     afterStep(next);
   }
 
@@ -453,13 +457,13 @@ export function useGameSession() {
     if (!current) return;
     setGame(setCaseTheory(current, objective));
     setPendingUndo(null);
-    setAnnouncement(`Case theory set to ${adversaryObjectives[objective].title}.`);
+    setAnnouncement(msg("session.caseTheorySet", { title: lit(adversaryObjectives[objective].title) }));
   }
 
   function exportProgress() {
     const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), ledger: readLedger(scenarios.length), session: game && game.mode !== "ironman" && !botRun ? serialiseSession(game, guided, fastResolve) : null });
     setBackupInput(payload);
-    navigator.clipboard?.writeText(payload).then(() => setBackupMessage("Backup copied to the clipboard."), () => setBackupMessage("Backup prepared. Copy the text below."));
+    navigator.clipboard?.writeText(payload).then(() => setBackupMessage(msg("session.backupCopied")), () => setBackupMessage(msg("session.backupPrepared")));
   }
 
   function importProgress() {
@@ -498,12 +502,12 @@ export function useGameSession() {
         // one, and returning to assignments would delete it. Hold it until then.
         importedRef.current = game ? restoredSession : null;
       }
-      if (!storedCampaign) setBackupMessage("Progress restored for this visit, but this browser is not allowing saved data.");
-      else if (typeof payload.session === "string" && !restoredSession) setBackupMessage("Campaign progress restored. The saved operation in this backup could not be read and was left out.");
-      else if (restoredSession && game) setBackupMessage("Progress restored. Return to assignments to resume the restored operation; the operation in progress will not be kept.");
-      else if (restoredSession) setBackupMessage("Progress restored. The restored operation is ready to resume from the assignment screen.");
-      else setBackupMessage("Progress restored.");
-    } catch { setBackupMessage("Backup not recognised. Paste a complete Breach Command backup."); }
+      if (!storedCampaign) setBackupMessage(msg("session.restoredNoStorage"));
+      else if (typeof payload.session === "string" && !restoredSession) setBackupMessage(msg("session.restoredWithoutSession"));
+      else if (restoredSession && game) setBackupMessage(msg("session.restoredReturn"));
+      else if (restoredSession) setBackupMessage(msg("session.restoredReady"));
+      else setBackupMessage(msg("session.restored"));
+    } catch { setBackupMessage(msg("session.backupNotRecognised")); }
   }
 
   // Daily operation gives every commander the same case today, so choosing it
@@ -532,7 +536,7 @@ export function useGameSession() {
     setCampaignChange(campaignChanges(campaignRef.current, updated, result, score));
     campaignRef.current = updated;
     setCampaign(updated);
-    if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice("This browser is not allowing saved data, so campaign progress was not kept.");
+    if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice(msg("session.campaignNotKept"));
     // What the review suggests next, kept so a returning player is met with it.
     const next = recommendNext(result, nextCase(updated, scenarios.length));
     const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? getLossReason(result).title : result.status === "exercise" ? msg("record.endingExercise") : msg("record.endingStoodDown"), score, endedAt: Date.now(), next };
@@ -588,7 +592,7 @@ export function useGameSession() {
     setBotRun(false);
     setBotActive(false);
     setBotPaused(false);
-    setBotStatus("Waiting for the operation to begin.");
+    setBotStatus(msg("session.botWaiting"));
     clearMeterPulse();
     setAdaptiveScore(false);
   }
@@ -625,7 +629,7 @@ export function useGameSession() {
   function toggleBotPause() {
     setBotPaused(value => {
       const next = !value;
-      setBotStatus(next ? "Automation paused. The current operation state is unchanged." : "Automation resumed. Reassessing the visible incident state.");
+      setBotStatus(next ? msg("session.botPaused") : msg("session.botResumed"));
       return next;
     });
   }
@@ -634,8 +638,8 @@ export function useGameSession() {
     setBotActive(false);
     setBotPaused(false);
     setBotEnabled(false);
-    setBotStatus("Manual control resumed. This remains a practice operation without campaign rewards.");
-    setAnnouncement("Manual control resumed. Bot-assisted operations do not award campaign progress.");
+    setBotStatus(msg("session.botManual"));
+    setAnnouncement(msg("session.manualAnnouncement"));
   }
 
   const executeBotAction = useEffectEvent((action: BotAction) => {
@@ -674,10 +678,10 @@ export function useGameSession() {
       // left to resume, and opening it landed on a disabled workspace.
       if (session && (session.game.status === "playing" || session.game.status === "response")) setSavedSession(session);
       else if (session) removeStored(SESSION_KEY);
-      else if (sessionFromNewerBuild(stored)) setStorageNotice("The saved operation on this device was written by a newer version of Breach Command and cannot be opened here. It is kept aside, and a version that can open it will offer it again.");
+      else if (sessionFromNewerBuild(stored)) setStorageNotice(msg("session.saveFromNewer"));
       else {
         removeStored(SESSION_KEY);
-        setStorageNotice("The saved operation on this device could not be read and has been removed. Campaign progress is not affected.");
+        setStorageNotice(msg("session.saveUnreadable"));
       }
     }, 0);
     return () => clearTimeout(loadTimer);
@@ -698,8 +702,8 @@ export function useGameSession() {
       // between four routes, which is the wrong first lesson. The player can still
       // choose otherwise before beginning.
       if (loaded.operations === 0) setDifficulty("training");
-      if (!storageWritable()) setStorageNotice("This browser is not allowing saved data, so progress from this visit will not be kept.");
-      else if (stored !== null && !campaignReadable(stored)) setStorageNotice("Campaign progress on this device could not be read, so a new campaign has started.");
+      if (!storageWritable()) setStorageNotice(msg("session.storageVisit"));
+      else if (stored !== null && !campaignReadable(stored)) setStorageNotice(msg("session.campaignUnreadable"));
     }, 0);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register(`/sw.js?v=${process.env.NEXT_PUBLIC_APP_VERSION ?? "0"}-${process.env.NEXT_PUBLIC_BUILD_ID ?? "local"}`).catch(() => {});
     return () => clearTimeout(loadTimer);
@@ -738,7 +742,7 @@ export function useGameSession() {
     }
     parkNewerSave();
     if (writeStored(SESSION_KEY, serialiseSession(game, guided, fastResolve))) return;
-    const notice = setTimeout(() => setStorageNotice("This browser is not allowing saved data, so this operation is being played from memory only."), 0);
+    const notice = setTimeout(() => setStorageNotice(msg("session.storageMemory")), 0);
     return () => clearTimeout(notice);
   }, [game, guided, fastResolve]);
 
@@ -752,7 +756,7 @@ export function useGameSession() {
       const current = stateRef.current;
       if (!current) return;
       if (report && !current.pendingDecision) {
-        setBotStatus(current.status === "response" ? "Entering the three-stage response sequence." : "Closing the completed action report.");
+        setBotStatus(current.status === "response" ? msg("session.botResponse") : msg("session.botClosing"));
         setReport(null);
         if (["won", "lost", "exercise"].includes(current.status)) setDebrief(true);
         return;
@@ -760,9 +764,9 @@ export function useGameSession() {
       import("@/lib/game-bot").then(({ chooseBotAction }) => {
         if (cancelled || stateRef.current !== current) return;
         const action = chooseBotAction(current);
-        setBotStatus(say(action.reason, activeLocale()));
+        setBotStatus(action.reason);
         executeBotAction(action);
-      }).catch(() => setBotStatus("The practice commander could not be loaded. Take manual control to continue."));
+      }).catch(() => setBotStatus(msg("session.botLoadFailed")));
     }, delay);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [game, botActive, botPaused, rolling, missionBriefing, settings, rules, newConfirm, debrief, tutorial, selected, report]);
@@ -777,16 +781,16 @@ export function useGameSession() {
   // are now, and it clears itself the moment the operation is no longer running.
   const criticalAnnouncement = game && game.status === "playing"
     && (game.impact >= IMPACT_CRITICAL || game.continuity <= CONTINUITY_AT_RISK || game.objectiveProgress >= OBJECTIVE_IMMINENT)
-    ? `Warning. Business impact ${game.impact}. ${getOperationalLabel(game)} ${game.continuity}. Adversary progress ${game.objectiveProgress}.`
-    : "";
+    ? msg("session.warning", { impact: game.impact, label: lit(getOperationalLabel(game)), continuity: game.continuity, progress: game.objectiveProgress })
+    : null;
 
-  const answer = game && question === "scope" ? activeScenario.scope
-    : question === "constraints" ? activeScenario.constraints
-    : question === "impact" ? activeScenario.impact
-    : question === "known" ? `${activeScenario.timeline} ${say(getLead(game!), activeLocale())} ${game!.revealed.length ? `Confirmed so far: ${game!.revealed.map(id => attacks.find(attack => attack.id === id)!.title).join(", ")}.` : "No stage is confirmed yet."}`
-    : question === "adversary" ? `${say(getObjectiveRead(game!).title, activeLocale())}: ${say(getObjectiveRead(game!).detail, activeLocale())} Current behaviour: ${say(getAdversaryState(game!), activeLocale())}. ${say(getAdversaryRead(game!), activeLocale())}`
-    : question === "assumptions" ? "Treat alerts, valid credentials and successful procedures as evidence, not conclusions. Record one working hypothesis for each turn and revise it only when evidence no longer fits."
-    : "";
+  const answer: Message | null = game && question === "scope" ? lit(activeScenario.scope)
+    : question === "constraints" ? lit(activeScenario.constraints)
+    : question === "impact" ? lit(activeScenario.impact)
+    : question === "known" ? msg("session.known", { timeline: lit(activeScenario.timeline), lead: getLead(game!), confirmed: game!.revealed.length ? msg("session.confirmedSoFar", { stages: game!.revealed.map(id => words.attack(id, "title")).reduceRight((rest, first) => msg("session.listComma", { first, rest })) }) : msg("session.noStageConfirmed") })
+    : question === "adversary" ? msg("session.adversary", { title: getObjectiveRead(game!).title, detail: getObjectiveRead(game!).detail, state: getAdversaryState(game!), read: getAdversaryRead(game!) })
+    : question === "assumptions" ? msg("session.assumptions")
+    : null;
 
   return {
     // Campaign, session and operation state

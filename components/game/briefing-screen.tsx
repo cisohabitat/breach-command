@@ -148,7 +148,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             <code>{challengeCode ?? t("briefingScreen.preparingCode")}</code>
             <p className="muted small">{t("briefingScreen.aCodeReproduces")}</p>
             <div className="challenge-load"><input aria-label={t("briefingScreen.challengeCode")} value={challengeInput} onChange={event => setChallengeInput(event.target.value)} placeholder={t("briefingScreen.enterBcChallenge")} /><button onClick={loadChallengeCode}>{t("briefingScreen.load")}</button></div>
-            {challengeMessage && <p aria-live="polite">{challengeMessage}</p>}
+            {challengeMessage && <p aria-live="polite">{say(challengeMessage)}</p>}
           </div>
           <div className="setup-controls">
             <div className="guided-control">

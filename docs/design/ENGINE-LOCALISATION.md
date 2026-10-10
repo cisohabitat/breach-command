@@ -1,6 +1,6 @@
 # Localising the engine's prose
 
-Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026), step 4 built (0.9.7 and 0.9.8, the session hook's own sentences aside); step 5 follows. The interface around it is
+Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026), step 4 built (0.9.7 to 0.9.9); step 5 follows. The interface around it is
 catalogued (`lib/i18n/`, 0.9.1 to 0.9.3); this is the plan for the rest, so
 that the work can start when a first locale has a translator and a reviewer
 (Phase 7, `docs/ROADMAP.md`).
@@ -136,8 +136,12 @@ Three parts of the interface read English back:
 
 7. **What stays English:** the diagnostic a player copies into a bug report
    (marked `i18n: maintainer English`), the ledger's CSV column names (a file
-   for a spreadsheet, read by whoever analyses it), telemetry event names, and
-   ATT&CK technique names, which MITRE publishes in English.
+   for a spreadsheet, read by whoever analyses it), telemetry event names,
+   ATT&CK technique names, which MITRE publishes in English, the
+   `effectText` English the maintainers' tools quote, and the name and
+   description of the incident-state tool for browser agents
+   (`hooks/use-incident-state-tool.ts`), which an agent reads as it reads an
+   API's; what that tool returns is the player's, in the player's locale.
 
 ## Order of work
 
@@ -195,10 +199,14 @@ exact.
    line drawn on it in the pseudo-locale to be the pseudo-locale's; another
    reads the last operation in it, where the date, which `Intl` writes, is
    accented too. The incident-state tool for browser agents says what the
-   player sees, so in the player's locale. Left for its own step: the
-   sentences `hooks/use-game-session.ts` composes itself (about 40
-   announcements and briefing answers), which are the components' kind of
-   string, not the engine's.
+   player sees, so in the player's locale. The sentences the hooks compose
+   themselves (announcements, the Bot Commander's status, the storage, backup
+   and challenge notices, the briefing's answers) followed in 0.9.9: 57
+   messages in `lib/i18n/en/session.ts`, which the hooks register, since the
+   session runs from the first render. The hooks keep them as messages in
+   state and the components say them, because a string put in state on the
+   first render is English before the locale is read. `tests/i18n.test.ts`
+   reads `hooks/` for written-in English as it reads the components.
 5. **A ratchet like the components'.** `tests/i18n.test.ts` gains a pass over
    `lib/` that allows prose only in content tables, and the pseudo-locale
    sweep gains a check that no seeded screen in `en-XA` shows a run of four

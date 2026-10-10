@@ -61,7 +61,7 @@ function useOpened(open: boolean) {
 
 export default function Home() {
   const session = useGameSession();
-  const { t } = useMessages();
+  const { t, say } = useMessages();
   const { game, ended, highContrast, announcement, criticalAnnouncement, storageNotice, rolling, setRules, setSettings, setNewConfirm, setStorageNotice, resetToBriefing } = session;
   const show = {
     actionSheet: useOpened(!!session.selected),
@@ -105,15 +105,15 @@ export default function Home() {
   return (
     <div className={`app-shell ${highContrast ? "high-contrast" : ""}`}>
       <a className="skip-link" href="#main-content">{t("shell.skip")}</a>
-      <div className="sr-only" aria-live="polite" aria-atomic="true">{announcement}</div>
-      <div className="sr-only" aria-live="assertive" aria-atomic="true">{criticalAnnouncement}</div>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">{announcement && say(announcement)}</div>
+      <div className="sr-only" aria-live="assertive" aria-atomic="true">{criticalAnnouncement && say(criticalAnnouncement)}</div>
       {storageNotice && (
         <div className="storage-notice" role="status">
           {/* Each notice says what happened to which data in its own words; a fixed
               heading claimed an unreadable save and a reset campaign for all of them. */}
           <strong>{t("page.savedData")}</strong>
-          <span>{storageNotice}</span>
-          <button onClick={() => setStorageNotice("")} aria-label={t("shell.dismissStorage")}><X size={16} /></button>
+          <span>{say(storageNotice)}</span>
+          <button onClick={() => setStorageNotice(null)} aria-label={t("shell.dismissStorage")}><X size={16} /></button>
         </div>
       )}
       <header className="topbar">

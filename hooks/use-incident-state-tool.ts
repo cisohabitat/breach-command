@@ -14,6 +14,9 @@ export function useIncidentStateTool(stateRef: RefObject<Game | null>) {
     if (!context?.registerTool) return;
     const lifecycle = new AbortController();
     try {
+      // i18n: maintainer English. The tool's name and description are read by
+      // the agent that calls it, as an API's are; what it returns is the
+      // player's, in the player's locale.
       const registration = context.registerTool({
         name: "read_incident_state",
         title: "Read incident state",

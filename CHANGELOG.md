@@ -4,6 +4,15 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.9, 10 October 2026
+
+- **Announcements and notices in any language.** What the game says to a
+  screen reader as you play, the Bot Commander's status, the notices about
+  saved data and backups, the briefing's answers and the challenge code's
+  replies are messages (57 of them), said in the language the game is in.
+  English is unchanged. The check for English written into the interface now
+  reads the hooks as well as the components.
+
 ## 0.9.8, 10 October 2026
 
 - **The campaign, the Bot Commander and your last operation in any language.**

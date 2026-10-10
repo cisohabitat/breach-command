@@ -35,7 +35,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
             { id: "assumptions", label: t("briefingWorkspace.whatShouldWe") },
           ].map(item => <button key={item.id} className={question === item.id ? "active" : ""} aria-pressed={question === item.id} onClick={() => setQuestion(question === item.id ? null : item.id)}>{item.label}</button>)}
         </div>
-        {question && <div className="captain-answer" aria-live="polite">{answer}</div>}
+        {question && <div className="captain-answer" aria-live="polite">{answer && say(answer)}</div>}
         <div className="guided-inline"><label htmlFor="guided-game">{game.mode === "expert" ? t("briefingWorkspace.guidanceDisabledIn") : t("briefingWorkspace.guidedReflection")}</label><Switch id="guided-game" checked={guided} disabled={game.mode === "expert"} onCheckedChange={setGuided} /></div>
         <div className="guided-inline"><label htmlFor="fast-game">{t("briefingScreen.fastResolution")}</label><Switch id="fast-game" checked={fastResolve} onCheckedChange={setFastResolve} /></div>
         <div className="adversary-read"><span className="eyebrow">{t("briefingWorkspace.actorModel")}</span><p>{say(getAdversaryRead(game))}</p></div>

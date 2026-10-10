@@ -2,13 +2,19 @@
 
 import { useEffect, useEffectEvent, useState } from "react";
 import { readStored, writeStored } from "@/lib/storage";
+import { msg, type Message } from "@/lib/i18n/message";
+import { register } from "@/lib/i18n";
+import { sessionMessages } from "@/lib/i18n/en/session";
+
+register(sessionMessages);
+
 
 const PREFERENCES_KEY = "breach-command.preferences";
 
 // Audio, haptics and contrast belong to the player, not to an operation: they
 // are loaded once and persisted on every change, and they outlive every
 // incident. Keeping them here leaves the session hook to the game itself.
-export function usePreferences(onUnreadable: (notice: string) => void) {
+export function usePreferences(onUnreadable: (notice: Message) => void) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
@@ -34,7 +40,7 @@ export function usePreferences(onUnreadable: (notice: string) => void) {
           setHighContrast(parsed.highContrast === true);
           setShortcutsEnabled(parsed.shortcuts !== false);
         } catch {
-          report("Stored settings could not be read, so defaults are in use.");
+          report(msg("session.settingsUnreadable"));
         }
       }
       setLoaded(true);

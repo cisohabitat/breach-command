@@ -171,3 +171,8 @@ assignment screen shows before the game's script arrives (the last operation,
 the suggestion, trust and readiness, the campaign's ending): 840,379 B,
 3,918 B more, 9,621 B under budget. All script by the time play starts is
 1,181,390 B. No budget moved.
+
+The hooks' sentences as messages (0.9.9) are on the first load, because the
+session runs from the first render: 844,296 B, 3,917 B more, 5,704 B under
+budget. All script by the time play starts is 1,185,328 B, 4,672 B under its
+budget. No budget moved; step 5 adds tests, not script.

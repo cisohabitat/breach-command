@@ -4,6 +4,12 @@ import { useState, useSyncExternalStore } from "react";
 import { decodeChallenge, encodeChallenge, isOutdatedChallenge } from "@/lib/phase8";
 import { scenarios, type GameMode } from "@/lib/advanced-game";
 import { weeklyOperation } from "@/lib/command-systems";
+import { msg, type Message } from "@/lib/i18n/message";
+import { register } from "@/lib/i18n";
+import { sessionMessages } from "@/lib/i18n/en/session";
+
+register(sessionMessages);
+
 
 export type ChallengeSetup = NonNullable<ReturnType<typeof decodeChallenge>>;
 
@@ -31,19 +37,19 @@ export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
   const weeklySeed = useSyncExternalStore(noSubscription, thisWeeksSeed, () => null);
   const [challenge, setChallenge] = useState<{ seed: number; source: "code" | "generated" } | null>(null);
   const [challengeInput, setChallengeInput] = useState("");
-  const [challengeMessage, setChallengeMessage] = useState("");
+  const [challengeMessage, setChallengeMessage] = useState<Message | null>(null);
 
   function loadChallengeCode() {
     const setup = decodeChallenge(challengeInput);
     if (!setup) {
       setChallengeMessage(isOutdatedChallenge(challengeInput)
-        ? "This code is from an earlier version of the game, whose incidents have since changed, so it would not replay the same operation. Ask for a new code."
-        : "Code not recognised. Check every character and try again.");
+        ? msg("session.challengeOutdated")
+        : msg("session.challengeUnknown"));
       return;
     }
     applySetup(setup);
     setChallenge({ seed: setup.seed, source: "code" });
-    setChallengeMessage("Challenge loaded. It applies to the next operation you begin.");
+    setChallengeMessage(msg("session.challengeLoaded"));
   }
 
   // Loads a code the game itself produced, as the replay with the Bot Commander
@@ -53,13 +59,13 @@ export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
     if (!setup) return false;
     applySetup(setup);
     setChallenge({ seed: setup.seed, source: "code" });
-    setChallengeMessage("Replay loaded. It applies to the next operation you begin.");
+    setChallengeMessage(msg("session.replayLoaded"));
     return true;
   }
 
   function generateSeed() {
     setChallenge({ seed: 100000 + Math.floor(Math.random() * 900000), source: "generated" });
-    setChallengeMessage("New challenge generated. It applies to the next operation you begin.");
+    setChallengeMessage(msg("session.challengeGenerated"));
   }
 
   // The seed the next operation will use, and whether it is a promise to replay.
@@ -75,7 +81,7 @@ export function useChallengeCode(applySetup: (setup: ChallengeSetup) => void) {
   function spendChallenge() {
     if (!challenge) return;
     setChallenge(null);
-    setChallengeMessage("");
+    setChallengeMessage(null);
   }
 
   const codeFor = (scenario: number, difficulty: ChallengeSetup["difficulty"], mode: ChallengeSetup["mode"], specialist: ChallengeSetup["specialist"]) => {
