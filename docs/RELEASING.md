@@ -23,7 +23,21 @@ push to `main` is a release, so it goes out only through this procedure.
    version already tagged is not tagged again.
 7. Confirm the deploy: the footer of the production page shows the new
    version and the commit's short hash, and Settings, Copy diagnostics shows
-   the same build with the service worker controlling.
+   the same build with the service worker controlling. Where the site cannot
+   be opened, the commit's GitHub deployments say the same thing: Vercel
+   records a `Production` deployment against each commit it builds from
+   `main`, with its state (`success` once it is live).
+
+## What Verify does not hold back
+
+Vercel deploys every push to `main` as soon as it has built, without waiting
+for Verify, so a push that fails Verify is still in production until the
+next one. 0.9.13 (`2db933b`) failed Verify on a whitespace check and was live
+for the minutes until its fix (`32d832c`); the release tag waited for the
+fix, as step 6 intends, but the deploy did not. Two ways to close the gap:
+let production wait for the GitHub checks (Vercel's deployment checks, in
+the project's settings, naming Verify), or reach `main` only through pull
+requests that Verify has already passed, as steps 1 and 5 describe.
 
 The service worker's cache is named for the version and build the page
 registers it with, so each deploy installs a fresh cache and deletes the old

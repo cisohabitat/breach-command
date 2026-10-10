@@ -3,19 +3,24 @@
 // replaced by a TODO the drafts test rejects until it is written. Numbers keep
 // the first scenario's values as a starting point. Reading the shapes from the
 // live tables keeps the scaffold in step as they change.
-import { attacks, scenarioDynamics, scenarios, sectorProcedures } from "../lib/game.ts";
+import { attackMitre, attacks, scenarioDynamics, scenarios, sectorProcedures } from "../lib/game.ts";
 import { infrastructureTopologies, secondSetPieces, sectorSetPieces } from "../lib/phase8.ts";
 import { variantTemplates } from "../lib/phase9.ts";
 import { objectiveRotation, sectorSystems } from "../lib/command-systems.ts";
 import { responseProfiles, scenarioProfiles, sectorDecisionTerms } from "../lib/engine/content.ts";
 
+const firstAtEachStage = [0, 1, 2, 3].map(stage => attacks.find(attack => attack.stage === stage)!);
+
 // Every table that holds one entry per scenario, where it lives, and the entry
 // the draft is shaped from.
 export const scenarioTables = {
-  scenario: { file: "lib/game.ts", table: "scenarios", template: scenarios[0] },
+  scenario: { file: "lib/scenarios.ts", table: "scenarios", template: scenarios[0] },
   dynamics: { file: "lib/game.ts", table: "scenarioDynamics", template: scenarioDynamics[0] },
   sectorAction: { file: "lib/game.ts", table: "sectorProcedures", template: sectorProcedures[0] },
-  exclusiveTechniques: { file: "lib/game.ts", table: "attacks (three or more, used only by this scenario)", template: [attacks[0], attacks[1], attacks[2]] },
+  // One per stage: every stage draws from a pool of the same size, so a sector
+  // adds to each stage or the pools drift apart.
+  exclusiveTechniques: { file: "lib/game.ts", table: "attacks (one per stage, used only by this scenario)", template: firstAtEachStage },
+  exclusiveMitre: { file: "lib/game.ts", table: "attackMitre (the ATT&CK ids of each exclusive technique, in the same order)", template: firstAtEachStage.map(attack => attackMitre[attack.id]) },
   topology: { file: "lib/phase8.ts", table: "infrastructureTopologies", template: infrastructureTopologies[0] },
   firstCrisis: { file: "lib/phase8.ts", table: "sectorSetPieces", template: sectorSetPieces[0] },
   secondCrisis: { file: "lib/phase8.ts", table: "secondSetPieces", template: secondSetPieces[0] },
@@ -29,8 +34,10 @@ export const scenarioTables = {
 
 // Ids and enumerated values keep their form so the shape type-checks; every
 // other string becomes a TODO naming where it goes.
-const keepAsIs = new Set(["vector", "stage", "icon", "color", "zone", "posture", "kind"]);
+// The icon is a component, which would serialise as {}, so it becomes a TODO too.
+const keepAsIs = new Set(["vector", "stage", "color", "zone", "posture", "kind"]);
 function blank(value: unknown, path: string): unknown {
+  if (path.endsWith(".icon")) return `TODO: ${path} (a lucide-react icon, imported in lib/scenarios.ts)`;
   if (typeof value === "string") return keepAsIs.has(path.split(".").at(-1) ?? "") ? value : `TODO: ${path}`;
   if (Array.isArray(value)) return value.map((item, index) => blank(item, `${path}[${index}]`));
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, blank(item, `${path}.${key}`)]));

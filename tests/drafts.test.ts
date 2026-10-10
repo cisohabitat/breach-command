@@ -7,11 +7,14 @@ import { scenarios } from "../lib/game.ts";
 import { scaffold, scenarioTables, todosIn } from "../scripts/scenario-scaffold.ts";
 
 test("the scaffold covers every table that holds one entry per scenario", async () => {
-  const modules = ["../lib/game.ts", "../lib/phase8.ts", "../lib/phase9.ts", "../lib/command-systems.ts", "../lib/engine/content.ts"];
+  const modules = ["../lib/scenarios.ts", "../lib/game.ts", "../lib/phase8.ts", "../lib/phase9.ts", "../lib/command-systems.ts", "../lib/engine/content.ts"];
   const covered = new Set(Object.values(scenarioTables).map(entry => entry.table.split(" ")[0]));
+  // Shared tables whose length can match the scenario count by chance: the
+  // eleven shared procedures met an eleventh scenario in the scaffold's dry run.
+  const shared = new Set(["procedures"]);
   for (const path of modules) {
     for (const [name, value] of Object.entries(await import(path))) {
-      if (Array.isArray(value) && value.length === scenarios.length && name !== "scenarios") assert.ok(covered.has(name) || name === "scenarios", `${name} in ${path} is per scenario; add it to scenarioTables`);
+      if (Array.isArray(value) && value.length === scenarios.length && !shared.has(name)) assert.ok(covered.has(name), `${name} in ${path} is per scenario; add it to scenarioTables`);
     }
   }
   const draft = scaffold("example");

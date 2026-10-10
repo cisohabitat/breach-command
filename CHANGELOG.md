@@ -4,6 +4,21 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.16, 10 October 2026
+
+- **Adding a sector is a measured procedure.** A trial sector was scaffolded,
+  written, wired in and taken to a passing test suite in one session, and
+  everything it tripped over is fixed: the scaffold names
+  `lib/scenarios.ts` for the scenario, asks for one exclusive technique a
+  stage with its ATT&CK ids and for the icon, and the drafts test no longer
+  mistakes the shared procedures for a per-scenario table.
+  `docs/CONTENT.md` lists the rules the wired-in tests check and records the
+  run. The trial sector is not shipped.
+- **Release notes on deploys.** `docs/RELEASING.md` says how to confirm a
+  deploy from its GitHub deployment, and that Vercel deploys `main` before
+  Verify has passed, with the two ways to close that gap.
+  Nothing in the game changes.
+
 ## 0.9.15, 10 October 2026
 
 - **The first screen paints sooner.** The page now waits only for the styles

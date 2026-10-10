@@ -792,9 +792,21 @@ draft the tests reject until all of its TODOs are written (228 in a fresh
 draft). Copy diagnostics in Settings, the release and rollback procedure in
 `docs/RELEASING.md`, and monthly grouped framework updates.
 
-Not yet met, and only time can meet them: three consecutive releases shipped
-through the procedure, and a new scenario scaffolded and made to pass in one
-session, which needs an author.
+Status, 10 October 2026 (0.9.16). A new scenario scaffolded and made to
+pass in one session: met. A rail-signalling sector went from
+`pnpm new-scenario` to a green `pnpm test` (113 tests), with balance at
+3,000 per difficulty within noise and the repetition audit run, in about
+twelve minutes of an agent's time; it was not shipped, since it has had no
+practitioner review. The four checks it failed once wired in are now in
+the scaffold or in `docs/CONTENT.md`, where the run is recorded.
+
+Releases: 0.9.7 to 0.9.15, nine in a row, each has its changelog entry, its
+`v<version>` tag from the release workflow and a successful `Production`
+deployment on its commit. They went to `main` directly rather than through
+pull requests and previews, and one of them (0.9.13) was in production
+while its Verify was red, because Vercel does not wait for Verify
+(`docs/RELEASING.md`, "What Verify does not hold back"). Not met as written
+until production waits for Verify or releases go through pull requests.
 
 ## Cross-cutting rules
 
