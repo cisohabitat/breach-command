@@ -159,11 +159,15 @@ for (const width of [320, 390, 820, 1280]) {
 // applied; with the game's styles loading after the page's it would lose. So a
 // copy of it goes into the game's sheet at its place, wherever both rules match
 // one element on a game screen and set a property of the same family
-// ("margin" and "margin-top"). Copying where it is not needed costs bytes, not
-// pixels, so the matching is the same widened one.
+// ("margin" and "margin-top"). The copy then sits after kept rules that used to
+// follow it, so the condition is transitive: walking the rules in order, a kept
+// rule is copied when any earlier rule already in the game's sheet, moved or
+// copied, overlaps it. Copying where it is not needed costs bytes, not pixels,
+// so the matching is the same widened one.
 const family = (name: string) => name.replace(/^-(webkit|moz|ms)-/, "").split("-")[0];
 const properties = rules.map(rule => new Set(rule.text.slice(rule.text.indexOf("{") + 1, rule.text.lastIndexOf("}")).replace(/\/\*[\s\S]*?\*\//g, "").split(";").map(part => part.split(":")[0].trim().toLowerCase()).filter(Boolean).map(family)));
 const copied = new Set<number>();
+const screens: number[][][] = [];
 async function collectGame(page: Page) {
   await page.evaluate(() => document.querySelectorAll("details").forEach(details => { details.open = true; }));
   const matches: number[][] = await page.evaluate(lists => {
@@ -175,12 +179,19 @@ async function collectGame(page: Page) {
       return [...found];
     });
   }, widened);
+  screens.push(matches);
+}
+function decideCopies() {
+  const inGame = (index: number) => !needed.has(index) || copied.has(index);
   for (let kept = 0; kept < rules.length; kept++) {
-    if (!needed.has(kept) || copied.has(kept) || !matches[kept].length) continue;
-    const elements = new Set(matches[kept]);
-    for (let moved = 0; moved < kept; moved++) {
-      if (needed.has(moved) || !matches[moved].length || ![...properties[moved]].some(name => properties[kept].has(name))) continue;
-      if (matches[moved].some(element => elements.has(element))) { copied.add(kept); break; }
+    if (!needed.has(kept)) continue;
+    for (const matches of screens) {
+      if (!matches[kept].length) continue;
+      const elements = new Set(matches[kept]);
+      const overlaps = (earlier: number) => inGame(earlier) && matches[earlier].length > 0 && [...properties[earlier]].some(name => properties[kept].has(name)) && matches[earlier].some(element => elements.has(element));
+      let found = false;
+      for (let earlier = 0; earlier < kept && !found; earlier++) found = overlaps(earlier);
+      if (found) { copied.add(kept); break; }
     }
   }
 }
@@ -192,7 +203,7 @@ async function openGame(page: Page, game: Game) {
   await page.waitForTimeout(600);
 }
 const pause = (page: Page) => page.waitForTimeout(400);
-for (const width of [390, 1280]) {
+for (const width of [320, 390, 820, 1280]) {
   console.log(`game screens at ${width}`);
   let page = await browser.newPage({ viewport: { width, height: 900 } });
   page.setDefaultTimeout(15000);
@@ -223,6 +234,7 @@ for (const width of [390, 1280]) {
   await page.close();
 }
 await browser.close();
+decideCopies();
 
 // Hard-kept whatever matched: the tokens, the theme, fonts, keyframes, imports.
 const keep = (item: Item) => item.kind !== "rule" || needed.has(rules.indexOf(item));
