@@ -6,6 +6,7 @@
 // they share load together, once, and nothing on the first load imports the
 // engine (tests/first-load.test.ts).
 import "@/lib/i18n/engine-messages";
+import "./game.css";
 
 export * as engine from "@/lib/advanced-game";
 export * as session from "@/lib/session";
