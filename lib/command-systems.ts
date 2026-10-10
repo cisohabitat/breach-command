@@ -1,4 +1,9 @@
 import { registerContent } from "./i18n/content/registry.ts";
+// The fatigue at which a specialist's bonus stops applying. The roll, its
+// preview and the deployment screen all read it here; it sits with the
+// specialists so the assignment screen reads it without the engine.
+export const SPECIALIST_EXHAUSTED_AT = 5;
+
 export type GameMode = "campaign" | "daily" | "weekly" | "ironman" | "escalation" | "expert";
 export type SpecialistId = "hunter" | "forensics" | "identity" | "ot" | "continuity" | "communications";
 export type ProcedureScope = "focused" | "enterprise";

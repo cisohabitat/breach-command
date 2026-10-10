@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import { Bot, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { SPECIALIST_EXHAUSTED_AT, difficulties, gameModes, scenarios, specialists, stages, type Difficulty, type GameMode, type SpecialistId } from "@/lib/advanced-game";
+import { difficulties, scenarios, stages, type Difficulty } from "@/lib/game";
+import { SPECIALIST_EXHAUSTED_AT, gameModes, specialists, type GameMode, type SpecialistId } from "@/lib/command-systems";
 import { campaignRank, standingEffects } from "@/lib/campaign";
 import { namedSpecialists } from "@/lib/phase8";
 import { describeWhen } from "@/lib/last-operation";

@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.12, 10 October 2026
+
+- **A lighter first visit.** The assignment screen no longer loads the
+  game's engine: the rules, the reads, the review, the session's reading of a
+  save and the Bot Commander arrive with the game screen, warmed while the
+  page is idle. The script the page needs before it answers fell from 845 KB
+  to 726 KB, and the whole game's script by 37 KB, because the parts no
+  longer each carry their own copy of what they share. Nothing on screen
+  changes.
+
 ## 0.9.11, 10 October 2026
 
 - **The last of the leftover English.** The pseudo-locale sweep now opens

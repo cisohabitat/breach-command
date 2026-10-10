@@ -2,7 +2,8 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { decodeChallenge, encodeChallenge, isOutdatedChallenge } from "@/lib/phase8";
-import { scenarios, type GameMode } from "@/lib/advanced-game";
+import { scenarios } from "@/lib/game";
+import type { GameMode } from "@/lib/command-systems";
 import { weeklyOperation } from "@/lib/command-systems";
 import { msg, type Message } from "@/lib/i18n/message";
 import { register } from "@/lib/i18n";

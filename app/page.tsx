@@ -10,44 +10,31 @@ import { FaultBoundary } from "@/components/game/fault-boundary";
 import { useGameSession } from "@/hooks/use-game-session";
 import { pageMessages } from "@/lib/i18n/en/page";
 import { register } from "@/lib/i18n";
-import { loadSharedText } from "@/lib/i18n/shared-text";
+import { loadGame } from "@/lib/game-loader";
 
 register(pageMessages);
 
-// The assignment screen is all a first visit needs. The game screen and every
-// dialog load on demand, so the script parsed before the page answers is the
-// slip, the engine and the framework rather than the whole game. Each is
-// warmed once the browser is idle, which makes its first opening immediate and
-// puts its script in the offline cache, since the service worker keeps every
-// same-origin script it sees.
-// Each part loads with the text the parts share (lib/i18n/shared-text.ts), so
-// the engine's catalogue and the glossary are one script, fetched once.
-const withText = <T,>(part: Promise<T>) => Promise.all([part, loadSharedText()]).then(([module]) => module);
-const parts = {
-  game: () => withText(import("@/components/game/game-screen")),
-  actionSheet: () => withText(import("@/components/game/action-sheet")),
-  roll: () => withText(import("@/components/game/roll-dialog")),
-  brief: () => withText(import("@/components/game/mission-briefing-dialog")),
-  report: () => withText(import("@/components/game/captain-report-dialog")),
-  guide: () => withText(import("@/components/game/field-guide-dialog")),
-  debrief: () => withText(import("@/components/game/debrief-dialog")),
-  settings: () => withText(import("@/components/game/settings-dialog")),
-  newIncident: () => withText(import("@/components/game/new-incident-dialog")),
-};
+// The assignment screen is all a first visit needs. The game screen, every
+// dialog and the engine load on demand, from one bundle (lib/game-loader.ts),
+// so the script parsed before the page answers is the assignment screen and
+// the framework, and nothing the parts share is copied into several scripts.
+// The bundle is warmed once the browser is idle, which makes a first opening
+// immediate and puts its script in the offline cache, since the service worker
+// keeps every same-origin script it sees.
 // While the game screen's script arrives the page keeps a main landmark and says
 // what it is doing, rather than showing nothing between the click and the case.
-const GameScreen = dynamic(() => parts.game().then(m => m.GameScreen), {
+const GameScreen = dynamic(() => loadGame().then(m => m.GameScreen), {
   ssr: false,
   loading: () => <main className="game-screen game-loading" id="main-content" aria-busy="true"><h1>{textFor("page.openingTheOperation")}</h1></main>,
 });
-const ActionSheet = dynamic(() => parts.actionSheet().then(m => m.ActionSheet), { ssr: false });
-const RollDialog = dynamic(() => parts.roll().then(m => m.RollDialog), { ssr: false });
-const MissionBriefingDialog = dynamic(() => parts.brief().then(m => m.MissionBriefingDialog), { ssr: false });
-const CaptainReportDialog = dynamic(() => parts.report().then(m => m.CaptainReportDialog), { ssr: false });
-const FieldGuideDialog = dynamic(() => parts.guide().then(m => m.FieldGuideDialog), { ssr: false });
-const DebriefDialog = dynamic(() => parts.debrief().then(m => m.DebriefDialog), { ssr: false });
-const SettingsDialog = dynamic(() => parts.settings().then(m => m.SettingsDialog), { ssr: false });
-const NewIncidentDialog = dynamic(() => parts.newIncident().then(m => m.NewIncidentDialog), { ssr: false });
+const ActionSheet = dynamic(() => loadGame().then(m => m.ActionSheet), { ssr: false });
+const RollDialog = dynamic(() => loadGame().then(m => m.RollDialog), { ssr: false });
+const MissionBriefingDialog = dynamic(() => loadGame().then(m => m.MissionBriefingDialog), { ssr: false });
+const CaptainReportDialog = dynamic(() => loadGame().then(m => m.CaptainReportDialog), { ssr: false });
+const FieldGuideDialog = dynamic(() => loadGame().then(m => m.FieldGuideDialog), { ssr: false });
+const DebriefDialog = dynamic(() => loadGame().then(m => m.DebriefDialog), { ssr: false });
+const SettingsDialog = dynamic(() => loadGame().then(m => m.SettingsDialog), { ssr: false });
+const NewIncidentDialog = dynamic(() => loadGame().then(m => m.NewIncidentDialog), { ssr: false });
 
 // Mounted from the first time it opens and kept after, so a dialog closes with
 // its own focus return and exit rather than vanishing with the component.
@@ -74,7 +61,7 @@ export default function Home() {
     newIncident: useOpened(session.newConfirm),
   };
   useEffect(() => {
-    const warm = () => Object.values(parts).forEach(load => load().catch(() => {}));
+    const warm = () => void loadGame().catch(() => {});
     const idle = (window as Window & { requestIdleCallback?: (callback: () => void) => number }).requestIdleCallback;
     if (idle) idle(warm);
     else window.setTimeout(warm, 1500);

@@ -177,7 +177,16 @@ Partly met: initial script fell from 921 KB to 770 KB by loading the game
 screen, the dialogs, the audio and the Bot Commander on demand, but the
 400 KB target is below this stack's floor (React DOM and the Next.js runtime
 are about 540 KB decoded); the next cut is splitting the engine from the
-assignment screen. Not met: the stylesheet is 9,330 lines, down from 10,032
+assignment screen. *10 October 2026 (0.9.12): made.* The engine, the
+session's migration, the Bot Commander and every lazy part are one bundle the
+assignment screen never imports (`lib/game-loader.ts`,
+`tests/first-load.test.ts`): initial script 845,158 B to 726,346 B, all
+script by play start 1,190,300 B to 1,153,079 B (the parts no longer carry
+copies of what they share), the operation's layout shift 0.030 to 0.011;
+budgets lowered to 750,000 B and 1,170,000 B. What remains on the first load
+beyond the framework is the content tables the assignment screen reads from
+(`lib/game.ts` with every attack, `lib/phase8.ts`, `lib/phase9.ts`), the next
+cut. Not met: the stylesheet is 9,330 lines, down from 10,032
 by removing only what provably cannot apply. Reaching 6,000 means
 restructuring it by component, which is better done with Phase 3's type
 system than ahead of it. Open, because it needs a device: offline play on a

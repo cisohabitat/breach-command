@@ -1,14 +1,12 @@
 // Rules shared by the reads and the transitions: availability, the roll modifier, map costs, the loss check and settle.
 import { attacks, procedures, sectorProcedures, hypotheses, scenarioDynamics, scenarios, randomInt, type HypothesisId } from "../game.ts";
-import { procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
+import { SPECIALIST_EXHAUSTED_AT, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { infrastructureTopologies } from "../phase8.ts";
 import { adversaryProfiles, meterDirection, meterNames, responseProfiles } from "./content.ts";
 import { type CarriedSource, type DecisionChoice, type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
 import { lit, msg, ref, type Message } from "../i18n/message.ts";
 
-// The fatigue at which a specialist's bonus stops applying. The roll, its
-// preview and the deployment screen all read it here.
-export const SPECIALIST_EXHAUSTED_AT = 5;
+export { SPECIALIST_EXHAUSTED_AT };
 
 export function responseOptionsFor(game: Game): ResponseProfile {
   return responseProfiles[game.scenario] ?? responseProfiles[0];

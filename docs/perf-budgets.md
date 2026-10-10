@@ -183,3 +183,13 @@ levels, phase names, the first-session record). The first load is 845,031 B,
 4,969 B under budget; all script by the time play starts 1,189,715 B, 285 B
 under the 1,190,000 B budget, which moved to 1,200,000 B so the next change
 has room to be measured rather than refused.
+
+Splitting the engine off the first load (0.9.12) moved the rules, reads,
+review, transitions, the engine's content, the session's migration and the
+Bot Commander into the one bundle the game screen and every dialog come from
+(`lib/game-loader.ts`). Initial script fell from 845,158 B to 726,346 B. All
+script by the time play starts fell from 1,190,300 B to 1,153,079 B: each
+lazily loaded part had carried its own copy of the modules it shared with the
+others (the effect list in four scripts), and one bundle has one. Budgets
+lowered to 750,000 B initial and 1,170,000 B in all; `tests/first-load.test.ts`
+keeps the engine off the first load.

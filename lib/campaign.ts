@@ -1,4 +1,6 @@
-import { SPECIALIST_EXHAUSTED_AT, countRevisions, type Game } from "./advanced-game.ts";
+import { SPECIALIST_EXHAUSTED_AT } from "./command-systems.ts";
+import { countRevisions } from "./engine/revisions.ts";
+import type { Game } from "./engine/types.ts";
 import { registerContent } from "./i18n/content/registry.ts";
 import { lit, msg, type Message } from "./i18n/message.ts";
 

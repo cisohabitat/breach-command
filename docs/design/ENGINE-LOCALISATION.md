@@ -92,7 +92,8 @@ Three parts of the interface read English back:
    `lib/i18n/en/engine.ts`. *Amended:* it is not registered by the game
    screen's chunk but loaded once, with the glossary, by
    `lib/i18n/shared-text.ts`, which every lazily loaded part of the page awaits
-   (`withText` in `app/page.tsx`); imported by each component that showed a
+   (`withText` in `app/page.tsx`; since 0.9.12 the game bundle,
+   `lib/game-loader.ts`, which carries the engine too); imported by each component that showed a
    message, it was copied into five scripts. A reference shows the content as
    it is now, so a clue edited after a save reads edited in that save; that is
    what a translation needs, and a change from the copies saves held before.

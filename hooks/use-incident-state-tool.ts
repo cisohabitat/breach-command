@@ -3,7 +3,8 @@
 import { useEffect, type RefObject } from "react";
 import { say } from "@/lib/i18n/message";
 import { activeLocale } from "@/hooks/use-messages";
-import { attacks, availableIn, getAdversaryState, getLead, getTurnLimit, proceduresFor, scenarios, type Game } from "@/lib/advanced-game";
+import type { Game } from "@/lib/advanced-game";
+import { loadedGame } from "@/lib/game-loader";
 
 // Registers a read-only tool for browser agents that support document.modelContext.
 // It reports what the player can already see — never the hidden attack chain —
@@ -27,6 +28,8 @@ export function useIncidentStateTool(stateRef: RefObject<Game | null>) {
           if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).length) throw new Error("Expected an empty object.");
           const current = stateRef.current;
           if (!current) return { status: "briefing" };
+          // An operation exists only once the game bundle has loaded.
+          const { attacks, availableIn, getAdversaryState, getLead, getTurnLimit, proceduresFor, scenarios } = loadedGame().engine;
           return {
             status: current.status,
             difficulty: current.difficulty,

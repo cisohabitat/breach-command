@@ -3,11 +3,7 @@ import type { CarriedSource, NodePosture } from "./advanced-game";
 import { injects } from "./engine/content.ts";
 import { isMessage, legacy, msg, type Message } from "./i18n/message.ts";
 
-export const SESSION_KEY = "breach-command.session";
-// Where a save this build cannot read is moved before anything replaces it, so a
-// newer build's operation outlives an older bundle served offline. A build that
-// can read it moves it back and offers it for resume.
-export const PARKED_SESSION_KEY = "breach-command.session.parked";
+export { PARKED_SESSION_KEY, SESSION_KEY } from "./session-keys.ts";
 // 18: the Weekly operation mode, which an older build would read as damaged.
 // 19: what the engine wrote for the player is stored as messages and content
 // references (lib/i18n/message.ts), not English, so a save reads in any

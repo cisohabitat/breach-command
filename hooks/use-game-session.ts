@@ -1,52 +1,26 @@
 "use client";
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import {
-  scenarios,
-  hypotheses,
-  difficulties,
-  newGame,
-  playTurn,
-  resolveDecision,
-  resolveResponse,
-  resolveCommand,
-  resolveSetPiece,
-  resolveMapAction,
-  correlateEvidence,
-  setHypothesis,
-  setInfrastructureFocus,
-  setCaseTheory,
-  availableIn,
-  getLead,
-  getTrainingPrompt,
-  guidanceLevel,
-  responseOptionsFor,
-  getOutcome,
-  recommendNext,
-  getDecisionOptions,
-  getAdversaryState,
-  getAdversaryRead,
-  getOperationalLabel,
-  getObjectiveRead,
-  getLossReason,
-  adversaryObjectives,
-  type Difficulty,
-  type GameMode,
-  type ProcedureIntensity,
-  type ProcedureScope,
-  type SpecialistId,
-  type HypothesisId,
-  type Game,
-  type Turn,
-  type AdversaryObjectiveId,
-  type DecisionChoice,
-  type MapAction,
-  type SetPieceChoice,
-  countRevisions,
-  hypothesisSources,
-  procedureById,
+import type {
+  Difficulty,
+  GameMode,
+  ProcedureIntensity,
+  ProcedureScope,
+  SpecialistId,
+  HypothesisId,
+  Game,
+  Turn,
+  AdversaryObjectiveId,
+  DecisionChoice,
+  MapAction,
+  SetPieceChoice,
 } from "@/lib/advanced-game";
-import { parseSession, serialiseSession, sessionFromNewerBuild, PARKED_SESSION_KEY, SESSION_KEY, type SavedSession } from "@/lib/session";
+import { difficulties, hypotheses, scenarios } from "@/lib/game";
+import { adversaryObjectives } from "@/lib/command-systems";
+import { countRevisions } from "@/lib/engine/revisions";
+import { loadGame, loadedGame } from "@/lib/game-loader";
+import { PARKED_SESSION_KEY, SESSION_KEY } from "@/lib/session-keys";
+import type { SavedSession } from "@/lib/session";
 import { campaignAct, campaignChanges, campaignEnding, campaignStory, campaignReadable, campaignTier, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
@@ -82,6 +56,10 @@ function prefersReducedMotion() {
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
 }
+
+
+// The engine is in the game bundle; an operation exists only once it has loaded.
+const engine = () => loadedGame().engine;
 
 export function useGameSession() {
   const [game, setGame] = useState<Game | null>(null);
@@ -156,16 +134,16 @@ export function useGameSession() {
 
   const activeScenario = scenarios[game?.scenario ?? scenarioChoice];
   const ScenarioIcon = activeScenario.icon;
-  const proc = game ? procedureById(game, selected ?? "") : undefined;
+  const proc = game ? engine().procedureById(game, selected ?? "") : undefined;
   const ended = !!game && ["won", "lost", "exercise"].includes(game.status);
   const config = game ? difficulties[game.difficulty] : difficulties[difficulty];
-  const decision = game ? getDecisionOptions(game) : null;
-  const guidance = game ? guidanceLevel(game, guided) : "off";
-  const trainingPrompt = game ? getTrainingPrompt(game, guided) : null;
-  const responseProfile = game ? responseOptionsFor(game) : null;
-  const outcome = game ? getOutcome(game) : null;
+  const decision = game ? engine().getDecisionOptions(game) : null;
+  const guidance = game ? engine().guidanceLevel(game, guided) : "off";
+  const trainingPrompt = game ? engine().getTrainingPrompt(game, guided) : null;
+  const responseProfile = game ? engine().responseOptionsFor(game) : null;
+  const outcome = game ? engine().getOutcome(game) : null;
   const activeHypothesis = game ? hypotheses.find(item => item.id === game.hypothesis) : null;
-  const procedureAligned = !!proc && !!game && !!activeHypothesis && hypothesisSources(game, activeHypothesis.id).includes(proc.id);
+  const procedureAligned = !!proc && !!game && !!activeHypothesis && engine().hypothesisSources(game, activeHypothesis.id).includes(proc.id);
   const currentAct = campaignAct(campaign.completed.length);
   const currentRouteId = routeForCampaign(campaign);
   const currentRoute = campaignRoutes[currentRouteId];
@@ -191,8 +169,9 @@ export function useGameSession() {
   }
 
 
-  function start(index = scenarioChoice) {
+  async function start(index = scenarioChoice) {
     if (busyRef.current) return;
+    await loadGame();
     clearStoredSession();
     importedRef.current = null;
     recordedRef.current = false;
@@ -209,7 +188,7 @@ export function useGameSession() {
     setReplay(null);
     const route = replaying?.campaignRoute ?? routeForCampaign(campaign);
     const automated = botEnabled;
-    const next = newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: replaying?.variant ?? incidentVariant(index, route, seed), seed: reproducible ? seed : null, recentCommands: campaign.recentCommands, recentInjects: campaign.recentInjects, recentCrises: campaign.recentCrises });
+    const next = engine().newGame(index, difficulty, random, { mode, specialist, campaignTier: campaignTier(campaign.xp), inheritedFatigue: campaign.specialistFatigue[specialist] ?? 0, readiness: campaign.readiness, leadershipTrust: campaign.leadershipTrust, unresolvedThreads: campaign.unresolvedThreads, doctrine: posture, campaignRoute: route, variant: replaying?.variant ?? incidentVariant(index, route, seed), seed: reproducible ? seed : null, recentCommands: campaign.recentCommands, recentInjects: campaign.recentInjects, recentCrises: campaign.recentCrises });
     spendChallenge();
     setGame(next);
     // A new operation starts on the default plan; Exhaustive carried over from
@@ -272,7 +251,7 @@ export function useGameSession() {
 
   function run(id: string, plan = { scope: actionScope, intensity: actionIntensity }) {
     const current = stateRef.current;
-    if (!current || busyRef.current || current.status !== "playing" || current.pendingDecision || current.pendingCommand || current.pendingSetPiece || availableIn(current, id) > 0) return;
+    if (!current || busyRef.current || current.status !== "playing" || current.pendingDecision || current.pendingCommand || current.pendingSetPiece || engine().availableIn(current, id) > 0) return;
     busyRef.current = true;
     const quick = fastResolve && current.turns.length > 0;
     setSelected(null);
@@ -295,7 +274,7 @@ export function useGameSession() {
     timers.current.push(timeout);
 
     const resolveRun = () => {
-      const next = playTurn(current, id, undefined, plan);
+      const next = engine().playTurn(current, id, undefined, plan);
       const result = next.turns.at(-1)!;
       // Fast resolution is the switch that means "skip the ceremony". Without it
       // every turn gets the captain's report, including the turn that found
@@ -313,7 +292,7 @@ export function useGameSession() {
       // after seeing it would hand the player the answer or a free re-roll.
       setPendingUndo(null);
       setRolling(false);
-      setAnnouncement(msg(result.success ? "session.turnSucceeded" : "session.turnUnsuccessful", { number: result.number, impact: next.impact, label: lit(getOperationalLabel(next)), continuity: next.continuity, progress: next.objectiveProgress }));
+      setAnnouncement(msg(result.success ? "session.turnSucceeded" : "session.turnUnsuccessful", { number: result.number, impact: next.impact, label: lit(engine().getOperationalLabel(next)), continuity: next.continuity, progress: next.objectiveProgress }));
       playFeedback(next.status === "lost" ? "lost" : result.adversaryEvent ? "warning" : result.revealed ? "find" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
         procedure: result.procedure,
         success: result.success,
@@ -336,13 +315,13 @@ export function useGameSession() {
   function decide(choice: DecisionChoice) {
     const current = stateRef.current;
     if (!current) return;
-    const next = resolveDecision(current, choice);
+    const next = engine().resolveDecision(current, choice);
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
     afterStep(next, "investigate");
     playFeedback("decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(msg("session.decisionRecorded", { impact: next.impact, label: lit(getOperationalLabel(next)), continuity: next.continuity }));
+    setAnnouncement(msg("session.decisionRecorded", { impact: next.impact, label: lit(engine().getOperationalLabel(next)), continuity: next.continuity }));
   }
 
   // Where the player goes after a step, and the record of an operation that step
@@ -358,7 +337,7 @@ export function useGameSession() {
   function chooseHypothesis(id: HypothesisId) {
     const current = stateRef.current;
     if (!current || current.pendingDecision || current.pendingCommand || current.pendingSetPiece) return;
-    const next = setHypothesis(current, id);
+    const next = engine().setHypothesis(current, id);
     setGame(next);
     setPendingUndo(null);
     // A revision is a change from a reading already held, counted as the review
@@ -373,13 +352,13 @@ export function useGameSession() {
   function respond(choice: string) {
     const current = stateRef.current;
     if (!current) return;
-    const next = resolveResponse(current, choice);
+    const next = engine().resolveResponse(current, choice);
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
     playFeedback(next.status === "won" ? "complete" : next.status === "lost" ? "lost" : "decision", soundEnabled, hapticsEnabled);
     setAnnouncement(next.status === "won" ? msg("session.responseWon")
-      : next.status === "lost" ? msg("session.responseLost", { loss: getLossReason(next).title })
+      : next.status === "lost" ? msg("session.responseLost", { loss: engine().getLossReason(next).title })
       : next.responseChoices.length === 1 ? msg("session.containmentRecorded") : msg("session.assuranceRecorded"));
     // The stand-down panel is the player's arrival point. The review opens on
     // request so the resolution is seen before the analysis.
@@ -389,7 +368,7 @@ export function useGameSession() {
   function command(choice: "a" | "b") {
     const current = stateRef.current;
     if (!current) return;
-    const next = resolveCommand(current, choice);
+    const next = engine().resolveCommand(current, choice);
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
@@ -401,32 +380,32 @@ export function useGameSession() {
   function sectorDecision(choice: SetPieceChoice) {
     const current = stateRef.current;
     if (!current) return;
-    const next = resolveSetPiece(current, choice);
+    const next = engine().resolveSetPiece(current, choice);
     setGame(next);
     pulseMeters(current, next);
     setPendingUndo(null);
     afterStep(next, "investigate");
     playFeedback(choice === "a" ? "decision" : "warning", soundEnabled, hapticsEnabled);
-    setAnnouncement(msg("session.sectorRecorded", { label: lit(getOperationalLabel(next)), continuity: next.continuity }));
+    setAnnouncement(msg("session.sectorRecorded", { label: lit(engine().getOperationalLabel(next)), continuity: next.continuity }));
   }
 
   function focusInfrastructure(nodeId: string) {
     const current = stateRef.current;
     if (!current) return;
-    setGame(setInfrastructureFocus(current, nodeId));
+    setGame(engine().setInfrastructureFocus(current, nodeId));
     setPendingUndo(null);
   }
 
   function mapAction(nodeId: string, action: MapAction) {
     const current = stateRef.current;
     if (!current) return;
-    const next = resolveMapAction(current, nodeId, action);
+    const next = engine().resolveMapAction(current, nodeId, action);
     setGame(next);
     pulseMeters(current, next);
     const blockedNow = !!next.pendingDecision || !!next.pendingCommand || !!next.pendingSetPiece;
     setPendingUndo(next.status === "playing" && !blockedNow ? { label: action === "isolate" ? msg("session.undoIsolation") : msg("session.undoMonitoring"), game: current } : null);
     playFeedback(action === "isolate" ? "warning" : "decision", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "lost" ? msg("session.lost", { loss: getLossReason(next).title }) : next.mapHistory.at(-1)?.effect ?? msg("session.mapRecorded"));
+    setAnnouncement(next.status === "lost" ? msg("session.lost", { loss: engine().getLossReason(next).title }) : next.mapHistory.at(-1)?.effect ?? msg("session.mapRecorded"));
     afterStep(next);
   }
 
@@ -443,30 +422,31 @@ export function useGameSession() {
   function correlate(ids: [string, string], assessment: "causal" | "coincidental") {
     const current = stateRef.current;
     if (!current) return;
-    const next = correlateEvidence(current, ids, assessment);
+    const next = engine().correlateEvidence(current, ids, assessment);
     setGame(next);
     setPendingUndo(null);
     const correct = next.correlations.at(-1)?.correct;
     playFeedback(correct ? "success" : "failure", soundEnabled, hapticsEnabled);
-    setAnnouncement(next.status === "lost" ? msg("session.assessmentLost", { loss: getLossReason(next).title }) : correct ? msg("session.assessmentSupported") : msg("session.assessmentChallenged"));
+    setAnnouncement(next.status === "lost" ? msg("session.assessmentLost", { loss: engine().getLossReason(next).title }) : correct ? msg("session.assessmentSupported") : msg("session.assessmentChallenged"));
     afterStep(next);
   }
 
   function chooseCaseTheory(objective: AdversaryObjectiveId) {
     const current = stateRef.current;
     if (!current) return;
-    setGame(setCaseTheory(current, objective));
+    setGame(engine().setCaseTheory(current, objective));
     setPendingUndo(null);
     setAnnouncement(msg("session.caseTheorySet", { title: lit(adversaryObjectives[objective].title) }));
   }
 
   function exportProgress() {
-    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), ledger: readLedger(scenarios.length), session: game && game.mode !== "ironman" && !botRun ? serialiseSession(game, guided, fastResolve) : null });
+    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), ledger: readLedger(scenarios.length), session: game && game.mode !== "ironman" && !botRun ? loadedGame().session.serialiseSession(game, guided, fastResolve) : null });
     setBackupInput(payload);
     navigator.clipboard?.writeText(payload).then(() => setBackupMessage(msg("session.backupCopied")), () => setBackupMessage(msg("session.backupPrepared")));
   }
 
-  function importProgress() {
+  async function importProgress() {
+    await loadGame();
     try {
       const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null; telemetry?: unknown; ledger?: unknown };
       if (payload.format !== "breach-command-backup") throw new Error("format");
@@ -477,7 +457,7 @@ export function useGameSession() {
       // The operation travels as text too, so it is validated by the same
       // migration the local save goes through before it is allowed to replace
       // anything. An unreadable operation never blocks the campaign restore.
-      const restoredSession = typeof payload.session === "string" ? parseSession(payload.session) : null;
+      const restoredSession = typeof payload.session === "string" ? loadedGame().session.parseSession(payload.session) : null;
       setCampaign(nextCampaign);
       campaignRef.current = nextCampaign;
       const storedCampaign = writeStored(CAMPAIGN_KEY, JSON.stringify(nextCampaign));
@@ -496,7 +476,7 @@ export function useGameSession() {
         setLedger(restoredLedger);
       }
       if (restoredSession) {
-        writeStored(SESSION_KEY, serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
+        writeStored(SESSION_KEY, loadedGame().session.serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
         setSavedSession(restoredSession);
         // While an operation is in play its own saves would overwrite the restored
         // one, and returning to assignments would delete it. Hold it until then.
@@ -529,7 +509,7 @@ export function useGameSession() {
     recordedRef.current = true;
     recordTelemetry(result.status === "won" ? "win" : result.status === "exercise" ? "exercise" : "loss", { scenario: result.scenario });
     setTelemetry(readTelemetry());
-    const score = getOutcome(result).breakdown.total;
+    const score = engine().getOutcome(result).breakdown.total;
     // The updater stays pure; the campaign is persisted from the value it
     // produced rather than from inside the reducer.
     const updated = recordCampaignResult(campaignRef.current, result, score);
@@ -538,11 +518,11 @@ export function useGameSession() {
     setCampaign(updated);
     if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice(msg("session.campaignNotKept"));
     // What the review suggests next, kept so a returning player is met with it.
-    const next = recommendNext(result, nextCase(updated, scenarios.length));
-    const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? getLossReason(result).title : result.status === "exercise" ? msg("record.endingExercise") : msg("record.endingStoodDown"), score, endedAt: Date.now(), next };
+    const next = engine().recommendNext(result, nextCase(updated, scenarios.length));
+    const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? engine().getLossReason(result).title : result.status === "exercise" ? msg("record.endingExercise") : msg("record.endingStoodDown"), score, endedAt: Date.now(), next };
     writeLastOperation(record);
     setLastOperation(record);
-    const entry: LedgerEntry = { at: Date.now(), scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, outcome: result.status as LedgerEntry["outcome"], score, hypothesis: getOutcome(result).breakdown.hypothesis, stages: result.revealed.length, turns: result.turns.length, code: result.seed === null ? null : encodeChallenge({ scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, specialist: result.specialist, seed: result.seed }) };
+    const entry: LedgerEntry = { at: Date.now(), scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, outcome: result.status as LedgerEntry["outcome"], score, hypothesis: engine().getOutcome(result).breakdown.hypothesis, stages: result.revealed.length, turns: result.turns.length, code: result.seed === null ? null : encodeChallenge({ scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, specialist: result.specialist, seed: result.seed }) };
     const nextLedger = [...readLedger(scenarios.length), entry];
     writeLedger(nextLedger);
     setLedger(nextLedger);
@@ -578,7 +558,7 @@ export function useGameSession() {
     const imported = importedRef.current;
     importedRef.current = null;
     if (imported) {
-      writeStored(SESSION_KEY, serialiseSession(imported.game, imported.guided, imported.fastResolve));
+      writeStored(SESSION_KEY, loadedGame().session.serialiseSession(imported.game, imported.guided, imported.fastResolve));
       setSavedSession(imported);
     } else clearStoredSession();
     setGame(null);
@@ -658,33 +638,41 @@ export function useGameSession() {
     }
   });
 
+  // A save is read by the session's migration, which is in the game bundle, so
+  // a first visit with nothing saved never loads it for this. The bundle is
+  // usually warm by the time a returning player looks for the Resume button;
+  // a start or import waits on the same load, so the newer-build check below
+  // still runs before anything is written to the save slot.
   useEffect(() => {
-    let stored = readStored(SESSION_KEY);
-    // A save an older build parked because it could not read it: once this build
-    // can, it goes back in the slot and is offered like any other.
-    const parked = readStored(PARKED_SESSION_KEY);
-    if (!stored && parked) {
-      const restored = parseSession(parked);
-      if (restored && (restored.game.status === "playing" || restored.game.status === "response") && writeStored(SESSION_KEY, parked)) {
-        removeStored(PARKED_SESSION_KEY);
-        stored = parked;
-      } else if (!restored && !sessionFromNewerBuild(parked)) removeStored(PARKED_SESSION_KEY);
-    }
-    if (!stored) return;
-    const session = parseSession(stored);
-    if (!session && sessionFromNewerBuild(stored)) newerSaveRef.current = stored;
-    const loadTimer = setTimeout(() => {
+    if (!readStored(SESSION_KEY) && !readStored(PARKED_SESSION_KEY)) return;
+    let cancelled = false;
+    void loadGame().then(({ session: saves }) => {
+      if (cancelled) return;
+      let stored = readStored(SESSION_KEY);
+      // A save an older build parked because it could not read it: once this build
+      // can, it goes back in the slot and is offered like any other.
+      const parked = readStored(PARKED_SESSION_KEY);
+      if (!stored && parked) {
+        const restored = saves.parseSession(parked);
+        if (restored && (restored.game.status === "playing" || restored.game.status === "response") && writeStored(SESSION_KEY, parked)) {
+          removeStored(PARKED_SESSION_KEY);
+          stored = parked;
+        } else if (!restored && !saves.sessionFromNewerBuild(parked)) removeStored(PARKED_SESSION_KEY);
+      }
+      if (!stored) return;
+      const session = saves.parseSession(stored);
+      if (!session && saves.sessionFromNewerBuild(stored)) newerSaveRef.current = stored;
       // Only an operation still in progress is offered. A finished one has nothing
       // left to resume, and opening it landed on a disabled workspace.
       if (session && (session.game.status === "playing" || session.game.status === "response")) setSavedSession(session);
       else if (session) removeStored(SESSION_KEY);
-      else if (sessionFromNewerBuild(stored)) setStorageNotice(msg("session.saveFromNewer"));
+      else if (saves.sessionFromNewerBuild(stored)) setStorageNotice(msg("session.saveFromNewer"));
       else {
         removeStored(SESSION_KEY);
         setStorageNotice(msg("session.saveUnreadable"));
       }
-    }, 0);
-    return () => clearTimeout(loadTimer);
+    }).catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -741,7 +729,7 @@ export function useGameSession() {
       return;
     }
     parkNewerSave();
-    if (writeStored(SESSION_KEY, serialiseSession(game, guided, fastResolve))) return;
+    if (writeStored(SESSION_KEY, loadedGame().session.serialiseSession(game, guided, fastResolve))) return;
     const notice = setTimeout(() => setStorageNotice(msg("session.storageMemory")), 0);
     return () => clearTimeout(notice);
   }, [game, guided, fastResolve]);
@@ -761,7 +749,7 @@ export function useGameSession() {
         if (["won", "lost", "exercise"].includes(current.status)) setDebrief(true);
         return;
       }
-      import("@/lib/game-bot").then(({ chooseBotAction }) => {
+      loadGame().then(({ chooseBotAction }) => {
         if (cancelled || stateRef.current !== current) return;
         const action = chooseBotAction(current);
         setBotStatus(action.reason);
@@ -781,14 +769,14 @@ export function useGameSession() {
   // are now, and it clears itself the moment the operation is no longer running.
   const criticalAnnouncement = game && game.status === "playing"
     && (game.impact >= IMPACT_CRITICAL || game.continuity <= CONTINUITY_AT_RISK || game.objectiveProgress >= OBJECTIVE_IMMINENT)
-    ? msg("session.warning", { impact: game.impact, label: lit(getOperationalLabel(game)), continuity: game.continuity, progress: game.objectiveProgress })
+    ? msg("session.warning", { impact: game.impact, label: lit(engine().getOperationalLabel(game)), continuity: game.continuity, progress: game.objectiveProgress })
     : null;
 
   const answer: Message | null = game && question === "scope" ? lit(activeScenario.scope)
     : question === "constraints" ? lit(activeScenario.constraints)
     : question === "impact" ? lit(activeScenario.impact)
-    : question === "known" ? msg("session.known", { timeline: lit(activeScenario.timeline), lead: getLead(game!), confirmed: game!.revealed.length ? msg("session.confirmedSoFar", { stages: game!.revealed.map(id => words.attack(id, "title")).reduceRight((rest, first) => msg("session.listComma", { first, rest })) }) : msg("session.noStageConfirmed") })
-    : question === "adversary" ? msg("session.adversary", { title: getObjectiveRead(game!).title, detail: getObjectiveRead(game!).detail, state: getAdversaryState(game!), read: getAdversaryRead(game!) })
+    : question === "known" ? msg("session.known", { timeline: lit(activeScenario.timeline), lead: engine().getLead(game!), confirmed: game!.revealed.length ? msg("session.confirmedSoFar", { stages: game!.revealed.map(id => words.attack(id, "title")).reduceRight((rest, first) => msg("session.listComma", { first, rest })) }) : msg("session.noStageConfirmed") })
+    : question === "adversary" ? msg("session.adversary", { title: engine().getObjectiveRead(game!).title, detail: engine().getObjectiveRead(game!).detail, state: engine().getAdversaryState(game!), read: engine().getAdversaryRead(game!) })
     : question === "assumptions" ? msg("session.assumptions")
     : null;
 

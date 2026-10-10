@@ -5,6 +5,7 @@ import { encodeChallenge } from "../phase8.ts";
 import { level, lit, msg, ref, withForm, type Message } from "../i18n/message.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
+import { countRevisions } from "./revisions.ts";
 import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
 
 // The full review is written for someone who already knows the trade. A first
@@ -14,9 +15,7 @@ import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate,
 // same check count once, because only the reading the check was made under is
 // kept. The review and the device's own record both count this way; Settings
 // once said five where the review said four.
-export function countRevisions(game: Pick<Game, "hypothesisHistory">) {
-  return game.hypothesisHistory.reduce((count, item, index, history) => count + (index > 0 && history[index - 1].id !== item.id ? 1 : 0), 0);
-}
+export { countRevisions };
 
 // One or two reasons, said together; nothing when there are none.
 function both(parts: (Message | null)[]): Message {
