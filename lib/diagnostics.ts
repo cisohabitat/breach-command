@@ -28,6 +28,8 @@ export function collectDiagnostics() {
     lastError = "unreadable";
   }
   const sizes = storedSizes();
+  // i18n: maintainer English. The player copies this into a bug report for
+  // whoever maintains the game, who reads it in English whatever the locale.
   return [
     "Breach Command diagnostics",
     `Version: ${process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown"}, build ${process.env.NEXT_PUBLIC_BUILD_ID ?? "local"}`,

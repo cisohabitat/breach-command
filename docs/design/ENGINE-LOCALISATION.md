@@ -1,6 +1,6 @@
 # Localising the engine's prose
 
-Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026), step 4 built (0.9.7 to 0.9.9); step 5 follows. The interface around it is
+Status: steps 1 to 3 built (0.9.4 to 0.9.6, 10 October 2026), steps 4 and 5 built (0.9.7 to 0.9.10). The plan is complete; a first locale needs a translator and a reviewer. The interface around it is
 catalogued (`lib/i18n/`, 0.9.1 to 0.9.3); this is the plan for the rest, so
 that the work can start when a first locale has a translator and a reviewer
 (Phase 7, `docs/ROADMAP.md`).
@@ -211,6 +211,25 @@ exact.
    `lib/` that allows prose only in content tables, and the pseudo-locale
    sweep gains a check that no seeded screen in `en-XA` shows a run of four
    unaccented letters outside codes and numbers.
+   *Built in 0.9.10, amended.* The pass over `lib/` reads every string and
+   template literal with the components' rule and allows it only as a leaf of
+   `lib/i18n/content/en.json` (a template only if, evaluated, it is one), a
+   structural level, a `ref()` path or a statement marked maintainer English.
+   The sweep (`tests/e2e/locale.spec.ts`) takes the bracketed pseudo-locale
+   text out of the assignment, the three workspaces, the ending and the review
+   and requires no four-letter word to be left, except the specialists'
+   callsigns and the build's id; counting unaccented runs instead would have
+   failed on English the pseudo-locale had translated ("withdraw" keeps "thdr").
+   The two found what the earlier steps had missed, mostly single lower-case
+   words the component rule passes ("worse", "entries", a node's state): the
+   walker skipped any object whose key was a structural field's name, so the
+   "disruption" objective was never extracted, and "C2 & exfiltration" did not
+   read as words to it; the response options' levels and the reads'
+   confidence codes were shown as their English values (now `level()`); the
+   map's node kinds and states, the review's phase names, the adversary's pace,
+   the log's count and the dialogs' Close were English in components; the
+   first-session record in Settings was English in `lib/telemetry.ts`; and an
+   unused copy of the response options sat in `lib/game.ts`.
 
 ## Costs to expect
 

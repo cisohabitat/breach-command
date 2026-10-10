@@ -2,7 +2,7 @@
 import { attacks, difficulties, scenarios, stages, hypotheses, scenarioDynamics } from "../game.ts";
 import { gameModes, sectorSystems } from "../command-systems.ts";
 import { encodeChallenge } from "../phase8.ts";
-import { lit, msg, ref, withForm, type Message } from "../i18n/message.ts";
+import { level, lit, msg, ref, withForm, type Message } from "../i18n/message.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
 import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
@@ -429,11 +429,11 @@ export function getCounterfactuals(game: Game): Message[] {
   const responseProfile = responseOptionsFor(game);
   if (game.responseChoices.length) {
     const containment = responseProfile.containment.find(option => option.id === game.responseChoices[0]);
-    items.push(msg("engine.review.containmentChoice", { title: lit(containment!.title), disruption: lit(containment!.disruption, "lower"), residual: lit(containment!.residual, "lower"), countermeasure: lit(dynamics.countermeasure) }));
+    items.push(msg("engine.review.containmentChoice", { title: lit(containment!.title), disruption: withForm(level(containment!.disruption), "lower"), residual: withForm(level(containment!.residual), "lower"), countermeasure: lit(dynamics.countermeasure) }));
   }
   if (game.responseChoices.length > 1) {
     const assurance = responseProfile.assurance.find(option => option.id === game.responseChoices[1]);
-    items.push(msg("engine.review.assuranceChoice", { title: lit(assurance!.title), confidence: lit(assurance!.confidence, "lower") }));
+    items.push(msg("engine.review.assuranceChoice", { title: lit(assurance!.title), confidence: withForm(level(assurance!.confidence), "lower") }));
   }
   if (game.mapHistory.some(record => record.action === "isolate")) items.push(msg("engine.review.isolationReduced"));
   // Revising when a completed check has turned against the reading is the

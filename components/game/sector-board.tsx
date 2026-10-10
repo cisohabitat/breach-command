@@ -2,6 +2,7 @@ import { Progress } from "@/components/ui/progress";
 import { getAttributionRead, getObjectiveRead, getSectorRead, sectorSystems, specialists, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { useMessages } from "@/hooks/use-messages";
+import { level, withForm } from "@/lib/i18n/message";
 import { sectorBoardMessages } from "@/lib/i18n/en/sector-board";
 import { register } from "@/lib/i18n";
 
@@ -23,7 +24,7 @@ export function SectorBoard({ game }: { game: Game }) {
   return (
     <>
       <div className="sit-entry compact">
-        <span className="sit-label">{t("missionBriefingDialog.attribution")}<small>{t("sectorBoard.confidence")}{attribution.confidence === "ATTRIBUTED" ? t("sectorBoard.attributed") : attribution.confidence.toLowerCase()}</small></span>
+        <span className="sit-label">{t("missionBriefingDialog.attribution")}<small>{t("sectorBoard.confidence")}{attribution.confidence === "ATTRIBUTED" ? t("sectorBoard.attributed") : say(withForm(level(attribution.confidence), "lower"))}</small></span>
         <div className="sit-body"><p><strong>{say(attribution.title)}.</strong> {say(attribution.detail)}</p></div>
       </div>
       <div className="sit-entry">
@@ -42,7 +43,7 @@ export function SectorBoard({ game }: { game: Game }) {
         <b className="sit-figure">{game.sectorHealth}</b>
       </div>
       <div className="sit-entry adversary">
-        <span className="sit-label">{rich("sectorBoard.adversaryObjectiveSmall", { confidence: objective.confidence.toLowerCase() }, { small: chunk => <small>{chunk}</small> })}</span>
+        <span className="sit-label">{rich("sectorBoard.adversaryObjectiveSmall", { confidence: say(withForm(level(objective.confidence), "lower")) }, { small: chunk => <small>{chunk}</small> })}</span>
         <div className="sit-body">
           <p><strong>{say(objective.title)}</strong></p>
           <Progress value={game.objectiveProgress} aria-label={t("sectorBoard.adversaryProgress", { objectiveTitle: say(objective.title) })} />

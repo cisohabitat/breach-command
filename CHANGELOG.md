@@ -4,6 +4,19 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.10, 10 October 2026
+
+- **Nothing left in English by accident.** A test now reads the whole engine
+  and its tables and allows prose only where a translation can reach it, and
+  another walks every seeded screen in the pseudo-locale and fails on any word
+  it did not write. Between them they found what the earlier steps missed and
+  this release translates it: the map's node kinds and states, the levels of
+  disruption, confidence and residual risk, the response phases in the
+  review, the adversary's pace, the incident log's count, the first-session
+  record in Settings, the dialogs' Close, one stage name and the whole
+  "service disruption" objective, which the content extraction had skipped.
+  English is unchanged.
+
 ## 0.9.9, 10 October 2026
 
 - **Announcements and notices in any language.** What the game says to a

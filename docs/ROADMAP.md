@@ -685,6 +685,18 @@ first load 844,296 B (5,704 B of headroom), all script 1,185,328 B. Step 4 is
 complete; step 5, the ratchet over `lib/` and the pseudo-locale sweep, is
 next.
 
+10 October 2026 (0.9.10), step 5: `tests/i18n.test.ts` allows prose in `lib/`
+only as content, a level or maintainer English, and `tests/e2e/locale.spec.ts`
+fails on any word on the seeded screens the pseudo-locale did not write. They
+found and this release fixed 11 kinds of leftover English (the "disruption"
+objective and one stage name the extraction had skipped, levels, the map's
+node words, phase names, pace, counts, Close, the first-session record).
+1,977 content strings for a translator; text identical on all 56 screens
+(pixels on four differ by kerning where two text nodes became one message);
+fingerprint 1826729440 with and without the pseudo-locale; first load
+845,031 B; all script 1,189,715 B, budget moved to 1,200,000 B. The engine
+localisation plan (`docs/design/ENGINE-LOCALISATION.md`) is complete.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

@@ -42,7 +42,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
       </section>
 
       <section className="journal-panel">
-        <div className="section-heading"><h2>{t("briefingWorkspace.incidentLog")}</h2><span className="muted">{game.turns.length} {game.turns.length === 1 ? "entry" : "entries"}</span></div>
+        <div className="section-heading"><h2>{t("briefingWorkspace.incidentLog")}</h2><span className="muted">{t("briefingWorkspace.entries", { count: game.turns.length })}</span></div>
         {!game.turns.length ? (
           <div className="empty-log"><p>{t("briefingWorkspace.investigationOpened")}</p><small>{t("briefingWorkspace.hypothesesFindingsAnd")}</small></div>
         ) : (

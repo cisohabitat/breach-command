@@ -303,19 +303,6 @@ export type DecisionRecord = {stage:string;choice:"preserve"|"disrupt";title:str
 export type GameStatus = "playing"|"response"|"won"|"lost"|"exercise";
 export type Game = {scenario:number;difficulty:Difficulty;chain:string[];revealed:string[];established:string[];lastUsed:Record<string,number>;turns:Turn[];failures:number;nextModifier:number;injectDeck:number[];status:GameStatus;impact:number;pendingDecision:string|null;decisions:DecisionRecord[];responseChoices:string[];responseScore:number;continuity:number};
 
-export const responseOptions = {
-  containment:[
-    {id:"isolate",title:"Isolate affected systems",description:"Cuts attacker access quickly, but may interrupt service.",impact:-24,continuity:-14,score:12},
-    {id:"credential",title:"Revoke identities and sessions",description:"Constrains identity-led movement with moderate operational disruption.",impact:-17,continuity:-5,score:11},
-    {id:"monitor",title:"Monitor while mapping scope",description:"Preserves visibility and continuity, but allows risk to persist.",impact:5,continuity:5,score:9},
-  ],
-  recovery:[
-    {id:"rebuild",title:"Rebuild from trusted baseline",description:"Highest confidence, longest service interruption.",impact:-18,continuity:-13,score:14},
-    {id:"restore",title:"Restore validated backups",description:"Faster recovery if backup integrity is sound.",impact:-12,continuity:2,score:11},
-    {id:"patch",title:"Patch in place and monitor",description:"Fastest return, with more residual uncertainty.",impact:-6,continuity:8,score:7},
-  ],
-};
-
 export function randomInt(max:number) {if(typeof crypto!=="undefined"&&crypto.getRandomValues){const limit=Math.floor(0x100000000/max)*max;const value=new Uint32Array(1);do{crypto.getRandomValues(value)}while(value[0]>=limit);return value[0]%max;}return Math.floor(Math.random()*max);}
 
 // The words of these tables are a locale's to replace (lib/i18n/content/).

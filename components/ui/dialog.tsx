@@ -5,7 +5,14 @@ import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useMessages } from "@/hooks/use-messages"
 import { Button } from "@/components/ui/button"
+
+// The close control's words, from the shared base, in the player's language.
+function CloseLabel() {
+  const { t } = useMessages()
+  return t("shell.close")
+}
 
 function Dialog({
   ...props
@@ -73,7 +80,7 @@ function DialogContent({
             className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
           >
             <XIcon />
-            <span className="sr-only">Close</span>
+            <span className="sr-only"><CloseLabel /></span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
@@ -111,7 +118,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
+          <Button variant="outline"><CloseLabel /></Button>
         </DialogPrimitive.Close>
       )}
     </div>

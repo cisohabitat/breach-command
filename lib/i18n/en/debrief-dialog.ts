@@ -126,4 +126,7 @@ export const debriefDialogMessages = {
   "debriefDialog.theAttackChain2": "The attack chain<span>{revealed} of 4 stages confirmed; see what each one was</span>",
   "debriefDialog.campaignAndTeam2": "Campaign and team<span>trust {leadershipTrust}, readiness {readiness}, mastery {mastery} of 3 on this case</span>",
   "debriefDialog.noMeterMoved": "no meter moved",
+  "debriefDialog.phaseContainment": "Containment",
+  "debriefDialog.phaseAssurance": "Assurance",
+  "debriefDialog.phaseRecovery": "Recovery",
 } as const;

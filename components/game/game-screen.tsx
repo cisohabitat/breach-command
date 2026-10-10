@@ -97,7 +97,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             {meterPulse?.impactCritical && <span key={`impact-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.impact !== 0 && (
               <span key={`impact-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.impact > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
-                {meterPulse.impact > 0 ? "+" : "−"}{Math.abs(meterPulse.impact)} {meterPulse.impact > 0 ? "worse" : "better"}
+                {meterPulse.impact > 0 ? "+" : "−"}{Math.abs(meterPulse.impact)} {t(meterPulse.impact > 0 ? "gameScreen.worse" : "gameScreen.better")}
               </span>
             )}
           </div>
@@ -108,7 +108,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             {meterPulse?.continuityAtRisk && <span key={`continuity-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.continuity !== 0 && (
               <span key={`continuity-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.continuity < 0 ? "adverse" : "favourable"}`} aria-hidden="true">
-                {meterPulse.continuity > 0 ? "+" : "−"}{Math.abs(meterPulse.continuity)} {meterPulse.continuity < 0 ? "worse" : "better"}
+                {meterPulse.continuity > 0 ? "+" : "−"}{Math.abs(meterPulse.continuity)} {t(meterPulse.continuity < 0 ? "gameScreen.worse" : "gameScreen.better")}
               </span>
             )}
           </div>
@@ -117,7 +117,7 @@ export function GameScreen({ session }: { session: GameSession }) {
             <Progress value={game.objectiveProgress} aria-label={t("gameScreen.adversaryProgress")} />
             {/* The caption carries the pace as well, so "PACE: PRESSING HARD" beside a low
                 number reads as one picture: little done so far, rising fast. */}
-            <small>{game.objectiveProgress < 40 ? t("gameScreen.early") : game.objectiveProgress < OBJECTIVE_IMMINENT ? t("gameScreen.advancing") : t("gameScreen.imminent")}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? `, pace ${say(withForm(getAdversaryState(game), "lower"))}` : ""}</small>
+            <small>{game.objectiveProgress < 40 ? t("gameScreen.early") : game.objectiveProgress < OBJECTIVE_IMMINENT ? t("gameScreen.advancing") : t("gameScreen.imminent")}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? t("gameScreen.pace", { pace: say(withForm(getAdversaryState(game), "lower")) }) : ""}</small>
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">

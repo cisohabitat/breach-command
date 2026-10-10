@@ -1,6 +1,7 @@
 import { getAttributionRead, getOperationalLabel, infrastructureTopologies, readyToCorrelate, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { useMessages } from "@/hooks/use-messages";
+import { level, withForm } from "@/lib/i18n/message";
 import { livingIncidentMessages } from "@/lib/i18n/en/living-incident";
 import { register } from "@/lib/i18n";
 
@@ -91,7 +92,7 @@ export function SectorOperationalScene({ game }: { game: Game }) {
 }
 
 export function SpecialistTransmission({ game }: { game: Game }) {
-  const { t } = useMessages();
+  const { t, say } = useMessages();
   const specialist = namedSpecialists[game.specialist];
   const topology = infrastructureTopologies[game.scenario];
   const node = topology.nodes.find(item => item.id === game.focusedNode) ?? topology.nodes[0];
@@ -107,6 +108,6 @@ export function SpecialistTransmission({ game }: { game: Game }) {
           ? t("livingIncident.theEvidencePicture", { nodeLabel: node.label })
           : t("livingIncident.focusCollectionOn", { nodeLabel: node.label, voice: specialist.voice });
   return <section className="specialist-transmission" aria-live="polite">
-    <div><small>{specialist.callsign}, {attribution.confidence === "ATTRIBUTED" ? t("livingIncident.attributed") : t("livingIncident.confidenceAttribution", { confidence: attribution.confidence.toLowerCase() })}</small><strong>{specialist.name}</strong><p>{advice}</p></div>
+    <div><small>{specialist.callsign}, {attribution.confidence === "ATTRIBUTED" ? t("livingIncident.attributed") : t("livingIncident.confidenceAttribution", { confidence: say(withForm(level(attribution.confidence), "lower")) })}</small><strong>{specialist.name}</strong><p>{advice}</p></div>
   </section>;
 }

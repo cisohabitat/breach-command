@@ -4,6 +4,7 @@ import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { adversaryObjectives, attacks, getObjectiveRead, hypotheses, stages, type AdversaryObjectiveId, type Game } from "@/lib/advanced-game";
 import { objectiveTheory } from "@/lib/phase9";
 import { useMessages } from "@/hooks/use-messages";
+import { level, lit, withForm } from "@/lib/i18n/message";
 import { evidenceWorkspaceMessages } from "@/lib/i18n/en/evidence-workspace";
 import { register } from "@/lib/i18n";
 
@@ -27,13 +28,13 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
   // both. Without them a player could only guess, and timing was all they had.
   const placement = (supports: string | null) => {
     const attack = supports ? attacks.find(item => item.id === supports) : null;
-    return attack ? `${stages[attack.stage].name}, ${hypotheses.find(item => item.id === attack.vector)!.title.toLowerCase()} route` : null;
+    return attack ? t("evidenceWorkspace.placement", { stage: stages[attack.stage].name, route: say(lit(hypotheses.find(item => item.id === attack.vector)!.title, "lower")) }) : null;
   };
   return (
     <section className="evidence-workspace" aria-label={t("evidenceWorkspace.evidenceCorrelationWorkspace")} tabIndex={-1}>
-      <div className="map-heading"><div><h2>{t("evidenceWorkspace.evidenceWorkspace")}</h2></div><span className="focus-instruction">{game.correlations.length} {game.correlations.length === 1 ? "correlation" : "correlations"}{t("evidenceWorkspace.tested")}</span></div>
+      <div className="map-heading"><div><h2>{t("evidenceWorkspace.evidenceWorkspace")}</h2></div><span className="focus-instruction">{t("evidenceWorkspace.correlationsTested", { count: game.correlations.length })}</span></div>
       <div className="case-theory">
-        <div><span><strong>{t("evidenceWorkspace.caseTheory")}</strong><small>{t("evidenceWorkspace.declareIntentThen")}{objective.confidence === "LOW" ? t("evidenceWorkspace.theObjectiveCan") : t("evidenceWorkspace.currentAssessmentConfidence", { objectiveTheoryTitle: objectiveTheory[game.objective].title.toLowerCase(), confidence: objective.confidence.toLowerCase() })}</small></span></div>
+        <div><span><strong>{t("evidenceWorkspace.caseTheory")}</strong><small>{t("evidenceWorkspace.declareIntentThen")}{objective.confidence === "LOW" ? t("evidenceWorkspace.theObjectiveCan") : t("evidenceWorkspace.currentAssessmentConfidence", { objectiveTheoryTitle: objectiveTheory[game.objective].title.toLowerCase(), confidence: say(withForm(level(objective.confidence), "lower")) })}</small></span></div>
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">{t("endState.recorded")}</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
       </div>
       {!game.evidence.length ? <div className="evidence-empty"><p>{rich("evidenceWorkspace.strongNoFindings", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div> : <>
@@ -44,7 +45,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
           <summary>{rich("evidenceWorkspace.findingsSpanConfirmed", { confirmed, evidence: game.evidence.length - confirmed, selected: selected.length }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="evidence-timeline" role="group" aria-label={t("evidenceWorkspace.evidenceTimeline")}>{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
           <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
-            <span>{t("evidenceWorkspace.turn2", { turn: item.turn })}</span><strong>{say(item.title)}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{t("evidenceWorkspace.at", { source: say(item.source), system: say(item.system) })}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? t("evidenceWorkspace.confirmedAStage") : t("evidenceWorkspace.foundNoStage2")}{t("evidenceWorkspace.confidence", { confidence: item.confidence.toLowerCase() })}</em>
+            <span>{t("evidenceWorkspace.turn2", { turn: item.turn })}</span><strong>{say(item.title)}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{t("evidenceWorkspace.at", { source: say(item.source), system: say(item.system) })}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? t("evidenceWorkspace.confirmedAStage") : t("evidenceWorkspace.foundNoStage2")}{t("evidenceWorkspace.confidence", { confidence: say(withForm(level(item.confidence), "lower")) })}</em>
           </button>)}</div>
         </details>
         <div className="relationship-assessment" role="group" aria-label={t("evidenceWorkspace.relationshipAssessment")}>

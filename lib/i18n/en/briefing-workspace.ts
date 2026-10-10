@@ -23,4 +23,5 @@ export const briefingWorkspaceMessages = {
   "briefingWorkspace.actionUnsuccessful": "Action unsuccessful",
   "briefingWorkspace.aD20Roll2": "A d20 roll plus its modifier must reach {threshold} to succeed. One of your reading's own sources adds +{ownSourceBonus}, right or wrong; an established source adds +2.",
   "briefingWorkspace.questionsForThe2": "Questions for the captain <span>Free action</span>",
+  "briefingWorkspace.entries": { one: "{count} entry", other: "{count} entries" },
 } as const;

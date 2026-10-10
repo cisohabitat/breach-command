@@ -160,7 +160,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
                 const chosen = options.find(option => option.id === game.responseChoices[index]);
                 if (!chosen) return null;
                 const best = Math.max(...options.map(option => option.score));
-                return <p key={phase}><strong>{phase.charAt(0).toUpperCase() + phase.slice(1)}:</strong> {chosen.title}<span>{t("debriefDialog.ofABest", { score: chosen.score, best, confidence: chosen.confidence.toLowerCase(), residual: chosen.residual.toLowerCase() })}</span><em>{chosen.score === best ? t("debriefDialog.theStrongestOption") : t("debriefDialog.wouldHaveScored", { title: options.find(option => option.score === best)!.title })}</em></p>;
+                return <p key={phase}><strong>{t(phase === "containment" ? "debriefDialog.phaseContainment" : phase === "assurance" ? "debriefDialog.phaseAssurance" : "debriefDialog.phaseRecovery")}:</strong> {chosen.title}<span>{t("debriefDialog.ofABest", { score: chosen.score, best, confidence: chosen.confidence.toLowerCase(), residual: chosen.residual.toLowerCase() })}</span><em>{chosen.score === best ? t("debriefDialog.theStrongestOption") : t("debriefDialog.wouldHaveScored", { title: options.find(option => option.score === best)!.title })}</em></p>;
               })}
               {game.mapHistory.map((record, index) => <p key={`${record.node}-${index}`}><strong>{t("debriefDialog.infrastructure")}</strong> {record.action === "isolate" ? t("debriefDialog.isolated") : t("debriefDialog.monitored")} {infrastructureTopologies[game.scenario].nodes.find(node => node.id === record.node)?.label ?? record.node}<span>{t("debriefDialog.mapAction")}</span><em>{say(record.effect)}</em></p>)}
               </details>

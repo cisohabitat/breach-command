@@ -14,6 +14,7 @@ export async function drawShareCard(card: ShareCard, origin: string, locale: Loc
   if (!context) throw new Error("Canvas unavailable");
   await document.fonts?.ready;
   const face = getComputedStyle(document.documentElement).getPropertyValue("--font-display").trim() || "sans-serif";
+  // i18n: maintainer English. A CSS font list, not words.
   const font = (weight: number, size: number) => `${weight} ${size}px ${face}, "Arial Narrow", sans-serif`;
   const ink = "#1d1b18", rule = "#1d1b18", soft = "#5b564d";
 

@@ -176,3 +176,10 @@ The hooks' sentences as messages (0.9.9) are on the first load, because the
 session runs from the first render: 844,296 B, 3,917 B more, 5,704 B under
 budget. All script by the time play starts is 1,185,328 B, 4,672 B under its
 budget. No budget moved; step 5 adds tests, not script.
+
+Step 5 (0.9.10) did add script after all: what its tests found had to be
+translated, about 40 keys and the maps that pick them (node kinds and states,
+levels, phase names, the first-session record). The first load is 845,031 B,
+4,969 B under budget; all script by the time play starts 1,189,715 B, 285 B
+under the 1,190,000 B budget, which moved to 1,200,000 B so the next change
+has room to be measured rather than refused.

@@ -212,7 +212,7 @@ export function parseSession(raw: string): SavedSession | null {
         counterfactual: text(decision.counterfactual, legacy("")),
         adaptationReason: optionalText(decision.adaptationReason),
         quality: Number.isFinite(decision.quality) ? decision.quality : 3,
-        rationale: text(decision.rationale, legacy("This decision was restored from an earlier saved session.")),
+        rationale: text(decision.rationale, msg("engine.session.restoredDecision")),
         impactChange: Number.isFinite(decision.impactChange) ? decision.impactChange : 0,
         continuityChange: Number.isFinite(decision.continuityChange) ? decision.continuityChange : 0,
         tempoChange: Number.isFinite(decision.tempoChange) ? decision.tempoChange : 0,

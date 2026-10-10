@@ -189,4 +189,4 @@ export function specialistArc(id: SpecialistId, bond: number): string | null {
 }
 
 // The words of these tables are a locale's to replace (lib/i18n/content/).
-registerContent({ campaignRoutes, objectiveTheory, variantTemplates, specialistReactions, specialistArcs });
+registerContent({ campaignRoutes, objectiveTheory, variantTemplates, specialistNames, specialistReactions, specialistArcs });

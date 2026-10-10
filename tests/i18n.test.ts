@@ -58,7 +58,7 @@ test("the pseudo-locale lengthens every string by about a third and keeps its pl
 // Attributes that never hold text a player reads; every other attribute, a
 // component's own props included (items, label), is read as text.
 const nonTextAttribute = /^(className|key|id|href|role|type|style|src|htmlFor|name|target|rel|tabIndex|method|action|value|defaultValue|autoComplete|inputMode|data-[a-z-]+|aria-(hidden|controls|describedby|labelledby|live|expanded|pressed|current|haspopup|modal|atomic|relevant|busy|selected|checked|disabled|invalid|level|orientation|owns|posinset|setsize|sort|valuemax|valuemin|valuenow)|variant|size|tone|kind|mode|status|state|cls|tag|sound|cue|side|align|as|direction|placement|icon)$/;
-const notText = /^(includes|match|matchAll|startsWith|endsWith|replace|replaceAll|split|indexOf|lastIndexOf|test|querySelector|querySelectorAll|getElementById|addEventListener|removeEventListener|setItem|getItem|removeItem|closest|matches|getPropertyValue|setProperty|createElement|postMessage|dispatchEvent|toLocaleString|toLocaleDateString|toLocaleTimeString|setAttribute|getAttribute|hasAttribute|removeAttribute|play|has|get|set|delete|add|push|join|padStart|padEnd|t|textFor|log|warn|error|info|debug|register|useMessages|cue|track|record|matchMedia)$/;
+const notText = /^(includes|match|matchAll|startsWith|endsWith|replace|replaceAll|split|indexOf|lastIndexOf|test|querySelector|querySelectorAll|getElementById|addEventListener|removeEventListener|setItem|getItem|removeItem|closest|matches|getPropertyValue|setProperty|createElement|postMessage|dispatchEvent|toLocaleString|toLocaleDateString|toLocaleTimeString|setAttribute|getAttribute|hasAttribute|removeAttribute|play|has|get|set|delete|add|push|join|padStart|padEnd|t|ref|textFor|log|warn|error|info|debug|register|useMessages|cue|track|record|matchMedia)$/;
 const reads = (text: string) => /[A-Za-z]{2,}/.test(text) && (/[A-Za-z]\S*\s+\S*[A-Za-z]/.test(text) || /^[^A-Za-z]*[A-Z][a-z]/.test(text));
 function literalText(node: ts.Node) {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
@@ -87,7 +87,7 @@ function notInterface(node: ts.Node): boolean {
     up = up.parent;
   }
   if (up && ts.isJsxExpression(up) && up.parent && ts.isJsxAttribute(up.parent)) return nonTextAttribute.test(up.parent.name.getText());
-  if (up && ts.isPropertyAssignment(up) && /^(className|key|id|href|role|type|tone|kind|variant|status|mode|state|cls|tag|sound|cue)$/.test(up.name.getText())) return true;
+  if (up && ts.isPropertyAssignment(up) && /^(className|key|id|href|role|type|tone|kind|variant|status|mode|state|cls|tag|sound|cue|disruption|confidence|residual)$/.test(up.name.getText())) return true;
   return false;
 }
 const componentFiles = [...readdirSync(new URL("../components/game/", import.meta.url)).filter(name => name.endsWith(".tsx")).map(name => `../components/game/${name}`), "../app/page.tsx"];
@@ -114,6 +114,33 @@ test("no interface string is written into a component or a hook", () => {
   assert.deepEqual(hardCoded(), [], "move it into the component's catalogue in lib/i18n/en/ and read it with t()");
 });
 
+// The engine and its tables: prose in lib/ is either content, in a table the
+// overlay reaches (lib/i18n/content/en.json holds every leaf), or a catalogue
+// key. A level the rules key on (disruption, confidence, residual) is shown
+// through level(); maintainer English is marked as in the components.
+test("no prose is written into lib/ outside its content tables", () => {
+  const content = Object.values(JSON.parse(readFileSync(new URL("../lib/i18n/content/en.json", import.meta.url), "utf8"))) as string[];
+  const known = new Set(content);
+  // A table's template, as the walker reads it once evaluated.
+  const evaluated = (node: ts.TemplateExpression) => {
+    const pattern = new RegExp(`^${[node.head.text, ...node.templateSpans.map(span => span.literal.text)].map(part => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\S+")}$`);
+    return content.some(text => pattern.test(text));
+  };
+  const files = [...readdirSync(new URL("../lib/", import.meta.url)).filter(name => name.endsWith(".ts")).map(name => `../lib/${name}`), ...readdirSync(new URL("../lib/engine/", import.meta.url)).map(name => `../lib/engine/${name}`)];
+  const found: string[] = [];
+  for (const file of files) {
+    const tree = ts.createSourceFile(file, readFileSync(new URL(file, import.meta.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const visit = (node: ts.Node) => {
+      const text = literalText(node);
+      if (text !== null && reads(text) && !notInterface(node) && !known.has(text) && !(ts.isTemplateExpression(node) && evaluated(node))) found.push(`${file}:${tree.getLineAndCharacterOfPosition(node.getStart()).line + 1}: ${node.getText().slice(0, 60)}`);
+      if (ts.isTemplateExpression(node)) node.templateSpans.forEach(span => visit(span.expression));
+      else ts.forEachChild(node, visit);
+    };
+    visit(tree);
+  }
+  assert.deepEqual(found, [], "put it in a content table the overlay reaches, or in a catalogue under lib/i18n/en/ and return a message");
+});
+
 // A component's strings travel with it: every key a file reads is in the shared
 // base or in the catalogue that file registers, so a lazily loaded dialog never
 // shows a bare key, and no key is defined twice with different words.
@@ -122,13 +149,16 @@ test("every key a component reads is in the base or its own catalogue", () => {
   // and translated at render is checked like one passed to t() directly.
   const missing: string[] = [];
   const unused: string[] = [];
+  // A key the engine writes for this component to say (lib/telemetry.ts's
+  // lines for the settings dialog) is read too.
+  const library = readdirSync(new URL("../lib/", import.meta.url)).filter(name => name.endsWith(".ts")).map(name => readFileSync(new URL(`../lib/${name}`, import.meta.url), "utf8")).join("\n");
   for (const file of componentFiles) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     const stem = source.match(/from "@\/lib\/i18n\/en\/([a-z-]+)"/)?.[1];
     const own = stem ? catalogues[stem] : {};
     const prefixes = new Set([...Object.keys(en), ...Object.keys(own)].map(key => key.split(".")[0]));
     for (const [, key] of source.matchAll(/"([a-z][A-Za-z]*\.[A-Za-z0-9]+)"/g)) if (prefixes.has(key.split(".")[0]) && !(key in en) && !(key in own)) missing.push(`${file}: ${key}`);
-    for (const key of Object.keys(own)) if (!source.includes(`"${key}"`)) unused.push(`${stem}: ${key}`);
+    for (const key of Object.keys(own)) if (!source.includes(`"${key}"`) && !library.includes(`"${key}"`)) unused.push(`${stem}: ${key}`);
   }
   assert.deepEqual(missing, []);
   assert.deepEqual(unused, [], "a key nothing reads only adds bytes; remove it");

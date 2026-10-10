@@ -34,4 +34,7 @@ export const gameScreenMessages = {
   "gameScreen.businessImpactEm": "Business impact <em>{impact}</em>",
   "gameScreen.adversaryProgressEm": "Adversary progress <em>{objectiveProgress}</em>",
   "gameScreen.sectorMarginEm": "Sector margin <em>{sectorHealth}</em>",
+  "gameScreen.pace": ", pace {pace}",
+  "gameScreen.worse": "worse",
+  "gameScreen.better": "better",
 } as const;

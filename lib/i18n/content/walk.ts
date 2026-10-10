@@ -11,7 +11,8 @@ export type Leaf = { path: string; text: string; get: () => string; set: (text: 
 const structural = new Set(["id", "icon", "color", "vector", "kind", "type", "route", "detect", "procedures", "scenarios", "from", "to", "event", "choice", "tone", "disruption", "confidence", "residual"]);
 // Tables whose every string is text, however short: the glossary's terms.
 const allText = new Set(["glossaryTerms"]);
-export const readsAsWords = (text: string) => /[A-Za-z]{2,}/.test(text) && (/[A-Za-z]\S*\s+\S*[A-Za-z]/.test(text) || /^[^A-Za-z]*[A-Z][a-z]/.test(text));
+// "C2 & exfiltration" reads as words too: a space and a lower-case word.
+export const readsAsWords = (text: string) => /[A-Za-z]{2,}/.test(text) && (/[A-Za-z]\S*\s+\S*[A-Za-z]/.test(text) || /^[^A-Za-z]*[A-Z][a-z]/.test(text) || /\s/.test(text) && /[a-z]{3,}/.test(text));
 
 export function contentLeaves(tables: Record<string, unknown>): Leaf[] {
   const seen = new WeakSet<object>();
@@ -31,7 +32,9 @@ export function contentLeaves(tables: Record<string, unknown>): Leaf[] {
       return;
     }
     for (const [key, item] of Object.entries(value)) {
-      if (structural.has(key)) continue;
+      // A structural field is skipped, but an entry that only shares its name
+      // is not: adversaryObjectives.disruption is an objective, with words.
+      if (structural.has(key) && !(item && typeof item === "object" && !Array.isArray(item))) continue;
       visit(item, `${path}.${key}`, key, () => (value as Record<string, unknown>)[key], text => { (value as Record<string, unknown>)[key] = text; });
     }
   };

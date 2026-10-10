@@ -4,7 +4,7 @@ import { attacks, words, procedureById, getMapActionEffect, infrastructureTopolo
 import { EffectList } from "@/components/game/effect-list";
 import { useMessages, type Translate } from "@/hooks/use-messages";
 import { infrastructureConsoleMessages } from "@/lib/i18n/en/infrastructure-console";
-import { register } from "@/lib/i18n";
+import { register, type MessageKey } from "@/lib/i18n";
 import { legacyText, msg, sameMessage } from "@/lib/i18n/message";
 
 register(infrastructureConsoleMessages);
@@ -26,6 +26,11 @@ function costLine(t: Translate, game: Game, nodeId: string, action: MapAction) {
   ];
 }
 
+
+// A node's kind and its state on the map, as words: the topology keys on the
+// codes, and the catalogue says them.
+const nodeTypes: Record<string, MessageKey> = { APPLICATION: "infrastructureConsole.typeApplication", ASSET: "infrastructureConsole.typeAsset", CONTROL: "infrastructureConsole.typeControl", EDGE: "infrastructureConsole.typeEdge", EXTERNAL: "infrastructureConsole.typeExternal", IDENTITY: "infrastructureConsole.typeIdentity" };
+const nodeStates: Record<string, MessageKey> = { isolated: "infrastructureConsole.stateIsolated", restored: "infrastructureConsole.stateRestored", affected: "infrastructureConsole.stateAffected", exposed: "infrastructureConsole.stateExposed", clear: "infrastructureConsole.stateClear" };
 export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
   const { t, rich } = useMessages();
   const topology = infrastructureTopologies[game.scenario];
@@ -45,10 +50,10 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             const critical = node.id === topology.critical;
             const findings = game.evidence.filter(item => sameMessage(item.system, words.node(game.scenario, node.id)) || legacyText(item.system) === node.label).length;
             return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
-              <small>{node.type.charAt(0) + node.type.slice(1).toLowerCase()}{critical ? ", critical" : ""}</small><strong>{node.label}</strong>
+              <small>{nodeTypes[node.type] ? t(nodeTypes[node.type]) : node.type}{critical ? t("infrastructureConsole.critical") : ""}</small><strong>{node.label}</strong>
               {/* Selecting a node no longer hides its state: "SELECTED" in place of
                   "AFFECTED" took the warning away from the node it was about. */}
-              <em>{game.focusedNode === node.id ? t("infrastructureConsole.selected") : ""}{nodePosture === "isolated" ? "isolated" : nodePosture === "monitored" ? "monitored" : nodePosture === "restored" ? "restored" : findings ? t("infrastructureConsole.collectedHere", { findings }) : state}</em>
+              <em>{game.focusedNode === node.id ? t("infrastructureConsole.selected") : ""}{nodePosture === "isolated" ? t("infrastructureConsole.stateIsolated") : nodePosture === "monitored" ? t("infrastructureConsole.stateMonitored") : nodePosture === "restored" ? t("infrastructureConsole.stateRestored") : findings ? t("infrastructureConsole.collectedHere", { findings }) : t(nodeStates[state])}</em>
             </button>;
           })}
         </div>

@@ -51,6 +51,12 @@ export function say(message: Message, locale: Locale = "en"): string {
 export const sameMessage = (a: Message | null | undefined, b: Message | null | undefined) => JSON.stringify(a) === JSON.stringify(b);
 // An older save's sentence, as the player read it; null for a message.
 export const legacyText = (message: Message | null | undefined) => message && "key" in message && message.key === "legacy.text" ? String(message.params?.text ?? "") : null;
+// A level the rules key on ("Moderate", "LOW") as the word for it: the
+// response options' disruption, confidence and residual risk, and the
+// attribution, objective and evidence confidence. The rules compare the
+// English value; this is how it is shown.
+const levels: Record<string, MessageKey> = { low: "level.low", moderate: "level.moderate", high: "level.high", strong: "level.strong", developing: "level.developing", limited: "level.limited" };
+export const level = (value: string): Message => levels[value.toLowerCase()] ? msg(levels[value.toLowerCase()]) : lit(value);
 // A message's key, if it is one.
 export const keyOf = (message: Message | null | undefined) => message && "key" in message ? message.key : null;
 export const isMessage = (value: unknown): value is Message => !!value && typeof value === "object" && ("key" in value || "ref" in value || ("text" in value && Object.keys(value).every(key => key === "text" || key === "form")));

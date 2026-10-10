@@ -366,4 +366,5 @@ export const engineMessages = {
   "engine.bot.noProcedure": "No procedure is currently available.",
   "engine.bot.focus": "Moving the evidence boundary to {node} for {procedure}.",
   "engine.bot.procedure": "Running {procedure} against the current hypothesis.",
+  "engine.session.restoredDecision": "This decision was restored from an earlier saved session.",
 } as const;

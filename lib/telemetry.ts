@@ -1,3 +1,4 @@
+import { msg, type Message } from "./i18n/message.ts";
 import { readStored, removeStored, writeStored } from "./storage.ts";
 
 export const TELEMETRY_KEY = "breach-command.balance";
@@ -125,25 +126,26 @@ export function clearTelemetry() {
 }
 
 // "1 min 20 s", "45 s", "2 h 5 min": the elapsed time a tester's notes record.
-export function formatElapsed(ms: number): string {
+export function formatElapsed(ms: number): Message {
   const seconds = Math.max(0, Math.round(ms / 1000));
-  if (seconds < 60) return `${seconds} s`;
+  if (seconds < 60) return msg("settingsDialog.elapsedSeconds", { seconds });
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return seconds % 60 ? `${minutes} min ${seconds % 60} s` : `${minutes} min`;
+  if (minutes < 60) return seconds % 60 ? msg("settingsDialog.elapsedMinutesSeconds", { minutes, seconds: seconds % 60 }) : msg("settingsDialog.elapsedMinutes", { minutes });
   const hours = Math.floor(minutes / 60);
-  return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
+  return minutes % 60 ? msg("settingsDialog.elapsedHoursMinutes", { hours, minutes: minutes % 60 }) : msg("settingsDialog.elapsedHours", { hours });
 }
 
 // The first operation on this device in sentences, for the settings panel.
-export function describeFirstSession(data: BalanceTelemetry): string[] {
+// Its keys are the settings dialog's, which is where it is read.
+export function describeFirstSession(data: BalanceTelemetry): Message[] {
   const first = data.firstSession;
-  if (first.startedAt === null) return ["No operation has been started on this device yet."];
-  const since = (at: number | null) => at === null ? null : formatElapsed(at - first.startedAt!);
+  if (first.startedAt === null) return [msg("settingsDialog.firstNotStarted")];
+  const since = (at: number) => formatElapsed(at - first.startedAt!);
   const lines = [
-    first.firstProcedureAt === null ? "First procedure: not yet run." : `First procedure ran ${since(first.firstProcedureAt)} after the first operation began.`,
-    first.firstRevisionAt === null ? "First revision of a reading: not yet made." : `First revision of a reading came ${since(first.firstRevisionAt)} in.`,
+    first.firstProcedureAt === null ? msg("settingsDialog.firstProcedureNotRun") : msg("settingsDialog.firstProcedureRan", { elapsed: since(first.firstProcedureAt) }),
+    first.firstRevisionAt === null ? msg("settingsDialog.firstRevisionNotMade") : msg("settingsDialog.firstRevisionCame", { elapsed: since(first.firstRevisionAt) }),
   ];
-  if (first.endedAt === null) lines.push("The first operation has not ended.");
-  else lines.push(`The first operation ended ${since(first.endedAt)} in, ${first.outcome === "win" ? "won" : first.outcome === "exercise" ? "as an authorised exercise" : "lost"}.`);
+  if (first.endedAt === null) lines.push(msg("settingsDialog.firstNotEnded"));
+  else lines.push(msg(first.outcome === "win" ? "settingsDialog.firstEndedWon" : first.outcome === "exercise" ? "settingsDialog.firstEndedExercise" : "settingsDialog.firstEndedLost", { elapsed: since(first.endedAt) }));
   return lines;
 }

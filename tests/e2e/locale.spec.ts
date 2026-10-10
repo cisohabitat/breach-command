@@ -37,3 +37,44 @@ test("the catalogued interface holds its layout with strings a third longer", as
     expect(await overflow(), `ending at ${width}`).toBeLessThanOrEqual(0);
   }
 });
+
+// Every word on a seeded screen is one the pseudo-locale wrote: the catalogue
+// and the content overlay bracket what they give, so once the brackets are
+// taken out no word is left but a specialist's callsign (a code name) and the
+// build's id. A word left over is English that no locale could replace.
+test("every word on the seeded screens comes from the catalogue or the content overlay", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "read in Chromium");
+  const { namedSpecialists } = await import("../../lib/phase8.ts");
+  const allowed = new Set([...Object.values(namedSpecialists).map(specialist => specialist.callsign), "local"]);
+  const leftOver = async (where: string) => {
+    let text = await page.locator("body").innerText();
+    for (let previous = ""; previous !== text;) { previous = text; text = text.replace(/\[[^[\]]*\]/g, " "); }
+    const words = [...new Set(text.match(/[A-Za-z]{4,}/g) ?? [])].filter(word => !allowed.has(word));
+    expect(words, `${where}: English outside the pseudo-locale`).toEqual([]);
+  };
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openWithSave(page, null, false, null, "/?locale=en-XA");
+  await leftOver("assignment");
+  await openWithSave(page, twoStagesGame(), false, null, "/?locale=en-XA");
+  await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
+  await page.waitForTimeout(400);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  for (const [index, tab] of ["command", "investigate", "briefing"].entries()) {
+    await page.locator(".workspace-tabs > button").nth(index).click();
+    await page.waitForTimeout(300);
+    await leftOver(tab);
+  }
+  await openWithSave(page, responsePhaseGame(), false, null, "/?locale=en-XA");
+  await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
+  await page.waitForTimeout(400);
+  for (let phase = 0; phase < 3; phase++) {
+    await page.locator(".response-options > button").first().click();
+    await page.waitForTimeout(250);
+  }
+  await leftOver("ending");
+  await page.getByRole("button", { name: pseudo("Open after-action review") }).first().click();
+  await expect(page.locator("[role=dialog]")).toBeVisible();
+  await page.waitForTimeout(500);
+  await leftOver("review");
+});

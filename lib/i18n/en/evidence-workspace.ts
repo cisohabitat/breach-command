@@ -2,7 +2,6 @@
 export const evidenceWorkspaceMessages = {
   "evidenceWorkspace.evidenceCorrelationWorkspace": "Evidence correlation workspace",
   "evidenceWorkspace.evidenceWorkspace": "Evidence workspace",
-  "evidenceWorkspace.tested": " tested",
   "evidenceWorkspace.caseTheory": "Case theory",
   "evidenceWorkspace.declareIntentThen": "Declare intent, then test it against causal evidence. ",
   "endState.recorded": "Recorded",
@@ -32,4 +31,6 @@ export const evidenceWorkspaceMessages = {
   "evidenceWorkspace.confidence": ", {confidence} confidence",
   "evidenceWorkspace.strongNoFindings": "<strong>No findings filed.</strong> Successful procedures will place findings here. A check can succeed and still settle nothing — that is recorded too. Select two findings to test whether they form a causal sequence.",
   "evidenceWorkspace.findingsSpanConfirmed": "Findings<span>{confirmed} confirmed a stage, {evidence} found no stage, {selected} selected</span>",
+  "evidenceWorkspace.correlationsTested": { one: "{count} correlation tested", other: "{count} correlations tested" },
+  "evidenceWorkspace.placement": "{stage}, {route} route",
 } as const;
