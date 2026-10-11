@@ -218,13 +218,16 @@ the same media query, rules with the same declarations and blocks for the
 same query, each only where no rule it moves past could compete (a related
 property through a selector of equal specificity that could match the same
 element, in any query). It made 32 same-selector merges, 157 selector-list
-merges and 10 block merges: the two sheets went from 10,826 lines to 10,173
-(globals 3,501 to 3,368, the game's 7,325 to 6,805), the linked sheet from
-85,997 B to 85,053 B. Computed styles are identical for every element and
+merges and 10 block merges, 595 lines: the two sheets went from 10,826 lines
+to 10,231 (globals 3,501 to 3,368, the game's 7,325 to 6,863), and to 10,173
+once the educator pack's 58 lines moved to their own sheet (60 there, with
+its header; 10,233 across the three). The linked sheet went from 85,997 B to
+85,053 B. Computed styles are identical for every element and
 its `::before` and `::after` on 135 seeded screens at nine widths, one inside
-every band the media queries draw, and pixels and text on the 56 screens; a
-planted move of one rule past its phone override showed in the computed
-styles. `tests/stylesheet.test.ts` now fails when any two rules could be one.
+every band the media queries draw (`tests/e2e/computed-styles.spec.ts` with
+`scripts/compare-styles.py`, an instrument that runs when `STYLE_DIR` is
+set), and pixels and text on the 56 screens; a planted move of one rule past
+its phone override showed in the computed styles. `tests/stylesheet.test.ts` now fails when any two rules could be one.
 The educator pack's rules, sent to the game's sheet by the split and so
 missing from /educators since 0.9.15, now load with that page
 (`app/educators/educators.css`), identical to 0.9.14 on screen and in print.

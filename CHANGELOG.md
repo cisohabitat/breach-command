@@ -4,13 +4,25 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.18, 11 October 2026
+
+- **The stylesheet tool is stricter.** Two rules count as saying the same
+  thing only when their declarations come in the same order, since the
+  order decides between a shorthand and its longhand; the sheets were
+  already consolidated this way, so nothing changes. The computed-style
+  comparison that showed 0.9.17 changed nothing is now in the repository
+  (`tests/e2e/computed-styles.spec.ts`, `scripts/compare-styles.py`), and
+  0.9.17's notes give the merges' true line count (595, not 653: the rest
+  was the educator pack's rules moving to their own sheet).
+  Nothing in the game changes.
+
 ## 0.9.17, 11 October 2026
 
 - **The educator pack is a printed document again.** Since 0.9.15 its page
   had lost its styles and showed as plain text; it now looks as it did in
   0.9.14, on screen and in print.
 - **A tidier stylesheet.** Rules that said the same thing in two places are
-  one rule now, wherever that cannot change what the page shows: 653 fewer
+  one rule now, wherever that cannot change what the page shows: 595 fewer
   lines, and the stylesheet the first screen waits for is about 1 KB
   smaller. Nothing on screen changes.
 

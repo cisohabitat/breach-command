@@ -13,7 +13,8 @@
 //   node scripts/css-consolidate.ts components/game/game.css --apply   rewrite
 //
 // The cascade check is what makes a move safe in principle; the computed
-// styles and the visual baselines are what show it, so run them after.
+// styles (tests/e2e/computed-styles.spec.ts, scripts/compare-styles.py) and
+// the visual baselines are what show it, so run them after.
 import { readFileSync, writeFileSync } from "node:fs";
 
 type Rule = { kind: "rule"; comments: string[]; selector: string; body: string[] };
@@ -268,7 +269,10 @@ function canMove(moving: Flat, flat: Flat[], start: number, end: number) {
 }
 
 function remove(list: Node[], node: Node) { list.splice(list.indexOf(node), 1); }
-function bodyKey(body: string[]) { return body.map(line => line.trim()).filter(line => !line.startsWith("/*")).sort().join("\n"); }
+// In order: within a rule a later declaration overrides a related earlier one
+// (a longhand after its shorthand, a fallback before the value), so two rules
+// are the same only when they say the same thing in the same order.
+function bodyKey(body: string[]) { return body.map(line => line.trim()).filter(line => !line.startsWith("/*")).join("\n"); }
 
 export type Change = { kind: "same selector" | "same declarations" | "same query"; detail: string };
 
