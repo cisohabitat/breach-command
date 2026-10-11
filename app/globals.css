@@ -3366,7 +3366,6 @@ body {
     padding-block:8px;
   }
 }
-
 /* Sector scenes establish the setting; state colours remain on the readouts. */
 .sector-illustration {
   display: block;
@@ -3389,6 +3388,56 @@ body {
 }
 @media print {
   .sector-illustration {
+    display: none;
+  }
+}
+/* Character and story art never replaces the readable incident record. */
+.specialist-portrait {
+  inline-size: 40px;
+  block-size: 40px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.specialist-roster button .specialist-name, .paper-dialog .briefing-readouts strong.specialist-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.story-art {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  object-fit: cover;
+  margin-block: 12px;
+}
+.briefing-main .campaign-act-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.campaign-act-card > .story-art {
+  grid-column: 1 / -1;
+  max-block-size: 140px;
+}
+.resolution > .story-art {
+  max-block-size: 180px;
+}
+.discovery > .story-art {
+  inline-size: 88px;
+  block-size: 64px;
+  flex-shrink: 0;
+  margin-block: 0;
+}
+@media (max-width: 600px) {
+  .resolution > .story-art {
+    max-block-size: 120px;
+  }
+  .discovery > .story-art {
+    inline-size: 56px;
+    block-size: 48px;
+  }
+}
+@media print {
+  .story-art, .specialist-portrait {
     display: none;
   }
 }

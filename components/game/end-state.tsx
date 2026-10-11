@@ -1,3 +1,4 @@
+import { StoryArt } from "./story-art";
 import { useRef, useState } from "react";
 import { getLossReason, getOperationalLabel, getResultSummary, getShareCard, type Game } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -36,6 +37,7 @@ export function EndState({ session }: { session: GameSession }) {
           </div>
           <button className="primary-button" onClick={openDebrief}>{t("ending.openReview")}</button>
         </div>
+        <StoryArt kind="endings" name="recovery" />
         <ol className="resolution-steps">
           {/* What closed the case, as lines of the record with their status in
               the margin, not a checklist of ticks. */}
@@ -59,6 +61,7 @@ export function EndState({ session }: { session: GameSession }) {
           </div>
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewRecord")}</button>
         </div>
+        <StoryArt kind="endings" name="unresolved" />
         <p className="resolution-note">{t("endState.unresolvedStagesRemain")}</p>
         <ShareResult game={game} />
       </section>
@@ -75,6 +78,7 @@ export function EndState({ session }: { session: GameSession }) {
           </div>
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewDrill")}</button>
         </div>
+        <StoryArt kind="endings" name="exercise" />
         <ShareResult game={game} />
       </section>
     );

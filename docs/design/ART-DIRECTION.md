@@ -103,3 +103,19 @@ after scenario IDs. They are decorative (`alt=""`): the adjacent title, sector
 and briefing provide all meaningful information. Full-resolution generated
 originals are retained separately in the workspace's `sector-illustrations`
 folder. All ten web assets are cached for offline sector selection.
+
+## Characters and story artwork, 11 October 2026
+
+The user requested all four proposed additions: six fictional specialist
+portraits, four generic evidence-source still lifes, three campaign-act scenes,
+and three operation-ending scenes. Portraits accompany names in the roster and
+mission brief. Campaign scenes sit beside each act's narrative. Source artifacts
+appear only with a revealed finding, chosen by the actual procedure and sector,
+never by a hidden technique. Their blank records are decorative, not evidence.
+Ending scenes follow the outcome and review button: recovery for a win, an
+unfinished desk for a loss, and training materials for an exercise.
+
+Each image has empty alt text because neighbouring game text carries the meaning.
+WebP files are local, lazy loaded, and optionally precached for offline use.
+Portraits share the charcoal-and-bone style; ending scenes include subdued natural
+light to distinguish time of day, without using the game's warning colours.

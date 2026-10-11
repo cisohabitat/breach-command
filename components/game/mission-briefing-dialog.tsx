@@ -5,6 +5,7 @@ import { campaignRoutes } from "@/lib/phase9";
 import type { GameSession } from "@/hooks/use-game-session";
 import { useMessages } from "@/hooks/use-messages";
 import { missionBriefingDialogMessages } from "@/lib/i18n/en/mission-briefing-dialog";
+import { SpecialistPortrait } from "./story-art";
 import { register } from "@/lib/i18n";
 import { SectorIllustration } from "./sector-illustration";
 
@@ -25,7 +26,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
               on a phone. */}
           <div className="briefing-readouts">
             <div><span>{t("fieldGuideDialog.sectorCondition")}</span><strong>{sectorSystems[game.scenario].title}</strong><small>{t("missionBriefingDialog.theOperationEnds2", { plain: sectorSystems[game.scenario].plain })}</small><details className="brief-rule-fold"><summary>{t("gameScreen.whatMovesIt")}</summary><small>{sectorSystems[game.scenario].rule}</small></details></div>
-            <div><span>{t("missionBriefingDialog.deployedSpecialist")}</span><strong>{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
+            <div><span>{t("missionBriefingDialog.deployedSpecialist")}</span><strong className="specialist-name"><SpecialistPortrait specialist={game.specialist} />{namedSpecialists[game.specialist].name} / {namedSpecialists[game.specialist].callsign}</strong><small>{specialists[game.specialist].ability}</small></div>
             <div><span>{t("missionBriefingDialog.attribution")}</span><strong>{say(getAttributionRead(game).title)}</strong><small>{say(getAttributionRead(game).detail)}</small></div>
           </div>
           {/* Expert withholds coaching; its brief said "Your first move" all the same. */}

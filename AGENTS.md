@@ -295,3 +295,10 @@ setting illustrations appear on the assignment and inside the mission brief's
 folded context. Keep attack techniques out of the scenes, reserve hue for state,
 and keep the first move clear on phones. `public/art/sectors` holds ten local
 WebP files named by scenario ID; `public/sw.js` caches them as optional assets.
+
+Story artwork: `components/game/story-art.tsx` supplies six decorative specialist
+portraits, three act scenes, three ending scenes and four source artifacts.
+Show source artifacts only on confirmed findings and derive them from the
+procedure/sector, never a hidden technique. Real evidence stays readable text.
+Keep ending art after the result and review control. All assets are local WebP
+files in `public/art` and optional service-worker precache entries.

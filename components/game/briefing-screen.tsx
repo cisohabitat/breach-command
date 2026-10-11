@@ -1,3 +1,4 @@
+import { SpecialistPortrait, StoryArt } from "./story-art";
 import type { CSSProperties } from "react";
 import { SectorIllustration } from "./sector-illustration";
 import { Bot, RefreshCw } from "lucide-react";
@@ -90,7 +91,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <b><small>{t("briefingScreen.experience")}</small>{campaign.xp}</b>
           <div className="career-progress"><span style={{ width: `${Math.min(100, campaign.xp / 8)}%` }} /></div>
         </section>
-        <section className="campaign-act-card"><span className="act-number">{t("briefingScreen.act2", { number: currentAct.number })}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p>{!finalEnding && <p className="act-briefing">{t("briefingScreen.director2", { briefing: currentStory.briefing })}</p>}{!finalEnding && currentStory.development && <p className="act-briefing">{t("briefingScreen.sinceThen2", { development: currentStory.development })}</p>}<small>{t("briefingScreen.unresolvedAccess2", { unresolvedThreads: campaign.unresolvedThreads })}{campaign.unresolvedThreads ? t("briefingScreen.eachStartsLater") : ""}</small></div></section>
+        <section className="campaign-act-card"><StoryArt kind="campaign" name={`act-${currentAct.number}`} /><span className="act-number">{t("briefingScreen.act2", { number: currentAct.number })}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p>{!finalEnding && <p className="act-briefing">{t("briefingScreen.director2", { briefing: currentStory.briefing })}</p>}{!finalEnding && currentStory.development && <p className="act-briefing">{t("briefingScreen.sinceThen2", { development: currentStory.development })}</p>}<small>{t("briefingScreen.unresolvedAccess2", { unresolvedThreads: campaign.unresolvedThreads })}{campaign.unresolvedThreads ? t("briefingScreen.eachStartsLater") : ""}</small></div></section>
         <section className="campaign-route-card"><div><span className="field-label">{t("briefingScreen.campaignRoute2", { currentRouteTitle: currentRoute.title })}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
         {finalEnding && <section className="campaign-ending"><div><span className="field-label">{t("briefingScreen.campaignConclusion")}</span><strong>{finalEnding.title}</strong><p>{say(finalEnding.detail)}</p></div></section>}
       </div>
@@ -130,7 +131,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
             ? t("briefingScreen.isAtFatigue", { namedSpecialistsName: namedSpecialists[specialist].name, specialistFatigue: assignmentCampaign.specialistFatigue[specialist] })
             : t("briefingScreen.fatigueCarriesBetween", { specialistExhaustedAt: SPECIALIST_EXHAUSTED_AT })}</small></div>
           <div className="difficulty-picker specialist-roster">
-            <div role="group" aria-label={t("briefingScreen.deploySpecialist")} aria-describedby="specialist-fatigue">{(Object.keys(specialists) as SpecialistId[]).map(id => <button key={id} className={specialist === id ? "active" : ""} aria-pressed={specialist === id} onClick={() => setSpecialist(id)}><strong>{namedSpecialists[id].name}</strong><small>{specialists[id].title}{t("briefingScreen.fatigueOf6", { specialistFatigue: assignmentCampaign.specialistFatigue[id] ?? 0 })}</small></button>)}</div>
+            <div role="group" aria-label={t("briefingScreen.deploySpecialist")} aria-describedby="specialist-fatigue">{(Object.keys(specialists) as SpecialistId[]).map(id => <button key={id} className={specialist === id ? "active" : ""} aria-pressed={specialist === id} onClick={() => setSpecialist(id)}><strong className="specialist-name"><SpecialistPortrait specialist={id} />{namedSpecialists[id].name}</strong><small>{specialists[id].title}{t("briefingScreen.fatigueOf6", { specialistFatigue: assignmentCampaign.specialistFatigue[id] ?? 0 })}</small></button>)}</div>
           </div>
           <p><strong>{namedSpecialists[specialist].name} / {namedSpecialists[specialist].callsign}</strong>, {specialists[specialist].title}, {specialists[specialist].role}{t("briefingScreen.fatigueOf62", { specialistFatigue: assignmentCampaign.specialistFatigue[specialist] ?? 0 })}{specialists[specialist].ability}{t("briefingScreen.rapportWithOf", { namedSpecialistsName: namedSpecialists[specialist].name, specialistBonds: assignmentCampaign.specialistBonds[specialist] ?? 35 })}</p>
         </div>
