@@ -211,3 +211,8 @@ into the game's sheet to keep their place in the cascade; that budget moved
 from 190,000 B to 220,000 B, on purpose, for a render-blocking sheet less than
 half the size. FCP on the throttled profile went from about 1,250 ms to
 1,100 ms.
+
+The stylesheets consolidated (0.9.17): rules for the same selectors, rules
+with the same declarations and blocks for the same query merged where the
+cascade allows. The linked sheet is 85,053 B and the game's about 123.6 KB
+as served, from 85,997 B and about 127.8 KB; the budgets are unchanged.

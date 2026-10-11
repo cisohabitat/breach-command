@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.17, 11 October 2026
+
+- **The educator pack is a printed document again.** Since 0.9.15 its page
+  had lost its styles and showed as plain text; it now looks as it did in
+  0.9.14, on screen and in print.
+- **A tidier stylesheet.** Rules that said the same thing in two places are
+  one rule now, wherever that cannot change what the page shows: 653 fewer
+  lines, and the stylesheet the first screen waits for is about 1 KB
+  smaller. Nothing on screen changes.
+
 ## 0.9.16, 10 October 2026
 
 - **Adding a sector is a measured procedure.** A trial sector was scaffolded,

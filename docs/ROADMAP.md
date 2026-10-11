@@ -212,6 +212,33 @@ restructuring it by component, which is better done with Phase 3's type
 system than ahead of it. Open, because it needs a device: offline play on a
 real iPhone (Playwright's WebKit cannot test it).
 
+*11 October 2026 (0.9.17, `645b5f6`): consolidated as far as the cascade
+allows.* `scripts/css-consolidate.ts` merges rules for the same selectors in
+the same media query, rules with the same declarations and blocks for the
+same query, each only where no rule it moves past could compete (a related
+property through a selector of equal specificity that could match the same
+element, in any query). It made 32 same-selector merges, 157 selector-list
+merges and 10 block merges: the two sheets went from 10,826 lines to 10,173
+(globals 3,501 to 3,368, the game's 7,325 to 6,805), the linked sheet from
+85,997 B to 85,053 B. Computed styles are identical for every element and
+its `::before` and `::after` on 135 seeded screens at nine widths, one inside
+every band the media queries draw, and pixels and text on the 56 screens; a
+planted move of one rule past its phone override showed in the computed
+styles. `tests/stylesheet.test.ts` now fails when any two rules could be one.
+The educator pack's rules, sent to the game's sheet by the split and so
+missing from /educators since 0.9.15, now load with that page
+(`app/educators/educators.css`), identical to 0.9.14 on screen and in print.
+
+What 6,000 lines would take: the sheets hold 5,757 declarations, 1,407 of
+them distinct, which is 5,757 lines at one declaration a line before any
+selector or brace, so no merging reaches 6,000. The merges left undone (56
+same-selector pairs, mostly) are blocked by rules in other components at the
+same specificity that the cascade alone cannot rule out; allowing them would
+rest on the screens observed rather than on a proof, for about 300 lines.
+The criterion as written needs fewer declarations: shared component
+primitives in the markup, which is Phase 3's type-and-component work, not a
+consolidation.
+
 ## Phase 2: first session
 
 Goal: a newcomer finishes their first operation and understands the loop —
