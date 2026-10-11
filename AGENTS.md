@@ -294,11 +294,11 @@ Sector artwork (11 October 2026): user-requested original charcoal-and-bone
 setting illustrations appear on the assignment and inside the mission brief's
 folded context. Keep attack techniques out of the scenes, reserve hue for state,
 and keep the first move clear on phones. `public/art/sectors` holds ten local
-WebP files named by scenario ID; `public/sw.js` caches them as optional assets.
+WebP files named by scenario ID; `public/sw.js` keeps each as it is seen rather than precaching them. The sectors whose incident reaches operational technology are named in `operationalTechnologySectors` (`lib/scenarios.ts`), never by case number.
 
 Story artwork: `components/game/story-art.tsx` supplies six decorative specialist
 portraits, three act scenes, three ending scenes and four source artifacts.
 Show source artifacts only on confirmed findings and derive them from the
 procedure/sector, never a hidden technique. Real evidence stays readable text.
 Keep ending art after the result and review control. All assets are local WebP
-files in `public/art` and optional service-worker precache entries.
+files in `public/art`, cached by the service worker once seen. Art rules for the assignment screen are in `app/globals.css`; those for the game's own screens in `components/game/game.css`.

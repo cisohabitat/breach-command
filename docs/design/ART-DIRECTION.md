@@ -102,7 +102,7 @@ Assets are precompressed 960 × 640 WebP files in `public/art/sectors`, named
 after scenario IDs. They are decorative (`alt=""`): the adjacent title, sector
 and briefing provide all meaningful information. Full-resolution generated
 originals are retained separately in the workspace's `sector-illustrations`
-folder. All ten web assets are cached for offline sector selection.
+folder. Each is cached for offline play once it has been shown.
 
 ## Characters and story artwork, 11 October 2026
 
@@ -116,6 +116,6 @@ Ending scenes follow the outcome and review button: recovery for a win, an
 unfinished desk for a loss, and training materials for an exercise.
 
 Each image has empty alt text because neighbouring game text carries the meaning.
-WebP files are local, lazy loaded, and optionally precached for offline use.
+WebP files are local and lazy loaded. The service worker keeps each one once it has been seen, rather than fetching 2.4 MB of them on a first visit.
 Portraits share the charcoal-and-bone style; ending scenes include subdued natural
 light to distinguish time of day, without using the game's warning colours.

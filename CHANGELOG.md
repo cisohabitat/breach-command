@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.21, 11 October 2026
+
+- **A lighter first visit.** The artwork is no longer downloaded all at
+  once (about 2.4 MB) when the game is first opened; each image is kept for
+  offline play once it has been shown.
+- **Housekeeping.** The game screens' art styles load with the game, not
+  with the first screen. Which sectors count as operational technology is
+  one named list rather than two case numbers, and the review's visual test
+  plays the same operation every time. Nothing on screen changes.
+
 ## 0.9.20, 11 October 2026
 
 - **Artwork.** Each of the ten sectors has an original charcoal-and-bone
