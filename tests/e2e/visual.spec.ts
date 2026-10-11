@@ -25,7 +25,19 @@ async function resume(page: Page) {
   await page.waitForTimeout(600);
 }
 
+// The artwork loads lazily, so whether a scene behind a dialog had arrived
+// when the screenshot was taken depended on timing. Every image is loaded and
+// decoded first, so a baseline shows the screen as a player sees it settled.
+async function imagesSettled(page: Page) {
+  await page.evaluate(async () => {
+    const images = [...document.images];
+    for (const image of images) image.loading = "eager";
+    await Promise.all(images.map(image => image.decode().catch(() => undefined)));
+  });
+}
+
 async function snap(page: Page, name: string) {
+  await imagesSettled(page);
   await expect(page).toHaveScreenshot(name, { mask: masked(page), animations: "disabled", caret: "hide", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
 }
 
