@@ -463,10 +463,25 @@ four cases plus replays draws about as many events and injects as exist.
 Balance on the same seeds, 1,000 operations a scenario: 76.0 / 67.8 / 49.6
 against 74.7 / 66.6 / 49.8 before, within three points everywhere.
 
+*11 October 2026 (0.9.19, `5b1d967` and `ccaf896`): events and injects met.*
+Repetition audit, 3,000 campaigns: within an act a command event repeats in
+1.8 per cent of campaigns (from 8.4) and an inject in 2.9 (from 12.7), both
+under five. The injects needed no new cards: the campaign's recently drawn
+cards went to the bottom of the deck in shuffled order, so once a valence's
+fresh cards were spent a critical roll often drew the card met last; they now
+go longest ago first. The events needed eight more (twenty-six; six would
+have reached 2.8, measured with copies before any was written), an
+operation's first event now reachable at every position
+(`commandEventStart`), and a campaign memory as long as each table, held so
+by a test. Win rates at 3,000 per difficulty: 75.5 / 67.2 / 49.0, from
+75.8 / 67.4 / 49.3. Challenge codes are `BC8`. A sector crisis still repeats
+in 58.5 per cent, for the reason above, and is not met.
+
 Not done: the two new sectors, which change the campaign's length, every
 per-scenario table and the endings, and want the practitioner's review of
 the techniques first; and the practitioner's sign-off on every new event,
-crisis and inject, which no agent can give.
+crisis and inject, which no agent can give, the eight events of 0.9.19
+included (`docs/reviews/PRACTITIONER-REVIEW-BRIEF.md`).
 
 ## Phase 5: replayability and mastery
 

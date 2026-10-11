@@ -4,6 +4,21 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.19, 11 October 2026
+
+- **A campaign repeats itself less.** Within an act, the same interruption
+  now comes back in about 2 campaigns in 100 (from 8), and the same inject
+  in 3 (from 13). Eight new command events: the intruder reading the
+  team's email, police asking to leave the intruder in place, the sector's
+  sharing group, the chief executive's laptop, a team's own server, a
+  proposal to reset every password, the intruder making contact, and a
+  breached remote-support tool. In four of them the better call is the
+  second option. A critical roll now draws the inject the campaign met
+  longest ago once the fresh ones are spent.
+- **Challenge codes move to `BC8`.** Codes shared before this version are
+  named as outdated, because the same seed now meets different events.
+  The new events have not yet had a practitioner's review.
+
 ## 0.9.18, 11 October 2026
 
 - **The stylesheet tool is stricter.** Two rules count as saying the same
