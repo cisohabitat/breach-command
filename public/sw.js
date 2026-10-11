@@ -12,19 +12,10 @@ const CORE = ["/", "/manifest.webmanifest", "/favicon.svg"];
 // is never served.
 async function precache(cache) {
   await cache.addAll(CORE);
-  // Optional artwork must never prevent the game shell from installing.
-  await Promise.all([
-    "quiet-office", "care-network", "power-support", "port-terminal", "cloud-control",
-    "shared-services", "government-service", "telecom-core", "water-operations", "financial-clearing",
-  ].map(id => cache.add(`/art/sectors/${id}.webp`).catch(() => {})));
-  const storyAssets = {
-    portraits: ["hunter", "forensics", "identity", "ot", "continuity", "communications"],
-    evidence: ["email", "identity", "maintenance", "telemetry"],
-    campaign: ["act-1", "act-2", "act-3"],
-    endings: ["recovery", "unresolved", "exercise"],
-  };
-  await Promise.all(Object.entries(storyAssets).flatMap(([kind, names]) =>
-    names.map(name => cache.add(`/art/${kind}/${name}.webp`).catch(() => {}))));
+  // The artwork is not precached: about 2.4 MB of decorative images would be
+  // fetched on a first visit, on whatever connection the player has. The fetch
+  // handler below keeps each image the player has seen, so it is there offline
+  // the next time; one never seen leaves an empty, unlabelled space.
   const shell = await cache.match("/");
   if (!shell) return;
   const html = await shell.text();

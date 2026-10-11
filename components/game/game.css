@@ -6560,6 +6560,35 @@ span.effect-list>span.effect.pace.worse>em {
   font-style:normal;
   font-weight:600;
 }
+/* The artwork on the game's own screens: the scene in the mission brief's
+   operation context, the specialist beside their name in the brief, the
+   ending's scene and the source behind a confirmed finding. */
+.briefing-more>.sector-illustration {
+  margin-block:16px;
+}
+.paper-dialog .briefing-readouts strong.specialist-name {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.resolution>.story-art {
+  max-block-size:180px;
+}
+.discovery>.story-art {
+  inline-size:88px;
+  block-size:64px;
+  flex-shrink:0;
+  margin-block:0;
+}
+@media(max-width:600px) {
+  .resolution>.story-art {
+    max-block-size:120px;
+  }
+  .discovery>.story-art {
+    inline-size:56px;
+    block-size:48px;
+  }
+}
 @media(max-width:650px) {
   /* The cards below already mark the reading's own sources; listing them again
      here put the first card under the fold. */

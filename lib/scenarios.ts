@@ -25,6 +25,13 @@ export const scenarios: Scenario[] = [
   {id:"financial-clearing",icon:BadgeDollarSign,sector:"Banking and finance",title:"The clearing window",summary:"An identity anomaly appears before a time-sensitive settlement cycle.",brief:"A fictional financial institution detects unusual privileged activity and an unexpected export pattern before settlement processing. Determine the route without disrupting trusted transactions unnecessarily.",scope:"Privileged identities, payment-support applications, cloud workloads and outbound transfer records.",timeline:"Activity began two hours before the next settlement cycle.",constraints:"Integrity and availability matter equally. Decisions must be defensible under tight time pressure.",impact:"Transactions continue, but data integrity and settlement confidence could deteriorate rapidly.",lesson:"What evidence is sufficient to constrain access before a critical financial window?",leads:["A valid privileged identity initiated unusual but permitted activity.","The export pattern may be reconciliation traffic or staged data.","Two reconciliation reports for the same window disagree by a small amount."],choices:[["approver","vpn","apikey","resolver"],["entitlement","vault","session","db-cred"],["paysupport","grant","key","wmi-sub"],["beneficiary","reconsuppress","mailout","splitzip"]],preferred:["credential","rebuild"]},
 ];
 
+// The sectors whose incident reaches operational technology: plant and
+// treatment control. The OT specialist protects their sector margin, and a
+// finding there shows a maintenance workstation. A new sector that runs
+// operational technology adds its id here.
+export const operationalTechnologySectors = new Set(["power-support", "water-operations"]);
+export const runsOperationalTechnology = (scenario: number) => operationalTechnologySectors.has(scenarios[scenario]?.id);
+
 export type Difficulty = "training"|"operational"|"crisis";
 export const difficulties: Record<Difficulty,{title:string;description:string;threshold:number;maxTurns:number;startImpact:number}> = {
   training:{title:"Training",description:"More time and a clearer margin to learn in; the score allows six turns before a slower finish costs anything.",threshold:10,maxTurns:12,startImpact:14},

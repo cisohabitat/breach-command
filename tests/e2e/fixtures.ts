@@ -4,6 +4,7 @@ import {
   resolveCommand, resolveDecision, resolveSetPiece, setHypothesis, type Game,
 } from "../../lib/advanced-game.ts";
 import { SESSION_KEY, serialiseSession } from "../../lib/session.ts";
+import { seededChallengeRandom } from "../../lib/phase8.ts";
 
 // Operations built from the engine with forced rolls, shared by the browser
 // suites so that nothing in them depends on the dice, and the page opened on one
@@ -21,9 +22,11 @@ export function pendingDecisionGame(): Game {
   return game;
 }
 
+// Seeded, like the rest: unseeded, each run drew a different incident, and the
+// review's score moved between 89 and 91 from one screenshot to the next.
 export function responsePhaseGame(): Game {
   for (let attempt = 0; attempt < 50; attempt++) {
-    let game = newGame(0, "training");
+    let game = newGame(0, "training", seededChallengeRandom(attempt + 1));
     for (let guard = 0; guard < 60 && game.status === "playing"; guard++) {
       if (game.pendingDecision) { game = resolveDecision(game, "act"); continue; }
       if (game.pendingCommand) { game = resolveCommand(game, "a"); continue; }

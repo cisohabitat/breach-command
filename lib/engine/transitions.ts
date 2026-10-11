@@ -1,5 +1,6 @@
 // Every change to an operation. Each takes a Game and returns a new one.
 import { attacks, procedures, scenarios, difficulties, hypotheses, scenarioDynamics, attackVector, randomInt, type Difficulty, type HypothesisId } from "../game.ts";
+import { runsOperationalTechnology } from "../scenarios.ts";
 import { objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { type SetPieceId, infrastructureTopologies, seededRoll, setPieceById, setPieceFor } from "../phase8.ts";
 import { objectiveTheory } from "../phase9.ts";
@@ -406,7 +407,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     }
   }
   const sector = sectorSystems[g.scenario];
-  const protection = g.specialist === "continuity" ? 3 : g.specialist === "ot" && [2, 8].includes(g.scenario) ? 3 : 0;
+  const protection = g.specialist === "continuity" ? 3 : g.specialist === "ot" && runsOperationalTechnology(g.scenario) ? 3 : 0;
   const identityLed = procedure === "identity" || procedure === "cloud";
   const boundarySuccess = success && ["network", "firewall", "dns"].includes(procedure);
   let sectorSpecific = 0;

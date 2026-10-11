@@ -23,7 +23,9 @@
    - seven variants;
    - a response profile whose cheap options (`accelerate`, `patch`) are
      named for this sector, with labels that agree with their score;
-   - decision terms naming who the sector notifies.
+   - decision terms naming who the sector notifies;
+   - if its incident reaches operational technology, its id in
+     `operationalTechnologySectors` (`lib/scenarios.ts`).
 3. Wire each section into the table its draft header names, appending at the
    end of each table. Import the scenario's icon from `lucide-react` in
    `lib/scenarios.ts`, add the exclusive techniques' ids to `attackMitre`,
