@@ -339,3 +339,13 @@ test("every technique maps to a MITRE ATT&CK technique", async () => {
   assert.equal(mitreUrl("T1566.001"), "https://attack.mitre.org/techniques/T1566/001/");
   assert.equal(mitreUrl("T1190"), "https://attack.mitre.org/techniques/T1190/");
 });
+
+test("a campaign remembers every command event and inject before it forgets one", async () => {
+  // An act draws from the events and injects the campaign has not met lately.
+  // A memory shorter than the table forgets a card while others are still
+  // unmet, and the act meets it again; appending a card means raising these.
+  const { RECENT_COMMANDS, RECENT_INJECTS } = await import("../lib/campaign.ts");
+  const { commandEvents, injects } = await import("../lib/engine/content.ts");
+  assert.ok(RECENT_COMMANDS >= Object.keys(commandEvents).length, `RECENT_COMMANDS covers all ${Object.keys(commandEvents).length} events`);
+  assert.ok(RECENT_INJECTS >= injects.length, `RECENT_INJECTS covers all ${injects.length} injects`);
+});

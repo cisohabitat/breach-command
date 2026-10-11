@@ -44,8 +44,10 @@ export function campaignReadable(raw: string): boolean {
   }
 }
 
-const RECENT_COMMANDS = 15;
-const RECENT_INJECTS = 16;
+// As many as there are, so nothing is forgotten before every other one has
+// been met (tests/content.test.ts holds them to the tables' sizes).
+export const RECENT_COMMANDS = 18;
+export const RECENT_INJECTS = 20;
 const RECENT_CRISES = 10;
 // Newest last, each id once.
 const remember = (list: string[], met: string[], keep: number) => [...list.filter(id => !met.includes(id)), ...met.filter((id, index) => met.indexOf(id) === index)].slice(-keep);
