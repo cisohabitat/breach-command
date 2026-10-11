@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.20, 11 October 2026
+
+- **Artwork.** Each of the ten sectors has an original charcoal-and-bone
+  illustration on the assignment and in the mission brief's operation
+  context. The six specialists have portraits in the roster and the brief;
+  each campaign act and each kind of ending has a scene; and a confirmed
+  finding shows a still life of the kind of source that found it, chosen by
+  the check that was run, never by the hidden technique. Every image is
+  decorative and local, and the offline cache keeps them when it can.
+
 ## 0.9.19, 11 October 2026
 
 - **A campaign repeats itself less.** Within an act, the same interruption
