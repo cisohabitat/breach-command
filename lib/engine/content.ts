@@ -226,6 +226,58 @@ export const commandEvents = {
     a: { title: "Brief them now", description: "The customer is steadier for it, and the call takes the lead analyst for an hour.", signal: "Next roll harder · Pressure falls", modifier: -1, impact: -3, continuity: 0, tempo: 0, quality: 4 },
     b: { title: "Send a written update", description: "The team keeps working, and the customer reads a short note as a brush-off.", signal: "Pressure rises", modifier: 0, impact: 3, continuity: 0, tempo: 0, quality: 3 },
   },
+  // Eight more, so a long act (a case lost and replayed) still meets a new
+  // interruption: with eighteen, an event repeated within an act in six per
+  // cent of campaigns. In half of them the better call is the second option,
+  // so the order on screen is no hint.
+  mailboxes: {
+    title: "The intruder may be reading email",
+    prompt: "Forwarding rules found on two mailboxes suggest someone can read staff email, including the response team's.",
+    a: { title: "Keep working through company email", description: "The team stays quick, and whoever reads the mailboxes can follow the response as it happens.", signal: "Next roll easier · Faster adversary", modifier: 1, impact: 0, continuity: 0, tempo: 1, quality: 2 },
+    b: { title: "Move the response to phones and a separate chat", description: "Nothing about the response goes through company email; setting it up costs the team time.", signal: "Next roll harder", modifier: -1, impact: 0, continuity: 0, tempo: 0, quality: 5 },
+  },
+  police: {
+    title: "Police ask you to leave the intruder in place",
+    prompt: "Investigators want the intruder left active for a few more days so they can trace who is behind it.",
+    a: { title: "Agree, and watch closely", description: "You keep seeing what the intruder does, and the intruder keeps doing it while leaders wait.", signal: "Next roll easier · Pressure rises · Faster adversary", modifier: 1, impact: 2, continuity: 0, tempo: 1, quality: 3 },
+    b: { title: "Contain on your own timetable", description: "The police are told why; they share less of what they learn, and your response stays your own.", signal: "Next roll harder", modifier: -1, impact: 0, continuity: 0, tempo: 0, quality: 4 },
+  },
+  sharing: {
+    title: "Your sector's sharing group asks what you have seen",
+    prompt: "Peers in the sector's information-sharing group ask for the addresses and file names you have found, to check their own networks.",
+    a: { title: "Share what is confirmed", description: "Peers can protect themselves and one may recognise the intruder, who may in turn notice its tools are known.", signal: "Pressure falls · Faster adversary", modifier: 0, impact: -2, continuity: 0, tempo: 1, quality: 4 },
+    b: { title: "Wait until the investigation closes", description: "Nothing leaves the organisation, and peers hear about it after the fact.", signal: "Pressure rises", modifier: 0, impact: 2, continuity: 0, tempo: 0, quality: 2 },
+  },
+  executive: {
+    title: "The chief executive's laptop raises the same alert",
+    prompt: "The laptop the chief executive is using in a board meeting shows the alert the team is chasing.",
+    a: { title: "Take the laptop now", description: "The meeting stops, and the laptop is examined while it still holds what it saw.", signal: "Next roll easier · Pressure rises", modifier: 1, impact: 3, continuity: 0, tempo: 0, quality: 5 },
+    b: { title: "Wait until the meeting ends", description: "Two hours of the board's work go on, on a device that may be the intruder's way in.", signal: "Faster adversary", modifier: 0, impact: 0, continuity: 0, tempo: 1, quality: 2 },
+  },
+  shadow: {
+    title: "A team admits to a server of its own",
+    prompt: "A project team says it runs a server outside the IT department's management, connected to the affected network.",
+    a: { title: "Bring it into the investigation", description: "One more system to collect from, and possibly the one the intruder used; leaders want to know how it was missed.", signal: "Next roll easier · Added pressure", modifier: 1, impact: 2, continuity: 0, tempo: 0, quality: 5 },
+    b: { title: "Have the team switch it off", description: "It stops being a risk, the project stalls, and whatever it held about the intruder is lost.", signal: "Service cost · Next roll harder", modifier: -1, impact: 0, continuity: -2, tempo: 0, quality: 2 },
+  },
+  passwords: {
+    title: "IT proposes resetting every password tonight",
+    prompt: "The IT director wants to force a password change on every account before morning.",
+    a: { title: "Reset every account tonight", description: "Every user is locked out until they reset, and the intruder learns it has been seen before its access is understood.", signal: "Service cost · Faster adversary", modifier: 0, impact: 0, continuity: -4, tempo: 1, quality: 2 },
+    b: { title: "Reset the accounts in use once the access is scoped", description: "Slower and harder to explain, but the reset lands when the intruder cannot simply move to another account.", signal: "Next roll harder · Pressure rises", modifier: -1, impact: 2, continuity: 0, tempo: 0, quality: 5 },
+  },
+  contact: {
+    title: "The intruder makes contact",
+    prompt: "A message to a staff mailbox says data has been taken and offers to discuss its return.",
+    a: { title: "Bring in a specialist negotiator", description: "Someone experienced handles the contact and learns what they can, while the deadline the intruder set keeps running.", signal: "Next roll easier · Pressure rises", modifier: 1, impact: 2, continuity: 0, tempo: 0, quality: 3 },
+    b: { title: "Do not reply, and keep to the evidence", description: "Nothing is given away, and leaders face the threat without knowing yet what was taken.", signal: "Pressure rises", modifier: 0, impact: 4, continuity: 0, tempo: 0, quality: 4 },
+  },
+  provider: {
+    title: "Your IT provider's remote tool was breached elsewhere",
+    prompt: "The company that supports your systems says the remote management tool it uses on them was compromised at another customer.",
+    a: { title: "Disconnect the provider's tool", description: "Nobody can manage your systems through it, including the provider, until it is checked.", signal: "Service cost · Pressure falls", modifier: 0, impact: -2, continuity: -3, tempo: 0, quality: 5 },
+    b: { title: "Keep it connected and ask for their logs", description: "Support carries on while the tool stays a possible way in.", signal: "Continuity protected · Faster adversary", modifier: 0, impact: 0, continuity: 2, tempo: 1, quality: 2 },
+  },
 } as const;
 
 // The response set is authored per incident. Containment, assurance and recovery

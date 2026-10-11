@@ -443,7 +443,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // the deck's own length: most operations met the same event every time. An
     // event the operation has not met comes first, in the same fixed order.
     const ids = Object.keys(commandEvents) as CommandEventId[];
-    const start = (g.scenario + number + g.adversaryTempo) % ids.length;
+    const start = commandEventStart(g.scenario, number, g.adversaryTempo, ids.length);
     const order = ids.map((_, index) => ids[(start + index) % ids.length]);
     // Then one the campaign has not met lately, and among those it has, the
     // longest ago.
@@ -452,6 +452,14 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     g.pendingCommand = [...order].sort((a, b) => rank(a) - rank(b))[0];
   }
   return g;
+}
+
+// Where an operation's search for an event begins: the case, the turn and the
+// adversary's pace. Each case starts nine places on from the last, so the
+// starts reach every event in the table; stepping by one, a table of
+// twenty-six left eight events no single operation could meet first.
+export function commandEventStart(scenario: number, turn: number, tempo: number, count: number) {
+  return (scenario * 9 + turn + tempo) % count;
 }
 
 export function selectAdaptation(game: Game, stage: number, current: string) {

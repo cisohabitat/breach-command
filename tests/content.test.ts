@@ -349,3 +349,16 @@ test("a campaign remembers every command event and inject before it forgets one"
   assert.ok(RECENT_COMMANDS >= Object.keys(commandEvents).length, `RECENT_COMMANDS covers all ${Object.keys(commandEvents).length} events`);
   assert.ok(RECENT_INJECTS >= injects.length, `RECENT_INJECTS covers all ${injects.length} injects`);
 });
+
+test("a single operation can meet any command event first", async () => {
+  // Outside a campaign there is no memory to steer the draw, so the event an
+  // operation meets is where its search begins. Over the cases, the turns an
+  // event fires on and the adversary's pace, the starts reach every event.
+  const { commandEventStart } = await import("../lib/engine/transitions.ts");
+  const { commandEvents } = await import("../lib/engine/content.ts");
+  const { scenarios } = await import("../lib/scenarios.ts");
+  const count = Object.keys(commandEvents).length;
+  const starts = new Set<number>();
+  for (let scenario = 0; scenario < scenarios.length; scenario++) for (const turn of [3, 6, 9]) for (let tempo = 0; tempo <= 3; tempo++) starts.add(commandEventStart(scenario, turn, tempo, count));
+  assert.equal(starts.size, count, `every one of the ${count} events can come first`);
+});

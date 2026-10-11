@@ -42,7 +42,12 @@ function replay(): Game {
   };
   const { difficulty, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute } = fixture.setup;
   let game = newGame(scenario, difficulty, seededChallengeRandom(seed), { seed, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute, variant: incidentVariant(scenario, campaignRoute, seed) });
+  // Since 0.9.19 an operation's search for an event starts elsewhere
+  // (commandEventStart), so the same seed can meet a different one; the replay
+  // meets the events version 18 met, which is the path the save records.
+  const events = (old.commandHistory as { event: Game["pendingCommand"] }[]).map(record => record.event);
   for (let step = 0; step < 200 && (game.status === "playing" || game.status === "response"); step++) {
+    if (game.pendingCommand && events[game.commandHistory.length]) game = { ...game, pendingCommand: events[game.commandHistory.length] };
     const action = chooseBotAction(game);
     if (action.type === "complete") break;
     game = apply(game, action);
