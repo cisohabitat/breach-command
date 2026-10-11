@@ -4,6 +4,12 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.22, 11 October 2026
+
+- **Dependencies.** Tailwind CSS and its PostCSS plugin move to 4.3.3
+  together, and tailwind-merge to 3.7.0. Nothing on screen changes: pixels
+  and text are identical on every seeded screen.
+
 ## 0.9.21, 11 October 2026
 
 - **A lighter first visit.** The artwork is no longer downloaded all at
