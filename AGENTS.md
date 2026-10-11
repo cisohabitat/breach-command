@@ -289,3 +289,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+Sector artwork (11 October 2026): user-requested original charcoal-and-bone
+setting illustrations appear on the assignment and inside the mission brief's
+folded context. Keep attack techniques out of the scenes, reserve hue for state,
+and keep the first move clear on phones. `public/art/sectors` holds ten local
+WebP files named by scenario ID; `public/sw.js` caches them as optional assets.

@@ -89,3 +89,17 @@ depends on hearing a cue.
   file, or the slip alone.
 - The title and label weights above.
 - Whether a commissioned sound palette replaces the procedural one.
+
+## Sector illustrations, 11 October 2026
+
+The user requested original illustrations for all ten sectors after reviewing
+the game. The set uses charcoal ink and warm bone paper, with settings rather
+than attack clues. Each illustration appears as a compact crop on the assignment
+and at its full ratio inside the mission brief's folded operation context. The
+first-move instructions and command button keep their existing positions.
+
+Assets are precompressed 960 × 640 WebP files in `public/art/sectors`, named
+after scenario IDs. They are decorative (`alt=""`): the adjacent title, sector
+and briefing provide all meaningful information. Full-resolution generated
+originals are retained separately in the workspace's `sector-illustrations`
+folder. All ten web assets are cached for offline sector selection.

@@ -6,6 +6,7 @@ import type { GameSession } from "@/hooks/use-game-session";
 import { useMessages } from "@/hooks/use-messages";
 import { missionBriefingDialogMessages } from "@/lib/i18n/en/mission-briefing-dialog";
 import { register } from "@/lib/i18n";
+import { SectorIllustration } from "./sector-illustration";
 
 register(missionBriefingDialogMessages);
 
@@ -31,6 +32,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
           {game.mode !== "expert" && <div className="briefing-first-move"><span>01</span><p>{rich("missionBriefingDialog.strongYourFirst", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>}
           <details className="briefing-more">
             <summary>{t("missionBriefingDialog.operationContext")}<span>{gameModes[game.mode].title}{game.mode === "campaign" ? `, ${campaignRoutes[game.campaignRoute].title}` : ""}, {say(game.variant.title)}</span></summary>
+            <SectorIllustration scenarioId={activeScenario.id} />
             <div className="briefing-readouts">
               <div><span>{t("missionBriefingDialog.mode")}</span><strong>{gameModes[game.mode].title}</strong><small>{gameModes[game.mode].description}</small></div>
               {/* Only a campaign operation runs under the campaign's route; an Expert

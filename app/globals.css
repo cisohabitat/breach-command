@@ -3366,3 +3366,29 @@ body {
     padding-block:8px;
   }
 }
+
+/* Sector scenes establish the setting; state colours remain on the readouts. */
+.sector-illustration {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  background: var(--lime);
+}
+.mission-panel > .sector-illustration {
+  max-block-size: 180px;
+  object-fit: cover;
+  margin-block: 16px;
+}
+.briefing-more > .sector-illustration {
+  margin-block: 16px;
+}
+@media (max-width: 600px) {
+  .mission-panel > .sector-illustration {
+    max-block-size: 120px;
+  }
+}
+@media print {
+  .sector-illustration {
+    display: none;
+  }
+}

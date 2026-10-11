@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { SectorIllustration } from "./sector-illustration";
 import { Bot, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { difficulties, scenarios, stages, type Difficulty } from "@/lib/scenarios";
@@ -104,6 +105,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
           <div><dt>{t("briefingScreen.status")}</dt><dd className={campaign.completed.includes(scenarioChoice) ? "" : "open"}>{campaign.completed.includes(scenarioChoice) ? t("briefingScreen.cleared") : t("briefingScreen.open")}</dd></div>
         </dl>
         <h2>{activeScenario.title}</h2>
+        <SectorIllustration scenarioId={activeScenario.id} />
         <p>{activeScenario.summary}</p>
         {(() => {
           // The case's mastery ladder: the rungs climbed and the next one to try.
