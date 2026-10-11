@@ -3,6 +3,7 @@ import Link from "next/link";
 import { difficulties } from "@/lib/advanced-game";
 import { glossaryTerms, plainLanguage } from "@/lib/glossary";
 import { debriefQuestionSets, difficultyTeaches } from "@/lib/educators";
+import "./educators.css";
 
 export const metadata: Metadata = {
   title: "Educator pack | Breach Command",

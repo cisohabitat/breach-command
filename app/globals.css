@@ -99,7 +99,7 @@ body {
    title, a label or a stressed word, regular for prose. The browser's bold
    (700) on every strong and b was a third weight in both faces, and the
    reviews counted it as drift. */
-strong,b,h1,h2,h3,h4 {
+strong,b,h1,h2,h3,h4,.briefing-chain strong {
   font-weight:600;
 }
 button,a {
@@ -107,19 +107,15 @@ button,a {
 }
 button {
   cursor:pointer;
+  transition:background var(--motion-instant),border-color var(--motion-instant),transform var(--motion-instant);
 }
 button:disabled {
   cursor:not-allowed;
+  transform:none;
 }
 button:focus-visible,a:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:4px;
-}
-button {
-  transition:background var(--motion-instant),border-color var(--motion-instant),transform var(--motion-instant);
-}
-button:disabled {
-  transform:none;
 }
 h1,h2,h3,p {
   margin:0;
@@ -268,13 +264,6 @@ a {
   padding-block:12px;
   padding-inline:12px 0;
   border-bottom:1px solid var(--line);
-}
-.briefing-chain .chain-index {
-  font-family:var(--font-mono);
-  font-size:var(--type-caption);
-}
-.briefing-chain strong {
-  font-weight:600;
 }
 .briefing-chain small {
   color:var(--text-soft);
@@ -446,7 +435,7 @@ a {
   padding-inline:12px 0;
   border-bottom:1px solid var(--line);
 }
-.chain-no {
+.briefing-chain .chain-index,.chain-no {
   font-family:var(--font-mono);
   font-size:var(--type-caption);
 }
@@ -474,6 +463,9 @@ a {
   .chain-sheet .chain-technique,.chain-sheet .chain-redacted {
     grid-column:2/-1;
     grid-row:2;
+  }
+  .resume-actions button {
+    flex:1;
   }
 }
 .captain-column {
@@ -740,17 +732,18 @@ a {
     display:flex;
     flex-direction:column;
     padding:34px 22px 22px;
-}
+  }
   .intro {
     font-size:var(--type-body);
     line-height:var(--leading-prose);
   }
-  .eyebrow {
+  .eyebrow,.mission-meta {
     font-size:var(--type-caption);
   }
   .briefing-chain {
     margin:25px 0 0;
     max-width:none;
+    display:none;
   }
   .mission-panel {
     padding:22px;
@@ -759,9 +752,6 @@ a {
     min-height:0;
     font-size:var(--type-body);
     line-height:var(--leading-prose);
-  }
-  .mission-meta {
-    font-size:var(--type-caption);
   }
   .adaptation-note {
     text-align:start;
@@ -774,7 +764,7 @@ a {
   .game-heading {
     align-items:flex-start;
     flex-direction:column;
-}
+  }
   .game-heading h1 {
     font-size:clamp(var(--type-h3),3vw,var(--type-h2));
   }
@@ -818,11 +808,15 @@ a {
     font-size:var(--type-lead);
     padding-inline-end:10px;
   }
+  .case-meters {
+    flex-direction:column;
+  }
+  .difficulty-picker button {
+    justify-content:space-between;
+    gap:12px;
+  }
 }
 @media(max-width:650px) {
-  .briefing-chain {
-    display:none;
-  }
   .briefing-screen {
     gap:25px;
     padding-top:26px;
@@ -877,12 +871,13 @@ a {
   margin-top:9px;
   color:#b1a996!important;
 }
-.impact-meter {
+/* Adaptive investigation layer */
+.impact-meter,.continuity-meter {
   display:grid;
   gap:5px 8px;
   align-items:center;
 }
-.impact-meter .mono {
+.impact-meter .mono,.continuity-meter .mono {
   color:#aba28c;
 }
 .impact-meter strong {
@@ -898,52 +893,25 @@ a {
 .impact-meter>[data-slot=progress]::after,.continuity-meter>[data-slot=progress]::after,.objective-meter>[data-slot=progress]::after {
   content:none;
 }
-.impact-meter>[data-slot=progress] {
-  grid-column:1/-1;
-}
-.impact-meter small {
+/* An odd readout out in a two-column brief takes the full row, rather than
+   leaving half of it empty beside the attribution. */
+.impact-meter>[data-slot=progress],.impact-meter small,.continuity-meter>[data-slot=progress],.continuity-meter small,.briefing-readouts>div:last-child:nth-child(odd) {
   grid-column:1/-1;
 }
 @media(max-width:850px) {
   .case-meters {
     width:100%;
-}
+  }
   .game-heading .case-meters {
     align-self:stretch;
   }
-}
-@media(max-width:650px) {
-  .case-meters {
-    flex-direction:column;
-  }
-  .difficulty-picker button {
-    justify-content:space-between;
-  }
-  .difficulty-picker button {
-    gap:12px;
-  }
-}
-/* Adaptive investigation layer */
-.continuity-meter {
-  display:grid;
-  gap:5px 8px;
-  align-items:center;
-}
-.continuity-meter .mono {
-  color:#aba28c;
 }
 .continuity-meter strong {
   font-family:var(--font-mono);
   color:var(--lime);
 }
-.continuity-meter>[data-slot=progress] {
-  grid-column:1/-1;
-}
 .continuity-meter>[data-slot=progress]>div {
   background:var(--lime);
-}
-.continuity-meter small {
-  grid-column:1/-1;
 }
 @media(max-width:1100px) {
   .case-meters {
@@ -1029,11 +997,6 @@ a {
 .muted,.section-heading p {
   color:#bcb7ac;
 }
-@media(max-width:650px) {
-  .resume-actions button {
-    flex:1;
-  }
-}
 @media print {
   body {
     background:#fff;
@@ -1085,11 +1048,7 @@ html,body {
   }
 }
 @media(max-width:650px) {
-  .topbar {
-    padding-inline-start:max(18px,env(safe-area-inset-left));
-    padding-inline-end:max(18px,env(safe-area-inset-right));
-  }
-  .game-screen,.briefing-screen {
+  .topbar,.game-screen,.briefing-screen {
     padding-inline-start:max(18px,env(safe-area-inset-left));
     padding-inline-end:max(18px,env(safe-area-inset-right));
   }
@@ -1121,6 +1080,7 @@ html,body {
   .mission-selector button {
     min-width:0;
     padding-inline:4px;
+    font-size:var(--type-caption);
   }
 }
 @media(max-width:360px) {
@@ -1210,9 +1170,6 @@ html,body {
 @media(max-width:430px) {
   .career-card {
     grid-template-columns:1fr auto;
-  }
-  .mission-selector button {
-    font-size:var(--type-caption);
   }
 }
 /* Command simulation expansion */
@@ -1328,7 +1285,7 @@ html,body {
   letter-spacing:.01em;
 }
 /* The sector's mechanics sit one tap under its plain description. */
-.brief-rule-fold {
+.brief-rule-fold,.variant-brief .variant-line+p {
   margin-top:4px;
 }
 .brief-rule-fold>summary {
@@ -1339,10 +1296,6 @@ html,body {
   color:var(--lime);
   font-size:var(--type-caption);
   font-weight:500;
-}
-.brief-rule-fold>summary:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
 }
 .director-order {
   display:flex;
@@ -1363,11 +1316,6 @@ html,body {
   display:block;
   color:var(--lime);
   margin-bottom:5px;
-}
-/* An odd readout out in a two-column brief takes the full row, rather than
-   leaving half of it empty beside the attribution. */
-.briefing-readouts>div:last-child:nth-child(odd) {
-  grid-column:1/-1;
 }
 /* The brief's secondary readouts, one tap down. The summary names what it holds. */
 .briefing-more>summary {
@@ -1390,10 +1338,6 @@ html,body {
 }
 .briefing-more>summary span {
   color:var(--text-soft);
-}
-.briefing-more>summary:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
 }
 .briefing-more[open]>summary {
   margin-bottom:10px;
@@ -1701,12 +1645,10 @@ html,body {
   color:#e1dcd1;
   font-size:var(--type-body);
   cursor:pointer;
+  padding:11px 0;
 }
 .advanced-setup>summary::-webkit-details-marker {
   display:none;
-}
-.advanced-setup>summary span {
-  margin-inline-start:auto;
 }
 .advanced-setup[open]>summary {
   border-bottom:1px solid #383d45;
@@ -1811,7 +1753,7 @@ html,body {
   flex-direction:column;
   min-width:0;
 }
-.workspace-tabs strong {
+.workspace-tabs strong,.question-list button,.guided-inline label {
   font-size:var(--type-body);
 }
 /* A count is a figure in the margin, not a circled badge. */
@@ -1831,6 +1773,7 @@ html,body {
   display:grid;
   grid-template-columns:minmax(0,1.5fr) minmax(290px,1fr);
   gap:20px;
+  align-items:start;
 }
 .workspace-shell .rules-reminder {
   grid-column:1/-1;
@@ -1846,11 +1789,8 @@ html,body {
   box-shadow:none;
 }
 /* Compact operational labels sit on the caption step; card and option titles on the body step. */
-.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards span,.evidence-cards small,.evidence-cards em,.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small {
+.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards span,.evidence-cards small,.evidence-cards em,.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small,.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
   font-size:var(--type-caption);
-}
-.question-list button,.guided-inline label {
-  font-size:var(--type-body);
 }
 @media(max-width:900px) {
   .workspace-tabs {
@@ -1954,14 +1894,11 @@ html,body {
   box-shadow:0 24px 60px #0008;
   scrollbar-color:#b3a993 transparent;
 }
-.game-dialog.paper-dialog [data-slot=dialog-description] {
+.game-dialog.paper-dialog [data-slot=dialog-description],.paper-dialog .eyebrow {
   color:#4a463e;
 }
 .game-dialog.paper-dialog [data-slot=dialog-close] {
   color:#1d1b18;
-}
-.paper-dialog .eyebrow {
-  color:#4a463e;
 }
 .paper-dialog button:focus-visible,.paper-dialog a:focus-visible,.paper-dialog:focus-visible {
   outline-color:#1d1b18;
@@ -2042,7 +1979,7 @@ html,body {
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
-input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-actions:focus-visible {
+.brief-rule-fold>summary:focus-visible,.briefing-more>summary:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-actions:focus-visible,.sit-link:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
@@ -2078,10 +2015,13 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
   background:transparent;
   color:#e8d6b4;
 }
+/* The sticky start carries the panel under it to the viewport's edge, so the
+   text it passes over does not show through the gap beneath it. */
 .start-button {
   position:sticky;
   bottom:14px;
   z-index:5;
+  box-shadow:0 14px 0 0 #1a1d21,0 -10px 18px #1a1d21;
 }
 /* On a laptop-height screen the sticky start sat over the difficulty cards on
    first load. One row of case numbers and the variant without its paragraph
@@ -2116,7 +2056,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,.investigation-a
 @media(max-width:650px) {
   .start-button {
     position:static;
-}
+  }
   .storage-notice {
     margin:0 18px;
   }
@@ -2461,7 +2401,7 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
 .sit-entry.adversary .sit-figure {
   color:#dab6cd;
 }
-.sit-lead {
+.sit-lead,.sit-body p,.sit-body>small {
   max-width:var(--measure-prose);
 }
 .sit-order .sit-label {
@@ -2484,12 +2424,8 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   text-underline-offset:4px;
   cursor:pointer;
 }
-.sit-link:hover {
+.sit-link:hover,.text-action:hover {
   text-decoration-thickness:2px;
-}
-.sit-link:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
 }
 /* The brief's readouts are a definition list, the term in the margin and the
    entry beside it, not three cards in the paper. */
@@ -2548,7 +2484,7 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   width:1.2em;
   font-family:var(--font-mono);
 }
-.paper-dialog .briefing-more[open]>summary::before {
+.paper-dialog .briefing-more[open]>summary::before,.advanced-setup[open]>summary::before {
   content:"−";
 }
 .paper-dialog .briefing-more>summary>span {
@@ -2627,13 +2563,13 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
 }
 /* Business impact takes the warning colour when it is rising, not before:
    amber beside "Contained" said warning about a meter that was not one. */
-.impact-meter strong {
+.impact-meter strong,.variant-brief strong,.form-row.on-desk dd,.form-row.on-desk dd.open {
   color:#f6f1e4;
 }
 .impact-meter>[data-slot=progress]>div {
   background:#d9cfb6;
 }
-.impact-meter small {
+.impact-meter small,.form-row.on-desk dt {
   color:var(--text-soft);
 }
 /* The active tab keeps its underline under the pointer too. */
@@ -2651,20 +2587,12 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   width:430px;
   max-width:100%;
 }
-/* A label that wraps and one that does not end on the same line: the label box
-   keeps its two-line height and sets its text at the bottom of it. */
-.case-meters>div>.mono {
-  display:flex;
-  align-items:flex-end;
-}
 /* The captain's panel labels are labels, not data: sentence case in the body
    face. The actor model is an annotation, a rule in the margin rather than a box
    in the panel, and the roll rule under both panels is a footnote. */
 .brief-label {
   font-family:var(--font-ui);
   letter-spacing:0;
-}
-.brief-label {
   font-weight:600;
 }
 .adversary-read {
@@ -2711,9 +2639,6 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   text-underline-offset:4px;
   cursor:pointer;
 }
-.text-action:hover {
-  text-decoration-thickness:2px;
-}
 .text-action:focus-visible {
   outline:2px solid currentColor;
   outline-offset:2px;
@@ -2733,6 +2658,9 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   transform:translateY(-50%);
   color:var(--text-soft);
   font:500 var(--type-micro) var(--font-mono);
+  font-family:var(--font-ui);
+  text-transform:none;
+  letter-spacing:0;
 }
 [data-slot=switch][data-state=checked]::before {
   content:"On" / "";
@@ -2744,9 +2672,6 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
    so Command has one right-hand column from top to bottom. */
 .sit-entry.compact {
   padding:9px 0;
-}
-.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
-  font-size:var(--type-caption);
 }
 .sit-entry.compact .sit-body>small {
   display:inline;
@@ -2769,9 +2694,6 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   border-radius:0;
   background:none;
 }
-.workspace-shell .captain-column {
-  align-items:start;
-}
 .workspace-shell .captain-panel {
   min-height:0;
 }
@@ -2790,9 +2712,12 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   position:relative;
   padding-inline-start:1.4em;
 }
+/* A fold's mark is centred on its title's first line. */
 .paper-dialog .debrief-fold>summary::before,.paper-dialog .briefing-more>summary::before {
   position:absolute;
   inset-inline-start:0;
+  top:10px;
+  line-height:inherit;
 }
 .briefing-screen {
   align-items:start;
@@ -2820,11 +2745,6 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   text-transform:none;
   letter-spacing:0;
 }
-[data-slot=switch]::before {
-  font-family:var(--font-ui);
-  text-transform:none;
-  letter-spacing:0;
-}
 .case-line .mono {
   font-family:var(--font-mono);
 }
@@ -2832,13 +2752,14 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   font-weight:500;
   color:var(--text-soft);
 }
+/* A label that wraps and one that does not end on the same line: the label box
+   keeps its two-line height and sets its text at the bottom of it. */
 .case-meters>div>.mono {
+  display:flex;
+  align-items:flex-end;
   font-size:var(--type-caption);
 }
-.operation-status>.mono,.sector-margin-line .mono {
-  font-size:var(--type-caption);
-}
-.chain-status,.resolution-steps li b {
+.operation-status>.mono,.sector-margin-line .mono,.chain-status,.resolution-steps li b {
   font-size:var(--type-caption);
 }
 /* A heading that took focus programmatically shows its ring to keyboard users
@@ -2851,18 +2772,10 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   outline:1px solid currentColor;
   outline-offset:6px;
 }
-/* A fold's mark is centred on its title's first line. */
-.paper-dialog .debrief-fold>summary::before,.paper-dialog .briefing-more>summary::before {
-  top:10px;
-  line-height:inherit;
-}
 /* A meter's bar runs the width of its entry, so it reaches toward its figure;
    only the prose keeps the reading measure. */
 .sit-body {
   max-width:none;
-}
-.sit-body p,.sit-body>small {
-  max-width:var(--measure-prose);
 }
 /* Tabs are one line, the count read inline after the name. A name over a
    subtitle with a count in the corner was a product's navigation. */
@@ -2894,9 +2807,6 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   font-family:var(--font-serif);
   font-weight:500;
 }
-.variant-brief strong {
-  color:#f6f1e4;
-}
 /* Polish after the round-8 grade. */
 /* Advanced settings are a ruled fold with a mark, not a bordered bar with an
    icon and a tag. */
@@ -2906,19 +2816,14 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   border-bottom:1px solid #383d45;
   border-radius:0;
 }
-.advanced-setup>summary {
-  padding:11px 0;
-}
 .advanced-setup>summary::before {
   content:"+";
   width:1.2em;
   font-family:var(--font-mono);
   color:var(--text-soft);
 }
-.advanced-setup[open]>summary::before {
-  content:"−";
-}
 .advanced-setup>summary span {
+  margin-inline-start:auto;
   color:var(--text-soft);
   font:400 var(--type-caption) var(--font-ui);
 }
@@ -2990,6 +2895,8 @@ body {
 .case-meters>div {
   padding:9px 0 8px;
   border-inline-start:0;
+  grid-row:span 3;
+  grid-template-rows:subgrid;
 }
 /* A form row on the desk: the same cells in the desk's rules. */
 .form-row.on-desk {
@@ -2998,15 +2905,6 @@ body {
 }
 .form-row.on-desk>div {
   border-inline-start-color:#4a4f57;
-}
-.form-row.on-desk dt {
-  color:var(--text-soft);
-}
-.form-row.on-desk dd {
-  color:#f6f1e4;
-}
-.form-row.on-desk dd.open {
-  color:#f6f1e4;
 }
 .slip-form {
   margin-bottom:10px;
@@ -3059,10 +2957,6 @@ body {
   grid-template-rows:auto auto auto;
   align-items:stretch;
 }
-.case-meters>div {
-  grid-row:span 3;
-  grid-template-rows:subgrid;
-}
 @media(min-width:1101px) {
   .case-meters {
     display:grid;
@@ -3072,7 +2966,7 @@ body {
 /* The tabs carry no rule of their own: each workspace opens on a ruled
    section, and a rule under the tabs as well drew two lines twenty pixels
    apart. The active tab's underline is the strip's edge. */
-.workspace-tabs {
+.workspace-tabs,.chain-sheet li:last-child {
   border-bottom:0;
 }
 /* The attack chain is the one sheet of paper on the desk: a released evidence
@@ -3086,9 +2980,6 @@ body {
   border-top:0;
   background:#f1ece1;
   color:#1d1b18;
-}
-.chain-sheet li:last-child {
-  border-bottom:0;
 }
 .chain-sheet li:nth-child(1) .chain-no {
   color:#9e3220;
@@ -3109,13 +3000,24 @@ body {
 .chain-sheet .chain-status {
   color:#4a463e;
 }
+/* The roster's caption reads under the name when the row is narrow, rather
+   than wrapping at the right edge. */
 @media(max-width:650px) {
   .chain-sheet {
     padding:2px 12px;
   }
+  .specialist-roster button {
+    grid-template-columns:1.4rem minmax(0,1fr);
+    row-gap:1px;
+  }
+  .specialist-roster small {
+    grid-column:2;
+    justify-self:start;
+    text-align:start;
+  }
 }
 /* A rule behind its fold: a quiet line with a + mark, opening in place. */
-.sit-more,.career-card .standing-effects {
+.sit-more,.career-card .standing-effects,.sit-more>p+p {
   margin-top:6px;
 }
 .sit-more>summary,.career-card .standing-effects>summary {
@@ -3141,20 +3043,12 @@ body {
 .sit-more[open]>summary::before,.career-card .standing-effects[open]>summary::before {
   content:"\2212";
 }
-.sit-more>p+p {
-  margin-top:6px;
-}
 /* What a fold holds is read at caption size in the body face. Set at 10 px in
    the condensed face, the counts read as debug scaffolding. */
 .briefing-more>summary span,.hypothesis-compare>summary span,.modifier-details>summary span,.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span,.reference-fold>summary span {
   font-family:var(--font-ui);
   font-size:var(--type-caption);
   letter-spacing:0;
-}
-/* The sticky start carries the panel under it to the viewport's edge, so the
-   text it passes over does not show through the gap beneath it. */
-.start-button {
-  box-shadow:0 14px 0 0 #1a1d21,0 -10px 18px #1a1d21;
 }
 /* The act is a word and a figure on the title's baseline. */
 .campaign-act-card {
@@ -3197,27 +3091,11 @@ body {
   margin:0;
   color:inherit;
 }
-.variant-brief .variant-line+p {
-  margin-top:4px;
-}
 /* A button's label is set at its left edge everywhere, as on the slip: some
    were centred and some were not. */
 .primary-button,.secondary-button {
   justify-content:flex-start;
   text-align:start;
-}
-/* The roster's caption reads under the name when the row is narrow, rather
-   than wrapping at the right edge. */
-@media(max-width:650px) {
-  .specialist-roster button {
-    grid-template-columns:1.4rem minmax(0,1fr);
-    row-gap:1px;
-  }
-  .specialist-roster small {
-    grid-column:2;
-    justify-self:start;
-    text-align:start;
-  }
 }
 .game-loading h1 {
   color:var(--text-soft);
@@ -3265,9 +3143,6 @@ body {
     flex-wrap:wrap;
     align-items:baseline;
     gap:4px 8px;
-  }
-  .operation-status .turn-progress {
-    display:none;
   }
   .case-meters {
     grid-template-columns:repeat(3,minmax(0,1fr));
@@ -3317,9 +3192,6 @@ body {
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .hypothesis-standing .reading-for,.sector-margin-line .margin-prefix {
-    display:none;
-  }
   .sector-margin-line .margin-word {
     text-transform:capitalize;
   }
@@ -3332,14 +3204,6 @@ body {
   }
   .workspace-shell {
     padding-top:12px;
-  }
-  /* The tab label ran underneath its own count badge: the button is a flex row
-     and the label had no min-width, so it overflowed instead of shrinking. */
-  /* The tab label ran underneath its own count badge: the button is a flex row
-     and the label had nowhere to shrink to. Truncating the label to "Inv..." is
-     worse than dropping the count, which the workspace itself repeats. */
-  .workspace-tabs button>b {
-    display:none;
   }
   .workspace-tabs button>span {
     min-width:0;
@@ -3399,7 +3263,12 @@ body {
 /* On a phone the tabs bar is already most of what is pinned; the strip is for
    tablets and wider, where the meters sit a screen or more above the map. */
 @media(max-width:650px) {
-  .pinned-readouts,.pinned-readouts.shown {
+  /* The tab label ran underneath its own count badge: the button is a flex row
+     and the label had no min-width, so it overflowed instead of shrinking. */
+  /* The tab label ran underneath its own count badge: the button is a flex row
+     and the label had nowhere to shrink to. Truncating the label to "Inv..." is
+     worse than dropping the count, which the workspace itself repeats. */
+  .operation-status .turn-progress,.hypothesis-standing .reading-for,.sector-margin-line .margin-prefix,.workspace-tabs button>b,.pinned-readouts,.pinned-readouts.shown {
     display:none;
   }
 }
@@ -3448,8 +3317,6 @@ body {
   }
   .paper-dialog .debrief-fold>summary span,.paper-dialog .briefing-more>summary>span {
     flex-basis:100%;
-}
-  .paper-dialog .debrief-fold>summary span,.paper-dialog .briefing-more>summary>span {
     margin-inline-start:0;
   }
   /* The case numbers stay one line of figures on a phone, not a pager grid. */

@@ -5,9 +5,12 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { consolidate } from "../scripts/css-consolidate.ts";
 
-// Both sheets: the page's and the game's (components/game/game.css).
-const css = ["../app/globals.css", "../components/game/game.css"].flatMap(path => readFileSync(new URL(path, import.meta.url), "utf8").split("\n"));
+// Every sheet: the page's, the game's (components/game/game.css) and the
+// educator pack's (app/educators/educators.css).
+const sheets = ["../app/globals.css", "../components/game/game.css", "../app/educators/educators.css"];
+const css = sheets.flatMap(path => readFileSync(new URL(path, import.meta.url), "utf8").split("\n"));
 
 test("the stylesheet uses logical properties for every inline-direction declaration", () => {
   const physical = /^\s*(margin-(left|right)|padding-(left|right)|border-(left|right)(-[a-z]+)?|left|right|border-(top|bottom)-(left|right)-radius)\s*:/;
@@ -24,4 +27,15 @@ test("no four-value shorthand sets left and right differently", () => {
     return parts.length === 4 && parts[1] !== parts[3];
   });
   assert.deepEqual(offenders.map(line => line.trim()), [], "split it into -block and -inline");
+});
+
+test("no two rules could be one", () => {
+  // Rules for the same selectors in the same media query, rules with the same
+  // declarations and blocks for the same query are merged wherever the cascade
+  // allows (scripts/css-consolidate.ts); a new rule that could join one already
+  // there is written into it. Run the script with --apply to do it.
+  for (const path of sheets) {
+    const { changes } = consolidate(readFileSync(new URL(path, import.meta.url), "utf8"));
+    assert.deepEqual(changes.map(change => `${change.kind}: ${change.detail}`), [], `${path.slice(3)} can be consolidated`);
+  }
 });

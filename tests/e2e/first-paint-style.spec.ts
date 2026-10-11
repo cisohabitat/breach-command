@@ -39,3 +39,16 @@ for (const width of [390, 1280]) {
     });
   }
 }
+
+// A route outside the game never loads the game's sheet, so a rule it needs
+// must reach it some other way. The educator pack imports its own
+// (app/educators/educators.css); after the split it was briefly left in the
+// game's, and the page showed as unstyled text.
+test("the educator pack is styled without the game", async ({ page }) => {
+  await page.goto("/educators", { waitUntil: "networkidle" });
+  const style = await page.locator(".educator-pack").evaluate(element => {
+    const computed = getComputedStyle(element);
+    return { maxWidth: computed.maxWidth, background: computed.backgroundColor };
+  });
+  expect(style).toEqual({ maxWidth: "760px", background: "rgb(239, 233, 220)" });
+});

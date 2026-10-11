@@ -343,7 +343,7 @@
   display:block;
   color:#2f2c27;
 }
-.result-roll.failure>div>span {
+.result-roll.failure>div>span,.decision-summary p em+em {
   color:#4a463e;
 }
 .result-roll strong {
@@ -440,7 +440,7 @@
   padding-top:23px;
   border-top:1px solid #3d434c;
 }
-.attribution p {
+.attribution p,.end-banner .primary-button {
   font-size:var(--type-body);
 }
 .attribution a {
@@ -476,9 +476,6 @@
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
-}
-.end-banner .primary-button {
-  font-size:var(--type-body);
 }
 .debrief-stats {
   display:grid;
@@ -572,18 +569,12 @@
   }
 }
 @media(max-width:650px) {
-  .eyebrow {
+  .eyebrow,.section-heading p,.established-key,.procedure-bottom,.result-roll>div>span,.debrief-stats span,.found-label,.missed-label {
     font-size:var(--type-caption);
   }
   .section-heading {
     gap:10px;
     align-items:flex-start;
-  }
-  .section-heading p {
-    font-size:var(--type-caption);
-  }
-  .established-key {
-    font-size:var(--type-caption);
   }
   .procedure-grid {
     grid-template-columns:repeat(2,minmax(0,1fr));
@@ -596,12 +587,9 @@
   .procedure-top {
     margin-bottom:15px;
   }
-  .procedure-card h3 {
+  .procedure-card h3,.log-entry strong {
     font-size:var(--type-body);
   }
-  .procedure-bottom {
-    font-size:var(--type-caption);
-}
   .guide-nudge {
     align-items:flex-start;
     max-width:var(--measure-prose);
@@ -612,9 +600,6 @@
   }
   .journal-entries {
     max-height:none;
-  }
-  .log-entry strong {
-    font-size:var(--type-body);
   }
   .game-dialog {
     padding:24px 20px!important;
@@ -636,20 +621,11 @@
   .result-roll>svg {
     display:none;
   }
-  .result-roll>div>span {
-    font-size:var(--type-caption);
-  }
   .debrief-stats {
     gap:10px;
   }
-  .debrief-stats span {
-    font-size:var(--type-caption);
-  }
   .end-banner .primary-button {
     width:100%;
-  }
-  .found-label,.missed-label {
-    font-size:var(--type-caption);
   }
   .roll-preview {
     gap:7px;
@@ -663,7 +639,7 @@
 .impact-meter.critical strong,.impact-meter.critical small {
   color:#ff967d;
 }
-.impact-meter.critical>[data-slot=progress]>div {
+.impact-meter.critical>[data-slot=progress]>div,.continuity-meter.critical>[data-slot=progress]>div {
   background:#ff967d;
 }
 .evidence-decision {
@@ -785,7 +761,7 @@
   border-top:1px solid #c9bfac;
   letter-spacing:.01em;
 }
-.decision-summary p strong {
+.decision-summary p strong,.paper-dialog .timeline p strong {
   color:#1d1b18;
   font-weight:500;
 }
@@ -813,9 +789,6 @@
 }
 .continuity-meter.critical strong,.continuity-meter.critical small {
   color:#ff967d;
-}
-.continuity-meter.critical>[data-slot=progress]>div {
-  background:#ff967d;
 }
 /* The working hypothesis is a section on the desk, ruled at the top like the
    procedures beside it. As a light card it read as a theme switch rather than a
@@ -1090,7 +1063,7 @@
   padding:6px 0;
   font-size:var(--type-caption);
 }
-.score-breakdown span {
+.score-breakdown span,.debrief-stats span {
   color:#4a463e;
 }
 .score-breakdown strong {
@@ -1121,7 +1094,7 @@
   padding:10px 0;
   border-top:1px solid #2c3036;
 }
-.timeline>details>div>span {
+.timeline>details>div>span,.paper-dialog .timeline>details>div>span {
   font:500 var(--type-caption) var(--font-mono);
   color:var(--lime);
 }
@@ -1153,10 +1126,6 @@
   padding:10px 0;
   border-top:1px solid #c9bfac;
 }
-.paper-dialog .timeline>details>div>span {
-  font:500 var(--type-caption) var(--font-mono);
-  color:var(--lime);
-}
 .paper-dialog .timeline p {
   font-size:var(--type-body);
   color:#2f2c27;
@@ -1164,18 +1133,11 @@
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
-.paper-dialog .timeline p strong {
-  color:#1d1b18;
-  font-weight:500;
-}
 .paper-dialog .timeline small {
   display:block;
   color:#4a463e;
   font-size:var(--type-caption);
   margin-top:4px;
-}
-.decision-summary p em+em {
-  color:#4a463e;
 }
 .debrief-actions {
   display:grid;
@@ -1183,9 +1145,6 @@
 }
 .impact-meter .mono,.impact-meter small,.continuity-meter .mono,.continuity-meter small,.objective-meter .mono,.objective-meter small,.difficulty-picker small,.response-options small {
   font-size:var(--type-caption);
-}
-.debrief-stats span {
-  color:#4a463e;
 }
 .muted,.section-heading p {
   color:#bcb7ac;
@@ -1199,7 +1158,7 @@
   }
 }
 @media print {
-  .topbar,.game-screen,.briefing-screen,[data-radix-dialog-overlay] {
+  .topbar,.game-screen,.briefing-screen,[data-radix-dialog-overlay],.debrief-dialog button,html.print-facilitator .debrief-dialog>:not(.facilitator-sheet) {
     display:none!important;
   }
   .debrief-dialog {
@@ -1225,9 +1184,6 @@
     color:#5f5a50!important;
     background:transparent!important;
   }
-  .debrief-dialog button {
-    display:none!important;
-  }
   .timeline {
     border-color:#777!important;
     break-inside:avoid;
@@ -1240,9 +1196,6 @@
   html.print-facilitator .debrief-dialog {
     background:#fff!important;
     padding:0!important;
-  }
-  html.print-facilitator .debrief-dialog>:not(.facilitator-sheet) {
-    display:none!important;
   }
   html.print-facilitator .debrief-dialog .facilitator-sheet {
     display:block!important;
@@ -1288,7 +1241,7 @@
     list-style:decimal;
   }
 }
-.facilitator-sheet {
+.facilitator-sheet,.evidence-timeline span:last-child i {
   display:none;
 }
 [data-slot=dialog-close] {
@@ -1298,11 +1251,6 @@
   place-items:center;
   top:6px!important;
   inset-inline-end:6px!important;
-}
-@media(max-width:850px) {
-  .game-heading>div:first-child {
-    width:100%;
-  }
 }
 @media(max-width:430px) {
   .top-actions .quiet-button>span {
@@ -1572,7 +1520,7 @@
 .capability-review .unlocked strong {
   color:var(--lime);
 }
-.settings-list {
+.settings-list,.local-telemetry span,.case-theory>div:first-child span {
   display:flex;
   flex-direction:column;
 }
@@ -1614,6 +1562,9 @@
   outline-width:3px;
 }
 @media(max-width:850px) {
+  .game-heading>div:first-child {
+    width:100%;
+  }
   .map-path {
     gap:10px;
   }
@@ -1632,7 +1583,7 @@
     grid-template-columns:1fr 1fr;
     gap:16px 8px;
   }
-  .map-step:nth-child(2) .map-link {
+  .map-step:nth-child(2) .map-link,.investigation-dashboard .procedure-card.established .procedure-bottom svg,.hypothesis-board.has-reading .hypothesis-standing .standing-meter {
     display:none;
   }
   .map-link {
@@ -1678,9 +1629,6 @@
   margin-top:5px;
   letter-spacing:.01em;
 }
-.mode-picker button.active small {
-  display:block;
-}
 .specialist-picker label,.specialist-head {
   display:flex;
   flex-direction:column;
@@ -1688,7 +1636,7 @@
   gap:4px;
   margin-bottom:9px;
 }
-.sector-read.diverged {
+.sector-read.diverged,.report-standing.level-weakening,.report-standing.level-unsupported {
   border-inline-start-color:var(--lime);
 }
 .tutorial-coach {
@@ -1797,21 +1745,18 @@
   color:#b1a997;
   margin-top:4px;
 }
-.procedure-planner {
+.procedure-planner,.procedure-planner>div>div {
   display:grid;
 }
 .procedure-planner>div>.eyebrow {
   display:block;
   margin-bottom:7px;
 }
-.procedure-planner>div>div {
-  display:grid;
-}
 .procedure-planner button {
   color:#ccc6b7;
   text-align:start;
 }
-.procedure-planner strong {
+.mode-picker button.active small,.procedure-planner strong,.correlation-results p strong {
   display:block;
 }
 .procedure-planner small {
@@ -1915,10 +1860,6 @@
   gap:10px;
   color:var(--lime);
 }
-.local-telemetry span {
-  display:flex;
-  flex-direction:column;
-}
 .local-telemetry b {
   font-size:var(--type-body);
   color:#e8e5dd;
@@ -1977,10 +1918,7 @@
     flex-direction:column;
     gap:4px;
   }
-  .tutorial-steps {
-    grid-template-columns:1fr;
-  }
-  .campaign-consequences {
+  .tutorial-steps,.campaign-consequences {
     grid-template-columns:1fr;
   }
 }
@@ -2122,9 +2060,6 @@
   margin-top:10px;
   font-style:normal;
 }
-.topology-nodes .focused em {
-  color:var(--lime);
-}
 /* The hover background is lighter, and the state line in its resting grey fell
    below contrast there; it was found when "Open the map" left the pointer
    resting on a node after the jump. */
@@ -2220,7 +2155,7 @@
   padding:3px 5px;
   border-radius:3px;
 }
-.confidence-high {
+.topology-nodes .focused em,.confidence-high,.advanced-setup>summary svg,.topology-routes>div.route-confirmed i {
   color:var(--lime);
 }
 .confidence-moderate {
@@ -2258,9 +2193,6 @@
   border-color:var(--lime);
   background:#20242a;
   color:var(--lime);
-}
-.correlation-results p strong {
-  display:block;
 }
 .correlation-results p span {
   display:block;
@@ -2379,13 +2311,10 @@
   .campaign-act-card,.campaign-ending {
     max-width:none;
   }
-  .topology-nodes button:last-child {
+  .topology-nodes button:last-child,.relationship-assessment>span {
     grid-column:1/-1;
   }
-  .evidence-cards {
-    grid-template-columns:1fr;
-  }
-  .set-piece-options {
+  .evidence-cards,.set-piece-options {
     grid-template-columns:1fr;
   }
   .advanced-review {
@@ -2400,14 +2329,11 @@
   .topology-nodes button:last-child {
     grid-column:auto;
   }
-  .challenge-load {
+  .challenge-load,.advanced-review {
     grid-template-columns:1fr;
   }
   .challenge-load button {
     height:40px;
-  }
-  .advanced-review {
-    grid-template-columns:1fr;
   }
 }
 @media(min-width:651px) and (max-width:1100px) {
@@ -2478,10 +2404,6 @@
   gap:9px;
   color:var(--lime);
 }
-.case-theory>div:first-child span {
-  display:flex;
-  flex-direction:column;
-}
 .case-theory strong {
   color:#e6e2d9;
 }
@@ -2499,6 +2421,8 @@
   margin-top:11px;
   border-top:1px solid #383d45;
 }
+/* Each theory carries its question in words, and the recorded one says so:
+   a touch screen never shows a title tooltip, and colour alone marked it. */
 .case-theory button {
   position:relative;
   min-height:40px;
@@ -2509,6 +2433,10 @@
   border-radius:0;
   padding-block:8px;
   padding-inline:28px 0;
+  display:grid;
+  gap:3px;
+  align-content:start;
+  text-align:start;
 }
 .case-theory button::before {
   content:"";
@@ -2527,14 +2455,6 @@
 }
 .case-theory button.active {
   color:#f6f1e4;
-}
-/* Each theory carries its question in words, and the recorded one says so:
-   a touch screen never shows a title tooltip, and colour alone marked it. */
-.case-theory button {
-  display:grid;
-  gap:3px;
-  align-content:start;
-  text-align:start;
 }
 .case-theory button small {
   color:var(--text-soft);
@@ -2566,9 +2486,6 @@
   background:#42474e;
   flex:1;
   margin:0 6px;
-}
-.evidence-timeline span:last-child i {
-  display:none;
 }
 .evidence-timeline span.selected {
   color:#e8ca6a;
@@ -2710,9 +2627,6 @@
 .advanced-setup>summary::-webkit-details-marker {
   display:none;
 }
-.advanced-setup>summary svg {
-  color:var(--lime);
-}
 .case-meters {
   display:flex;
 }
@@ -2810,7 +2724,14 @@
 /* The folded pair replaces the four cards once a reading is recorded, at every
    width: the declared reading appeared twice on a wide screen, and the column ran
    nine hundred pixels beside the procedures. */
-.hypothesis-detail,.hypothesis-compare {
+/* Four expanded premises are 955px on a phone and push the procedure grid three
+   screens down. Once a reading is recorded the cards give way to a compact
+   strip, and all four stay one tap away inside the comparison — where they are
+   still selectable, so changing the reading costs a tap, not a lost control. */
+/* The standing readout above already names the reading and how it is holding
+   up, so the strip carries only what it does not: the sources this reading
+   predicts. The premise is one tap away in the comparison. */
+.hypothesis-detail,.hypothesis-compare,.hypothesis-board.has-reading .hypothesis-options,.hypothesis-detail>strong,.hypothesis-detail>span {
   display:none;
 }
 .hypothesis-detail {
@@ -2826,7 +2747,7 @@
 .hypothesis-detail strong {
   color:var(--lime);
 }
-.hypothesis-detail span,.hypothesis-detail small {
+.hypothesis-detail span,.hypothesis-detail small,.hypothesis-compare>summary span,.hypothesis-compare-options button span {
   color:var(--text-soft);
 }
 /* Beside the strip, which already lists the reading's sources, the comparison
@@ -2838,21 +2759,8 @@
   font-size:var(--type-caption);
   line-height:var(--leading-base);
 }
-/* Four expanded premises are 955px on a phone and push the procedure grid three
-   screens down. Once a reading is recorded the cards give way to a compact
-   strip, and all four stay one tap away inside the comparison — where they are
-   still selectable, so changing the reading costs a tap, not a lost control. */
-.hypothesis-board.has-reading .hypothesis-options {
-  display:none;
-}
 .hypothesis-board.has-reading .hypothesis-detail {
   display:grid;
-}
-/* The standing readout above already names the reading and how it is holding
-   up, so the strip carries only what it does not: the sources this reading
-   predicts. The premise is one tap away in the comparison. */
-.hypothesis-detail>strong,.hypothesis-detail>span {
-  display:none;
 }
 /* The comparison shows wherever the board stacks, so its summary is styled
    here and not only on a phone, where it once ran "readingsnone" together. */
@@ -2879,14 +2787,7 @@
 .hypothesis-compare>summary::-webkit-details-marker {
   display:none;
 }
-.hypothesis-compare>summary:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
-}
-.hypothesis-compare>summary span {
-  color:var(--text-soft);
-}
-.hypothesis-compare dl {
+.hypothesis-compare dl,.first-read dl {
   margin:9px 0 0;
   display:grid;
   gap:9px;
@@ -2902,7 +2803,9 @@
   line-height:var(--leading-base);
 }
 /* Before a reading is recorded the four cards already are the comparison. */
-.hypothesis-board:not(.has-reading) .hypothesis-compare {
+/* The reference column is a fold only on a phone; beside the actions it is
+   always open and its summary is not shown. */
+.hypothesis-board:not(.has-reading) .hypothesis-compare,.reference-fold>summary {
   display:none;
 }
 .hypothesis-compare-options {
@@ -2918,13 +2821,6 @@
   color:var(--text);
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-}
-.hypothesis-compare-options button span {
-  color:var(--text-soft);
-}
-.hypothesis-compare-options button:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
 }
 /* What a completed check that found nothing actually settled. It sits in the
    captain's report because that is where the player is looking when the turn
@@ -2944,9 +2840,6 @@
   font-size:var(--type-caption);
   line-height:var(--leading-base);
 }
-.report-standing.level-weakening,.report-standing.level-unsupported {
-  border-inline-start-color:var(--lime);
-}
 .investigation-dashboard {
   display:grid;
   /* The reading sits above the reference material on the left, the actions hold
@@ -2963,11 +2856,6 @@
 .investigation-context {
   grid-area:context;
 }
-/* The reference column is a fold only on a phone; beside the actions it is
-   always open and its summary is not shown. */
-.reference-fold>summary {
-  display:none;
-}
 .investigation-actions {
   grid-area:actions;
 }
@@ -2978,10 +2866,7 @@
   margin-bottom:0;
 }
 /* The board's own top margin left it twenty pixels below the procedures beside it. */
-.investigation-lead>.hypothesis-board:first-child {
-  margin-top:0;
-}
-.investigation-dashboard .infrastructure-console {
+.investigation-lead>.hypothesis-board:first-child,.investigation-dashboard .infrastructure-console {
   margin-top:0;
 }
 .investigation-dashboard .evidence-workspace {
@@ -3026,7 +2911,7 @@
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
-.action-sheet .procedure-planner {
+.action-sheet .procedure-planner,.campaign-change li+li {
   margin-top:4px;
 }
 /* The fade above the sticky button hides what scrolls up to it; the solid
@@ -3062,9 +2947,6 @@
   background:#342d1b;
   color:#f1dc91;
 }
-.topology-routes>div {
-  padding-inline-end:72px;
-}
 .topology-routes>div i {
   position:absolute;
   inset-inline-end:0;
@@ -3077,16 +2959,15 @@
 .topology-routes>div.route-confirmed {
   box-shadow:inset 2px 0 var(--lime);
 }
-.topology-routes>div.route-confirmed i {
-  color:var(--lime);
-}
 .topology-routes>div.route-suspected {
   box-shadow:inset 2px 0 #e4c15f;
 }
 .topology-routes>div.route-suspected i {
   color:#e4c15f;
 }
-.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards span,.evidence-cards small,.evidence-cards em,.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small {
+/* Node names sit in narrow cells beside each other; at the body step the
+   longest word in "Management edge" was wider than its cell. */
+.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards span,.evidence-cards small,.evidence-cards em,.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small,.topology-nodes button strong,.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
   font-size:var(--type-caption);
 }
 @media(max-width:900px) {
@@ -3123,7 +3004,7 @@
   }
   .hypothesis-options button {
     min-height:48px;
-}
+  }
   .investigation-actions {
     position:static;
     max-height:none;
@@ -3158,64 +3039,13 @@
   .relationship-assessment {
     grid-template-columns:1fr 1fr;
   }
-  .relationship-assessment>span {
-    grid-column:1/-1;
-  }
   .action-sheet {
     inset:0!important;
     width:100%!important;
     max-width:none!important;
   }
 }
-@media(max-width:380px) {
-  .workspace-tabs button>svg {
-    display:none;
-  }
-  .workspace-tabs button {
-    padding-inline:5px;
-  }
-  .workspace-tabs button>b {
-    display:none;
-  }
-}
-@media(prefers-reduced-motion:reduce) {
-  .workspace-tabs {
-    backdrop-filter:none;
-  }
-}
-.sector-theme-1 {
-  --sector-accent:#e5d6b2;
-  --sector-glow:#2a2d32;
-}
-.sector-theme-2 {
-  --sector-accent:#e5d6b2;
-  --sector-glow:#2a2d32;
-}
-.sector-theme-3 {
-  --sector-accent:#e5d6b2;
-  --sector-glow:#2a2d32;
-}
-.sector-theme-4 {
-  --sector-accent:#e5d6b2;
-  --sector-glow:#2a2d32;
-}
-.sector-theme-5 {
-  --sector-accent:#e5d6b2;
-  --sector-glow:#2a2d32;
-}
-.sector-theme-6 {
-  --sector-accent:#e5d6b2;
-  --sector-glow:#2a2d32;
-}
-.sector-theme-7 {
-  --sector-accent:#e5d6b2;
-  --sector-glow:#2a2d32;
-}
-.sector-theme-8 {
-  --sector-accent:#e5d6b2;
-  --sector-glow:#2a2d32;
-}
-.sector-theme-9 {
+.sector-theme-1,.sector-theme-2,.sector-theme-3,.sector-theme-4,.sector-theme-5,.sector-theme-6,.sector-theme-7,.sector-theme-8,.sector-theme-9 {
   --sector-accent:#e5d6b2;
   --sector-glow:#2a2d32;
 }
@@ -3260,7 +3090,7 @@
   border-color:#d16f62;
   background:#211c1b;
 }
-.topology-nodes button.isolated em {
+.topology-nodes button.isolated em,.topology-routes>div.route-blocked i {
   color:#ef8d7e;
 }
 .topology-nodes button.restored {
@@ -3274,9 +3104,6 @@
   box-shadow:inset 2px 0 #d16f62;
   opacity:.72;
 }
-.topology-routes>div.route-blocked i {
-  color:#ef8d7e;
-}
 /* The selected node takes its own row and the two actions share the next, so
    each action's cost has room to read as a column of meters. */
 .map-command-bar {
@@ -3286,6 +3113,7 @@
 }
 .map-command-bar>div {
   grid-column:1/-1;
+  border-color:#4a4f57;
 }
 .map-command-bar>div,.map-command-bar>button {
   color:#d9d4c7;
@@ -3305,9 +3133,6 @@
   text-transform:none;
   margin-top:0;
   color:var(--text-soft);
-}
-.map-command-bar>div {
-  border-color:#4a4f57;
 }
 .map-command-bar>button:hover:not(:disabled) {
   border-color:var(--sector-accent);
@@ -3362,17 +3187,11 @@
   .map-command-bar {
     grid-template-columns:1fr 1fr;
   }
-  .map-command-bar>div {
+  .map-command-bar>div,.bot-control-actions button:only-child {
     grid-column:1/-1;
   }
   .specialist-transmission {
     margin-top:10px;
-  }
-}
-@media(prefers-reduced-motion:reduce) {
-  .incident-flow span,.topology-nodes button.affected:not(.isolated) {
-    animation:none;
-    transition:none;
   }
 }
 /* Operational polish: legible trust routes, sector-native command views and compact reports */
@@ -3380,6 +3199,7 @@
   padding:8px;
 }
 .topology-routes>div {
+  padding-inline-end:72px;
   position:relative;
   display:grid;
   grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
@@ -3431,7 +3251,7 @@
 .topology-routes>div.route-blocked .route-status {
   border-color:#75443f;
 }
-.investigation-dashboard .topology-shell {
+.investigation-dashboard .topology-shell,.report-dialog .evidence-decision>div {
   grid-template-columns:1fr;
 }
 .investigation-dashboard .topology-routes {
@@ -3467,28 +3287,22 @@
   box-shadow:0 24px 60px #0008;
   scrollbar-color:#b3a993 transparent;
 }
-.game-dialog.paper-dialog [data-slot=dialog-description] {
+.game-dialog.paper-dialog [data-slot=dialog-description],.paper-dialog .eyebrow,.paper-dialog span.effect-list>span.effect>em {
   color:#4a463e;
 }
-.game-dialog.paper-dialog [data-slot=dialog-close] {
+.game-dialog.paper-dialog [data-slot=dialog-close],.paper-dialog span.effect-list>span.effect>b,.form-row dd.confirmed {
   color:#1d1b18;
-}
-.paper-dialog .eyebrow {
-  color:#4a463e;
 }
 .paper-dialog span.effect-list {
   border-top-color:#1d1b1826;
 }
-.paper-dialog span.effect-list>span.effect>span {
+/* The field guide is a document like the report and the review: paper, a form
+   number, and its rules as ruled entries with the topic in the margin. Two
+   columns of numbered blocks read as a starter kit's "how it works" grid. */
+.paper-dialog span.effect-list>span.effect>span,.paper-dialog .rules-content p,.paper-dialog .quick-start-guide p {
   color:#2f2c27;
 }
-.paper-dialog span.effect-list>span.effect>b {
-  color:#1d1b18;
-}
-.paper-dialog span.effect-list>span.effect>em {
-  color:#4a463e;
-}
-.paper-dialog span.effect-list>span.effect.worse>b,.paper-dialog span.effect-list>span.effect.worse>em {
+.paper-dialog span.effect-list>span.effect.worse>b,.paper-dialog span.effect-list>span.effect.worse>em,.form-row dd.failed {
   color:#9e3220;
 }
 .paper-dialog span.effect-list>span.effect.same>b,.paper-dialog span.effect-list>span.effect.same>em {
@@ -3505,15 +3319,6 @@
 }
 .high-contrast .paper-dialog {
   --text-soft:#2f2c27;
-}
-/* A result is stamped on the memo, in ink that reads as ink: red for a confirmed
-   stage, black for a check that settled something, brown for one that failed.
-   The headline already says it in words, so the stamp is hidden from assistive
-   technology. */
-@media(min-width:651px) {
-  .report-dialog [data-slot=dialog-header] {
-    position:relative;
-  }
 }
 .report-layout {
   display:grid;
@@ -3544,9 +3349,6 @@
 }
 .report-dialog .evidence-decision h3 {
   margin:8px 0 11px;
-}
-.report-dialog .evidence-decision>div {
-  grid-template-columns:1fr;
 }
 .report-dialog .evidence-decision button {
   min-height:0;
@@ -3585,7 +3387,7 @@
   color:#f6f1e4;
   font-weight:600;
 }
-.evidence-decision button .decision-effect {
+.evidence-decision button .decision-effect,.sit-more>p+p {
   margin-top:6px;
 }
 .decision-pressure {
@@ -3600,11 +3402,6 @@
   font-size:var(--type-caption);
   color:var(--text-soft);
 }
-/* Node names sit in narrow cells beside each other; at the body step the
-   longest word in "Management edge" was wider than its cell. */
-.topology-nodes button strong {
-  font-size:var(--type-caption);
-}
 /* The response just chosen and what it did. */
 .decision-recorded {
   display:grid;
@@ -3614,14 +3411,8 @@
   font-size:var(--type-body);
   font-weight:600;
 }
-.decision-recorded p {
-  margin:0;
-  font-size:var(--type-caption);
-  line-height:var(--leading-base);
-  color:#2f2c27;
-}
 /* What the turn moved, apart from the plan that was chosen. */
-.turn-movement {
+.decision-recorded p,.turn-movement {
   margin:0;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
@@ -3682,14 +3473,11 @@ span.effect-list>span.effect>span,span.effect-list>span.effect>b,span.effect-lis
   line-height:var(--leading-compact);
   align-self:baseline;
 }
-span.effect-list>span.effect.worse>b,span.effect-list>span.effect.worse>em {
+span.effect-list>span.effect.worse>b,span.effect-list>span.effect.worse>em,.topology-nodes button.affected em {
   color:#f0a48c;
 }
 span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   color:#8c9198;
-}
-span.effect-list>span.effect.note>span {
-  grid-column:1/-1;
 }
 /* What each verb trades away, one tap down on a Training operation's first decision. */
 .decision-primer {
@@ -3704,10 +3492,6 @@ span.effect-list>span.effect.note>span {
   cursor:pointer;
   color:var(--lime);
   font-weight:500;
-}
-.decision-primer>summary:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
 }
 .decision-primer ul {
   display:grid;
@@ -3773,10 +3557,6 @@ span.effect-list>span.effect.note>span {
 .report-dialog .evidence-decision .options-below:hover>span {
   background:#e8e1d3;
 }
-.report-dialog .evidence-decision .options-below:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
-}
 .report-dialog .inject-box {
   padding:14px;
 }
@@ -3788,17 +3568,11 @@ span.effect-list>span.effect.note>span {
   line-height:var(--leading-base);
 }
 /* Dense cluster copy resolves to the body step; compact labels to the caption step. */
-.topology-nodes strong,.evidence-cards strong,.procedure-planner strong,.procedure-planner small,.correlation-results p strong,.correlation-results p span,.case-theory strong,.case-theory button,.set-piece-options span,.evidence-review p,.specialist-reaction p,.hypothesis-options strong,.hypothesis-options span,.map-intel,.evidence-empty p,.guide-nudge strong {
+.topology-nodes strong,.evidence-cards strong,.procedure-planner strong,.procedure-planner small,.correlation-results p strong,.correlation-results p span,.case-theory strong,.case-theory button,.set-piece-options span,.evidence-review p,.specialist-reaction p,.hypothesis-options strong,.hypothesis-options span,.map-intel,.evidence-empty p,.guide-nudge strong,.procedure-card p,.map-command-bar strong,.specialist-transmission strong,.specialist-transmission p,.report-ending strong {
   font-size:var(--type-body);
 }
-.evidence-cards small,.backup-console small,.hypothesis-heading small,.hypothesis-options button small,.case-theory small,.map-command-bar small {
+.evidence-cards small,.backup-console small,.hypothesis-heading small,.hypothesis-options button small,.case-theory small,.map-command-bar small,.tutorial-steps p strong {
   font-size:var(--type-caption);
-}
-.procedure-card p {
-  font-size:var(--type-body);
-}
-.map-command-bar strong,.specialist-transmission strong,.specialist-transmission p {
-  font-size:var(--type-body);
 }
 @media(max-width:800px) {
   .report-layout.with-briefing {
@@ -3826,6 +3600,12 @@ span.effect-list>span.effect.note>span {
   }
 }
 @media(max-width:380px) {
+  .workspace-tabs button>svg,.workspace-tabs button>b {
+    display:none;
+  }
+  .workspace-tabs button {
+    padding-inline:5px;
+  }
   .topology-routes>div {
     grid-template-columns:1fr;
     grid-template-areas:"source" "relation" "target" "status";
@@ -3838,9 +3618,6 @@ span.effect-list>span.effect.note>span {
   }
 }
 /* Playability audit: explicit next actions and visible decision costs */
-.tutorial-steps p strong {
-  font-size:var(--type-caption);
-}
 .tutorial-steps p small {
   font-size:var(--type-caption);
   letter-spacing:.01em;
@@ -3855,9 +3632,6 @@ span.effect-list>span.effect.note>span {
   border:1px solid #4b535e;
   border-radius:3px;
   background:#13161a;
-}
-.tutorial-next>div {
-  min-width:0;
 }
 .tutorial-next p {
   font-size:var(--type-body);
@@ -3913,9 +3687,6 @@ span.effect-list>span.effect.note>span {
 .report-ending.ending-exercise {
   border-color:#c9bfac;
   background:#e8e1d3;
-}
-.report-ending strong {
-  font-size:var(--type-body);
 }
 .report-ending p {
   color:var(--text-soft);
@@ -3984,7 +3755,7 @@ span.effect-list>span.effect.note>span {
   margin-bottom:3px;
 }
 @media(max-width:650px) {
-  .tutorial-steps>div:not(.current) {
+  .tutorial-steps>div:not(.current),.workspace-tabs button>b {
     display:none;
   }
   .tutorial-next {
@@ -4052,7 +3823,7 @@ span.effect-list>span.effect.note>span {
   font-size:var(--type-body);
   font-weight:600;
 }
-.undo-strip button:hover {
+.undo-strip button:hover,.bot-control-actions button:hover {
   border-color:var(--lime);
   color:var(--lime);
 }
@@ -4172,8 +3943,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
 }
 .resolution-won .end-banner {
   animation:resolution-standdown var(--motion-base) var(--ease-arrive) backwards;
-}
-.resolution-won .end-banner {
   border-color:#5e6d81;
   background:#ede2c90f;
 }
@@ -4261,6 +4030,13 @@ still sees the meter marked as crossed once the ring is suppressed. */
 }
 /* The review's headline: the grade, the score and what the operation found. */
 @media(prefers-reduced-motion:reduce) {
+  .workspace-tabs {
+    backdrop-filter:none;
+  }
+  .incident-flow span,.topology-nodes button.affected:not(.isolated) {
+    animation:none;
+    transition:none;
+  }
   .meter-delta {
     animation:none;
   }
@@ -4268,13 +4044,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
     animation:none;
     opacity:0;
   }
-  .response-stage,.response-options button {
-    animation:none;
-  }
-  .resolution-won .end-banner,.resolution-lost .end-banner,.resolution-exercise .end-banner,.resolution-steps li,.resolution-note {
-    animation:none;
-  }
-  .debrief-dialog [data-slot=dialog-header],.debrief-dialog .debrief-stats,.debrief-dialog .score-card,.debrief-dialog .advanced-review {
+  .response-stage,.response-options button,.resolution-won .end-banner,.resolution-lost .end-banner,.resolution-exercise .end-banner,.resolution-steps li,.resolution-note,.debrief-dialog [data-slot=dialog-header],.debrief-dialog .debrief-stats,.debrief-dialog .score-card,.debrief-dialog .advanced-review {
     animation:none;
   }
 }
@@ -4313,7 +4083,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
   color:var(--lime);
   background:#121418;
 }
-.bot-control-copy {
+.tutorial-next>div,.bot-control-copy {
   min-width:0;
 }
 .bot-control-copy>.eyebrow {
@@ -4348,10 +4118,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
   color:#f5efe1;
   font-size:var(--type-caption);
 }
-.bot-control-actions button:hover {
-  border-color:var(--lime);
-  color:var(--lime);
-}
 @media(max-width:650px) {
   .bot-control {
     grid-template-columns:auto 1fr;
@@ -4362,9 +4128,6 @@ still sees the meter marked as crossed once the ring is suppressed. */
     grid-column:1/-1;
     display:grid;
     grid-template-columns:1fr 1fr;
-  }
-  .bot-control-actions button:only-child {
-    grid-column:1/-1;
   }
 }
 .objective-meter {
@@ -4384,7 +4147,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
   color:#dab6cd;
   font-size:var(--type-lead);
 }
-.objective-meter>[data-slot=progress] {
+span.effect-list>span.effect.note>span,.objective-meter>[data-slot=progress] {
   grid-column:1/-1;
 }
 .objective-meter small {
@@ -4508,10 +4271,6 @@ they want without scrolling past the other nine. */
   gap:3px;
   min-width:0;
 }
-.hypothesis-ledger>details>div strong {
-  font-weight:500;
-  font-size:var(--type-body);
-}
 .hypothesis-ledger>details>div small,.hypothesis-ledger>details>div em {
   font-size:var(--type-caption);
   color:var(--text-soft);
@@ -4585,10 +4344,6 @@ the player already holds, so neither narrows the answer for them. */
 .modifier-details>summary::-webkit-details-marker {
   display:none;
 }
-.modifier-details>summary:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
-}
 .modifier-details>summary span {
   color:var(--text-soft);
   overflow-wrap:anywhere;
@@ -4613,9 +4368,6 @@ the player already holds, so neither narrows the answer for them. */
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
   gap:2px 12px;
-}
-.modifier-breakdown li>span {
-  font-size:var(--type-caption);
 }
 .modifier-breakdown li>strong {
   font-family:var(--font-mono);
@@ -4653,7 +4405,7 @@ the player already holds, so neither narrows the answer for them. */
   border-inline-start:3px solid var(--line);
   border-radius:0;
 }
-.hypothesis-standing strong {
+.hypothesis-ledger>details>div strong,.hypothesis-standing strong {
   font-weight:500;
   font-size:var(--type-body);
 }
@@ -4712,15 +4464,16 @@ awareness. */
   gap:4px 12px;
   min-height:40px;
   font-size:var(--type-caption);
+  padding:9px 0;
+  border:0;
+  border-top:1px solid #383d45;
+  border-bottom:1px solid #383d45;
+  border-radius:0;
 }
 .topology-detail>summary::-webkit-details-marker,.map-intel-detail>summary::-webkit-details-marker,.evidence-detail>summary::-webkit-details-marker,.known-facts>summary::-webkit-details-marker {
   display:none;
 }
-.topology-detail>summary:focus-visible,.map-intel-detail>summary:focus-visible,.evidence-detail>summary:focus-visible,.known-facts>summary:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
-}
-.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span {
+.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span,.known-timeline,.known-unverified,.modifier-breakdown li.suppressed > strong,.form-row.on-desk dt {
   color:var(--text-soft);
 }
 .topology-detail>summary::after,.map-intel-detail>summary::after,.evidence-detail>summary::after,.known-facts>summary::after {
@@ -4729,7 +4482,7 @@ awareness. */
   color:var(--text-soft);
   font-family:var(--font-mono);
 }
-.topology-detail[open]>summary::after,.map-intel-detail[open]>summary::after,.evidence-detail[open]>summary::after,.known-facts[open]>summary::after {
+.topology-detail[open]>summary::after,.map-intel-detail[open]>summary::after,.evidence-detail[open]>summary::after,.known-facts[open]>summary::after,.training-prompt .prompt-why[open] summary::after,.paper-dialog .debrief-fold[open]>summary::before {
   content:"−";
 }
 .topology-detail[open]>.topology-routes,.map-intel-detail[open]>.map-intel,.evidence-detail[open]>.evidence-timeline {
@@ -4768,13 +4521,10 @@ awareness. */
   inset-inline-start:3px;
   color:var(--text-soft);
 }
-.known-timeline {
-  color:var(--text-soft);
-}
 .known-confirmed li {
   color:var(--text);
 }
-.known-confirmed li::before {
+.known-confirmed li::before,.first-read dt::after {
   content:none;
 }
 .known-facts b {
@@ -4790,9 +4540,6 @@ awareness. */
   border-color:#485260;
   color:var(--lime);
 }
-.known-unverified {
-  color:var(--text-soft);
-}
 /* Four sentences before the full review, for a first operation. */
 .first-read {
   border:1px solid var(--line);
@@ -4801,15 +4548,11 @@ awareness. */
   padding:14px 16px;
   margin-bottom:4px;
 }
-.first-read dl {
-  margin:9px 0 0;
-  display:grid;
-  gap:9px;
-}
 .first-read dd {
   font-size:var(--type-body);
   line-height:var(--leading-base);
   max-width:80ch;
+  display:block;
 }
 /* The glossary in the field guide. */
 .plain-language dl {
@@ -4871,14 +4614,14 @@ awareness. */
 .compare-findings:hover {
   background:#ede2c914;
 }
-.compare-findings:focus-visible {
+.hypothesis-compare>summary:focus-visible,.hypothesis-compare-options button:focus-visible,.decision-primer>summary:focus-visible,.report-dialog .evidence-decision .options-below:focus-visible,.modifier-details>summary:focus-visible,.topology-detail>summary:focus-visible,.map-intel-detail>summary:focus-visible,.evidence-detail>summary:focus-visible,.known-facts>summary:focus-visible,.compare-findings:focus-visible,.training-prompt .prompt-why summary:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
 .evidence-workspace,.infrastructure-console {
   scroll-margin-top:96px;
 }
-.evidence-workspace:focus,.infrastructure-console:focus {
+.evidence-workspace:focus,.infrastructure-console:focus,[data-awaiting-heading]:focus:not(:focus-visible) {
   outline:none;
 }
 .evidence-workspace:focus-visible,.infrastructure-console:focus-visible {
@@ -4928,24 +4671,14 @@ awareness. */
   content:"+";
   font-family:var(--font-mono);
 }
-.training-prompt .prompt-why[open] summary::after {
-  content:"−";
-}
 .training-prompt .prompt-why[open] summary {
   margin-bottom:4px;
-}
-.training-prompt .prompt-why summary:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:2px;
 }
 .training-prompt.step-revise {
   border-inline-start:3px solid #e8c968;
 }
 .training-prompt.step-correlate,.training-prompt.step-theory {
   border-inline-start:3px solid #dab6cd;
-}
-.modifier-breakdown li.suppressed > strong {
-  color:var(--text-soft);
 }
 .procedure-card .spent-label.inconclusive {
   color:#b5ae9d;
@@ -4962,11 +4695,18 @@ in colour, and the carried plan is stated before the options. */
   color:var(--foreground);
   font-weight:500;
 }
+/* A result is stamped on the memo, in ink that reads as ink: red for a confirmed
+   stage, black for a check that settled something, brown for one that failed.
+   The headline already says it in words, so the stamp is hidden from assistive
+   technology. */
 /* The procedures are an index in the manual from tablet width up: one ruled line
    each, the number in the margin, the title and what it collects, the state at
    the right. Twelve bordered tiles read as a feature grid, and as a list the
    whole set sits beside the reading on a laptop. */
 @media(min-width:651px) {
+  .report-dialog [data-slot=dialog-header] {
+    position:relative;
+  }
   .investigation-dashboard .procedure-grid {
     grid-template-columns:1fr;
     gap:0;
@@ -5115,7 +4855,7 @@ in colour, and the carried plan is stated before the options. */
   text-underline-offset:4px;
   cursor:pointer;
 }
-.sit-link:hover {
+.sit-link:hover,.text-action:hover {
   text-decoration-thickness:2px;
 }
 /* The response is a ruled sheet like the rest of Command: the sequence a line
@@ -5138,10 +4878,12 @@ in colour, and the carried plan is stated before the options. */
   font:500 var(--type-caption) var(--font-mono);
   color:#878b91;
 }
+/* The dash between phases is outside the current phase's underline. */
 .response-sequence li+li::before {
   content:"—";
   margin:0 10px;
   color:#5d636c;
+  display:inline-block;
 }
 .response-sequence li.current {
   color:#f6f1e4;
@@ -5180,7 +4922,7 @@ in colour, and the carried plan is stated before the options. */
   border-color:#434850;
   background:#1c1f24;
 }
-.response-options button:focus-visible {
+.response-options button:focus-visible,.map-command-bar>button:focus-visible,.set-piece-options button:focus-visible,.command-options button:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:-2px;
 }
@@ -5241,6 +4983,7 @@ span.effect-list>span.effect.term>em {
   border-bottom:1px dotted #b3a993;
   border-radius:0;
   background:none;
+  justify-content:flex-start;
 }
 .paper-dialog .debrief-fold>summary::before {
   content:"+";
@@ -5248,14 +4991,8 @@ span.effect-list>span.effect.term>em {
   font-family:var(--font-mono);
   font-weight:500;
 }
-.paper-dialog .debrief-fold[open]>summary::before {
-  content:"−";
-}
 .paper-dialog .debrief-fold>summary::-webkit-details-marker {
   display:none;
-}
-.paper-dialog .debrief-fold>summary {
-  justify-content:flex-start;
 }
 .paper-dialog .debrief-fold>summary span {
   margin-inline-start:auto;
@@ -5323,6 +5060,7 @@ span.effect-list>span.effect.term>em {
   border-bottom:1px dotted #b3a993;
   border-radius:0;
   background:none;
+  padding:8px 0;
 }
 /* The section index is a line of contents: words with an underline on hover,
    not a row of bordered buttons. Its band is opaque to the dialog's top edge,
@@ -5385,14 +5123,14 @@ span.effect-list>span.effect.term>em {
   color:#f6f1e4;
   font:500 var(--type-caption) var(--font-mono);
 }
-.hypothesis-options button>* {
+.hypothesis-options button>*,.evidence-decision button>strong,.evidence-decision button>span {
   grid-column:2;
 }
 .hypothesis-options button:hover {
   border-color:#383d45;
   background:#1f2328;
 }
-.hypothesis-options button.active {
+.hypothesis-options button.active,.hypothesis-compare-options button.active {
   border-color:#383d45;
   background:#1c1f24;
   box-shadow:inset 3px 0 0 #f6f1e4;
@@ -5411,7 +5149,7 @@ span.effect-list>span.effect.term>em {
   color:#4a463e;
   font-size:var(--type-caption);
 }
-.hypothesis-compare-options {
+.hypothesis-compare-options,.procedure-planner>div>div {
   gap:0;
   border-top:1px solid #383d45;
 }
@@ -5421,11 +5159,6 @@ span.effect-list>span.effect.term>em {
   border:0;
   border-bottom:1px solid #383d45;
   border-radius:0;
-}
-.hypothesis-compare-options button.active {
-  border-color:#383d45;
-  background:#1c1f24;
-  box-shadow:inset 3px 0 0 #f6f1e4;
 }
 .report-standing {
   border:0;
@@ -5459,22 +5192,11 @@ span.effect-list>span.effect.term>em {
 .map-command-bar>button:hover:not(:disabled) {
   background:#1c1f24;
 }
-.map-command-bar>button:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:-2px;
-}
 .topology-routes .route-status {
   padding:0;
   border:0;
   border-radius:0;
   font:500 var(--type-micro) var(--font-mono);
-}
-.topology-detail>summary,.map-intel-detail>summary,.evidence-detail>summary,.known-facts>summary {
-  padding:9px 0;
-  border:0;
-  border-top:1px solid #383d45;
-  border-bottom:1px solid #383d45;
-  border-radius:0;
 }
 .topology-detail>summary:hover,.map-intel-detail>summary:hover,.evidence-detail>summary:hover,.known-facts>summary:hover {
   border-color:#383d45;
@@ -5489,9 +5211,6 @@ span.effect-list>span.effect.term>em {
 }
 .paper-dialog .campaign-consequences {
   gap:0 28px;
-}
-.paper-dialog .campaign-consequences>div {
-  padding:8px 0;
 }
 .paper-dialog .decision-summary span.decision-effects {
   display:grid;
@@ -5552,7 +5271,7 @@ span.effect-list>span.effect.term>em {
   border-color:#2f3339;
   background:none;
 }
-.difficulty-picker button:hover {
+.difficulty-picker button:hover,.procedure-planner button:hover {
   background:#1f2328;
 }
 .difficulty-picker small {
@@ -5616,10 +5335,6 @@ span.effect-list>span.effect.term>em {
   grid-template-columns:minmax(0,1fr);
   gap:16px;
 }
-.procedure-planner>div>div {
-  gap:0;
-  border-top:1px solid #383d45;
-}
 .procedure-planner button {
   display:grid;
   grid-template-columns:1.2rem minmax(0,1fr);
@@ -5640,9 +5355,6 @@ span.effect-list>span.effect.term>em {
 }
 .procedure-planner button>* {
   grid-column:2;
-}
-.procedure-planner button:hover {
-  background:#1f2328;
 }
 .procedure-planner button.active {
   border-color:#383d45;
@@ -5670,7 +5382,7 @@ span.effect-list>span.effect.term>em {
   border-radius:0;
   background:none;
 }
-.resolution .end-banner {
+.resolution .end-banner,.adversary-state.tempo-2,.adversary-state.tempo-3 {
   background:none;
 }
 .resolution-steps {
@@ -5747,9 +5459,6 @@ span.effect-list>span.effect.term>em {
   display:block;
   color:inherit;
 }
-.set-piece-title h2,.command-event-heading h2 {
-  color:#f6f1e4;
-}
 .set-piece-title p,.command-event-heading p {
   color:#c9c3b6;
 }
@@ -5776,10 +5485,6 @@ span.effect-list>span.effect.term>em {
 .set-piece-options button:hover,.command-options button:hover {
   border-color:#434850;
   background:#1c1f24;
-}
-.set-piece-options button:focus-visible,.command-options button:focus-visible {
-  outline:2px solid var(--lime);
-  outline-offset:-2px;
 }
 .set-piece-options .option-no,.command-options .option-no {
   padding-inline-start:6px;
@@ -5846,9 +5551,6 @@ span.effect-list>span.effect.term>em {
 .evidence-decision button>.option-letter {
   grid-row:1/span 2;
 }
-.evidence-decision button>strong,.evidence-decision button>span {
-  grid-column:2;
-}
 .evidence-decision .option-signals {
   margin:6px 0 0;
 }
@@ -5900,9 +5602,6 @@ span.effect-list>span.effect.term>em {
   background:none;
   transform:none;
 }
-.adversary-state.tempo-2,.adversary-state.tempo-3 {
-  background:none;
-}
 .act-number {
   padding:0;
   border:0;
@@ -5937,9 +5636,6 @@ span.effect-list>span.effect.term>em {
   text-underline-offset:4px;
   cursor:pointer;
 }
-.text-action:hover {
-  text-decoration-thickness:2px;
-}
 .text-action:focus-visible {
   outline:2px solid currentColor;
   outline-offset:2px;
@@ -5965,6 +5661,9 @@ span.effect-list>span.effect.term>em {
   transform:translateY(-50%);
   color:var(--text-soft);
   font:500 var(--type-micro) var(--font-mono);
+  font-family:var(--font-ui);
+  text-transform:none;
+  letter-spacing:0;
 }
 [data-slot=switch][data-state=checked]::before {
   content:"On" / "";
@@ -5972,9 +5671,6 @@ span.effect-list>span.effect.term>em {
 }
 .sit-entry.compact {
   padding:9px 0;
-}
-.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
-  font-size:var(--type-caption);
 }
 .sit-entry.compact .sit-body>small {
   display:inline;
@@ -6003,20 +5699,19 @@ span.effect-list>span.effect.term>em {
 /* The four plain sentences are run-in heads, not four stacked mini-labels. */
 .first-read dt {
   margin-inline-end:.35em;
+  display:block;
+  margin:0;
+  color:#4a463e;
+  font-size:var(--type-caption);
+  font-weight:400;
 }
-.first-read dd {
+.first-read dd,.topology-nodes small,.topology-nodes em,.paper-dialog .rules-grid h3 {
   margin:0;
 }
 /* The campaign tally reads as the review's other tally: two columns, the figure
    set right on a dotted rule. */
 .paper-dialog .campaign-consequences {
   grid-template-columns:repeat(2,minmax(0,1fr));
-}
-.paper-dialog .campaign-consequences>div {
-  align-items:baseline;
-}
-.paper-dialog .decision-summary span.decision-effects {
-  max-width:none;
 }
 .paper-dialog .debrief-fold>summary,.paper-dialog .briefing-more>summary {
   position:relative;
@@ -6025,16 +5720,13 @@ span.effect-list>span.effect.term>em {
 .paper-dialog .debrief-fold>summary::before,.paper-dialog .briefing-more>summary::before {
   position:absolute;
   inset-inline-start:0;
+  top:10px;
+  line-height:inherit;
 }
 .career-progress {
   height:2px;
 }
 .case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes small,.topology-nodes em,.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,.procedure-planner .plan-selected,.case-theory .plan-selected,.training-prompt .prompt-sources,.service-node small {
-  font-family:var(--font-ui);
-  text-transform:none;
-  letter-spacing:0;
-}
-[data-slot=switch]::before {
   font-family:var(--font-ui);
   text-transform:none;
   letter-spacing:0;
@@ -6046,36 +5738,19 @@ span.effect-list>span.effect.term>em {
   font-weight:500;
   color:var(--text-soft);
 }
-.case-meters>div>.mono {
+.modifier-breakdown li>span,.case-meters>div>.mono,.operation-status>.mono,.sector-margin-line .mono,.chain-status,.resolution-steps li b {
   font-size:var(--type-caption);
-}
-.operation-status>.mono,.sector-margin-line .mono {
-  font-size:var(--type-caption);
-}
-.chain-status,.resolution-steps li b {
-  font-size:var(--type-caption);
-}
-[data-awaiting-heading]:focus:not(:focus-visible) {
-  outline:none;
 }
 [data-awaiting-heading]:focus-visible {
   outline:1px solid currentColor;
   outline-offset:6px;
-}
-.paper-dialog .debrief-fold>summary::before,.paper-dialog .briefing-more>summary::before {
-  top:10px;
-  line-height:inherit;
-}
-/* The dash between phases is outside the current phase's underline. */
-.response-sequence li+li::before {
-  display:inline-block;
 }
 /* The ending's action sits under its sentence, not mid-row. */
 .end-banner {
   flex-direction:column;
   align-items:flex-start;
 }
-.sit-body {
+.paper-dialog .decision-summary span.decision-effects,.sit-body {
   max-width:none;
 }
 .sit-body p,.sit-body>small {
@@ -6097,10 +5772,6 @@ span.effect-list>span.effect.term>em {
   margin-inline-start:0;
   align-self:baseline;
   font-weight:400;
-}
-.chain-sheet li,.briefing-chain li {
-  border-inline-start:0;
-  padding-inline-start:0;
 }
 .chain-no,.briefing-chain .chain-index {
   color:var(--stage-color);
@@ -6152,21 +5823,12 @@ span.effect-list>span.effect.term>em {
 .topology-nodes button.affected,.topology-nodes button.exposed {
   border-color:#383d45;
 }
-.topology-nodes small,.topology-nodes em {
-  margin:0;
-}
-.topology-nodes button.affected em {
-  color:#f0a48c;
-}
 .topology-nodes button.exposed em {
   color:#e9c867;
 }
-.debrief-fold>summary,.standing-reading,.hypothesis-options strong,.variant-brief strong {
+.debrief-fold>summary,.standing-reading,.hypothesis-options strong,.variant-brief strong,.debrief-learning h3,.capability-review>.eyebrow {
   font-family:var(--font-serif);
   font-weight:500;
-}
-.variant-brief strong {
-  color:#f6f1e4;
 }
 .debrief-fold>summary span {
   font-family:var(--font-ui);
@@ -6220,19 +5882,6 @@ span.effect-list>span.effect.term>em {
   padding:7px 0;
   border-top:1px dotted #b3a993;
 }
-.first-read dt {
-  display:block;
-  margin:0;
-  color:#4a463e;
-  font-size:var(--type-caption);
-  font-weight:400;
-}
-.first-read dt::after {
-  content:none;
-}
-.first-read dd {
-  display:block;
-}
 /* An effect's figure and word sit on the last line of a name that wraps. */
 span.effect-list>span.effect>b,span.effect-list>span.effect>em {
   align-self:last baseline;
@@ -6266,10 +5915,6 @@ span.effect-list>span.effect>b,span.effect-list>span.effect>em {
 .case-theory>div:first-child strong {
   font-size:var(--type-body);
 }
-.debrief-learning h3,.capability-review>.eyebrow {
-  font-family:var(--font-serif);
-  font-weight:500;
-}
 .campaign-route-card strong {
   font-weight:500;
 }
@@ -6302,16 +5947,6 @@ body {
   font:600 var(--type-body)/1.25 var(--font-serif);
   overflow-wrap:break-word;
 }
-.form-row dd.confirmed {
-  color:#1d1b18;
-}
-.form-row dd.failed {
-  color:#9e3220;
-}
-.form-row dd.grade {
-  font-size:var(--type-title);
-  line-height:1;
-}
 .report-fields {
   margin-top:12px;
 }
@@ -6320,10 +5955,14 @@ body {
   border:0;
   border-top:1px solid #6b717a;
   border-bottom:1px solid #383d45;
+  grid-template-rows:auto auto auto;
+  align-items:stretch;
 }
 .case-meters>div {
   padding:9px 0 8px;
   border-inline-start:0;
+  grid-row:span 3;
+  grid-template-rows:subgrid;
 }
 .form-row.on-desk {
   margin:0 0 22px;
@@ -6332,13 +5971,7 @@ body {
 .form-row.on-desk>div {
   border-inline-start-color:#4a4f57;
 }
-.form-row.on-desk dt {
-  color:var(--text-soft);
-}
-.form-row.on-desk dd {
-  color:#f6f1e4;
-}
-.form-row.on-desk dd.open {
+.set-piece-title h2,.command-event-heading h2,.variant-brief strong,.form-row.on-desk dd,.form-row.on-desk dd.open {
   color:#f6f1e4;
 }
 .slip-form {
@@ -6370,21 +6003,13 @@ body {
   height:6px;
   flex:none;
 }
-.case-meters {
-  grid-template-rows:auto auto auto;
-  align-items:stretch;
-}
-.case-meters>div {
-  grid-row:span 3;
-  grid-template-rows:subgrid;
-}
 @media(min-width:1101px) {
   .case-meters {
     display:grid;
     grid-template-columns:repeat(3,auto);
   }
 }
-.workspace-tabs {
+.workspace-tabs,.chain-sheet li:last-child {
   border-bottom:0;
 }
 .chain-sheet {
@@ -6395,9 +6020,6 @@ body {
   border-top:0;
   background:#f1ece1;
   color:#1d1b18;
-}
-.chain-sheet li:last-child {
-  border-bottom:0;
 }
 .chain-sheet li:nth-child(1) .chain-no {
   color:#9e3220;
@@ -6411,19 +6033,11 @@ body {
 .chain-sheet li:nth-child(4) .chain-no {
   color:#1f5a85;
 }
-.chain-sheet .chain-technique {
+.chain-sheet .chain-technique,.chain-sheet li.confirmed .chain-status,.paper-dialog .quick-start-guide strong,.paper-dialog .attribution a {
   color:#1d1b18;
 }
 .chain-sheet .chain-status {
   color:#4a463e;
-}
-.chain-sheet li.confirmed .chain-status {
-  color:#1d1b18;
-}
-@media(max-width:650px) {
-  .chain-sheet {
-    padding:2px 12px;
-  }
 }
 /* Every title is set in the form face. Bold body type on Monitor and Isolate,
    the specialist's name, the case theories and the review's outcome columns
@@ -6438,17 +6052,8 @@ body {
   font-weight:400;
   color:var(--text-soft);
 }
-/* The field guide is a document like the report and the review: paper, a form
-   number, and its rules as ruled entries with the topic in the margin. Two
-   columns of numbered blocks read as a starter kit's "how it works" grid. */
-.paper-dialog .rules-content p,.paper-dialog .quick-start-guide p {
-  color:#2f2c27;
-}
 .paper-dialog .quick-start-guide,.paper-dialog .quick-start-guide>div,.paper-dialog .attribution {
   border-color:#c9bfac;
-}
-.paper-dialog .quick-start-guide strong,.paper-dialog .attribution a {
-  color:#1d1b18;
 }
 .paper-dialog .rules-content h3 {
   font-family:var(--font-display);
@@ -6467,13 +6072,22 @@ body {
   padding:12px 0;
   border-top:1px solid #c9bfac;
 }
-.paper-dialog .rules-grid h3 {
-  margin:0;
-}
 @media(max-width:650px) {
+  .chain-sheet {
+    padding:2px 12px;
+  }
   .paper-dialog .rules-grid section {
     grid-template-columns:minmax(0,1fr);
     gap:4px;
+  }
+  .specialist-roster button {
+    grid-template-columns:1.4rem minmax(0,1fr);
+    row-gap:1px;
+  }
+  .specialist-roster small {
+    grid-column:2;
+    justify-self:start;
+    text-align:start;
   }
 }
 .sit-more,.career-card .standing-effects {
@@ -6502,9 +6116,6 @@ body {
 .sit-more[open]>summary::before,.career-card .standing-effects[open]>summary::before {
   content:"\2212";
 }
-.sit-more>p+p {
-  margin-top:6px;
-}
 .briefing-more>summary span,.hypothesis-compare>summary span,.modifier-details>summary span,.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span,.reference-fold>summary span {
   font-family:var(--font-ui);
   font-size:var(--type-caption);
@@ -6513,9 +6124,11 @@ body {
 /* The grade is the record's value, in ink: the best grade in the danger red
    read as an error. */
 .form-row dd.grade {
+  font-size:var(--type-title);
+  line-height:1;
   color:#1d1b18;
 }
-.campaign-act-card {
+.paper-dialog .campaign-consequences>div,.campaign-act-card {
   align-items:baseline;
 }
 .act-number {
@@ -6550,7 +6163,8 @@ body {
   color:#f6f1e4;
   font-size:inherit;
 }
-.variant-label {
+/* The adversary's pace is a warning only when it presses. */
+.variant-label,.adversary-state,.procedure-card .alignment-label.other-sees {
   color:var(--text-soft);
 }
 .variant-brief .variant-line small {
@@ -6561,10 +6175,6 @@ body {
 .variant-brief .variant-line+p {
   margin-top:4px;
 }
-/* The adversary's pace is a warning only when it presses. */
-.adversary-state {
-  color:var(--text-soft);
-}
 /* The adversary's pace in a list of effects is a step, set as the value. */
 span.effect-list>span.effect.pace>em {
   grid-column:2/-1;
@@ -6574,7 +6184,7 @@ span.effect-list>span.effect.pace>em {
 span.effect-list>span.effect.pace.worse>em {
   color:#f0a48c;
 }
-.paper-dialog span.effect-list>span.effect.pace>em {
+.paper-dialog span.effect-list>span.effect.pace>em,.paper-dialog .mastery-panel strong {
   color:#1d1b18;
 }
 .paper-dialog span.effect-list>span.effect.pace.worse>em {
@@ -6582,7 +6192,7 @@ span.effect-list>span.effect.pace.worse>em {
 }
 /* On the report the responses are not an annotation: the left rule ran on past
    the last visible one into the strip at the report's foot. */
-.report-dialog .evidence-decision {
+.chain-sheet li,.briefing-chain li,.report-dialog .evidence-decision {
   border-inline-start:0;
   padding-inline-start:0;
 }
@@ -6594,9 +6204,6 @@ span.effect-list>span.effect.pace.worse>em {
   border-radius:0;
   background:none;
   padding:12px 0;
-}
-.paper-dialog .mastery-panel strong {
-  color:#1d1b18;
 }
 /* The other calls are ruled entries at the review's text size. */
 .paper-dialog .counterfactuals p {
@@ -6636,17 +6243,6 @@ span.effect-list>span.effect.pace.worse>em {
 }
 .paper-dialog .debrief-chain section:nth-child(4) .eyebrow::before {
   background:#1f5a85;
-}
-@media(max-width:650px) {
-  .specialist-roster button {
-    grid-template-columns:1.4rem minmax(0,1fr);
-    row-gap:1px;
-  }
-  .specialist-roster small {
-    grid-column:2;
-    justify-self:start;
-    text-align:start;
-  }
 }
 /* The first operation on this device, in sentences under the counts. */
 .local-telemetry .first-session {
@@ -6716,7 +6312,11 @@ span.effect-list>span.effect.pace.worse>em {
     align-items:baseline;
     gap:4px 8px;
   }
-  .operation-status .turn-progress {
+  /* The standing readout and the strip say the same thing twice on a phone. */
+  /* With a reading recorded, the board becomes a bar: what is declared, how it is
+     holding up, and the way to change it. The premises and the sources live one
+     tap down in the comparison, so the grid is on screen when the player acts. */
+  .operation-status .turn-progress,.hypothesis-board.has-reading .hypothesis-standing p,.hypothesis-board .hypothesis-heading small,.investigation-dashboard .procedure-card .procedure-code,.investigation-dashboard .procedure-bottom,.hypothesis-board.has-reading .hypothesis-heading {
     display:none;
   }
   .case-meters {
@@ -6764,13 +6364,6 @@ span.effect-list>span.effect.pace.worse>em {
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  /* The standing readout and the strip say the same thing twice on a phone. */
-  .hypothesis-board.has-reading .hypothesis-standing p {
-    display:none;
-  }
-  .hypothesis-board .hypothesis-heading small {
-    display:none;
-  }
   .procedure-section .section-heading p {
     font-size:var(--type-micro);
   }
@@ -6784,15 +6377,7 @@ span.effect-list>span.effect.pace.worse>em {
   }
   .investigation-dashboard .procedure-top {
     margin-bottom:4px;
-  }
-  .investigation-dashboard .procedure-card .procedure-code {
-    display:none;
-  }
-  .investigation-dashboard .procedure-top {
     justify-content:flex-end;
-  }
-  .investigation-dashboard .procedure-bottom {
-    display:none;
   }
   /* The footer is the only place the established bonus is stated, so on an
      established card it stays, compact and without the chevron. */
@@ -6800,9 +6385,6 @@ span.effect-list>span.effect.pace.worse>em {
     display:flex;
     padding-top:6px;
     font-size:var(--type-micro);
-  }
-  .investigation-dashboard .procedure-card.established .procedure-bottom svg {
-    display:none;
   }
   .investigation-dashboard .procedure-card h3 {
     font-size:var(--type-caption);
@@ -6830,11 +6412,10 @@ span.effect-list>span.effect.pace.worse>em {
   }
   /* Two lines each above the grid otherwise: the stage keeps its number and
      name, the margin its value and title. */
-  .hypothesis-standing .stage-only {
+  /* On the bar the stage and the reading are one phrase in one face: a bold
+     label beside a larger condensed title sat on two baselines. */
+  .hypothesis-standing .stage-only,.hypothesis-board.has-reading .hypothesis-standing>.eyebrow,.hypothesis-gate strong {
     display:inline;
-  }
-  .hypothesis-standing .reading-for,.sector-margin-line .margin-prefix {
-    display:none;
   }
   .sector-margin-line .margin-word {
     text-transform:capitalize;
@@ -6855,12 +6436,6 @@ span.effect-list>span.effect.pace.worse>em {
   .report-dialog .evidence-decision .options-below {
     bottom:-24px;
   }
-  /* With a reading recorded, the board becomes a bar: what is declared, how it is
-     holding up, and the way to change it. The premises and the sources live one
-     tap down in the comparison, so the grid is on screen when the player acts. */
-  .hypothesis-board.has-reading .hypothesis-heading {
-    display:none;
-  }
   .hypothesis-board.has-reading .hypothesis-standing {
     display:flex;
     flex-wrap:wrap;
@@ -6868,20 +6443,14 @@ span.effect-list>span.effect.pace.worse>em {
     gap:3px 8px;
     padding:9px 11px;
   }
-  .hypothesis-board.has-reading .hypothesis-standing .standing-meter {
-    display:none;
-  }
-  /* On the bar the stage and the reading are one phrase in one face: a bold
-     label beside a larger condensed title sat on two baselines. */
-  .hypothesis-board.has-reading .hypothesis-standing>.eyebrow {
-    display:inline;
-  }
   .hypothesis-board.has-reading .hypothesis-standing .standing-reading {
     font-family:var(--font-ui);
     font-size:var(--type-caption);
     font-weight:600;
   }
-  .hypothesis-board.has-reading .hypothesis-detail {
+  /* Before a reading is recorded the four cards already are the comparison, so
+     the folded copy of it only costs height. */
+  .hypothesis-standing .reading-for,.sector-margin-line .margin-prefix,.hypothesis-board.has-reading .hypothesis-detail,.hypothesis-board:not(.has-reading) .hypothesis-compare {
     display:none;
   }
   .hypothesis-board.has-reading .hypothesis-compare {
@@ -6891,13 +6460,9 @@ span.effect-list>span.effect.pace.worse>em {
     color:var(--text);
     font-weight:500;
   }
-  /* Before a reading is recorded the four cards already are the comparison, so
-     the folded copy of it only costs height. */
-  .hypothesis-board:not(.has-reading) .hypothesis-compare {
-    display:none;
-  }
   /* The plan sits beside the heading where it fits and wraps under it where it
      does not, which gave a phone back a line above the cards. */
+  /* And the prompts above the grid say their piece in fewer lines. */
   .procedure-section .section-heading {
     display:flex;
     flex-wrap:wrap;
@@ -6905,12 +6470,13 @@ span.effect-list>span.effect.pace.worse>em {
     justify-content:space-between;
     row-gap:4px;
     margin-bottom:10px;
+    gap:4px;
   }
   .procedure-section .section-heading .established-key {
     display:inline-block;
     margin-top:0;
   }
-  .procedure-section .section-heading>div {
+  .procedure-section .section-heading>div,.response-heading>div,.set-piece-title>div,.end-banner>div:nth-child(2) {
     display:contents;
   }
   .procedure-section .section-heading>div>p {
@@ -6920,9 +6486,6 @@ span.effect-list>span.effect.pace.worse>em {
   }
   .investigation-dashboard {
     gap:12px;
-  }
-  .workspace-tabs button>b {
-    display:none;
   }
   .workspace-tabs button>span {
     min-width:0;
@@ -6934,10 +6497,6 @@ span.effect-list>span.effect.pace.worse>em {
     font-size:var(--type-caption);
     font-style:italic;
   }
-  /* And the prompts above the grid say their piece in fewer lines. */
-  .procedure-section .section-heading {
-    gap:4px;
-  }
   .procedure-section .section-heading h2 {
     font-size:var(--type-lead);
   }
@@ -6948,9 +6507,6 @@ span.effect-list>span.effect.pace.worse>em {
   }
   .hypothesis-gate {
     padding:10px 11px;
-  }
-  .hypothesis-gate strong {
-    display:inline;
   }
   .phone-quick-start {
     display:grid;
@@ -6972,11 +6528,6 @@ span.effect-list>span.effect.pace.worse>em {
   /* The inline heading takes its sentence's size; a desktop rule sets it to body size. */
   .guide-nudge strong {
     font-size:inherit;
-  }
-  /* The cards below already mark the reading's own sources; listing them again
-     here put the first card under the fold. */
-  .procedure-section .training-prompt .prompt-sources {
-    display:none;
   }
   .workspace-tabs {
     margin-bottom:10px;
@@ -7010,12 +6561,11 @@ span.effect-list>span.effect.pace.worse>em {
   font-weight:600;
 }
 @media(max-width:650px) {
-  .pinned-readouts,.pinned-readouts.shown {
+  /* The cards below already mark the reading's own sources; listing them again
+     here put the first card under the fold. */
+  .procedure-section .training-prompt .prompt-sources,.pinned-readouts,.pinned-readouts.shown {
     display:none;
   }
-}
-.procedure-card .alignment-label.other-sees {
-  color:var(--text-soft);
 }
 /* The sheet's corner close control was a 16 px icon; a thumb needs 40. */
 .action-sheet>button.absolute {
@@ -7037,9 +6587,6 @@ span.effect-list>span.effect.pace.worse>em {
   margin:8px 0 0;
   padding-inline-start:18px;
   line-height:var(--leading-base);
-}
-.campaign-change li+li {
-  margin-top:4px;
 }
 .campaign-change p {
   margin:8px 0 0;
@@ -7080,64 +6627,6 @@ span.effect-list>span.effect.pace.worse>em {
     min-height:0;
   }
 }
-/* The educator pack: a document on the desk, read and printed by a trainer. */
-.educator-pack {
-  max-width:760px;
-  margin:32px auto;
-  padding:32px max(16px,4vw);
-  background:#efe9dc;
-  color:#1d1b18;
-  font-size:var(--type-body);
-  line-height:var(--leading-prose);
-}
-.educator-pack h1 {
-  margin:6px 0 12px;
-  font:600 var(--type-title)/1.2 var(--font-display);
-}
-.educator-pack h2 {
-  margin:28px 0 8px;
-  padding-top:10px;
-  border-top:1px solid #1d1b18;
-  font:600 var(--type-lead)/1.25 var(--font-display);
-}
-.educator-pack h3 {
-  margin:16px 0 4px;
-  font:600 var(--type-body)/1.3 var(--font-display);
-}
-.educator-pack p,.educator-pack li,.educator-pack dd {
-  color:#2f2c27;
-}
-.educator-pack ol {
-  padding-inline-start:22px;
-}
-.educator-pack li {
-  margin:6px 0;
-}
-.educator-pack dl>div {
-  padding:8px 0;
-  border-bottom:1px dotted #8a8478;
-}
-.educator-pack dt {
-  font-weight:600;
-}
-.educator-pack dd {
-  margin:2px 0 0;
-}
-.educator-pack a {
-  color:#1d1b18;
-  text-decoration:underline;
-}
-.educator-pack .educator-form {
-  font-size:var(--type-caption);
-  font-weight:600;
-}
-@media print {
-  .educator-pack {
-    margin:0;
-    padding:0;
-    background:#fff;
-  }
-}
 .restore-confirm {
   display:grid;
   gap:8px;
@@ -7145,7 +6634,7 @@ span.effect-list>span.effect.pace.worse>em {
 }
 @media(max-width:650px) {
   /* The index wraps to two rows on a phone, so a section it jumps to stops below both. */
-  .paper-dialog .debrief-stats,.paper-dialog .advanced-review {
+  .paper-dialog .debrief-stats,.paper-dialog .advanced-review,.first-read dl>div {
     grid-template-columns:minmax(0,1fr);
   }
   .paper-dialog .mission-consequences>div,.paper-dialog .mission-consequences>div:first-child {
@@ -7185,12 +6674,6 @@ span.effect-list>span.effect.pace.worse>em {
   .topology-nodes button {
     grid-template-columns:minmax(0,1fr) auto;
   }
-  .topology-nodes small {
-    grid-column:1/-1;
-  }
-  .first-read dl>div {
-    grid-template-columns:minmax(0,1fr);
-  }
   .mission-selector {
     grid-template-columns:repeat(10,minmax(0,1fr));
     gap:0;
@@ -7225,10 +6708,7 @@ span.effect-list>span.effect.pace.worse>em {
     align-items:center;
     gap:6px 10px;
   }
-  .response-heading>div,.set-piece-title>div,.end-banner>div:nth-child(2) {
-    display:contents;
-  }
-  .response-heading>div>*:not(.eyebrow),.set-piece-title>div>*:not(.eyebrow),.end-banner>div:nth-child(2)>*:not(.eyebrow),.end-banner>button {
+  .topology-nodes small,.response-heading>div>*:not(.eyebrow),.set-piece-title>div>*:not(.eyebrow),.end-banner>div:nth-child(2)>*:not(.eyebrow),.end-banner>button {
     grid-column:1/-1;
   }
   .set-piece-title>svg {
