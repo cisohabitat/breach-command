@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useEffect, type CSSProperties } from "react";
 import { StoryArt } from "./story-art";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
@@ -39,6 +39,28 @@ export function DebriefDialog({ session }: { session: GameSession }) {
     target.querySelectorAll("details").forEach(fold => { fold.open = true; });
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  // A printed review is read away from the screen, where a fold cannot be
+  // opened: every fold prints open, and the ones the player had closed close
+  // again afterwards.
+  useEffect(() => {
+    if (!debrief) return;
+    let opened: HTMLDetailsElement[] = [];
+    const openFolds = () => {
+      opened = [...document.querySelectorAll<HTMLDetailsElement>(".debrief-dialog details:not([open])")];
+      opened.forEach(fold => { fold.open = true; });
+    };
+    const closeFolds = () => {
+      opened.forEach(fold => { fold.open = false; });
+      opened = [];
+    };
+    window.addEventListener("beforeprint", openFolds);
+    window.addEventListener("afterprint", closeFolds);
+    return () => {
+      window.removeEventListener("beforeprint", openFolds);
+      window.removeEventListener("afterprint", closeFolds);
+    };
+  }, [debrief]);
 
   return (
     <Dialog open={debrief} onOpenChange={setDebrief}>

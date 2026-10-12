@@ -4,6 +4,23 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.28, 12 October 2026
+
+- **The printed review is whole.** Printing the after-action review gave its
+  first page and nothing more: an open dialog clips the page to the window
+  to stop it scrolling, and the print kept that clip. It now prints every
+  section, about three A4 pages, and every fold prints open, since a fold
+  cannot be opened on paper. Folds the player had closed close again
+  afterwards.
+- **A steadier first-paint check.** The test that the game's stylesheet
+  leaves the assignment screen alone failed about one run in ten under
+  load. It counted an image with no "loaded" mark as shown, and it could
+  keep a frame painted before the scene was decoded. It now waits for each
+  scene to be marked loaded and keeps the first of two matching captures:
+  100 of 100 under load.
+- **Roadmap.** Phase 7 records that the pseudo-locale layout check could
+  not fail before 0.9.27, and what it measures now.
+
 ## 0.9.27, 12 October 2026
 
 - **The specialist roster lines up.** Each specialist's selection mark sat

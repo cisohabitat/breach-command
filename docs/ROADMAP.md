@@ -789,6 +789,17 @@ and `lib/` by `tests/i18n.test.ts`, and on every screen the sweep reaches by
 screen-reader and keyboard-only playthroughs and a first shipped locale.
 First load 845,158 B; all script 1,190,300 B.
 
+12 October 2026 (0.9.27, commit fe60dd8): the claim above that the
+pseudo-locale "holds every layout" was measured by a check that could not
+fail. `tests/e2e/locale.spec.ts` compared the page's scroll width with the
+viewport, and the page clips sideways overflow (`overflow-x: clip`), so its
+scroll width never grew. A visual audit found the pseudo-locale assignment
+524 px wide at 320 and 390 px, and the investigation screen 8 px over at
+320. The check now measures how far the furthest box reaches past the
+viewport (outside boxes that scroll or clip on purpose); it caught the
+investigation screen's 8 px that the old check passed. Both are fixed and
+it passes at all four widths. English is pixel-identical.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

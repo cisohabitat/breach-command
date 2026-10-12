@@ -1161,9 +1161,17 @@
   .topbar,.game-screen,.briefing-screen,[data-radix-dialog-overlay],.debrief-dialog button,html.print-facilitator .debrief-dialog>:not(.facilitator-sheet) {
     display:none!important;
   }
+  /* An open dialog locks the page's scroll by clipping the body to the
+     window, and a dialog pinned to all four edges is one window tall, so the
+     review printed its first page and lost the rest. */
+  html body,html body[data-scroll-locked] {
+    overflow:visible!important;
+    height:auto!important;
+  }
   .debrief-dialog {
     position:absolute!important;
-    inset:0!important;
+    inset:0 0 auto!important;
+    height:auto!important;
     transform:none!important;
     width:100%!important;
     max-width:none!important;

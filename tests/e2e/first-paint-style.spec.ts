@@ -25,8 +25,29 @@ async function capture(page: Page, path: string, blocked: boolean, storage: Reco
     for (const image of images) image.loading = "eager";
     await Promise.all(images.map(image => image.decode().catch(() => undefined)));
   });
-  await page.waitForFunction(() => [...document.images].every(image => !image.complete || image.naturalWidth === 0 || image.dataset.loaded !== "false"));
-  return page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" });
+  // A scene that fades in is shown once the page has marked it loaded; before
+  // hydration it carries no mark at all, and counting that as shown let a
+  // capture catch the case's scene still transparent. One that failed to load
+  // stays empty, and a portrait does not fade.
+  await page.waitForFunction(() => [...document.images].every(image => image.complete && (image.naturalWidth === 0 || !image.matches(".story-art, .sector-illustration") || image.dataset.loaded === "true")));
+  // A complete, shown image decoded off the main thread could still miss the
+  // frame the screenshot took (one capture in ten under load, the scene's
+  // frame empty), so the images decode with the page and two frames pass.
+  await page.evaluate(async () => {
+    const images = [...document.images];
+    for (const image of images) image.decoding = "sync";
+    await Promise.all(images.map(image => image.decode().catch(() => undefined)));
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  // And, as toHaveScreenshot does, the capture is the first that matches the
+  // one before it, so a frame painted without its image is never the one kept.
+  let shot = await page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" });
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const next = await page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" });
+    if (next.equals(shot)) break;
+    shot = next;
+  }
+  return shot;
 }
 
 const returning = {
