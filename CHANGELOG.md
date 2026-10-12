@@ -4,6 +4,25 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.27, 12 October 2026
+
+- **The specialist roster lines up.** Each specialist's selection mark sat
+  between their name and their role; it is now level with the name and
+  portrait, and on a wide screen the role is centred on the row.
+- **Your command record wraps cleanly.** "3/10 incidents, trust 50,
+  readiness 50" no longer leaves the last figure alone on a line on a phone.
+- **Longer languages fit on a phone.** On the assignment and investigation
+  screens, a long word in a translation made the page wider than the phone
+  (the pseudo-locale's assignment was 524 px wide at 390). The columns,
+  the fatigue note, the Bot Commander setting, the reading comparison and
+  the wordmark now wrap within the screen. English is unchanged.
+- **The layout check sees clipped overflow.** The page clips sideways
+  overflow, so the locale test's scroll-width check could never fail; it now
+  measures how far the furthest box reaches past the viewport.
+- **Campaign states have visual baselines.** A campaign part-way through
+  and a finished one with its conclusion are photographed whole at all four
+  widths.
+
 ## 0.9.26, 12 October 2026
 
 - **The case numbers line up.** On the assignment, a cleared case's number

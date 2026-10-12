@@ -5,12 +5,23 @@ import { openWithSave, responsePhaseGame, twoStagesGame } from "./fixtures";
 
 // The pseudo-locale makes every catalogued string a third longer, as German
 // runs, so a layout that would break in a longer language breaks here first:
-// no page scrolls sideways and the workspace tabs stay on one line.
+// nothing reaches past the side of the page and the workspace tabs stay on
+// one line.
 const widths = [320, 390, 820, 1280];
 
 test("the catalogued interface holds its layout with strings a third longer", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "measured in Chromium");
-  const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  // The page clips sideways overflow (overflow-x: clip), so its scroll width
+  // never grows: measure how far past the viewport the furthest box reaches,
+  // leaving out what sits inside a box that scrolls or clips on purpose.
+  const overflow = () => page.evaluate(() => {
+    const contained = (element: Element) => {
+      for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) if (getComputedStyle(parent).overflowX !== "visible") return true;
+      return false;
+    };
+    const rights = [...document.body.querySelectorAll("*")].filter(element => element.getBoundingClientRect().width > 0 && !contained(element)).map(element => element.getBoundingClientRect().right);
+    return Math.round(Math.max(0, ...rights)) - document.documentElement.clientWidth;
+  });
   for (const width of widths) {
     await page.setViewportSize({ width, height: 844 });
     await openWithSave(page, null, false, null, "/?locale=en-XA");

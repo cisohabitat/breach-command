@@ -2810,10 +2810,13 @@
 }
 .hypothesis-compare-options {
   display:grid;
+  grid-template-columns:minmax(0,1fr);
   margin-top:9px;
 }
 .hypothesis-compare-options button {
   display:grid;
+  grid-template-columns:minmax(0,1fr);
+  overflow-wrap:break-word;
   gap:4px;
   min-height:44px;
   text-align:start;

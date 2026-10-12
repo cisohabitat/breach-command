@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { sectorSetPieces } from "../../lib/phase8";
 import { commandEvents } from "../../lib/advanced-game";
+import { defaultCampaign, CAMPAIGN_KEY } from "../../lib/campaign";
 import { openWithSave, pendingDecisionGame, responsePhaseGame, twoStagesGame } from "./fixtures";
 
 // Pixel baselines for the screens a player spends the game on, at the four
@@ -36,9 +37,32 @@ async function imagesSettled(page: Page) {
   });
 }
 
-async function snap(page: Page, name: string) {
+async function snap(page: Page, name: string, fullPage = false) {
   await imagesSettled(page);
-  await expect(page).toHaveScreenshot(name, { mask: masked(page), animations: "disabled", caret: "hide", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+  await expect(page).toHaveScreenshot(name, { fullPage, mask: masked(page), animations: "disabled", caret: "hide", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+}
+
+// A campaign part-way through, and one finished with its conclusion: the
+// assignment then carries a record, a mastery tally on the case strip, an act
+// and a conclusion with their art, which a new player's screen never shows.
+const midCampaign = { ...defaultCampaign, completed: [0, 2, 4], xp: 300, operations: 6, mastery: { 0: 1, 2: 3, 4: 5 }, bestScores: { 0: 81, 2: 74, 4: 66 }, unresolvedThreads: 2, routeHistory: ["watchtower", "breakwater"] };
+const finishedCampaign = { ...midCampaign, completed: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], xp: 1450, operations: 14, leadershipTrust: 80, readiness: 80, unresolvedThreads: 0, commandPosture: { observe: 9, act: 6 }, mastery: { 0: 2, 1: 1, 2: 3, 3: 1, 4: 5, 5: 2, 6: 1, 7: 1, 8: 2, 9: 1 }, routeHistory: ["watchtower", "breakwater", "convergence"] };
+
+async function openCampaign(page: Page, campaign: object) {
+  await page.addInitScript(([key, value]) => {
+    try {
+      localStorage.clear();
+      localStorage.setItem("breach-command.tutorial-complete", "true");
+      localStorage.setItem(key, value);
+    } catch {}
+  }, [CAMPAIGN_KEY, JSON.stringify(campaign)] as const);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".career-card")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  // A whole-page capture leaves the sticky start where the first screen put
+  // it, over whatever is there in the page; in its own place it shows the
+  // panel as it is laid out.
+  await page.addStyleTag({ content: ".start-button { position: static !important; }" });
 }
 
 test.describe("visual baselines", () => {
@@ -91,6 +115,23 @@ test.describe("visual baselines", () => {
       await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
       await page.waitForTimeout(600);
       await snap(page, `${width}-review.png`);
+    });
+  }
+
+  // Whole pages, because what changes in a campaign is below the first screen.
+  for (const [width, height] of widths) {
+    test(`campaign at ${width}`, async ({ page }) => {
+      await page.clock.setFixedTime(new Date("2026-10-11T12:00:00Z"));
+      await page.setViewportSize({ width, height });
+      await openCampaign(page, midCampaign);
+      await snap(page, `${width}-campaign-mid.png`, true);
+    });
+    test(`finished campaign at ${width}`, async ({ page }) => {
+      await page.clock.setFixedTime(new Date("2026-10-11T12:00:00Z"));
+      await page.setViewportSize({ width, height });
+      await openCampaign(page, finishedCampaign);
+      await expect(page.locator(".campaign-ending")).toBeVisible();
+      await snap(page, `${width}-campaign-finished.png`, true);
     });
   }
 });

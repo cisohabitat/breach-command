@@ -181,6 +181,7 @@ a {
 .brand {
   display:flex;
   align-items:baseline;
+  min-width:0;
   gap:12px;
   text-decoration:none;
   font-size:var(--type-lead);
@@ -322,6 +323,10 @@ a {
   font-size:var(--type-caption);
   color:#bdb6a7;
   margin-top:4px;
+}
+/* A setting's words wrap beside its switch rather than pushing it out. */
+.guided-control>div {
+  min-width:0;
 }
 .primary-button {
   display:flex;
@@ -732,6 +737,12 @@ a {
     display:flex;
     flex-direction:column;
     padding:34px 22px 22px;
+    overflow-wrap:break-word;
+  }
+  /* Each column takes the phone's width, so one long word in a translation
+     breaks rather than widening the page. */
+  .briefing-screen>* {
+    align-self:stretch;
   }
   .intro {
     font-size:var(--type-body);
@@ -1112,6 +1123,7 @@ html,body {
   color:#b3ac9a;
   font-size:var(--type-caption);
   margin-top:3px;
+  text-wrap:pretty;
 }
 /* Experience is a field on the record, not a game counter. */
 .career-card>b {
@@ -1228,6 +1240,7 @@ html,body {
   margin-bottom:9px;
 }
 .specialist-picker label small,.specialist-head small {
+  max-width:100%;
   color:#92979f;
   font-size:var(--type-caption);
 }
@@ -3403,6 +3416,10 @@ body {
   block-size:40px;
   flex-shrink:0;
   object-fit:cover;
+}
+/* The game's sheet repeats the picker's baseline rule after this one. */
+.difficulty-picker.specialist-roster button {
+  align-items:center;
 }
 .specialist-roster button .specialist-name {
   display:flex;
