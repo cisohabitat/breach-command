@@ -46,6 +46,10 @@ test.describe("visual baselines", () => {
 
   for (const [width, height] of widths) {
     test(`screens at ${width}`, async ({ page }) => {
+      // The assignment previews the day's incident variant, whose line can wrap
+      // to two and move everything below it, so the clock is the day the
+      // baselines were recorded: they passed on 11 October and failed on the 12th.
+      await page.clock.setFixedTime(new Date("2026-10-11T12:00:00Z"));
       await page.setViewportSize({ width, height });
 
       await openWithSave(page, null);
