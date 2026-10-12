@@ -1143,14 +1143,16 @@ html,body {
 }
 .mission-selector button.completed:not(.active) {
   color:#f4eedf;
-  position:relative;
 }
-.mission-selector button.completed:not(.active):after {
+/* A cleared case's tick hangs off its number, so the number keeps its place
+   in the line; pinned to the button's corner it crowded the figure. */
+.mission-selector button.completed:not(.active)>span:after {
   content:"✓";
   font-size:var(--type-micro);
   position:absolute;
-  inset-inline-end:5px;
-  top:2px;
+  inset-inline-start:100%;
+  inset-block-start:-.1em;
+  margin-inline-start:1px;
   color:var(--lime);
 }
 .adversary-read {
@@ -1423,6 +1425,13 @@ html,body {
   align-items:center;
   justify-content:center;
   gap:2px;
+  position:relative;
+  min-height:54px;
+}
+/* The number stands clear of the tally beneath it, with room for the
+   selected case's underline between the two. */
+.mission-selector button>span {
+  margin-block-end:14px;
 }
 .mission-selector button small {
   display:flex;
@@ -2064,7 +2073,7 @@ keep their existing width transitions. Curves decelerate (expo/quart out) and no
 beat overshoots past 1.02. Exits are shorter than their entrances. Staggers step
 by index. Each animation is neutralised again under prefers-reduced-motion, and
 every value it carries is also present as static text. */
-.impact-meter,.continuity-meter,.objective-meter {
+.mission-selector button>span,.impact-meter,.continuity-meter,.objective-meter {
   position:relative;
 }
 /* Three-beat reveal entrance: settle at 0.95, overshoot to 1.02, rest at 1. */
@@ -2725,12 +2734,17 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
 .game-footer>span {
   text-wrap:balance;
 }
-/* A cleared case's mastery is tally marks under its number, not tiny stars. */
+/* A cleared case's mastery is tally marks under its number, not tiny stars.
+   They sit at the foot of the button, so every number shares one line
+   whether its case is cleared or not. */
 .mission-selector button small {
   justify-content:center;
   height:auto;
   font:500 var(--type-micro)/1 var(--font-mono);
   letter-spacing:.12em;
+  position:absolute;
+  inset-inline:0;
+  inset-block-end:1px;
 }
 /* Mono is for figures and identifiers — rolls, counts, case and turn numbers,
    a callsign — and words are set in the body face in sentence case. Tracked

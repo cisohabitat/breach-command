@@ -17,6 +17,15 @@ async function capture(page: Page, path: string, blocked: boolean, storage: Reco
   await page.addInitScript(values => { localStorage.clear(); for (const [key, value] of Object.entries(values)) localStorage.setItem(key, value); }, storage);
   await page.goto(path, { waitUntil: "networkidle" });
   await page.waitForTimeout(blocked ? 300 : 1500);
+  // The artwork loads lazily and fades in once it has, so both captures wait
+  // for every image to arrive and show: under a loaded machine one of them
+  // could otherwise be taken mid-fade, and the comparison failed on timing.
+  await page.evaluate(async () => {
+    const images = [...document.images];
+    for (const image of images) image.loading = "eager";
+    await Promise.all(images.map(image => image.decode().catch(() => undefined)));
+  });
+  await page.waitForFunction(() => [...document.images].every(image => !image.complete || image.naturalWidth === 0 || image.dataset.loaded !== "false"));
   return page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" });
 }
 
