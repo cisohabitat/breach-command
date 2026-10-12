@@ -1,6 +1,6 @@
 # Breach Command
 
-Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. It is an unofficial adaptation inspired by the investigation structure of Backdoors & Breaches, using original scenarios, wording, characters, systems and presentation.
+Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
 
@@ -177,11 +177,6 @@ The interface is built with Next.js 16, React 19 and TypeScript and deployed as 
 
 See [`AGENTS.md`](AGENTS.md) for repository-wide contribution rules, game-engine invariants and required verification.
 
-## Attribution
-
-Breach Command is not affiliated with or endorsed by Black Hills Information Security or Active Countermeasures. It does not reproduce the commercial deck, official artwork, official card wording, Consultants or expansion content.
-
-- [Backdoors & Breaches](https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/)
-- [Classic visual guide](https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf)
+## Limits
 
 This project is a learning simulation. Its outcomes are not a security assessment, certification or evidence of regulatory compliance.

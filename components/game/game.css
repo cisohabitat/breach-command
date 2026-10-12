@@ -435,23 +435,8 @@
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
-.attribution {
-  margin-top:27px;
-  padding-top:23px;
-  border-top:1px solid #3d434c;
-}
-.attribution p,.end-banner .primary-button {
+.end-banner .primary-button {
   font-size:var(--type-body);
-}
-.attribution a {
-  display:flex;
-  align-items:center;
-  gap:7px;
-  color:var(--lime);
-  margin-top:15px;
-  font-size:var(--type-body);
-  text-decoration:underline;
-  text-underline-offset:3px;
 }
 .end-banner {
   display:flex;
@@ -6044,7 +6029,7 @@ body {
 .chain-sheet li:nth-child(4) .chain-no {
   color:#1f5a85;
 }
-.chain-sheet .chain-technique,.chain-sheet li.confirmed .chain-status,.paper-dialog .quick-start-guide strong,.paper-dialog .attribution a {
+.chain-sheet .chain-technique,.chain-sheet li.confirmed .chain-status,.paper-dialog .quick-start-guide strong {
   color:#1d1b18;
 }
 .chain-sheet .chain-status {
@@ -6063,7 +6048,7 @@ body {
   font-weight:400;
   color:var(--text-soft);
 }
-.paper-dialog .quick-start-guide,.paper-dialog .quick-start-guide>div,.paper-dialog .attribution {
+.paper-dialog .quick-start-guide,.paper-dialog .quick-start-guide>div {
   border-color:#c9bfac;
 }
 .paper-dialog .rules-content h3 {

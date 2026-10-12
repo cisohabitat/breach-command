@@ -4,6 +4,15 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.29, 12 October 2026
+
+- **Breach Command stands on its own.** The footer, the field guide, the
+  educator pack, the README and the contributor instructions no longer
+  describe the game as an adaptation of another card game or link to it.
+  The assignment's footer now reads "Fictional scenarios and a rule-based
+  computer facilitator", with the version and build, and the game screen's
+  footer link, which opens the field guide, is called "Field guide".
+
 ## 0.9.28, 12 October 2026
 
 - **The printed review is whole.** Printing the after-action review gave its

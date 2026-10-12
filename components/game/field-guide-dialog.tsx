@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { glossary } from "@/lib/i18n/shared-text";
 import type { GameSession } from "@/hooks/use-game-session";
@@ -58,7 +57,6 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
             <section><h3>{t("fieldGuideDialog.runningItWith")}</h3><p>{rich("fieldGuideDialog.theAEducator", {  }, { a: chunk => <a href="/educators" target="_blank" rel="noopener">{chunk}</a> })}</p></section>
             <section><h3>{t("fieldGuideDialog.portableBackup")}</h3><p>{t("fieldGuideDialog.settingsCanExport")}</p></section>
           </div>
-          <section className="attribution"><h3>{t("fieldGuideDialog.aboutThisAdaptation")}</h3><p>{t("fieldGuideDialog.inspiredByBackdoors")}</p><a href="https://www.blackhillsinfosec.com/wp-content/uploads/2024/03/BnB_VisualGuide_v2_03052024.pdf" target="_blank" rel="noreferrer">{t("fieldGuideDialog.readTheOfficial")}<ArrowRight size={14} /></a></section>
         </div>
       </DialogContent>
     </Dialog>

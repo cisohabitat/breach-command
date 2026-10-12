@@ -1,12 +1,11 @@
 # Breach Command contributor instructions
 
-These instructions apply to the entire repository. Preserve the game as a polished, public, single-player incident-response simulation. Changes should strengthen the player experience without turning the project into a reproduction of the commercial Backdoors & Breaches deck.
+These instructions apply to the entire repository. Preserve the game as a polished, public, single-player incident-response simulation. Changes should strengthen the player experience.
 
 ## Product boundaries
 
 - Keep all scenarios, card wording, characters, art direction and rules text original.
-- Retain the existing attribution and the statement that the project is unofficial and not endorsed by the original creators.
-- Do not add official card text, commercial artwork, Consultants content or other proprietary deck material.
+- Do not add another game's card text, artwork or other proprietary material.
 - Keep the game fictional and educational. It must not connect to, scan or modify real infrastructure.
 - Preserve the rule-based computer Incident Captain. Do not introduce a required AI service, account, backend or network dependency.
 - Keep campaign, session, preferences and telemetry data local to the player's browser.

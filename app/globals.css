@@ -366,7 +366,7 @@ a {
   gap:6px;
   align-items:center;
 }
-.adaptation-note {
+.colophon {
   grid-column:1/-1;
   color:#92979e;
   font-size:var(--type-body);
@@ -375,11 +375,6 @@ a {
   max-width:100%;
   text-align:center;
   line-height:var(--leading-prose);
-}
-.adaptation-note a,.attribution a {
-  text-decoration:underline;
-  color:#cbc6bb;
-  text-underline-offset:3px;
 }
 .game-screen {
   max-width:1600px;
@@ -764,7 +759,7 @@ a {
     font-size:var(--type-body);
     line-height:var(--leading-prose);
   }
-  .adaptation-note {
+  .colophon {
     text-align:start;
     padding-top:20px;
     line-height:var(--leading-prose);
@@ -1582,7 +1577,7 @@ html,body {
   .mission-panel {
     width:100%;
   }
-  .adaptation-note {
+  .colophon {
     text-align:start;
     line-height:var(--leading-prose);
   }

@@ -8,7 +8,7 @@ export const gameScreenMessages = {
   "gameScreen.commandWorkspace": "Command workspace",
   "gameScreen.breachCommand": "Breach Command",
   "gameScreen.singlePlayerTabletop": "Single-player tabletop",
-  "gameScreen.rulesAttribution": "Rules & attribution ",
+  "gameScreen.fieldGuide": "Field guide ",
   "gameScreen.responsePhase": "Response phase",
   "gameScreen.finalStatus": "Final status",
   "gameScreen.investigationWindow": "Investigation window",

@@ -157,7 +157,7 @@ export function GameScreen({ session }: { session: GameSession }) {
         <FaultBoundary name="Briefing workspace"><BriefingWorkspace session={session} /></FaultBoundary>
       </div>
 
-      <footer className="game-footer"><span><span className="nowrap">{t("gameScreen.breachCommand")}</span> <span className="separator">/</span> <span className="nowrap">{t("gameScreen.singlePlayerTabletop")}</span></span><button onClick={() => setRules(true)}>{t("gameScreen.rulesAttribution")}<CircleHelp size={14} /></button></footer>
+      <footer className="game-footer"><span><span className="nowrap">{t("gameScreen.breachCommand")}</span> <span className="separator">/</span> <span className="nowrap">{t("gameScreen.singlePlayerTabletop")}</span></span><button onClick={() => setRules(true)}>{t("gameScreen.fieldGuide")}<CircleHelp size={14} /></button></footer>
     </main>
   );
 }

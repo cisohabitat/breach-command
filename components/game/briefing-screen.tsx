@@ -188,7 +188,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </> : <button className="primary-button start-button" onClick={() => start()}>{t("briefingScreen.beginInvestigation")}</button>}
         <div className="mission-meta"><span>{t("briefingScreen.2035MinutesSolo")}</span><span>{t("briefingScreen.noRealSystems")}</span></div>
       </section>
-      <p className="adaptation-note">{rich("briefingScreen.anUnofficialSolo2", { version: process.env.NEXT_PUBLIC_APP_VERSION ?? "", build: process.env.NEXT_PUBLIC_BUILD_ID ?? "" }, { a: chunk => <a href="https://www.blackhillsinfosec.com/tools/backdoorsandbreaches/" target="_blank" rel="noreferrer">{chunk}</a>, span: chunk => <span className="nowrap build-version">{chunk}</span> })}</p>
+      <p className="colophon">{rich("briefingScreen.colophon", { version: process.env.NEXT_PUBLIC_APP_VERSION ?? "", build: process.env.NEXT_PUBLIC_BUILD_ID ?? "" }, { span: chunk => <span className="nowrap build-version">{chunk}</span> })}</p>
     </main>
   );
 }

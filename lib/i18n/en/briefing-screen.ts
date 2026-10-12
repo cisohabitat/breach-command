@@ -86,7 +86,7 @@ export const briefingScreenMessages = {
   "briefingScreen.operation2Plural": { one: "{count} operation", other: "{count} operations" },
   "briefingScreen.formBc0012": "Form BC-001 <span>/</span> Assignment",
   "briefingScreen.advancedOperationSettings2": "Advanced operation settings <span>{gameModesTitle}</span>",
-  "briefingScreen.anUnofficialSolo2": "An unofficial solo adaptation inspired by <a>Backdoors & Breaches</a>. Original scenarios and card text. Rule-based computer facilitator. <span>Version {version}, build {build}.</span>",
+  "briefingScreen.colophon": "Fictional scenarios and a rule-based computer facilitator. <span>Version {version}, build {build}.</span>",
   "briefingScreen.accuracyOver": { one: "operation: {recent} of 10", other: "{count}: {recent} of 10" },
   "briefingScreen.scoreOf100": ", {score} of 100",
 } as const;
