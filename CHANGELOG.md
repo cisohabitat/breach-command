@@ -4,6 +4,15 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.31, 12 October 2026
+
+- **A line of atmosphere under the heading.** "You have the incident." is
+  followed by "Ten organisations. One pattern behind them. Your call.",
+  in the heading's face and the page's bone, before the paragraph that
+  explains a turn. It names the campaign's shape: ten cases, and the acts
+  that ask what connects them. The start button stays on the first screen
+  of a 320 by 720 phone.
+
 ## 0.9.30, 12 October 2026
 
 - **The assignment says what it is again.** The line above "You have the

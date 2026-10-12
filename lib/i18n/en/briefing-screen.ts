@@ -2,6 +2,7 @@
 export const briefingScreenMessages = {
   "briefingScreen.soloTabletop": "A solo incident-response tabletop",
   "briefingScreen.youHaveThe": "You have the incident.",
+  "briefingScreen.tagline": "Ten organisations. One pattern behind them. Your call.",
   "briefingScreen.anIntruderHas": "An intruder has worked through four stages somewhere in the organisation. Each turn you state what you think happened, test it against one evidence source and decide what to do with what you find. Once the whole chain is known, you lead the response.",
   "briefingScreen.theFourStages": "The four stages you are looking for",
   "briefingScreen.quickStart": "Quick start",

@@ -37,6 +37,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
       <div className="briefing-main">
         <p className="desk-line">{t("briefingScreen.soloTabletop")}</p>
         <h1>{t("briefingScreen.youHaveThe")}</h1>
+        <p className="tagline">{t("briefingScreen.tagline")}</p>
         <p className="intro">{t("briefingScreen.anIntruderHas")}</p>
         <ol className="briefing-chain" aria-label={t("briefingScreen.theFourStages")}>
           {stages.map((stage, index) => {

@@ -244,6 +244,14 @@ a {
   line-height:var(--leading-tight);
   margin:28px 0 18px;
 }
+/* The campaign in one breath, in the heading's face and the page's bone. */
+.tagline {
+  margin:-6px 0 16px;
+  color:var(--lime);
+  font:500 var(--type-lead)/var(--leading-tight) var(--font-serif);
+  letter-spacing:.01em;
+  text-wrap:balance;
+}
 .intro {
   color:#c9c3b6;
   max-width:540px;
