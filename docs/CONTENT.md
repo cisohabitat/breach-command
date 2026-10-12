@@ -19,7 +19,7 @@
      sector's (the draft starts with the first sector's, which the tests
      reject as a copy);
    - a topology of its own shape;
-   - two crises whose narrow measure costs something;
+   - three crises whose narrow measure costs something;
    - seven variants;
    - a response profile whose cheap options (`accelerate`, `patch`) are
      named for this sector, with labels that agree with their score;

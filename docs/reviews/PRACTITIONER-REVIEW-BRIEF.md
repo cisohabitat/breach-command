@@ -13,7 +13,7 @@ and how to record the result. Nothing here has been reviewed by a human yet.
 | ATT&CK mapping | `lib/game.ts`, `attackMitre` | 96 | Is the first ID the technique a practitioner would file the finding under? |
 | Procedures and sector actions | `lib/game.ts`, `procedures`, `sectorProcedures` | 21 | Would a responder run this, and does it collect what it says? |
 | Scenarios: summary, briefing, leads, scope | `lib/game.ts`, `scenarios` | 10 | Is the sector plausible to someone who works in it? |
-| Sector rules and decisions | `lib/command-systems.ts`, `lib/phase8.ts` | 10 sectors, 20 crises | Would that sector's people own the decision, and are the three measures the ones they would weigh? |
+| Sector rules and decisions | `lib/command-systems.ts`, `lib/phase8.ts` | 10 sectors, 30 crises (the ten in `thirdSetPieces` added in 0.9.23) | Would that sector's people own the decision, and are the three measures the ones they would weigh? |
 | Response options | `lib/engine/content.ts`, `responseProfiles` | 10 sectors × 3 phases | Is the cheap option a real shortcut in that sector, and is its cost right? |
 | Command events and injects | `lib/engine/content.ts` | 26 and 20 | Does this happen in the middle of a real incident? Is the option graded better (`quality`) the call a response lead should make? The eight added in 0.9.19 come last in `commandEvents` (`mailboxes` to `provider`); `police` and `contact` (leaving an intruder in place for investigators, and replying to an extortion message) are the ones a practitioner may grade differently. |
 | Glossary | `lib/engine/content.ts`, `plainLanguage` | about 70 | Correct, and plain enough for someone outside the field? |

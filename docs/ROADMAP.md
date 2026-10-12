@@ -477,6 +477,15 @@ by a test. Win rates at 3,000 per difficulty: 75.5 / 67.2 / 49.0, from
 75.8 / 67.4 / 49.3. Challenge codes are `BC8`. A sector crisis still repeats
 in 58.5 per cent, for the reason above, and is not met.
 
+*12 October 2026 (0.9.23, `95c3578`): a third crisis for every sector.* Within
+an act a crisis repeats in 30.0 per cent of 3,000 campaigns, from 58.5;
+events 1.4, injects 2.7. Every remaining crisis repeat is a fourth or later
+attempt at a case the Bot Commander kept losing in the same act, which three
+crises a sector cannot avoid; the five per cent criterion is not met for
+crises. Win rates over the incident variants move by at most 0.1 point.
+Codes are `BC9`. The ten new crises wait for the practitioner's review with
+the rest.
+
 Not done: the two new sectors, which change the campaign's length, every
 per-scenario table and the endings, and want the practitioner's review of
 the techniques first; and the practitioner's sign-off on every new event,

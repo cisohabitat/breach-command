@@ -4,6 +4,18 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.23, 12 October 2026
+
+- **A third crisis for every sector.** Remote workers signing in, scans
+  sent for reporting, a control room handover, gate bookings, a status page,
+  administrator accounts, an application deadline, emergency call routing,
+  reservoir readings and card authorisation. Each offers a decisive, a
+  narrow and a permissive measure, like the first two. A crisis now repeats
+  within a campaign act in about 30 campaigns in 100, from about 58.
+- **Challenge codes move to `BC9`**, because the same seed can now meet a
+  different crisis; earlier codes are named as outdated. The new crises have
+  not yet had a practitioner's review.
+
 ## 0.9.22, 11 October 2026
 
 - **Dependencies.** Tailwind CSS and its PostCSS plugin move to 4.3.3
