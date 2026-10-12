@@ -302,3 +302,14 @@ Show source artifacts only on confirmed findings and derive them from the
 procedure/sector, never a hidden technique. Real evidence stays readable text.
 Keep ending art after the result and review control. All assets are local WebP
 files in `public/art`, cached by the service worker once seen. Art rules for the assignment screen are in `app/globals.css`; those for the game's own screens in `components/game/game.css`.
+
+Expanded artwork (12 October 2026): `lib/art.ts` supplies `evidenceArtFor`,
+re-exported by `story-art.tsx`, keyed only by procedure and sector. Eight
+adversary object emblems appear in the review; four campaign conclusions use
+the id returned by `campaignEnding`. Sector, act and ending scenes have
+`-480.webp` copies and responsive image attributes. `DecorativeImage` reserves
+the frame and handles loaded, cached and failed assets; the fade uses
+`--motion-short` and is disabled under reduced motion. Keep all images
+decorative and out of the service worker precache. The share card carries its
+scenario id for a muted local sector scene; a failed or stalled image must
+still save the complete text result. No rules, scores or stored schema change.

@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { StoryArt } from "./story-art";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
 import { FacilitatorSheet } from "@/components/game/facilitator-sheet";
@@ -128,11 +129,11 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             </section>
             <section className="mission-consequences">
               <div><span className="eyebrow">{t("debriefDialog.sectorOutcome")}</span><strong>{t("debriefDialog.of1003", { sectorSystemsTitle: sectorSystems[game.scenario].title, sectorHealth: game.sectorHealth })}</strong><p>{sectorSystems[game.scenario].rule}</p></div>
-              <div><span className="eyebrow">{t("debriefDialog.adversaryIntent")}</span><strong>{adversaryObjectives[game.objective].title}{t("debriefDialog.adversaryProgressOf", { objectiveProgress: game.objectiveProgress })}</strong><p>{adversaryObjectives[game.objective].tell}</p>
+              <div><span className="eyebrow">{t("debriefDialog.adversaryIntent")}</span><strong>{adversaryObjectives[game.objective].title}{t("debriefDialog.adversaryProgressOf", { objectiveProgress: game.objectiveProgress })}</strong><p>{adversaryObjectives[game.objective].tell}</p><div className="adversary-profile"><StoryArt kind="adversaries" name={game.adversaryProfile} /><p>{t("debriefDialog.operationAgainst2", { gameModesTitle: gameModes[game.mode].title })}{getAdversaryProfile(game).title}{t("debriefDialog.itsHabitWas2", { signature: getAdversaryProfile(game).signature.toLowerCase(), counterplay: inSentence(getAdversaryProfile(game).counterplay) })}</p></div>
                 {/* A recorded theory was never judged anywhere, so a player could not
                     learn whether the reading of intent had been right. */}
                 <p className="theory-verdict">{!game.caseTheory ? t("debriefDialog.noCaseTheory") : game.caseTheory === game.objective ? t("debriefDialog.yourCaseTheory", { objectiveTheoryTitle: objectiveTheory[game.caseTheory].title.toLowerCase() }) : t("debriefDialog.yourCaseTheory2", { objectiveTheoryTitle: objectiveTheory[game.caseTheory].title.toLowerCase(), objectiveTheoryTitle2: objectiveTheory[game.objective].title.toLowerCase() })}</p>{game.revealed.includes(game.chain[3]) && <p className="intent-link"><strong>{attacks.find(attack => attack.id === game.chain[3])?.title}:</strong> {adversaryObjectives[game.objective].outbound}</p>}</div>
-              <div><span className="eyebrow">{t("debriefDialog.commandTeam")}</span><strong>{t("debriefDialog.fatigueOf6", { namedSpecialistsName: namedSpecialists[game.specialist].name, specialistFatigue: game.specialistFatigue })}</strong><p>{t("debriefDialog.operationAgainst2", { gameModesTitle: gameModes[game.mode].title })}{getAdversaryProfile(game).title}{t("debriefDialog.itsHabitWas2", { signature: getAdversaryProfile(game).signature.toLowerCase(), counterplay: inSentence(getAdversaryProfile(game).counterplay) })}</p></div>
+              <div><span className="eyebrow">{t("debriefDialog.commandTeam")}</span><strong>{t("debriefDialog.fatigueOf6", { namedSpecialistsName: namedSpecialists[game.specialist].name, specialistFatigue: game.specialistFatigue })}</strong></div>
             </section>
           </details>
           <section className="timeline" id="debrief-timeline">

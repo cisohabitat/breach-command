@@ -1214,9 +1214,6 @@ html,body {
 .mode-picker button.active {
   grid-column:span 2;
 }
-.mode-picker button.active small {
-  display:block;
-}
 .specialist-picker {
   padding:17px 0;
   border-bottom:1px solid #3e4248;
@@ -3372,7 +3369,9 @@ body {
   display:block;
   inline-size:100%;
   block-size:auto;
-  background:var(--lime);
+  background:var(--background);
+  opacity:0;
+  transition:opacity var(--motion-short) var(--ease-arrive);
 }
 .mission-panel>.sector-illustration {
   max-block-size:180px;
@@ -3402,6 +3401,29 @@ body {
   block-size:auto;
   object-fit:cover;
   margin-block:12px;
+  background:var(--background);
+  opacity:0;
+  transition:opacity var(--motion-short) var(--ease-arrive);
+}
+.sector-illustration[data-loaded="true"],.story-art[data-loaded="true"] {
+  opacity:1;
+}
+.mode-picker button.active small,.briefing-main .campaign-ending {
+  display:block;
+}
+.campaign-ending>.story-art {
+  block-size:180px;
+  margin-block-end:0;
+}
+@media(max-width:600px) {
+  .campaign-ending>.story-art {
+    block-size:120px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sector-illustration,.story-art {
+    transition:none;
+  }
 }
 .briefing-main .campaign-act-card {
   display:grid;

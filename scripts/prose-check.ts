@@ -35,6 +35,11 @@ const lines: string[] = [];
 const say = (name: string, call: () => unknown) => {
   let result: unknown;
   try { result = call(); } catch (error) { result = `throws: ${(error as Error).message}`; }
+  // Decorative asset identifiers add no player-facing words. Their mapping is
+  // checked in art.test.ts; keep this fingerprint on the unchanged game prose.
+  if (result && typeof result === "object" && (name === "getShareCard" || name === "campaignEnding")) {
+    result = Object.fromEntries(Object.entries(result).filter(([key]) => key !== (name === "getShareCard" ? "scenarioId" : "id")));
+  }
   lines.push(`${name} ${JSON.stringify(english(result))}`);
 };
 const fn = (name: string) => (engine as Record<string, unknown>)[name] as ((...args: unknown[]) => unknown) | undefined;

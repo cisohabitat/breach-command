@@ -6580,6 +6580,17 @@ span.effect-list>span.effect.pace.worse>em {
   flex-shrink:0;
   margin-block:0;
 }
+.adversary-profile {
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+}
+.mission-consequences .story-art-adversaries {
+  inline-size:48px;
+  block-size:48px;
+  flex-shrink:0;
+  margin-block:0;
+}
 @media(max-width:600px) {
   .resolution>.story-art {
     max-block-size:120px;

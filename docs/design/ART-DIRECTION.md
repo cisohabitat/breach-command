@@ -119,3 +119,28 @@ Each image has empty alt text because neighbouring game text carries the meaning
 WebP files are local and lazy loaded. The service worker keeps each one once it has been seen, rather than fetching 2.4 MB of them on a first visit.
 Portraits share the charcoal-and-bone style; ending scenes include subdued natural
 light to distinguish time of day, without using the game's warning colours.
+
+## Source, adversary and conclusion artwork, 12 October 2026
+
+The requested `ART-BRIEF.md` adds eight evidence-source still lifes, eight
+object-only adversary emblems and four campaign conclusions. All use charcoal
+linework on warm bone, with blank records and no state colours, brands or
+attack clues. Evidence art follows the procedure and sector alone; server and
+endpoint checks in operational-technology sectors retain the maintenance scene.
+Adversary emblems appear only in the after-action review, beside intent whose
+meaning is already stated in text. Campaign conclusions retain their complete
+text before a cropped scene, 180 px high or 120 px on phones.
+
+Every sector, act and ending scene has a 480 px WebP copy. Responsive image
+attributes select the appropriate local asset without an image service. Frames
+reserve their space on the dark desk; an image fades in over `--motion-short`
+after loading, with no transition under reduced motion. Cached images that
+arrived before hydration are also shown. A failed image remains an empty frame.
+Artwork continues to be cached only after it is seen, never precached.
+
+The optional result-card scene is included: its case id comes from the same
+share card as the counts, and the sector setting is drawn at ten per cent
+opacity behind the header. Loading has a deadline; an unavailable scene leaves
+the complete original text form. No hidden technique reaches the image.
+Generated originals remain outside the repository in `generated_images`;
+only downscaled, budgeted WebP assets are committed.

@@ -93,7 +93,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </section>
         <section className="campaign-act-card"><StoryArt kind="campaign" name={`act-${currentAct.number}`} /><span className="act-number">{t("briefingScreen.act2", { number: currentAct.number })}</span><div><strong>{currentAct.title}</strong><p>{currentAct.detail}</p>{!finalEnding && <p className="act-briefing">{t("briefingScreen.director2", { briefing: currentStory.briefing })}</p>}{!finalEnding && currentStory.development && <p className="act-briefing">{t("briefingScreen.sinceThen2", { development: currentStory.development })}</p>}<small>{t("briefingScreen.unresolvedAccess2", { unresolvedThreads: campaign.unresolvedThreads })}{campaign.unresolvedThreads ? t("briefingScreen.eachStartsLater") : ""}</small></div></section>
         <section className="campaign-route-card"><div><span className="field-label">{t("briefingScreen.campaignRoute2", { currentRouteTitle: currentRoute.title })}</span><strong>{currentRoute.order}</strong><p>{currentRoute.consequence}</p></div></section>
-        {finalEnding && <section className="campaign-ending"><div><span className="field-label">{t("briefingScreen.campaignConclusion")}</span><strong>{finalEnding.title}</strong><p>{say(finalEnding.detail)}</p></div></section>}
+        {finalEnding && <section className="campaign-ending"><div><span className="field-label">{t("briefingScreen.campaignConclusion")}</span><strong>{finalEnding.title}</strong><p>{say(finalEnding.detail)}</p></div><StoryArt kind="campaign" name={`ending-${finalEnding.id}`} /></section>}
       </div>
       <section className="mission-panel">
         {/* The assignment is a dispatch slip: a form number, then the case as a

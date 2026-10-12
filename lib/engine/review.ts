@@ -332,7 +332,7 @@ export function getResultSummary(game: Game): Message[] {
 // The share image's text, under the same rule as the copied result: the case,
 // the outcome, counts and the code, never a technique. The image is drawn from
 // this and nothing else, so the rule is tested here.
-export type ShareCard = { form: Message; title: string; meta: Message; result: Message; score: Message; stages: Message; code: string | null; expert: boolean };
+export type ShareCard = { form: Message; title: string; meta: Message; result: Message; score: Message; stages: Message; code: string | null; expert: boolean; scenarioId: string };
 export function getShareCard(game: Game): ShareCard {
   const scenario = scenarios[game.scenario];
   const outcome = getOutcome(game);
@@ -340,6 +340,7 @@ export function getShareCard(game: Game): ShareCard {
   return {
     form: msg("engine.review.formBc310"),
     title: scenario.title,
+    scenarioId: scenario.id,
     meta: msg("engine.review.case", { scenario: game.scenario + 1, sector: scenario.sector, difficultiesTitle: difficulties[game.difficulty].title, gameModesTitle: gameModes[game.mode].title }),
     result: game.status === "won" ? msg("engine.review.stoodDownGrade2", { grade: outcome.grade }) : game.status === "exercise" ? msg("engine.review.authorisedExerciseConcluded2") : msg("engine.review.lost", { getLossReasonTitle: getLossReason(game).title }),
     score: msg("engine.review.scoreOf100", { total: outcome.breakdown.total }),

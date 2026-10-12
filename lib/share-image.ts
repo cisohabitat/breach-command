@@ -24,6 +24,17 @@ export async function drawShareCard(card: ShareCard, origin: string, locale: Loc
   context.fillStyle = "#efe9dc";
   context.fillRect(x, y, w, h);
 
+  // Setting only, from the share card's case id. A missing or stalled image
+  // leaves the original text form intact, including offline on a first visit.
+  const scene = await loadSectorScene(card.scenarioId);
+  if (scene) {
+    context.save();
+    context.globalAlpha = 0.1;
+    const sceneHeight = 180, sourceHeight = scene.width * sceneHeight / (w - 96);
+    context.drawImage(scene, 0, (scene.height - sourceHeight) / 2, scene.width, sourceHeight, x + 48, y + 16, w - 96, sceneHeight);
+    context.restore();
+  }
+
   context.fillStyle = soft;
   context.font = font(600, 22);
   context.fillText(say(card.form, locale), x + 48, y + 64);
@@ -70,4 +81,21 @@ function fit(context: CanvasRenderingContext2D, text: string, room: number) {
   let cut = text;
   while (cut.length > 1 && context.measureText(`${cut}…`).width > room) cut = cut.slice(0, -1);
   return `${cut.trimEnd()}…`;
+}
+
+function loadSectorScene(scenarioId: string): Promise<HTMLImageElement | null> {
+  return new Promise(resolve => {
+    const image = new Image();
+    const finish = (loaded: boolean) => {
+      clearTimeout(timeout);
+      image.onload = null;
+      image.onerror = null;
+      resolve(loaded ? image : null);
+    };
+    const timeout = setTimeout(() => finish(false), 2500);
+    image.onload = () => finish(image.naturalWidth > 0);
+    image.onerror = () => finish(false);
+    // i18n: maintainer English. A local asset path, never displayed as text.
+    image.src = `/art/sectors/${scenarioId}.webp`;
+  });
 }
