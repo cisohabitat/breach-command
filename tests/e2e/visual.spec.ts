@@ -45,8 +45,11 @@ async function snap(page: Page, name: string, fullPage = false) {
 // A campaign part-way through, and one finished with its conclusion: the
 // assignment then carries a record, a mastery tally on the case strip, an act
 // and a conclusion with their art, which a new player's screen never shows.
+// A whole page fails on any change of height, so the figures avoid a line
+// that wraps on one machine and not another: a four-digit experience left
+// "Your command record" a pixel from wrapping at 320.
 const midCampaign = { ...defaultCampaign, completed: [0, 2, 4], xp: 300, operations: 6, mastery: { 0: 1, 2: 3, 4: 5 }, bestScores: { 0: 81, 2: 74, 4: 66 }, unresolvedThreads: 2, routeHistory: ["watchtower", "breakwater"] };
-const finishedCampaign = { ...midCampaign, completed: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], xp: 1450, operations: 14, leadershipTrust: 80, readiness: 80, unresolvedThreads: 0, commandPosture: { observe: 9, act: 6 }, mastery: { 0: 2, 1: 1, 2: 3, 3: 1, 4: 5, 5: 2, 6: 1, 7: 1, 8: 2, 9: 1 }, routeHistory: ["watchtower", "breakwater", "convergence"] };
+const finishedCampaign = { ...midCampaign, completed: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], xp: 960, operations: 14, leadershipTrust: 80, readiness: 80, unresolvedThreads: 0, commandPosture: { observe: 9, act: 6 }, mastery: { 0: 2, 1: 1, 2: 3, 3: 1, 4: 5, 5: 2, 6: 1, 7: 1, 8: 2, 9: 1 }, routeHistory: ["watchtower", "breakwater", "convergence"] };
 
 async function openCampaign(page: Page, campaign: object) {
   await page.addInitScript(([key, value]) => {
