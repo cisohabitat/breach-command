@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.26, 12 October 2026
+
+- **The case numbers line up.** On the assignment, a cleared case's number
+  sat higher than the rest and its tick crowded the figure. All ten numbers
+  now share one line, each tick sits beside its number, the mastery tally
+  has its own line beneath, and the selected case's underline no longer
+  touches its tally.
+
 ## 0.9.25, 12 October 2026
 
 - **Source artwork.** Eight new evidence still lifes give each shared check
