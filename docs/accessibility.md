@@ -12,12 +12,22 @@ it is met. Four statuses, and none is claimed past its evidence:
 The tests named are `tests/e2e/accessibility.spec.ts` (axe at six widths and
 over every overlay and the surfaces a fresh page never reaches),
 `tests/e2e/wcag.spec.ts` (target size, focus not obscured, the hidden
-objective), `tests/e2e/keyboard.spec.ts`, `tests/e2e/responsive-game.spec.ts`
-and `tests/e2e/locale.spec.ts`.
+objective), `tests/e2e/keyboard.spec.ts`,
+`tests/e2e/keyboard-playthrough.spec.ts` (a whole operation played with the
+keyboard alone), `tests/e2e/responsive-game.spec.ts` and
+`tests/e2e/locale.spec.ts`.
 
 Status, 9 October 2026. The human audit has not happened: no screen-reader
 user (VoiceOver on iOS, NVDA on Windows) or keyboard-only player has played a
 full operation. Their findings are the next work list.
+
+12 October 2026: a scripted keyboard-only player now plays a whole operation
+at 1280 and 390 px, a win and a loss, from the assignment to the review
+(`keyboard-playthrough.spec.ts`). It is a floor, as axe is, not the human
+playthrough. For the screen-reader session it leaves one question: after a
+check, the turn's announcement is joined by the reading's standing and the
+specialist's message, both polite regions that change every turn. Whether
+that is two too many is for a screen-reader user to say.
 
 | Criterion | Level | Status | How |
 | --- | --- | --- | --- |
@@ -37,7 +47,7 @@ full operation. Their findings are the next work list.
 | 1.4.11 Non-text Contrast | AA | Met by design, to confirm | Focus rings, meter bars and switch tracks are drawn against the desk at 3:1; axe checks only part of this. |
 | 1.4.12 Text Spacing | AA | Met by design, to confirm | No fixed heights on text containers; an injected-spacing check is not yet automated. |
 | 1.4.13 Content on Hover or Focus | AA | Met | No hover-only content; glossary meanings open on activation and stay until closed. |
-| 2.1.1 Keyboard | A | Met | Every action has a control; `keyboard.spec.ts` plays through focus moves and shortcuts. |
+| 2.1.1 Keyboard | A | Met | Every action has a control; `keyboard-playthrough.spec.ts` plays a whole operation, won and lost, with Tab, Enter and Escape alone, and `keyboard.spec.ts` covers focus moves and shortcuts. |
 | 2.1.2 No Keyboard Trap | A | Met | Dialogs trap focus by design and close with Escape. |
 | 2.1.4 Character Key Shortcuts | A | Met | Single-key shortcuts can be turned off in Settings and never fire from a field (`keyboard.spec.ts`). |
 | 2.2.1 Timing Adjustable | A | Met | Play is turn-based with no time limit; the Bot Commander's run can be paused and handed back. |
@@ -45,7 +55,7 @@ full operation. Their findings are the next work list.
 | 2.3.1 Three Flashes | A | Met | Nothing flashes. |
 | 2.4.1 Bypass Blocks | A | Met | Skip link to the main content. |
 | 2.4.2 Page Titled | A | Met | The game and the educator pack each set a title. |
-| 2.4.3 Focus Order | A | Met | Focus moves to a replaced panel's heading (`useRecoverFocus`) and to a dialog's own sheet; `keyboard.spec.ts`. |
+| 2.4.3 Focus Order | A | Met | Focus moves to a replaced panel's heading (`useRecoverFocus`) and to a dialog's own sheet; when the control that held it leaves or is disabled, it goes to the open dialog, what is waiting, the procedures or the next order (`recoverFocus`). The keyboard playthrough found it falling to the page five ways and fails if it does again. |
 | 2.4.4 Link Purpose (In Context) | A | Met | Links say where they go; ATT&CK links name the technique ID in their sentence. |
 | 2.4.5 Multiple Ways | AA | Not applicable | A single-page game; the educator pack is reached from the field guide. |
 | 2.4.6 Headings and Labels | AA | Met | Every section and fold names what it holds. |
@@ -71,4 +81,4 @@ full operation. Their findings are the next work list.
 | 3.3.7 Redundant Entry | A | Met | Nothing asks for the same information twice; a challenge code is copied, not retyped. |
 | 3.3.8 Accessible Authentication (Minimum) | AA | Not applicable | No sign-in. |
 | 4.1.2 Name, Role, Value | A | Met | Native controls, `aria-pressed` on toggles, switches with names. axe. |
-| 4.1.3 Status Messages | AA | Met | Polite and assertive live regions announce each turn in the readouts' names, the result of a choice and storage notices; nothing announced names the hidden objective (`wcag.spec.ts`). Announcements are built in `hooks/use-game-session.ts` and are not yet in the message catalogue. |
+| 4.1.3 Status Messages | AA | Met | Polite and assertive live regions announce each turn in the readouts' names, the result of a choice and storage notices; nothing announced names the hidden objective (`wcag.spec.ts`). The assertive warning names the pressures past their line, so it speaks when one crosses and not again on every turn; the sector decision is no longer a live region, which read it in full behind the open report. |

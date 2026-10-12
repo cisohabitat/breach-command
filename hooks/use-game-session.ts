@@ -773,9 +773,17 @@ export function useGameSession() {
 
   // Derived, never stored: the warning can only ever describe the meters as they
   // are now, and it clears itself the moment the operation is no longer running.
-  const criticalAnnouncement = game && game.status === "playing"
-    && (game.impact >= IMPACT_CRITICAL || game.continuity <= CONTINUITY_AT_RISK || game.objectiveProgress >= OBJECTIVE_IMMINENT)
-    ? msg("session.warning", { impact: game.impact, label: lit(engine().getOperationalLabel(game)), continuity: game.continuity, progress: game.objectiveProgress })
+  // It names the pressures past their line, not their figures: the turn's own
+  // announcement reads the figures, and a warning that changed with every point
+  // was read again, assertively, over it on every turn. Now it speaks when a
+  // pressure crosses its line and again only when another one does.
+  const critical = game && game.status === "playing" ? [
+    game.impact >= IMPACT_CRITICAL ? msg("session.warningImpact") : null,
+    game.continuity <= CONTINUITY_AT_RISK ? msg("session.warningContinuity", { label: lit(engine().getOperationalLabel(game)) }) : null,
+    game.objectiveProgress >= OBJECTIVE_IMMINENT ? msg("session.warningObjective") : null,
+  ].filter((part): part is Message => part !== null) : [];
+  const criticalAnnouncement = critical.length
+    ? msg("session.warning", { pressures: critical.reduceRight((rest, first) => msg("session.sentences", { first, rest })) })
     : null;
 
   const answer: Message | null = game && question === "scope" ? lit(activeScenario.scope)

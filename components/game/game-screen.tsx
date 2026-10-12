@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CircleHelp, TriangleAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useMessages } from "@/hooks/use-messages";
+import { useFocusSafetyNet } from "@/hooks/use-recover-focus";
 import { TutorialCoach } from "@/components/game/tutorial-coach";
 import { CommandWorkspace } from "@/components/game/command-workspace";
 import { InvestigateWorkspace } from "@/components/game/investigate-workspace";
@@ -29,6 +30,7 @@ const lossStatus: Record<LossCause, MessageKey> = {
 
 export function GameScreen({ session }: { session: GameSession }) {
   const { t, rich, say } = useMessages();
+  useFocusSafetyNet();
   const {
     game, activeScenario, config, ended, activeWorkspace, setActiveWorkspace,
     tutorial, dismissTutorial, setRules, meterPulse,
@@ -74,7 +76,7 @@ export function GameScreen({ session }: { session: GameSession }) {
           {/* Each separator travels with the segment after it, so a breadcrumb that
               wraps on a narrow phone never ends a line on a bare "/". */}
           <div className="eyebrow case-line"><span>{rich("gameScreen.caseSpanSpan", { scenario: String(game.scenario + 1) }, { span: chunk => <span className="mono">{chunk}</span> })}</span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
-          <h1>{activeScenario.title}</h1>
+          <h1 tabIndex={-1}>{activeScenario.title}</h1>
           {/* The investigation window rarely decides an operation, so it reads as
               context under the title rather than competing with the three
               pressures that do. */}

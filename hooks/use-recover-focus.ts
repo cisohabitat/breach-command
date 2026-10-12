@@ -33,21 +33,65 @@ export function landOnInvestigation(moveFocus = false) {
   return true;
 }
 
-export function returnFocusToAwaiting(event: Event) {
-  const awaiting = document.querySelector<HTMLElement>("[data-awaiting-heading]");
-  if (!awaiting) {
-    landOnInvestigation();
+// Where focus goes when the control that held it is gone: into the dialog
+// that is open, to whatever is waiting for the player, to the investigation's
+// actions, to the next order on Command, or to the operation's title. A
+// keyboard-only playthrough found it falling to the page five ways: closing
+// the mission brief, recording a hypothesis, closing a report with nothing to
+// decide, and choosing a sector decision or a command event.
+export function recoverFocus() {
+  const dialog = document.querySelector<HTMLElement>("[role=dialog][data-state=open]");
+  if (dialog) {
+    dialog.focus();
     return;
   }
+  const awaiting = document.querySelector<HTMLElement>("[data-awaiting-heading]");
+  if (awaiting) {
+    awaiting.focus();
+    awaiting.scrollIntoView({ block: "center" });
+    return;
+  }
+  if (landOnInvestigation(true)) return;
+  const next = document.querySelector<HTMLElement>(".sit-order .sit-link");
+  if (next) {
+    next.focus();
+    return;
+  }
+  document.querySelector<HTMLElement>(".game-screen h1")?.focus();
+}
+
+export function returnFocusToAwaiting(event: Event) {
   event.preventDefault();
-  awaiting.focus();
-  awaiting.scrollIntoView({ block: "center" });
+  requestAnimationFrame(recoverFocus);
+}
+
+// Focus is lost when the control that held it leaves the page or is disabled
+// under it. A click on empty space also blurs, but leaves the control in
+// place, so the player's own move is never overridden.
+export function useFocusSafetyNet() {
+  useEffect(() => {
+    const onFocusOut = (event: FocusEvent) => {
+      if (event.relatedTarget) return;
+      const lost = event.target as HTMLElement;
+      requestAnimationFrame(() => {
+        const active = document.activeElement;
+        if (active && active !== document.body) return;
+        const gone = !lost.isConnected || (lost as HTMLButtonElement).disabled || lost.getClientRects().length === 0;
+        if (gone) recoverFocus();
+      });
+    };
+    document.addEventListener("focusout", onFocusOut);
+    return () => document.removeEventListener("focusout", onFocusOut);
+  }, []);
 }
 
 export function useRecoverFocus(target: RefObject<HTMLElement | null>, key: unknown) {
   useEffect(() => {
     const active = document.activeElement;
     if (active && active !== document.body) return;
+    // Behind an open dialog the heading waits: closing the dialog brings focus
+    // here. Taking it now left focus outside the dialog while it was open.
+    if (document.querySelector("[role=dialog][data-state=open]")) return;
     target.current?.focus();
   }, [target, key]);
 }

@@ -800,6 +800,41 @@ viewport (outside boxes that scroll or clip on purpose); it caught the
 investigation screen's 8 px that the old check passed. Both are fixed and
 it passes at all four widths. English is pixel-identical.
 
+12 October 2026 (0.9.32): a scripted keyboard-only playthrough, the floor
+under the human one this phase asks for, as axe is under the screen-reader
+session. `tests/e2e/keyboard-playthrough.spec.ts` plays a whole operation
+with Tab, Enter and Escape at 1280 px (won, through the response) and 390 px
+(lost, the last report opening the review), on seeded dice, and runs axe on
+each surface the first time it appears: the mission brief, the procedure
+dialog, four kinds of report, a sector decision, two command events, the
+response, both endings and the review. Run against 0.9.31 it fails; it
+found:
+
+- Focus falling to the page five ways: closing the mission brief (which
+  also opened on a fold half-way down rather than on itself), recording a
+  reading, closing a report with nothing to decide, and choosing a sector
+  decision or a command event. `recoverFocus` now sends it to the open
+  dialog, what is waiting, the procedures or the next order.
+- Focus leaving an open report: a response that brought a sector decision
+  or the response phase moved focus to that heading behind the dialog. The
+  heading now waits for the report to close.
+- Five of the six specialists, and the "Training" difficulty, focused
+  mostly behind the pinned start button on a laptop. Not a 2.4.11
+  failure (the five-point check in `wcag.spec.ts` passed: a corner showed),
+  but nearly; scroll padding now clears the start button and the pinned
+  workspace tabs.
+- Two live regions talking over the turn's announcement: the sector decision
+  was an assertive region, read in full behind the report and again when
+  focus arrived, and the assertive warning repeated its figures every turn
+  while a pressure stayed critical. The first is no longer live; the second
+  names the pressures past their line, so it speaks when one crosses.
+
+axe found nothing on any surface. Not met: the human keyboard-only and
+screen-reader playthroughs. For the second, one question the script cannot
+answer: after a check the turn's announcement is joined by the reading's
+standing and the specialist's message, two polite regions that change every
+turn.
+
 ## Phase 8: release engineering
 
 Goal: shipping is routine, reversible and documented, and a regression

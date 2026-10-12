@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { gameModes, getAttributionRead, sectorSystems, specialists } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
@@ -7,6 +8,7 @@ import { useMessages } from "@/hooks/use-messages";
 import { missionBriefingDialogMessages } from "@/lib/i18n/en/mission-briefing-dialog";
 import { SpecialistPortrait } from "./story-art";
 import { register } from "@/lib/i18n";
+import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { SectorIllustration } from "./sector-illustration";
 
 register(missionBriefingDialogMessages);
@@ -14,10 +16,14 @@ register(missionBriefingDialogMessages);
 export function MissionBriefingDialog({ session }: { session: GameSession }) {
   const { t, rich, say } = useMessages();
   const { missionBriefing, setMissionBriefing, game, activeScenario } = session;
+  // The brief opens on itself, as every report does, so it is read from its
+  // title; it opened on a fold half-way down. Closed, focus goes to the next
+  // order rather than to the start button that opened it, which is gone.
+  const content = useRef<HTMLDivElement>(null);
 
   return (
     <Dialog open={missionBriefing} onOpenChange={setMissionBriefing}>
-      <DialogContent className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false}>
+      <DialogContent ref={content} className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false} onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }} onCloseAutoFocus={returnFocusToAwaiting}>
         <DialogHeader><div className="eyebrow">{rich("missionBriefingDialog.formBc1002", { scenario: (game?.scenario ?? 0) + 1 }, { span: chunk => <span className="separator">{chunk}</span> })}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
         {game && <>
           {/* What shapes the first decisions stays open: the sector's condition,

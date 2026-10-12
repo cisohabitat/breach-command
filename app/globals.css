@@ -2049,6 +2049,12 @@ html,body {
   background:transparent;
   color:#e8d6b4;
 }
+/* The start button stays pinned at the foot of the screen, so a control that
+   Tab brings into view stops above it: five of the six specialists were
+   focused behind it on a laptop. */
+html:has(.start-button) {
+  scroll-padding-bottom:96px;
+}
 /* The sticky start carries the panel under it to the viewport's edge, so the
    text it passes over does not show through the gap beneath it. */
 .start-button {

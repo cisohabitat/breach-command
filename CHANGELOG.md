@@ -4,6 +4,30 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.32, 12 October 2026
+
+- **Keyboard play keeps its place.** Played with the keyboard alone, focus
+  fell to the top of the page after closing the mission brief, recording a
+  reading, closing a report with nothing to decide, and choosing a sector
+  decision or a command event. It now goes to the next thing to do: the
+  procedures, the waiting decision, or the next order. The mission brief
+  opens on itself, like every report, and a decision that appears behind an
+  open report waits for it to close before taking focus.
+- **Nothing hides what has focus.** On a laptop, the specialists and the
+  difficulty were focused mostly behind the pinned start button, and
+  controls under the pinned workspace tabs could be tucked behind them. The
+  page now scrolls them clear.
+- **Fewer interruptions for screen readers.** A sector decision was read in
+  full the moment it appeared, behind the open report, and again when focus
+  reached it; it is now read once, when it takes focus. The warning while a
+  pressure is critical repeated its figures every turn; it now names the
+  pressures past their line ("Business impact is critical.") and speaks when
+  another one crosses.
+- **A keyboard-only playthrough test.** A whole operation, won at 1280 px and
+  lost at 390 px, is played with Tab, Enter and Escape on seeded dice, with
+  axe run on each surface it reaches. It fails on the version before this
+  one.
+
 ## 0.9.31, 12 October 2026
 
 - **A line of atmosphere under the heading.** "You have the incident." is

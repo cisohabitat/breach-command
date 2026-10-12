@@ -4614,10 +4614,13 @@ awareness. */
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
-.evidence-workspace,.infrastructure-console {
-  scroll-margin-top:96px;
+/* The workspace tabs stay pinned at the top, so whatever focus or a jump
+   brings into view lands below them: the actions region and the summary under
+   it were tucked behind the tabs when reached by Tab. */
+html:has(.workspace-tabs) {
+  scroll-padding-top:96px;
 }
-.evidence-workspace:focus,.infrastructure-console:focus,[data-awaiting-heading]:focus:not(:focus-visible) {
+.evidence-workspace:focus,.infrastructure-console:focus,[data-awaiting-heading]:focus:not(:focus-visible),.game-screen h1:focus:not(:focus-visible) {
   outline:none;
 }
 .evidence-workspace:focus-visible,.infrastructure-console:focus-visible {
@@ -5737,7 +5740,7 @@ span.effect-list>span.effect.term>em {
 .modifier-breakdown li>span,.case-meters>div>.mono,.operation-status>.mono,.sector-margin-line .mono,.chain-status,.resolution-steps li b {
   font-size:var(--type-caption);
 }
-[data-awaiting-heading]:focus-visible {
+[data-awaiting-heading]:focus-visible,.game-screen h1:focus-visible {
   outline:1px solid currentColor;
   outline-offset:6px;
 }

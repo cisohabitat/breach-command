@@ -171,6 +171,7 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
 | `tests/e2e/persistence.spec.ts` | Stored settings survive a load and a reload |
 | `tests/e2e/keyboard.spec.ts` | Initial focus in overlays, focus recovery and switchable shortcuts |
+| `tests/e2e/keyboard-playthrough.spec.ts` | A whole operation, won and lost, played with the keyboard alone, with axe on each surface |
 | `playwright.config.ts` | Deterministic Chromium test runner and local preview lifecycle |
 
 The interface is built with Next.js 16, React 19 and TypeScript and deployed as a native Next.js application on Vercel.
