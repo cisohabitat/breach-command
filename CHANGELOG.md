@@ -4,6 +4,11 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.24, 12 October 2026
+
+- **Dependencies.** React and React DOM move to 19.3.0. Nothing on screen
+  changes: pixels and text are identical on every seeded screen.
+
 ## 0.9.23, 12 October 2026
 
 - **A third crisis for every sector.** Remote workers signing in, scans
