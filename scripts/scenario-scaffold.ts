@@ -4,7 +4,7 @@
 // the first scenario's values as a starting point. Reading the shapes from the
 // live tables keeps the scaffold in step as they change.
 import { attackMitre, attacks, scenarioDynamics, scenarios, sectorProcedures } from "../lib/game.ts";
-import { infrastructureTopologies, secondSetPieces, sectorSetPieces } from "../lib/phase8.ts";
+import { infrastructureTopologies, secondSetPieces, sectorSetPieces, thirdSetPieces } from "../lib/phase8.ts";
 import { variantTemplates } from "../lib/phase9.ts";
 import { objectiveRotation, sectorSystems } from "../lib/command-systems.ts";
 import { responseProfiles, scenarioProfiles, sectorDecisionTerms } from "../lib/engine/content.ts";
@@ -24,6 +24,7 @@ export const scenarioTables = {
   topology: { file: "lib/phase8.ts", table: "infrastructureTopologies", template: infrastructureTopologies[0] },
   firstCrisis: { file: "lib/phase8.ts", table: "sectorSetPieces", template: sectorSetPieces[0] },
   secondCrisis: { file: "lib/phase8.ts", table: "secondSetPieces", template: secondSetPieces[0] },
+  thirdCrisis: { file: "lib/phase8.ts", table: "thirdSetPieces", template: thirdSetPieces[0] },
   sectorSystem: { file: "lib/command-systems.ts", table: "sectorSystems", template: sectorSystems[0] },
   objectives: { file: "lib/command-systems.ts", table: "objectiveRotation", template: objectiveRotation[0] },
   variants: { file: "lib/phase9.ts", table: "variantTemplates (seven; the first three never move once shipped)", template: variantTemplates[0] },

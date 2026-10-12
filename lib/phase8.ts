@@ -130,7 +130,7 @@ export const infrastructureTopologies: InfrastructureTopology[] = [
 
 export { namedSpecialists } from "./command-systems.ts";
 
-export type SetPieceId = `sector-${number}` | `sector-${number}-b`;
+export type SetPieceId = `sector-${number}` | `sector-${number}-b` | `sector-${number}-c`;
 export type SetPieceOption = { title: string; detail: string; impact: number; continuity: number; sector: number; objective: number; quality: number };
 // Every sector decision carries a graduated middle measure alongside the decisive
 // and the permissive one. A real incident rarely offers only "stop it" or "carry
@@ -170,15 +170,34 @@ export const secondSetPieces: SectorSetPiece[] = [
   { id: "sector-9-b", title: "Treasury payment file", prompt: "Treasury's end-of-day payment file arrived with a changed list of payees, approved by the usual approver.", a: op("Reject the file", "Nothing in the file pays out; treasury resubmits after checking, past the cut-off.", -6, -5, 7, -8, 5), b: op("Release the file", "Payments go on time to a payee list nobody has checked.", 6, 3, -8, 9, 1), c: op("Release, holding the new payees", "Known payees are paid on time; new ones wait for a call back to treasury.", -3, -1, 4, -4, 5) },
 ];
 
-export const allSetPieces = [...sectorSetPieces, ...secondSetPieces];
+// A third crisis for each sector, so a case met again later in an act meets
+// a call it has not made: with two, a crisis repeated within an act in 58 per
+// cent of simulated campaigns. Each has the same shape as the first two.
+export const thirdSetPieces: SectorSetPiece[] = [
+  { id: "sector-0-c", title: "Remote workers sign in", prompt: "Half the company starts work from home within the hour, through the remote access gateway the intruder may have used.", a: op("Close remote access until it is checked", "Staff at home cannot work; the office fills with people who can.", -5, -6, 5, -6, 5), b: op("Keep remote access open", "Everyone starts on time through a gateway nobody has cleared.", 4, 3, -4, 6, 2), c: op("Make every remote session sign in again with a phone prompt", "Access stays open, and each session has to pass a second check before it starts.", -2, -2, 3, -3, 5) },
+  { id: "sector-1-c", title: "Scan results to the reporting service", prompt: "Scan images go to an outside reporting service over a link that shares a support account with the affected path.", a: op("Stop sending images out", "Radiologists on site read everything, and reports run hours late.", -5, -6, 5, -6, 5), b: op("Keep sending images", "Reports arrive on time over a link nobody has checked.", 4, 3, -5, 6, 2), c: op("Send urgent scans only, over a separate link", "Emergency scans go out through a different connection; the rest wait for the link to be checked.", -2, -2, 3, -3, 5) },
+  { id: "sector-2-c", title: "Control room handover", prompt: "The night shift hands over in thirty minutes, and the logs show an engineering laptop on the control network during their shift.", a: op("Hold the shift and take the laptop", "Both shifts stay while the laptop is examined, and tomorrow runs short-handed.", -4, -5, 6, -6, 5), b: op("Hand over as normal", "The day shift takes over a network a laptop nobody has checked was plugged into.", 3, 3, -5, 5, 2), c: op("Hand over, and disable the laptop's network port", "The shift changes on time, and the port the laptop used stays off until it is checked.", -2, -1, 4, -4, 5) },
+  { id: "sector-3-c", title: "Gate appointments", prompt: "Trucks book gate slots through a system that trusts the booking platform under investigation. The morning wave starts at six.", a: op("Close online booking and take bookings by phone", "The gate runs on a phone list, and queues reach the motorway.", -4, -6, 5, -5, 5), b: op("Keep online booking", "Trucks arrive on time against bookings nobody has checked.", 4, 3, -6, 6, 2), c: op("Check each booking at the gate against the haulier's own list", "Bookings stay online, and the gate team confirms every truck before it enters.", -2, -2, 3, -3, 5) },
+  { id: "sector-4-c", title: "Status page", prompt: "Customers are reporting errors in public. The status page still says every system is working.", a: op("Post a security incident notice", "Customers know to check their own accounts, and some move their workloads away.", -4, -4, 5, -5, 5), b: op("Keep the page green", "Nothing new is said in public while customers keep asking.", 3, 2, -5, 4, 2), c: op("Post degraded service publicly, and tell affected tenants it is a security incident", "The public page says service is degraded; the tenants the evidence reaches hear the rest directly.", -2, -1, 3, -3, 4) },
+  { id: "sector-5-c", title: "Administrator accounts", prompt: "The shared platform has forty administrator accounts across its client organisations, and the intruder used one of them.", a: op("Disable all but two administrator accounts", "Client changes stop until accounts are reissued one at a time.", -5, -6, 5, -6, 5), b: op("Keep them all and watch", "Clients work as normal with forty ways in still open.", 3, 3, -5, 5, 2), c: op("Disable accounts unused for thirty days", "Dormant accounts go now; each owner of an active one is asked to confirm it by phone.", -2, -1, 3, -3, 5) },
+  { id: "sector-6-c", title: "Application deadline", prompt: "The public application form runs on the platform under investigation, and a legal deadline closes at midnight.", a: op("Take the form offline and extend the deadline", "Applications stop, and the extension needs a minister's sign-off before midnight.", -4, -5, 5, -6, 5), b: op("Keep the form open", "Applications arrive on time through a platform nobody has cleared.", 4, 3, -5, 6, 2), c: op("Keep the form, and accept applications by phone and post", "The form stays up, anyone can apply another way, and staff check online applications against the other channels.", -2, -2, 3, -3, 5) },
+  { id: "sector-7-c", title: "Emergency call routing", prompt: "A routing change the intruder made this week could touch the path emergency calls take.", a: op("Roll back every routing change from this week", "Emergency calls are safe, and several customer fixes are undone with them.", -5, -5, 6, -6, 5), b: op("Leave routing as it is", "Calls route as they do now while the change is traced.", 4, 2, -6, 6, 1), c: op("Test emergency routes every hour, and roll back only what fails", "Engineers place test calls hourly, and any route that fails is put back at once.", -2, -1, 4, -3, 5) },
+  { id: "sector-8-c", title: "Reservoir level readings", prompt: "Two reservoir level readings disagree with what operators measured on the morning round.", a: op("Run every reservoir on manual readings", "Operators read levels by hand each hour, and pumping slows.", -4, -6, 6, -6, 5), b: op("Trust the sensors", "Pumping follows readings two of which nobody can explain.", 3, 3, -6, 6, 2), c: op("Read the two disputed reservoirs by hand", "The rest run on their sensors; an operator checks the two sites every two hours.", -2, -1, 4, -4, 5) },
+  { id: "sector-9-c", title: "Card authorisation", prompt: "The card authorisation service shares a support account with the clearing path. Its standby runs simpler rules.", a: op("Switch to the standby service", "Cards keep working on simpler rules, and some genuine payments are declined.", -5, -5, 6, -7, 5), b: op("Stay on the main service", "Payments approve as normal through a service that shares the affected account.", 5, 3, -7, 8, 1), c: op("Stay, with a lower limit for online card payments", "Online payments above a lower limit are checked or declined; cards in shops work as normal.", -2, -2, 4, -4, 5) },
+];
 
-// Variant 0 is the standard picture every non-campaign operation plays; odd
-// variants meet the sector's second crisis. A case the campaign replays after a
-// loss meets whichever crisis it did not meet last time.
+export const allSetPieces = [...sectorSetPieces, ...secondSetPieces, ...thirdSetPieces];
+
+// Each sector has three crises, and the incident variant draws one: variant 0,
+// the standard picture every non-campaign operation plays, the first; the
+// rest in turn. A case the campaign meets again reaches first for a crisis it
+// has not met lately, and among those it has, the one met longest ago.
 export function setPieceFor(scenario: number, variantId: string, recent: readonly string[] = []): SectorSetPiece {
   const index = Number(variantId.split("-")[1] ?? 0);
-  const [drawn, other] = index % 2 === 1 ? [secondSetPieces[scenario], sectorSetPieces[scenario]] : [sectorSetPieces[scenario], secondSetPieces[scenario]];
-  return recent.includes(drawn.id) && !recent.includes(other.id) ? other : drawn;
+  const pieces = [sectorSetPieces[scenario], secondSetPieces[scenario], thirdSetPieces[scenario]];
+  const order = pieces.map((_, offset) => pieces[(index + offset) % pieces.length]);
+  const rank = (piece: SectorSetPiece) => recent.includes(piece.id) ? 1 + recent.indexOf(piece.id) : 0;
+  return [...order].sort((a, b) => rank(a) - rank(b))[0];
 }
 
 export function setPieceById(id: SetPieceId, scenario: number): SectorSetPiece {
@@ -188,4 +207,4 @@ export function setPieceById(id: SetPieceId, scenario: number): SectorSetPiece {
 export { CHALLENGE_VERSION, decodeChallenge, encodeChallenge, isOutdatedChallenge, seededChallengeRandom, seededRoll, type ChallengeSetup } from "./challenge.ts";
 
 // The words of these tables are a locale's to replace (lib/i18n/content/).
-registerContent({ infrastructureTopologies, sectorSetPieces, secondSetPieces });
+registerContent({ infrastructureTopologies, sectorSetPieces, secondSetPieces, thirdSetPieces });

@@ -4,7 +4,7 @@
 // names what it means: words.attack(id, "evidence"), not a string.
 import { ref, type Form } from "../i18n/message.ts";
 import { sectorProcedures } from "../game.ts";
-import { sectorSetPieces } from "../phase8.ts";
+import { secondSetPieces, sectorSetPieces } from "../phase8.ts";
 import type { DecisionLanguage } from "./content.ts";
 
 export const words = {
@@ -21,7 +21,7 @@ export const words = {
   decision: (scenario: number, stage: number, field: keyof DecisionLanguage) => ref(`decisionLanguage.${stage}.${field}`, { owners: ref(`sectorDecisionTerms.${scenario}.owners`), service: ref(`sectorDecisionTerms.${scenario}.service`) }),
   decisionEffect: (choice: string) => ref(`decisionEffects.${choice}`),
   command: (id: string, choice: string, field: "title" | "signal") => ref(`commandEvents.${id}.${choice}.${field}`),
-  setPiece: (id: string, choice: string, field: "title" | "detail") => ref(`${sectorSetPieces.some(item => item.id === id) ? "sectorSetPieces" : "secondSetPieces"}.${id}.${choice}.${field}`),
+  setPiece: (id: string, choice: string, field: "title" | "detail") => ref(`${sectorSetPieces.some(item => item.id === id) ? "sectorSetPieces" : secondSetPieces.some(item => item.id === id) ? "secondSetPieces" : "thirdSetPieces"}.${id}.${choice}.${field}`),
   stage: (index: number, form?: Form) => ref(`stages.${index}.name`, undefined, form),
   route: (hypothesis: string, form?: Form) => ref(`hypotheses.${hypothesis}.title`, undefined, form),
 };

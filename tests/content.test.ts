@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {newGame,resolveDecision,getDecisionOptions,attacks,hypotheses,procedures,responseProfiles,scenarios,infrastructureTopologies,sectorSystems} from "../lib/advanced-game.ts";
-import {allSetPieces, secondSetPieces, sectorSetPieces, setPieceFor} from "../lib/phase8.ts";
+import {allSetPieces, secondSetPieces, sectorSetPieces, setPieceFor, thirdSetPieces} from "../lib/phase8.ts";
 import {hypothesisSources, proceduresFor, sectorProcedures} from "../lib/advanced-game.ts";
 import {adversaryObjectives} from "../lib/command-systems.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
@@ -300,14 +300,22 @@ test("every adversary profile is drawn somewhere, has a mechanic of its own and 
   }
 });
 
-test("each sector has a second crisis, met by the odd incident variants", () => {
+test("each sector has three crises, met by the incident variants in turn", () => {
   assert.equal(sectorSetPieces.length, scenarios.length);
   assert.equal(secondSetPieces.length, scenarios.length);
+  assert.equal(thirdSetPieces.length, scenarios.length);
   assert.equal(new Set(allSetPieces.map(piece => piece.id)).size, allSetPieces.length, "set piece ids are unique");
   for (let scenario = 0; scenario < scenarios.length; scenario++) {
-    assert.notEqual(secondSetPieces[scenario].title, sectorSetPieces[scenario].title);
+    const pieces = [sectorSetPieces[scenario], secondSetPieces[scenario], thirdSetPieces[scenario]];
+    assert.equal(new Set(pieces.map(piece => piece.title)).size, 3, "three different crises");
+    assert.deepEqual(pieces.map(piece => piece.id), [`sector-${scenario}`, `sector-${scenario}-b`, `sector-${scenario}-c`]);
     assert.equal(setPieceFor(scenario, `${scenario}-0`).id, `sector-${scenario}`, "the standard picture meets the first crisis");
-    assert.equal(setPieceFor(scenario, `${scenario}-3`).id, `sector-${scenario}-b`, "an odd variant meets the second");
+    for (let variant = 0; variant < 7; variant++) assert.equal(setPieceFor(scenario, `${scenario}-${variant}`).id, pieces[variant % 3].id, "the variants meet the crises in turn");
+    // A case met again reaches for a crisis the campaign has not met lately,
+    // then the one met longest ago.
+    assert.equal(setPieceFor(scenario, `${scenario}-0`, [pieces[0].id]).id, pieces[1].id);
+    assert.equal(setPieceFor(scenario, `${scenario}-0`, [pieces[0].id, pieces[1].id]).id, pieces[2].id);
+    assert.equal(setPieceFor(scenario, `${scenario}-0`, [pieces[1].id, pieces[2].id, pieces[0].id]).id, pieces[1].id);
     const g = newGame(scenario, "operational", () => 0, { variant: { id: `${scenario}-1`, title: legacy("t"), briefing: legacy("b"), modifier: legacy("m"), impact: 0, continuity: 0, objective: 0 } });
     assert.equal(g.variant.id, `${scenario}-1`);
   }

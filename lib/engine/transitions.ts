@@ -89,7 +89,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     pendingCommand: null,
     commandHistory: [],
     recentCommands: remembered.commands.filter((id): id is CommandEventId => id in commandEvents),
-    recentCrises: remembered.crises.filter((id): id is SetPieceId => /^sector-\d+(-b)?$/.test(id)),
+    recentCrises: remembered.crises.filter((id): id is SetPieceId => /^sector-\d+(-[bc])?$/.test(id)),
     mode,
     turnLimit,
     specialist,

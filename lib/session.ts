@@ -147,7 +147,7 @@ export function parseSession(raw: string): SavedSession | null {
       injectDeck: Array.isArray(game.injectDeck) ? game.injectDeck : [],
       // Version 17 remembers the campaign's recent command events; older saves met none.
       recentCommands: Array.isArray(game.recentCommands) ? game.recentCommands.filter((id: unknown) => typeof id === "string" && id in commandEvents) : [],
-      recentCrises: Array.isArray(game.recentCrises) ? game.recentCrises.filter((id: unknown) => typeof id === "string" && /^sector-\d+(-b)?$/.test(id)) : [],
+      recentCrises: Array.isArray(game.recentCrises) ? game.recentCrises.filter((id: unknown) => typeof id === "string" && /^sector-\d+(-[bc])?$/.test(id)) : [],
       responseChoices,
       seed: typeof game.seed === "number" && Number.isFinite(game.seed) ? game.seed : null,
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],
