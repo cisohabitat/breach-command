@@ -53,7 +53,10 @@ for (const width of [320, 390, 820, 1280]) {
       await loaded(image);
       await expect(image).toHaveAttribute("src", `/art/campaign/ending-${id}.webp`);
       await expect(image).toHaveCSS("height", width <= 600 ? "120px" : "180px");
-      if (width <= 600) expect(await image.evaluate((element: HTMLImageElement) => element.currentSrc)).toContain("-480.webp");
+      // The half-size copy where the scene is narrower than it, never stretched wider.
+      const shown = await image.evaluate((element: HTMLImageElement) => ({ src: element.currentSrc, width: element.getBoundingClientRect().width }));
+      if (shown.width <= 400) expect(shown.src).toContain("-480.webp");
+      if (shown.width > 480) expect(shown.src).not.toContain("-480.webp");
       await page.locator(".campaign-ending").screenshot({ path: info.outputPath(`campaign-${id}.png`) });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
