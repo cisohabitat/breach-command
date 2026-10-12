@@ -4,6 +4,19 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.30, 12 October 2026
+
+- **The assignment says what it is again.** The line above "You have the
+  incident." reads "A solo incident-response tabletop" (it repeated the top
+  bar's "Incident desk" before), and the footer signs off in the game's own
+  voice: "Breach Command. A solo tabletop of four-stage intrusions, played
+  against a rule-based Incident Captain. Every organisation, person and
+  breach in it is invented." The name is set brighter, the lines balance,
+  and the version and build stay together on one line.
+- **`nowrap` works.** Four places in the markup asked for a run of words not
+  to break (a footer's name, a version, a "+2") and no rule ever gave the
+  class its meaning; it has one now.
+
 ## 0.9.29, 12 October 2026
 
 - **Breach Command stands on its own.** The footer, the field guide, the

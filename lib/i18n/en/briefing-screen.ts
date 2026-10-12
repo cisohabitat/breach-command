@@ -1,6 +1,6 @@
 // The strings of components/game/briefing-screen.tsx (app/page.tsx for page), loaded with it.
 export const briefingScreenMessages = {
-  "briefingScreen.incidentDeskSingle": "Incident desk, single-player exercise",
+  "briefingScreen.soloTabletop": "A solo incident-response tabletop",
   "briefingScreen.youHaveThe": "You have the incident.",
   "briefingScreen.anIntruderHas": "An intruder has worked through four stages somewhere in the organisation. Each turn you state what you think happened, test it against one evidence source and decide what to do with what you find. Once the whole chain is known, you lead the response.",
   "briefingScreen.theFourStages": "The four stages you are looking for",
@@ -86,7 +86,7 @@ export const briefingScreenMessages = {
   "briefingScreen.operation2Plural": { one: "{count} operation", other: "{count} operations" },
   "briefingScreen.formBc0012": "Form BC-001 <span>/</span> Assignment",
   "briefingScreen.advancedOperationSettings2": "Advanced operation settings <span>{gameModesTitle}</span>",
-  "briefingScreen.colophon": "Fictional scenarios and a rule-based computer facilitator. <span>Version {version}, build {build}.</span>",
+  "briefingScreen.colophon": "<b>Breach Command.</b> A solo tabletop of four-stage intrusions, played against a rule-based Incident Captain. Every organisation, person and breach in it is invented. <span>Version {version}, build {build}.</span>",
   "briefingScreen.accuracyOver": { one: "operation: {recent} of 10", other: "{count}: {recent} of 10" },
   "briefingScreen.scoreOf100": ", {score} of 100",
 } as const;

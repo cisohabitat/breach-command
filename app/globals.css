@@ -375,6 +375,18 @@ a {
   max-width:100%;
   text-align:center;
   line-height:var(--leading-prose);
+  text-wrap:balance;
+  hyphens:manual;
+}
+/* A run of words that reads as one: a name, a figure with its unit, the
+   version and build. The markup used the class before any rule gave it one. */
+.nowrap {
+  white-space:nowrap;
+}
+/* The sign-off names the game in the page's own ink. */
+.colophon strong {
+  color:#cbc6bb;
+  font-weight:600;
 }
 .game-screen {
   max-width:1600px;
