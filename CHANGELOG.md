@@ -4,6 +4,19 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.24, 12 October 2026
+
+- **Source artwork.** Eight new evidence still lifes give each shared check
+  its own source image; operational-technology checks retain maintenance art.
+- **Story artwork.** Eight object emblems accompany adversary intent in the
+  review, and all four campaign conclusions have original scenes.
+- **Smaller scenes on phones.** Sector, act and ending scenes have 480 px
+  copies selected through responsive image attributes. Frames use the dark
+  desk while loading, and images fade in with reduced motion respected.
+- **Result images.** A muted sector scene accompanies the saved result form.
+  Missing artwork still produces the full text result. Rules, scores, saves,
+  challenge codes and game wording are unchanged.
+
 ## 0.9.23, 12 October 2026
 
 - **A third crisis for every sector.** Remote workers signing in, scans

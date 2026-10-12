@@ -65,6 +65,14 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 
 The game does not call an AI service, inspect real systems or transmit incident information.
 
+Artwork is decorative and local: source still lifes follow the procedure and
+sector, object emblems accompany adversary intent in the review, and all four
+campaign conclusions have scenes. Sector, act and ending scenes include 480 px
+phone copies selected by responsive image attributes. Images fade in on the
+dark desk, respect reduced motion, and remain empty frames if unavailable.
+Saved result images include a muted sector scene, with the complete text form
+as the fallback. Images are cached only once seen, never precached.
+
 ## Campaign and saves
 
 Campaign progression is stored in browser local storage. Mid-operation sessions are versioned and migrated by `lib/session.ts`, which refuses a save from a newer build or one describing a state the engine's own transitions could not produce. A save from a newer build is never deleted or overwritten: it is set aside before anything else is saved, and a build that can read it offers it again. Only an operation still in progress is offered for resume; a finished operation's save is cleared. Ironman mode intentionally disables normal mid-operation saving. Clearing browser storage resets local progress. The balance record counts wins, losses and authorised exercises separately — an exercise is never recorded as a defeat.

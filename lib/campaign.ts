@@ -229,7 +229,7 @@ const doctrineNames: Record<string, Parameters<typeof msg>[0]> = {
   convergence: "campaign.doctrine.convergence",
 };
 
-export function campaignEnding(state: CampaignState): { title: string; detail: Message } | null {
+export function campaignEnding(state: CampaignState): { id: string; title: string; detail: Message } | null {
   if (state.completed.length < 10) return null;
   const bonds = Object.values(state.specialistBonds);
   const cohesion = bonds.length ? Math.round(bonds.reduce((sum, value) => sum + value, 0) / bonds.length) : 35;
@@ -250,7 +250,7 @@ export function campaignEnding(state: CampaignState): { title: string; detail: M
     doctrine: msg(doctrineNames[finalRoute] ?? "campaign.doctrine.commonGround"),
     cohesion,
   });
-  return { title: ending.title, detail };
+  return { id: ending.id, title: ending.title, detail };
 }
 
 export function recordCampaignResult(current: CampaignState, game: Game, score: number): CampaignState {
