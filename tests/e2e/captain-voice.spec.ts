@@ -11,34 +11,53 @@ declare global {
   }
 }
 
-async function mockSpeech(page: Page, local = true) {
-  await page.addInitScript(localVoice => {
-    const events = new EventTarget();
+async function mockSpeech(page: Page, available = true) {
+  const lines = Object.fromEntries(Object.entries(captainVoiceMessages).map(([key, text]) => [key.replace("captainVoice.", ""), text]));
+  await page.addInitScript(({ available, lines }) => {
     window.captainSpeechProbe = { lines: [], cancellations: 0, refuse: false };
-    class Utterance {
-      text: string;
-      constructor(text: string) { this.text = text; }
+    class Audio {
+      src: string;
+      volume = 1;
+      onplaying: (() => void) | null = null;
+      onended: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(src: string) { this.src = src; }
+      play() {
+        if (!available || window.captainSpeechProbe.refuse) return Promise.reject(new Error("playback refused"));
+        const cue = this.src.split("/").at(-1)!.replace(".mp3", "");
+        window.captainSpeechProbe.lines.push(lines[cue]);
+        this.onplaying?.();
+        return Promise.resolve();
+      }
+      pause() { window.captainSpeechProbe.cancellations++; }
+      removeAttribute() {}
+      load() {}
     }
-    Object.defineProperty(window, "SpeechSynthesisUtterance", { configurable: true, value: Utterance });
-    const voice = { name: "Test voice", voiceURI: "test", lang: "en-US", localService: localVoice, default: true };
-    Object.defineProperty(window, "speechSynthesis", { configurable: true, value: {
-      getVoices: () => [voice],
-      addEventListener: events.addEventListener.bind(events),
-      removeEventListener: events.removeEventListener.bind(events),
-      speak: (utterance: SpeechSynthesisUtterance) => {
-        if (window.captainSpeechProbe.refuse) throw new Error("speech refused");
-        window.captainSpeechProbe.lines.push(utterance.text);
-        utterance.onstart?.({} as SpeechSynthesisEvent);
-      },
-      cancel: () => { window.captainSpeechProbe.cancellations++; },
-    } });
-  }, local);
+    Object.defineProperty(window, "Audio", { configurable: true, value: Audio });
+  }, { available, lines });
 }
 
 const voicePreferences = { voice: true, music: false, sound: false, haptics: false };
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
-test("voice defaults off, can be enabled independently, and survives reload", async ({ page }) => {
+test("the bundled Captain recording decodes and plays in the browser", async ({ page }) => {
+  await openWithSave(page, null, false, voicePreferences);
+  await page.evaluate(() => {
+    const audio = new Audio("/audio/captain/opening.mp3");
+    audio.id = "captain-real-audio";
+    const button = document.createElement("button");
+    button.textContent = "Play Captain test recording";
+    button.onclick = () => { void audio.play(); };
+    document.body.append(audio, button);
+  });
+  await page.getByRole("button", { name: "Play Captain test recording" }).click();
+  await expect.poll(() => page.locator("#captain-real-audio").evaluate((audio: HTMLAudioElement) => audio.currentTime)).toBeGreaterThan(0);
+  const duration = await page.locator("#captain-real-audio").evaluate((audio: HTMLAudioElement) => { audio.pause(); return audio.duration; });
+  expect(duration).toBeGreaterThan(8);
+  expect(duration).toBeLessThan(15);
+});
+
+test("voice defaults on, explicit opt-out survives reload, and recordings can be replayed", async ({ page }) => {
   await mockSpeech(page);
   await page.addInitScript(() => {
     if (localStorage.getItem("captain-test-seeded")) return;
@@ -48,13 +67,14 @@ test("voice defaults off, can be enabled independently, and survives reload", as
   });
   await page.goto("/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Game settings" }).click();
-  await expect(page.locator("#voice-setting")).toHaveAttribute("aria-checked", "false");
+  await expect(page.locator("#voice-setting")).toHaveAttribute("aria-checked", "true");
   await page.locator("#voice-setting").click();
   await page.keyboard.press("Escape");
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Game settings" }).click();
-  await expect(page.locator("#voice-setting")).toHaveAttribute("aria-checked", "true");
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("breach-command.preferences") ?? "{}").voice)).toBe(true);
+  await expect(page.locator("#voice-setting")).toHaveAttribute("aria-checked", "false");
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("breach-command.preferences") ?? "{}").voice)).toBe(false);
+  await page.locator("#voice-setting").click();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: /Begin investigation/i }).first().click();
   const voice = page.getByRole("region", { name: "Incident Captain" });
@@ -84,7 +104,7 @@ test("findings have matching text, skip works, and M mutes voice", async ({ page
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.cancellations)).toBeGreaterThan(0);
 });
 
-test("unavailable or refused speech leaves the text and game controls usable", async ({ page }) => {
+test("unavailable recordings leaves the text and game controls usable", async ({ page }) => {
   await mockSpeech(page, false);
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
   await page.getByRole("button", { name: "Resume", exact: true }).click();
@@ -97,7 +117,7 @@ test("unavailable or refused speech leaves the text and game controls usable", a
   await expect(page.locator(".report-gate")).toHaveCount(0);
 });
 
-test("a platform that refuses speech still accepts the evidence decision", async ({ page }) => {
+test("a browser that refuses audio playback still accepts the evidence decision", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
   await page.evaluate(() => { window.captainSpeechProbe.refuse = true; });
@@ -119,7 +139,7 @@ test("Bot Commander practice does not speak", async ({ page }) => {
 });
 
 test("an unavailable optional voice download never blocks the operation", async ({ page }) => {
-  await openWithSave(page, null, false, { music: false, sound: false, haptics: false });
+  await openWithSave(page, null, false, { voice: false, music: false, sound: false, haptics: false });
   await page.getByRole("button", { name: "Game settings" }).click();
   await page.locator("#voice-setting").click();
   await page.keyboard.press("Escape");

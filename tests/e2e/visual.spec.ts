@@ -79,33 +79,35 @@ test.describe("visual baselines", () => {
       await page.clock.setFixedTime(new Date("2026-10-11T12:00:00Z"));
       await page.setViewportSize({ width, height });
 
-      await openWithSave(page, null);
+      // Keep the established silent presentation baselines. The Captain suite
+      // separately covers the default-on presentation at every supported width.
+      await openWithSave(page, null, false, { voice: false });
       await snap(page, `${width}-assignment.png`);
 
-      await openWithSave(page, twoStagesGame());
+      await openWithSave(page, twoStagesGame(), false, { voice: false });
       await resume(page);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
       await snap(page, `${width}-investigate.png`);
 
-      await openWithSave(page, pendingDecisionGame());
+      await openWithSave(page, pendingDecisionGame(), false, { voice: false });
       await resume(page);
       await snap(page, `${width}-report.png`);
 
       const sector = twoStagesGame();
-      await openWithSave(page, { ...sector, pendingSetPiece: sectorSetPieces[sector.scenario].id });
+      await openWithSave(page, { ...sector, pendingSetPiece: sectorSetPieces[sector.scenario].id }, false, { voice: false });
       await resume(page);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
       await snap(page, `${width}-sector-decision.png`);
 
-      await openWithSave(page, { ...sector, pendingCommand: Object.keys(commandEvents)[0] as keyof typeof commandEvents });
+      await openWithSave(page, { ...sector, pendingCommand: Object.keys(commandEvents)[0] as keyof typeof commandEvents }, false, { voice: false });
       await resume(page);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
       await snap(page, `${width}-command-event.png`);
 
-      await openWithSave(page, responsePhaseGame());
+      await openWithSave(page, responsePhaseGame(), false, { voice: false });
       await resume(page);
       await snap(page, `${width}-response.png`);
 

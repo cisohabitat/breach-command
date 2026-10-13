@@ -5,7 +5,7 @@ export const settingsDialogMessages = {
   "settingsDialog.proceduralAudioFor": "Procedural audio for discoveries, warnings and outcomes.",
   "settingsDialog.adaptiveScore": "Adaptive score",
   "settingsDialog.captainVoice": "Captain voice",
-  "settingsDialog.voicePilot": "Optional voice for The quiet intrusion: short briefings, pivotal updates and closing assessments. Uses an installed English voice; every line has text and can be skipped.",
+  "settingsDialog.voicePilot": "Recorded male Captain for The quiet intrusion: short briefings, pivotal updates and closing assessments. On by default; every line has text and can be skipped.",
   "settingsDialog.sectorSpecificCommand": "Sector-specific command ambience intensifies as operational pressure rises.",
   "settingsDialog.hapticFeedback": "Haptic feedback",
   "settingsDialog.shortVibrationCues": "Short vibration cues on supported mobile devices.",

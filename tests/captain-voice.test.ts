@@ -1,8 +1,21 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { captainVoiceMessages } from "../lib/i18n/en/captain-voice.ts";
 import { newGame, playTurn, attacks } from "../lib/advanced-game.ts";
 import { captainUpdateFor } from "../lib/captain-voice.ts";
 import { speakCaptain, type CaptainSpeechState } from "../lib/captain-speech.ts";
+
+test("bundled recordings match the authored captions and fit the playback deadline", () => {
+  const directory = new URL("../public/audio/captain/", import.meta.url);
+  const manifest = JSON.parse(readFileSync(new URL("manifest.json", directory), "utf8"));
+  assert.equal(Object.keys(manifest.clips).length, 8);
+  for (const [cue, clip] of Object.entries(manifest.clips) as [string, { text: string; durationSeconds: number }][]) {
+    assert.equal(clip.text, captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);
+    assert.ok(clip.durationSeconds > 1 && clip.durationSeconds < 20);
+    assert.ok(readFileSync(new URL(`${cue}.mp3`, directory)).length > 1000);
+  }
+});
 
 test("Captain updates follow public findings, not hidden answers", () => {
   const opening = { ...newGame(0, "training", () => 0), injectDeck: [] };
@@ -21,29 +34,28 @@ test("Captain updates follow public findings, not hidden answers", () => {
   assert.equal(captainUpdateFor({ ...found, revealed: [], impact: 84 }, empty), null, "no pressure narration every turn above the threshold");
 });
 
-function installSpeech() {
+function installAudio() {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
-  const events = new EventTarget();
-  const probe = { states: [] as CaptainSpeechState[], utterances: [] as SpeechSynthesisUtterance[], cancellations: 0, throws: false, voices: [] as SpeechSynthesisVoice[] };
-  const synth = {
-    getVoices: () => probe.voices,
-    addEventListener: events.addEventListener.bind(events),
-    removeEventListener: events.removeEventListener.bind(events),
-    speak: (utterance: SpeechSynthesisUtterance) => {
-      if (probe.throws) throw new Error("speech refused");
-      probe.utterances.push(utterance);
-      utterance.onstart?.({} as SpeechSynthesisEvent);
-    },
-    cancel: () => { probe.cancellations++; },
-  };
-  class Utterance {
-    text: string;
-    constructor(text: string) { this.text = text; }
+  const probe = { states: [] as CaptainSpeechState[], clips: [] as Audio[], cancellations: 0, throws: false };
+  class Audio {
+    src: string;
+    volume = 1;
+    onplaying: (() => void) | null = null;
+    onended: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    constructor(src: string) { this.src = src; probe.clips.push(this); }
+    play() {
+      if (probe.throws) throw new Error("playback refused");
+      this.onplaying?.();
+      return Promise.resolve();
+    }
+    pause() { probe.cancellations++; }
+    removeAttribute() {}
+    load() {}
   }
-  Object.defineProperty(globalThis, "window", { configurable: true, value: { speechSynthesis: synth, SpeechSynthesisUtterance: Utterance } });
-  const local = { name: "Installed voice", lang: "en-US", localService: true, default: true, voiceURI: "local" } as SpeechSynthesisVoice;
+  Object.defineProperty(globalThis, "window", { configurable: true, value: { Audio } });
   return {
-    probe, local, events,
+    probe,
     restore: () => {
       if (descriptor) Object.defineProperty(globalThis, "window", descriptor);
       else Reflect.deleteProperty(globalThis, "window");
@@ -51,48 +63,40 @@ function installSpeech() {
   };
 }
 
-test("speech waits for local voices, replaces rather than overlaps, and stops", t => {
+test("recorded clips replace rather than overlap and stop without stale callbacks", t => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
-  const { probe, local, events, restore } = installSpeech();
+  const { probe, restore } = installAudio();
   let stop = () => {};
   try {
-    probe.voices = [{ ...local, localService: false }];
-    stop = speakCaptain("First line", "en", state => probe.states.push(state));
-    assert.deepEqual(probe.states, ["waiting"]);
-    assert.equal(probe.utterances.length, 0, "remote voices are never selected");
-    probe.voices = [local];
-    events.dispatchEvent(new Event("voiceschanged"));
-    assert.equal(probe.utterances.length, 1);
+    stop = speakCaptain("opening", state => probe.states.push(state));
+    assert.equal(probe.clips[0].src, "/audio/captain/opening.mp3");
     assert.equal(probe.states.at(-1), "speaking");
-    const oldEnd = probe.utterances[0].onend;
-    stop = speakCaptain("Second line", "en", state => probe.states.push(state));
+    const oldEnd = probe.clips[0].onended;
+    stop = speakCaptain("firstFinding", state => probe.states.push(state));
     assert.equal(probe.cancellations, 1);
-    assert.equal(probe.utterances.length, 2);
-    oldEnd?.call(probe.utterances[0], {} as SpeechSynthesisEvent);
+    oldEnd?.();
     assert.equal(probe.states.at(-1), "speaking", "stale callbacks cannot end the replacement");
     stop();
     assert.equal(probe.cancellations, 2);
     assert.equal(probe.states.at(-1), "idle");
     t.mock.timers.tick(30_000);
-    assert.equal(probe.states.at(-1), "idle", "cancelled timers cannot restart playback");
+    assert.equal(probe.states.at(-1), "idle");
   } finally { stop(); restore(); }
 });
 
-test("missing voices, playback errors and missing end events fail without blocking", t => {
+test("playback errors and missing end events fail without blocking", t => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
-  const { probe, local, restore } = installSpeech();
+  const { probe, restore } = installAudio();
   let stop = () => {};
   try {
-    stop = speakCaptain("No voice", "en", state => probe.states.push(state));
-    t.mock.timers.tick(1500);
-    assert.equal(probe.states.at(-1), "unavailable");
-    assert.equal(probe.utterances.length, 0);
-    probe.voices = [local];
     probe.throws = true;
-    assert.doesNotThrow(() => { stop = speakCaptain("Refused", "en", state => probe.states.push(state)); });
+    assert.doesNotThrow(() => { stop = speakCaptain("opening", state => probe.states.push(state)); });
     assert.equal(probe.states.at(-1), "unavailable");
     probe.throws = false;
-    stop = speakCaptain("No end event", "en", state => probe.states.push(state));
+    stop = speakCaptain("pressure", state => probe.states.push(state));
+    probe.clips.at(-1)!.onerror?.();
+    assert.equal(probe.states.at(-1), "unavailable");
+    stop = speakCaptain("response", state => probe.states.push(state));
     t.mock.timers.tick(25_000);
     assert.equal(probe.states.at(-1), "unavailable");
     assert.ok(probe.cancellations > 0);

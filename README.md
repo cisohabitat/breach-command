@@ -4,10 +4,11 @@ Breach Command is a public, single-player incident-response card game played aga
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
 
-**Captain voice pilot:** enable Captain voice in Settings to hear short mission
+**Captain voice pilot:** hear short mission
 openings, pivotal updates, response handovers and closing assessments in
-**The quiet intrusion**. Voice is off by default and uses an installed English
-device voice. Every spoken line is also readable, with Listen and Skip voice
+**The quiet intrusion**. Voice is on by default, using bundled recordings of a
+calm male Captain with a British English voice. An explicit saved Off setting is
+respected. Every spoken line is also readable, with Listen and Skip voice
 controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Other cases
 and Bot Commander practice runs retain their existing presentation.
@@ -15,10 +16,11 @@ and Bot Commander practice runs retain their existing presentation.
 `components/game/captain-voice-lazy.tsx` loads voice only when enabled;
 `components/game/captain-voice.tsx` owns the transcript and controls,
 `lib/captain-voice.ts` selects updates from public findings and meter crossings,
-and `lib/captain-speech.ts` handles local speech discovery, cancellation and
+and `lib/captain-speech.ts` handles recorded audio playback, cancellation and
 failure. The preference stays in the existing device-local settings record;
 the game and saved-session schemas are unchanged. Playtest this case's pacing
-and character before expanding the voice corpus or commissioning recordings.
+and character before expanding the voice corpus. Audio provenance and the exact
+recorded scripts are in `public/audio/captain/README.md` and `manifest.json`.
 
 ## What the player does
 
