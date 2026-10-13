@@ -7,7 +7,7 @@ import { useMessages } from "@/hooks/use-messages";
 import { endStateMessages } from "@/lib/i18n/en/end-state";
 import { register } from "@/lib/i18n";
 import { withForm } from "@/lib/i18n/message";
-import { CaptainVoice } from "./captain-voice";
+import { CaptainVoice } from "./captain-voice-lazy";
 
 register(endStateMessages);
 

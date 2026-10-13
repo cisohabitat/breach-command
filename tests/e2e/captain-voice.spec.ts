@@ -118,6 +118,19 @@ test("Bot Commander practice does not speak", async ({ page }) => {
   expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
 });
 
+test("an unavailable optional voice download never blocks the operation", async ({ page }) => {
+  await openWithSave(page, null, false, { music: false, sound: false, haptics: false });
+  await page.getByRole("button", { name: "Game settings" }).click();
+  await page.locator("#voice-setting").click();
+  await page.keyboard.press("Escape");
+  // The game is now loaded; the optional voice player is the next script.
+  await page.route("**/_next/static/**/*.js", route => route.abort());
+  await page.getByRole("button", { name: /Begin investigation/i }).first().click();
+  await expect(page.getByRole("status").filter({ hasText: "Captain voice is unavailable" })).toBeVisible();
+  await page.getByRole("button", { name: "Assume command", exact: true }).click();
+  await expect(page.locator(".game-screen")).toBeVisible();
+});
+
 test("response and closing assessments play once and do not overlap", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, responsePhaseGame(), false, voicePreferences);

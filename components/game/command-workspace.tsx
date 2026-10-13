@@ -12,7 +12,7 @@ import type { GameSession } from "@/hooks/use-game-session";
 import { useMessages } from "@/hooks/use-messages";
 import { commandWorkspaceMessages } from "@/lib/i18n/en/command-workspace";
 import { register } from "@/lib/i18n";
-import { CaptainVoice } from "./captain-voice";
+import { CaptainVoice } from "./captain-voice-lazy";
 
 register(commandWorkspaceMessages);
 

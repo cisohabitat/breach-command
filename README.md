@@ -12,6 +12,7 @@ controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Other cases
 and Bot Commander practice runs retain their existing presentation.
 
+`components/game/captain-voice-lazy.tsx` loads voice only when enabled;
 `components/game/captain-voice.tsx` owns the transcript and controls,
 `lib/captain-voice.ts` selects updates from public findings and meter crossings,
 and `lib/captain-speech.ts` handles local speech discovery, cancellation and

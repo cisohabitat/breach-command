@@ -10,7 +10,7 @@ import { SpecialistPortrait } from "./story-art";
 import { register } from "@/lib/i18n";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { SectorIllustration } from "./sector-illustration";
-import { CaptainVoice } from "./captain-voice";
+import { CaptainVoice } from "./captain-voice-lazy";
 
 register(missionBriefingDialogMessages);
 

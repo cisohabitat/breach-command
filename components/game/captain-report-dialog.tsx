@@ -12,7 +12,7 @@ import { captainReportDialogMessages } from "@/lib/i18n/en/captain-report-dialog
 import { register, type Locale, type MessageKey } from "@/lib/i18n";
 import { legacyText, say as sayIn, withForm } from "@/lib/i18n/message";
 import { captainUpdateFor, type CaptainVoiceCue } from "@/lib/captain-voice";
-import { CaptainVoice } from "./captain-voice";
+import { CaptainVoice } from "./captain-voice-lazy";
 
 register(captainReportDialogMessages);
 
