@@ -7,6 +7,7 @@ import { useMessages } from "@/hooks/use-messages";
 import { endStateMessages } from "@/lib/i18n/en/end-state";
 import { register } from "@/lib/i18n";
 import { withForm } from "@/lib/i18n/message";
+import { CaptainVoice } from "./captain-voice";
 
 register(endStateMessages);
 
@@ -23,6 +24,9 @@ export function EndState({ session }: { session: GameSession }) {
   if (!game) return null;
   const loss = getLossReason(game);
   const openDebrief = () => setDebrief(true);
+  const voice = game.scenario === 0 && !session.botRun && (game.status === "won" || game.status === "lost" || game.status === "exercise")
+    ? <CaptainVoice cue={game.status} enabled={session.voiceEnabled && !session.report && !session.debrief && !session.settings && !session.rules} history={session.voiceHistory} />
+    : null;
 
   if (game.status === "won") {
     // Expert withholds every aid, so its win is its own ending and its own mark
@@ -38,6 +42,7 @@ export function EndState({ session }: { session: GameSession }) {
           <button className="primary-button" onClick={openDebrief}>{t("ending.openReview")}</button>
         </div>
         <StoryArt kind="endings" name="recovery" />
+        {voice}
         <ol className="resolution-steps">
           {/* What closed the case, as lines of the record with their status in
               the margin, not a checklist of ticks. */}
@@ -62,6 +67,7 @@ export function EndState({ session }: { session: GameSession }) {
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewRecord")}</button>
         </div>
         <StoryArt kind="endings" name="unresolved" />
+        {voice}
         <p className="resolution-note">{t("endState.unresolvedStagesRemain")}</p>
         <ShareResult game={game} />
       </section>
@@ -79,6 +85,7 @@ export function EndState({ session }: { session: GameSession }) {
           <button className="secondary-button" onClick={openDebrief}>{t("ending.reviewDrill")}</button>
         </div>
         <StoryArt kind="endings" name="exercise" />
+        {voice}
         <ShareResult game={game} />
       </section>
     );

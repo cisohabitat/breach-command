@@ -17,6 +17,7 @@ const PREFERENCES_KEY = "breach-command.preferences";
 export function usePreferences(onUnreadable: (notice: Message) => void) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [highContrast, setHighContrast] = useState(false);
   // Single-key shortcuts must be able to be turned off (WCAG 2.1.4): a speech
@@ -33,9 +34,10 @@ export function usePreferences(onUnreadable: (notice: Message) => void) {
       const stored = readStored(PREFERENCES_KEY);
       if (stored) {
         try {
-          const parsed = JSON.parse(stored) as { sound?: boolean; music?: boolean; haptics?: boolean; highContrast?: boolean; shortcuts?: boolean };
+          const parsed = JSON.parse(stored) as { sound?: boolean; music?: boolean; voice?: boolean; haptics?: boolean; highContrast?: boolean; shortcuts?: boolean };
           setSoundEnabled(parsed.sound !== false);
           setMusicEnabled(parsed.music !== false);
+          setVoiceEnabled(parsed.voice === true);
           setHapticsEnabled(parsed.haptics !== false);
           setHighContrast(parsed.highContrast === true);
           setShortcutsEnabled(parsed.shortcuts !== false);
@@ -50,8 +52,8 @@ export function usePreferences(onUnreadable: (notice: Message) => void) {
 
   useEffect(() => {
     if (!loaded) return;
-    writeStored(PREFERENCES_KEY, JSON.stringify({ sound: soundEnabled, music: musicEnabled, haptics: hapticsEnabled, highContrast, shortcuts: shortcutsEnabled }));
-  }, [loaded, soundEnabled, musicEnabled, hapticsEnabled, highContrast, shortcutsEnabled]);
+    writeStored(PREFERENCES_KEY, JSON.stringify({ sound: soundEnabled, music: musicEnabled, voice: voiceEnabled, haptics: hapticsEnabled, highContrast, shortcuts: shortcutsEnabled }));
+  }, [loaded, soundEnabled, musicEnabled, voiceEnabled, hapticsEnabled, highContrast, shortcutsEnabled]);
 
   // Dialogs and sheets render into a portal outside the application shell, so
   // the contrast tokens are carried on the document root as well, where every
@@ -60,5 +62,5 @@ export function usePreferences(onUnreadable: (notice: Message) => void) {
     document.documentElement.classList.toggle("high-contrast", highContrast);
   }, [highContrast]);
 
-  return { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled };
+  return { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, voiceEnabled, setVoiceEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled };
 }

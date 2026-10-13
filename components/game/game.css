@@ -6842,3 +6842,22 @@ span.effect-list>span.effect.pace.worse>em {
     font-size:var(--type-micro);
   }
 }
+.captain-voice {
+  border-block-start: 1px solid currentColor;
+  padding-block: 0.75rem;
+  margin-block: 0.75rem;
+}
+.captain-voice-transcript {
+  margin-block: 0 0.5rem;
+}
+.captain-voice-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+.captain-voice-controls button {
+  min-block-size: 2.75rem;
+}
+.captain-voice-status {
+  margin-block: 0.5rem 0;
+}

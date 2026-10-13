@@ -37,6 +37,7 @@ register(sessionMessages);
 
 import { campaignRoutes, incidentVariant, routeForCampaign } from "@/lib/phase9";
 import { weeklyOperation } from "@/lib/command-systems";
+import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import type { BotAction } from "@/lib/game-bot";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useChallengeCode } from "@/hooks/use-challenge-code";
@@ -102,7 +103,7 @@ export function useGameSession() {
   const [backupMessage, setBackupMessage] = useState<Message | null>(null);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
   const [storageNotice, setStorageNotice] = useState<Message | null>(null);
-  const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled } = usePreferences(setStorageNotice);
+  const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, voiceEnabled, setVoiceEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled } = usePreferences(setStorageNotice);
   const { todaySeed, seedFor, applyCode, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
     setScenarioChoice(setup.scenario);
     setDifficulty(setup.difficulty);
@@ -126,6 +127,7 @@ export function useGameSession() {
   // operation, not to its shape: two losses on the same turn of the same
   // scenario are two results.
   const recordedRef = useRef(false);
+  const voiceHistory = useRef(new Set<CaptainVoiceCue>());
   // A saved operation restored from a backup while another is in play. The one
   // in play stops overwriting the save, and returning to assignments offers the
   // restored one instead of deleting it.
@@ -176,6 +178,7 @@ export function useGameSession() {
     clearStoredSession();
     importedRef.current = null;
     recordedRef.current = false;
+    voiceHistory.current = new Set();
     // Daily Operation and any challenge configuration promise that the same
     // code replays the same operation, so those runs draw their hidden chain from
     // the seed and carry it into the procedure rolls. Ordinary campaign play draws
@@ -225,6 +228,7 @@ export function useGameSession() {
   function resume(session: SavedSession) {
     importedRef.current = null;
     recordedRef.current = false;
+    voiceHistory.current = new Set();
     botRunRef.current = false;
     setBotRun(false);
     setBotActive(false);
@@ -704,9 +708,10 @@ export function useGameSession() {
   useKeyboardShortcuts(shortcutsEnabled, {
     f: () => setRules(value => !value),
     m: () => {
-      if (soundEnabled || musicEnabled) {
+      if (soundEnabled || musicEnabled || voiceEnabled) {
         setSoundEnabled(false);
         setMusic(false);
+        setVoiceEnabled(false);
       } else setSoundEnabled(true);
     },
     g: () => setGuided(value => !value),
@@ -812,6 +817,8 @@ export function useGameSession() {
     telemetry,
     soundEnabled, setSoundEnabled,
     musicEnabled,
+    voiceEnabled, setVoiceEnabled,
+    voiceHistory,
     hapticsEnabled, setHapticsEnabled,
     highContrast, setHighContrast,
     shortcutsEnabled, setShortcutsEnabled,

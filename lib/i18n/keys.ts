@@ -5,6 +5,7 @@ import type { botControlMessages } from "./en/bot-control.ts";
 import type { briefingScreenMessages } from "./en/briefing-screen.ts";
 import type { briefingWorkspaceMessages } from "./en/briefing-workspace.ts";
 import type { captainReportDialogMessages } from "./en/captain-report-dialog.ts";
+import type { captainVoiceMessages } from "./en/captain-voice.ts";
 import type { commandEventMessages } from "./en/command-event.ts";
 import type { commandWorkspaceMessages } from "./en/command-workspace.ts";
 import type { debriefDialogMessages } from "./en/debrief-dialog.ts";
@@ -39,6 +40,7 @@ export type MessageKey = keyof typeof en
   | keyof typeof briefingScreenMessages
   | keyof typeof briefingWorkspaceMessages
   | keyof typeof captainReportDialogMessages
+  | keyof typeof captainVoiceMessages
   | keyof typeof commandEventMessages
   | keyof typeof commandWorkspaceMessages
   | keyof typeof debriefDialogMessages
@@ -67,4 +69,4 @@ export type MessageKey = keyof typeof en
   | keyof typeof sectorSetPieceMessages
   | keyof typeof settingsDialogMessages
   | keyof typeof tutorialCoachMessages;
-export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "command-event", "command-workspace", "debrief-dialog", "effect-list", "engine", "end-state", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach"];
+export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "effect-list", "engine", "end-state", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach"];

@@ -11,6 +11,8 @@ import { useMessages, type Translate } from "@/hooks/use-messages";
 import { captainReportDialogMessages } from "@/lib/i18n/en/captain-report-dialog";
 import { register, type Locale, type MessageKey } from "@/lib/i18n";
 import { legacyText, say as sayIn, withForm } from "@/lib/i18n/message";
+import { captainUpdateFor, type CaptainVoiceCue } from "@/lib/captain-voice";
+import { CaptainVoice } from "./captain-voice";
 
 register(captainReportDialogMessages);
 
@@ -40,6 +42,9 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   // The turn that ends an operation is headed by how it ended: "Evidence
   // confirmed." with a green tick sat above "OPERATION LOST".
   const lostHere = !!(ended && report && game && report.number === game.turns.length && game.status !== "won");
+  const voiceCue: CaptainVoiceCue | null = report && game
+    ? ended ? game.status as "won" | "lost" | "exercise" : captainUpdateFor(game, report)
+    : null;
   const content = useRef<HTMLDivElement>(null);
   const optionList = useRef<HTMLDivElement>(null);
   // A decision belongs to a running operation. Once the operation has ended the
@@ -80,6 +85,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
           </dl>}
         </DialogHeader>
         {report && game && <>
+          {game.scenario === 0 && voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
           {/* The turn that ends an operation is still reported as a turn, so its
               headline can be good news on a lost operation. Say how it ended first. */}
           {ended && report.number === game.turns.length && game.status !== "won" && (

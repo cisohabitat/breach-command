@@ -17,3 +17,7 @@ export function playFeedback(cue: FeedbackCue, sound = true, haptics = true, con
 export function setAdaptiveScore(enabled: boolean, tension = 0, sector = 0) {
   load().then(module => module.setAdaptiveScore(enabled, tension, sector)).catch(() => {});
 }
+
+export function setNarrationActive(active: boolean) {
+  load().then(module => module.setNarrationActive(active)).catch(() => {});
+}

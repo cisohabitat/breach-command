@@ -13,7 +13,7 @@ register(settingsDialogMessages);
 
 export function SettingsDialog({ session }: { session: GameSession }) {
   const {
-    settings, setSettings, soundEnabled, setSoundEnabled, musicEnabled, setMusic,
+    settings, setSettings, soundEnabled, setSoundEnabled, musicEnabled, setMusic, voiceEnabled, setVoiceEnabled,
     hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled, telemetry, clearLocalRecord,
     exportProgress, importProgress, backupInput, setBackupInput, backupMessage, restartTutorial,
   } = session;
@@ -43,6 +43,7 @@ export function SettingsDialog({ session }: { session: GameSession }) {
         <div className="settings-list">
           <label htmlFor="sound-setting"><span><b>{t("settingsDialog.soundCues")}</b><small>{t("settingsDialog.proceduralAudioFor")}</small></span><Switch id="sound-setting" checked={soundEnabled} onCheckedChange={setSoundEnabled} /></label>
           <label htmlFor="music-setting"><span><b>{t("settingsDialog.adaptiveScore")}</b><small>{t("settingsDialog.sectorSpecificCommand")}</small></span><Switch id="music-setting" checked={musicEnabled} onCheckedChange={setMusic} /></label>
+          <label htmlFor="voice-setting"><span><b>{t("settingsDialog.captainVoice")}</b><small>{t("settingsDialog.voicePilot")}</small></span><Switch id="voice-setting" checked={voiceEnabled} onCheckedChange={setVoiceEnabled} /></label>
           <label htmlFor="haptic-setting"><span><b>{t("settingsDialog.hapticFeedback")}</b><small>{t("settingsDialog.shortVibrationCues")}</small></span><Switch id="haptic-setting" checked={hapticsEnabled} onCheckedChange={setHapticsEnabled} /></label>
           <label htmlFor="contrast-setting"><span><b>{t("settingsDialog.highContrast")}</b><small>{t("settingsDialog.strengthensBordersText")}</small></span><Switch id="contrast-setting" checked={highContrast} onCheckedChange={setHighContrast} /></label>
           <label htmlFor="shortcut-setting"><span><b>{t("settingsDialog.keyboardShortcuts")}</b><small>{t("settingsDialog.fOpensThe")}</small></span><Switch id="shortcut-setting" checked={shortcutsEnabled} onCheckedChange={setShortcutsEnabled} /></label>

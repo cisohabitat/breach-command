@@ -80,6 +80,19 @@ let graph: AudioGraph | null = null;
 // Set once construction has failed, so a device that cannot make audio is not
 // asked again on every cue.
 let audioUnavailable = false;
+let narrationActive = false;
+let musicLevel = SILENCE;
+
+// Speech holds the mix; haptics and game actions still run.
+export function setNarrationActive(active: boolean) {
+  narrationActive = active;
+  try {
+    if (!graph) return;
+    const now = graph.context.currentTime;
+    graph.sfxBus.gain.setTargetAtTime(active ? SILENCE : SFX_BUS_LEVEL, now, 0.04);
+    graph.musicBus.gain.setTargetAtTime(active ? SILENCE : musicLevel, now, 0.08);
+  } catch {}
+}
 
 function ensureGraph(): AudioGraph | null {
   if (typeof window === "undefined" || audioUnavailable) return null;
@@ -109,7 +122,7 @@ function ensureGraph(): AudioGraph | null {
   limiter.attack.value = 0.003;
   limiter.release.value = 0.25;
   const sfxBus = context.createGain();
-  sfxBus.gain.value = SFX_BUS_LEVEL;
+  sfxBus.gain.value = narrationActive ? SILENCE : SFX_BUS_LEVEL;
   const musicBus = context.createGain();
   musicBus.gain.value = SILENCE;
   sfxBus.connect(master);
@@ -490,7 +503,7 @@ function playFeedbackCue(cue: FeedbackCue, sound: boolean, haptics: boolean, con
     const pattern = mod?.haptics ?? (cue === "warning" ? [35, 45, 70] : cue === "failure" ? [70, 35, 70] : cue === "lost" ? [80, 40, 80, 40, 120] : cue === "find" ? [30, 30, 30] : [30]);
     navigator.vibrate(pattern);
   }
-  if (!sound || typeof window === "undefined") return;
+  if (!sound || narrationActive || typeof window === "undefined") return;
   const bus = ensureGraph();
   if (!bus) return;
 
@@ -764,6 +777,7 @@ export function setAdaptiveScore(enabled: boolean, tension = 0, sector = 0) {
 function applyAdaptiveScore(enabled: boolean, tension: number, sector: number) {
   if (typeof window === "undefined") return;
   if (!enabled) {
+    musicLevel = SILENCE;
     if (padTeardown !== null) return;
     if (graph && pad) {
       const now = graph.context.currentTime;
@@ -783,6 +797,7 @@ function applyAdaptiveScore(enabled: boolean, tension: number, sector: number) {
   if (!bus) return;
   const state = ensurePad(bus);
   const clamped = clamp(tension, 0, 1);
-  bus.musicBus.gain.setTargetAtTime(0.02 + clamped * 0.06, bus.context.currentTime, 0.35);
+  musicLevel = 0.02 + clamped * 0.06;
+  bus.musicBus.gain.setTargetAtTime(narrationActive ? SILENCE : musicLevel, bus.context.currentTime, 0.35);
   applyBand(bus, state, bandForTension(clamped), clamped, sector);
 }
