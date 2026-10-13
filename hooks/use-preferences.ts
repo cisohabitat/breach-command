@@ -17,7 +17,7 @@ const PREFERENCES_KEY = "breach-command.preferences";
 export function usePreferences(onUnreadable: (notice: Message) => void) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [highContrast, setHighContrast] = useState(false);
   // Single-key shortcuts must be able to be turned off (WCAG 2.1.4): a speech
@@ -37,7 +37,7 @@ export function usePreferences(onUnreadable: (notice: Message) => void) {
           const parsed = JSON.parse(stored) as { sound?: boolean; music?: boolean; voice?: boolean; haptics?: boolean; highContrast?: boolean; shortcuts?: boolean };
           setSoundEnabled(parsed.sound !== false);
           setMusicEnabled(parsed.music !== false);
-          setVoiceEnabled(parsed.voice === true);
+          setVoiceEnabled(parsed.voice !== false);
           setHapticsEnabled(parsed.haptics !== false);
           setHighContrast(parsed.highContrast === true);
           setShortcutsEnabled(parsed.shortcuts !== false);

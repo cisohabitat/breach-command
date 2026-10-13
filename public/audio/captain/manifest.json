@@ -1,0 +1,40 @@
+{
+  "model": "hexgrad/Kokoro-82M",
+  "voice": "bm_george",
+  "speed": 0.94,
+  "language": "en-gb",
+  "clips": {
+    "opening": {
+      "text": "Captain here. Two workstation reports and unexpected outbound traffic. Services are still running. We need to establish what connects those signals.",
+      "durationSeconds": 10.71
+    },
+    "firstFinding": {
+      "text": "That gives us our first confirmed finding. Keep the evidence and the assumptions separate.",
+      "durationSeconds": 5.89
+    },
+    "connectedFindings": {
+      "text": "Two stages are confirmed. The incident is taking shape, but the remaining activity is still unconfirmed.",
+      "durationSeconds": 7.8
+    },
+    "pressure": {
+      "text": "Operational pressure is rising. Keep the service consequences in view as you make the next call.",
+      "durationSeconds": 6.94
+    },
+    "response": {
+      "text": "The four-stage chain is confirmed. We can now move through containment, assurance, and recovery.",
+      "durationSeconds": 6.97
+    },
+    "won": {
+      "text": "Response complete. The incident is resolved. Review the record while the decisions are still fresh.",
+      "durationSeconds": 6.82
+    },
+    "lost": {
+      "text": "The operation has ended with activity unresolved. Review what was confirmed and where the response lost its margin.",
+      "durationSeconds": 8.49
+    },
+    "exercise": {
+      "text": "The controller has confirmed authorised exercise activity. Stand down and review what the investigation established.",
+      "durationSeconds": 9.11
+    }
+  }
+}

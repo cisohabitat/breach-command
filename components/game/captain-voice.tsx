@@ -30,7 +30,7 @@ export function CaptainVoice({ cue, enabled, history }: { cue: CaptainVoiceCue; 
     pending.current = null;
     history.current.add(cue);
     cancel.current();
-    cancel.current = speakCaptain(text, locale === "en-XA" ? "en" : locale, setState);
+    cancel.current = speakCaptain(cue, setState);
   };
   const autoPlay = useEffectEvent(play);
   const skip = () => {

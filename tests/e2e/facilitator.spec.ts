@@ -26,6 +26,9 @@ test("the facilitator sheet prints alone, on one or two pages at A4 and Letter",
   await expect(sheet).toContainText("Form BC-320");
   for (const id of game.chain) await expect(sheet).toContainText(attackMitre[id][0]);
   await expect(page.locator(".debrief-actions")).toBeHidden();
+  // Narration can make the ending taller and leave the viewport scrolled.
+  // Measure the print layout from the document's top, as PDF pagination does.
+  await page.evaluate(() => window.scrollTo(0, 0));
   // A print that is blank or shifted off the page still counts its pages; the
   // sheet has to start on the page, where the reader will see it.
   const box = (await sheet.boundingBox())!;
