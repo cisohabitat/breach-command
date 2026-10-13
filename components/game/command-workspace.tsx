@@ -12,6 +12,7 @@ import type { GameSession } from "@/hooks/use-game-session";
 import { useMessages } from "@/hooks/use-messages";
 import { commandWorkspaceMessages } from "@/lib/i18n/en/command-workspace";
 import { register } from "@/lib/i18n";
+import { CaptainVoice } from "./captain-voice-lazy";
 
 register(commandWorkspaceMessages);
 
@@ -32,6 +33,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
           sat two screens down with nothing on screen saying one was waiting. */}
       {activeWorkspace === "command" && game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
       {activeWorkspace === "command" && game.status === "playing" && <SectorSetPiece game={game} onChoose={sectorDecision} />}
+      {activeWorkspace === "command" && game.status === "response" && game.scenario === 0 && !session.botRun && <CaptainVoice cue="response" enabled={session.voiceEnabled && !session.report && !session.settings && !session.rules && !session.debrief} history={session.voiceHistory} />}
       {activeWorkspace === "command" && (ended ? (
         <EndState session={session} />
       ) : game.status === "response" ? (

@@ -10,6 +10,7 @@ import { SpecialistPortrait } from "./story-art";
 import { register } from "@/lib/i18n";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { SectorIllustration } from "./sector-illustration";
+import { CaptainVoice } from "./captain-voice-lazy";
 
 register(missionBriefingDialogMessages);
 
@@ -26,6 +27,7 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
       <DialogContent ref={content} className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false} onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }} onCloseAutoFocus={returnFocusToAwaiting}>
         <DialogHeader><div className="eyebrow">{rich("missionBriefingDialog.formBc1002", { scenario: (game?.scenario ?? 0) + 1 }, { span: chunk => <span className="separator">{chunk}</span> })}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
         {game && <>
+          {game.scenario === 0 && !session.botRun && <CaptainVoice cue="opening" enabled={session.voiceEnabled && missionBriefing && !session.settings && !session.rules && !session.newConfirm} history={session.voiceHistory} />}
           {/* What shapes the first decisions stays open: the sector's condition,
               the specialist on hand and what is known of the operator. The rest
               is context, and six readouts put the button a screen and a half down

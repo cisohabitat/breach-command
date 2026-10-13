@@ -78,6 +78,17 @@ The adaptive score under play follows tension and the sector. Sound is on by
 default, and silence is one switch away in Settings; nothing in the game
 depends on hearing a cue.
 
+The opt-in Captain voice pilot covers **The quiet intrusion** only. Its short
+opening, first and connected findings, pressure crossing, response handover and
+three closing assessments use the same catalogue text for speech and captions.
+Each beat speaks once per operation, with Listen and Skip voice controls. It is
+off by default and independent of sound cues and music; M silences all three.
+Installed English device voices keep playback local. An unavailable voice
+leaves the complete text. Speech takes the mix while it plays, quieting both
+music and cues, and stops on dismissal, mute, navigation or a hidden tab.
+Validate pacing and character with this case before recording or expanding the
+corpus. Routine procedure results remain at the player's reading pace.
+
 ## Open for the designer
 
 - Whether the paper documents need an edge or a shadow to read as objects on

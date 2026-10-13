@@ -2,6 +2,7 @@
 // lib/i18n. A key names where the string is used; a value may hold {name}
 // placeholders, and a plural is an object of Intl plural categories.
 export const en = {
+  "voice.unavailable": "Captain voice is unavailable. You can continue using the written briefing and reports.",
   "shell.skip": "Skip to main content",
   "shell.home": "Breach Command home",
   "shell.desk": "Incident desk",

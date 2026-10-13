@@ -28,7 +28,7 @@ test.describe("local persistence", () => {
 
     const stored = await page.evaluate(key => localStorage.getItem(key), PREFERENCES);
     expect(JSON.parse(stored ?? "{}"), "the page must not overwrite settings it has not read yet").toEqual({
-      sound: false, music: false, haptics: false, highContrast: true, shortcuts: true,
+      sound: false, music: false, voice: false, haptics: false, highContrast: true, shortcuts: true,
     });
     // High contrast is applied, not merely remembered — on the document root as
     // well, where the dialogs and sheets rendered outside the shell inherit it.
@@ -287,7 +287,7 @@ test.describe("diagnostics", () => {
       try {
         localStorage.clear();
         localStorage.setItem("breach-command.tutorial-complete", "true");
-        localStorage.setItem("breach-command.campaign", JSON.stringify({ completed: [0, 1], xp: 120, bestScores: { "0": 88 } }));
+        localStorage.setItem("breach-command.campaign", JSON.stringify({ completed: [0, 1], xp: 120, bestScores: { "0": 88, "diagnostics-private-score": 99 } }));
       } catch {}
     });
     await page.goto("/", { waitUntil: "networkidle" });
@@ -298,6 +298,8 @@ test.describe("diagnostics", () => {
     expect(text).toContain("Storage: writable");
     expect(text).toMatch(/campaign \d+ B/);
     expect(text).not.toContain("bestScores");
-    expect(text).not.toContain("88");
+    // A short number can legitimately occur in the build id, user agent or
+    // storage sizes. A distinctive stored marker tests disclosure instead.
+    expect(text).not.toContain("diagnostics-private-score");
   });
 });
