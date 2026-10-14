@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { StoryArt } from "./story-art";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
@@ -15,11 +15,19 @@ import { useMessages } from "@/hooks/use-messages";
 import { debriefDialogMessages } from "@/lib/i18n/en/debrief-dialog";
 import { register } from "@/lib/i18n";
 import { sameMessage, withForm } from "@/lib/i18n/message";
+import dynamic from "next/dynamic";
+
+const CaptainDebrief = dynamic(() => import("./captain-debrief-player").then(module => module.CaptainDebrief, () => UnavailableVoice), { ssr: false });
+function UnavailableVoice() {
+  const { t } = useMessages();
+  return <p role="status">{t("voice.unavailable")}</p>;
+}
 
 register(debriefDialogMessages);
 
 export function DebriefDialog({ session }: { session: GameSession }) {
   const { t, rich, say } = useMessages();
+  const content = useRef<HTMLDivElement>(null);
   const {
     debrief, setDebrief, game, outcome, activeScenario, campaign, finalEnding,
     resetToBriefing, setScenarioChoice, campaignChange, playRecommended, replayWithBot,
@@ -64,7 +72,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
 
   return (
     <Dialog open={debrief} onOpenChange={setDebrief}>
-      <DialogContent className="game-dialog paper-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onCloseAutoFocus={returnFocusToAwaiting}>
+      <DialogContent ref={content} className="game-dialog paper-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }} onCloseAutoFocus={returnFocusToAwaiting}>
         {game && <FacilitatorSheet game={game} />}
         <DialogHeader>
           <div className="eyebrow">{rich("debriefDialog.formBc3002", {  }, { span: chunk => <span className="separator">{chunk}</span>, span2: chunk => <span>{chunk}</span> })}</div>
@@ -83,6 +91,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           )}
         </DialogHeader>
         {game && outcome && <>
+          {debrief && session.voiceEnabled && !session.botRun && !session.settings && !session.rules && !session.newConfirm && <CaptainDebrief game={game} grade={outcome.grade} history={session.voiceHistory} />}
           <section className="first-read" aria-label={t("debriefDialog.beforeTheDetail")}>
             {(() => {
               const review = getBeginnerReview(game);

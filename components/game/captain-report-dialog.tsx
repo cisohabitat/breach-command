@@ -11,7 +11,7 @@ import { useMessages, type Translate } from "@/hooks/use-messages";
 import { captainReportDialogMessages } from "@/lib/i18n/en/captain-report-dialog";
 import { register, type Locale, type MessageKey } from "@/lib/i18n";
 import { legacyText, say as sayIn, withForm } from "@/lib/i18n/message";
-import { captainUpdateFor, type CaptainVoiceCue } from "@/lib/captain-voice";
+import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import { CaptainVoice } from "./captain-voice-lazy";
 
 register(captainReportDialogMessages);
@@ -42,8 +42,8 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   // The turn that ends an operation is headed by how it ended: "Evidence
   // confirmed." with a green tick sat above "OPERATION LOST".
   const lostHere = !!(ended && report && game && report.number === game.turns.length && game.status !== "won");
-  const voiceCue: CaptainVoiceCue | null = report && game
-    ? ended ? game.status as "won" | "lost" | "exercise" : captainUpdateFor(game, report)
+  const voiceCue: CaptainVoiceCue | { game: Game; turn: Game["turns"][number] } | null = report && game
+    ? ended ? game.status as "won" | "lost" | "exercise" : { game, turn: report }
     : null;
   const content = useRef<HTMLDivElement>(null);
   const optionList = useRef<HTMLDivElement>(null);

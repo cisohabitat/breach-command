@@ -1143,7 +1143,7 @@
   }
 }
 @media print {
-  .topbar,.game-screen,.briefing-screen,[data-radix-dialog-overlay],.debrief-dialog button,html.print-facilitator .debrief-dialog>:not(.facilitator-sheet) {
+  .topbar,.game-screen,.briefing-screen,.captain-voice,[data-radix-dialog-overlay],.debrief-dialog button,html.print-facilitator .debrief-dialog>:not(.facilitator-sheet) {
     display:none!important;
   }
   /* An open dialog locks the page's scroll by clipping the body to the

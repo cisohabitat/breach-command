@@ -2,19 +2,47 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { captainVoiceMessages } from "../lib/i18n/en/captain-voice.ts";
-import { newGame, playTurn, attacks } from "../lib/advanced-game.ts";
-import { captainOpeningFor, captainUpdateFor } from "../lib/captain-voice.ts";
+import { newGame, playTurn, resolveDecision, attacks } from "../lib/advanced-game.ts";
+import { captainOpeningFor } from "../lib/captain-voice.ts";
+import { captainUpdateFor } from "../lib/captain-update.ts";
+import { captainDebriefFor } from "../lib/captain-debrief.ts";
 import { speakCaptain, type CaptainSpeechState } from "../lib/captain-speech.ts";
 
 test("bundled recordings match the authored captions and fit the playback deadline", () => {
   const directory = new URL("../public/audio/captain/", import.meta.url);
   const manifest = JSON.parse(readFileSync(new URL("manifest.json", directory), "utf8"));
-  assert.equal(Object.keys(manifest.clips).length, 27);
+  assert.equal(Object.keys(manifest.clips).length, 50);
   for (let scenario = 0; scenario < 10; scenario++) assert.ok(manifest.clips[captainOpeningFor(scenario)], "every case has a recorded opening");
   for (const [cue, clip] of Object.entries(manifest.clips) as [string, { text: string; durationSeconds: number }][]) {
     assert.equal(clip.text, captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);
     assert.ok(clip.durationSeconds > 1 && clip.durationSeconds < 20);
     assert.ok(readFileSync(new URL(`${cue}.mp3`, directory)).length > 1000);
+  }
+});
+
+test("spoken debrief selects only finished results and supported strengths", () => {
+  const initial = newGame(0, "training", () => 0);
+  assert.deepEqual(captainDebriefFor(initial), []);
+  assert.deepEqual(captainDebriefFor({ ...initial, status: "response" }), []);
+  assert.deepEqual(captainDebriefFor({ ...initial, status: "won" }), [], "a recovery grade must come from the actual outcome");
+  for (const grade of ["A", "B", "C", "D"]) assert.equal(captainDebriefFor({ ...initial, status: "won" }, grade).length, 3);
+  const lost = { ...initial, status: "lost" as const, impact: 100 };
+  assert.deepEqual(captainDebriefFor(lost), ["reviewImpact", "reviewNoStrength", "reviewServices"]);
+  assert.equal(captainDebriefFor({ ...lost, objectiveProgress: 100 })[0], "reviewObjective");
+  assert.equal(captainDebriefFor({ ...initial, status: "lost", continuity: 0 })[0], "reviewContinuityLost");
+  assert.equal(captainDebriefFor({ ...initial, status: "lost", sectorHealth: 0 })[0], "reviewSector");
+  assert.equal(captainDebriefFor({ ...initial, status: "lost" })[0], "reviewWindow");
+  assert.equal(captainDebriefFor({ ...initial, status: "exercise" })[0], "reviewExercise");
+  const found = playTurn({ ...initial, injectDeck: [] }, attacks.find(attack => attack.id === initial.chain[0])!.detect[0], 20);
+  const ended = { ...found, status: "lost" as const, impact: 100 };
+  assert.equal(captainDebriefFor(ended)[1], "reviewEvidence");
+  assert.equal(captainDebriefFor(ended)[2], "reviewReading");
+  const assessed = resolveDecision(found, "observe");
+  const reviewed = { ...assessed, status: "lost" as const, impact: 100 };
+  for (const choice of ["contain", "observe", "attribute", "notify", "act"] as const) {
+    const decision = { ...assessed.decisions[0], choice, quality: 3 };
+    const cues = captainDebriefFor({ ...reviewed, decisions: [decision] });
+    assert.equal(cues[1], { contain: "reviewContain", observe: "reviewObserve", attribute: "reviewAttribute", notify: "reviewNotify", act: "reviewAct" }[choice]);
   }
 });
 
@@ -89,6 +117,28 @@ test("recorded clips replace rather than overlap and stop without stale callback
     assert.equal(probe.cancellations, 2);
     assert.equal(probe.states.at(-1), "idle");
     t.mock.timers.tick(30_000);
+    assert.equal(probe.states.at(-1), "idle");
+  } finally { stop(); restore(); }
+});
+
+test("a spoken review plays its segments in order and skip cancels the remainder", () => {
+  const { probe, restore } = installAudio();
+  let stop = () => {};
+  try {
+    stop = speakCaptain(["reviewStable", "reviewEvidence", "reviewPractice"], state => probe.states.push(state));
+    const audio = probe.clips[0];
+    assert.equal(audio.src, "/audio/captain/reviewStable.mp3");
+    audio.onended?.();
+    assert.equal(audio.src, "/audio/captain/reviewEvidence.mp3");
+    assert.equal(probe.clips.length, 1, "reuse the media element's playback permission");
+    const staleEnd = audio.onended;
+    stop();
+    staleEnd?.();
+    assert.equal(audio.src, "/audio/captain/reviewEvidence.mp3", "skip cannot start the remaining review segment");
+    assert.equal(probe.states.at(-1), "idle");
+    stop = speakCaptain(["reviewStable", "reviewEvidence", "reviewPractice"], state => probe.states.push(state));
+    const complete = probe.clips.at(-1)!;
+    complete.onended?.(); complete.onended?.(); complete.onended?.();
     assert.equal(probe.states.at(-1), "idle");
   } finally { stop(); restore(); }
 });

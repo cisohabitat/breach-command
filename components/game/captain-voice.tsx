@@ -1,6 +1,9 @@
 import { useEffect, useEffectEvent, useRef, useState, type RefObject } from "react";
 import { useMessages } from "@/hooks/use-messages";
 import type { CaptainVoiceCue } from "@/lib/captain-voice";
+import type { Game, Turn } from "@/lib/advanced-game";
+import type { RecordedCaptainCue } from "@/lib/captain-debrief";
+import { captainUpdateFor } from "@/lib/captain-update";
 import { speakCaptain, type CaptainSpeechState } from "@/lib/captain-speech";
 import { register } from "@/lib/i18n";
 import { captainVoiceMessages } from "@/lib/i18n/en/captain-voice";
@@ -35,12 +38,43 @@ const lineKeys = {
   won: "captainVoice.won",
   lost: "captainVoice.lost",
   exercise: "captainVoice.exercise",
+  reviewControlled: "captainVoice.reviewControlled",
+  reviewStable: "captainVoice.reviewStable",
+  reviewCostly: "captainVoice.reviewCostly",
+  reviewFragile: "captainVoice.reviewFragile",
+  reviewObjective: "captainVoice.reviewObjective",
+  reviewImpact: "captainVoice.reviewImpact",
+  reviewContinuityLost: "captainVoice.reviewContinuityLost",
+  reviewSector: "captainVoice.reviewSector",
+  reviewWindow: "captainVoice.reviewWindow",
+  reviewExercise: "captainVoice.reviewExercise",
+  reviewContain: "captainVoice.reviewContain",
+  reviewObserve: "captainVoice.reviewObserve",
+  reviewAttribute: "captainVoice.reviewAttribute",
+  reviewNotify: "captainVoice.reviewNotify",
+  reviewAct: "captainVoice.reviewAct",
+  reviewEvidence: "captainVoice.reviewEvidence",
+  reviewContinuity: "captainVoice.reviewContinuity",
+  reviewAligned: "captainVoice.reviewAligned",
+  reviewNoStrength: "captainVoice.reviewNoStrength",
+  reviewReading: "captainVoice.reviewReading",
+  reviewDecisions: "captainVoice.reviewDecisions",
+  reviewServices: "captainVoice.reviewServices",
+  reviewPractice: "captainVoice.reviewPractice",
 } as const;
 
 // Mounted at a visible narrative beat, never under a closed dialog.
-export function CaptainVoice({ cue, enabled, history }: { cue: CaptainVoiceCue; enabled: boolean; history: RefObject<Set<CaptainVoiceCue>> }) {
+type VoiceProps = { cue: CaptainVoiceCue | { game: Game; turn: Turn }; lines?: readonly RecordedCaptainCue[]; enabled: boolean; history: RefObject<Set<CaptainVoiceCue>> };
+
+export function CaptainVoice(props: VoiceProps) {
+  const cue = typeof props.cue === "string" ? props.cue : captainUpdateFor(props.cue.game, props.cue.turn);
+  return cue ? <CaptainLine {...props} cue={cue} /> : null;
+}
+
+function CaptainLine({ cue, lines, enabled, history }: Omit<VoiceProps, "cue"> & { cue: CaptainVoiceCue }) {
   const { t, locale } = useMessages();
-  const text = t(lineKeys[cue]);
+  const cues = lines ?? (cue === "debrief" ? [] : [cue]);
+  const text = cues.map(line => t(lineKeys[line])).join(" ");
   const [state, setState] = useState<CaptainSpeechState>("idle");
   const cancel = useRef<() => void>(() => {});
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,7 +83,7 @@ export function CaptainVoice({ cue, enabled, history }: { cue: CaptainVoiceCue; 
     pending.current = null;
     history.current.add(cue);
     cancel.current();
-    cancel.current = speakCaptain(cue, setState);
+    cancel.current = speakCaptain(cues, setState);
   };
   const autoPlay = useEffectEvent(play);
   const skip = () => {
@@ -71,7 +105,7 @@ export function CaptainVoice({ cue, enabled, history }: { cue: CaptainVoiceCue; 
     return () => { stop(); document.removeEventListener("visibilitychange", hide); };
   }, [enabled, cue, text, locale, history]);
 
-  if (!enabled) return null;
+  if (!enabled || !cues.length) return null;
   const busy = state === "speaking" || state === "waiting";
   return (
     <section className="captain-voice" aria-label={t("captainVoice.captain")}>

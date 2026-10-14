@@ -111,6 +111,98 @@
     "exercise": {
       "text": "The controller has confirmed authorised exercise activity. Stand down and review what the investigation established.",
       "durationSeconds": 9.11
+    },
+    "reviewControlled": {
+      "text": "Controlled recovery, grade A. You completed the response with a strong balance of evidence and service protection.",
+      "durationSeconds": 7.93
+    },
+    "reviewStable": {
+      "text": "Stable recovery, grade B. The response is complete, with some residual costs worth examining in the record.",
+      "durationSeconds": 7.96
+    },
+    "reviewCostly": {
+      "text": "Costly stabilisation, grade C. You completed the response, but its impact and tradeoffs need a closer review.",
+      "durationSeconds": 8.29
+    },
+    "reviewFragile": {
+      "text": "Fragile recovery, grade D. The response is complete, but the record shows limited margin and significant costs.",
+      "durationSeconds": 8.55
+    },
+    "reviewObjective": {
+      "text": "The operation ended when the adversary completed its objective. Confirmed findings remain useful, but the response did not prevent that outcome.",
+      "durationSeconds": 10.41
+    },
+    "reviewImpact": {
+      "text": "The operation ended when business impact reached its limit. The investigation record matters, and so does the disruption accumulated along the way.",
+      "durationSeconds": 11.08
+    },
+    "reviewContinuityLost": {
+      "text": "The operation ended when essential service continuity reached zero. The response could not keep the service available while the incident remained unresolved.",
+      "durationSeconds": 11.1
+    },
+    "reviewSector": {
+      "text": "The operation ended when the sector's operating margin was exhausted. The response lost room to continue safely before the incident was resolved.",
+      "durationSeconds": 10.62
+    },
+    "reviewWindow": {
+      "text": "The investigation window closed with activity unresolved. The evidence you confirmed remains in the record, but the operation ran out of time.",
+      "durationSeconds": 10.63
+    },
+    "reviewExercise": {
+      "text": "The controller confirmed authorised exercise activity. This is a stand-down and learning review, rather than a completed containment and recovery.",
+      "durationSeconds": 10.59
+    },
+    "reviewContain": {
+      "text": "Your containment decision earned a strong assessment. You tied intervention to a confirmed finding, rather than acting on an assumption.",
+      "durationSeconds": 9.05
+    },
+    "reviewObserve": {
+      "text": "Your decision to observe earned a strong assessment. You gave the evidence room to develop before committing to intervention.",
+      "durationSeconds": 8.33
+    },
+    "reviewAttribute": {
+      "text": "Your attribution decision earned a strong assessment. You examined how the finding fitted the incident before committing to an explanation.",
+      "durationSeconds": 9.25
+    },
+    "reviewNotify": {
+      "text": "Your notification decision earned a strong assessment. You made communication part of the response alongside the investigation work.",
+      "durationSeconds": 9.52
+    },
+    "reviewAct": {
+      "text": "Your intervention decision earned a strong assessment. You connected a confirmed finding to a response the record could support.",
+      "durationSeconds": 8.81
+    },
+    "reviewEvidence": {
+      "text": "You left confirmed findings in the record. Build on that evidence, while keeping any unconfirmed parts of the story separate.",
+      "durationSeconds": 8.39
+    },
+    "reviewContinuity": {
+      "text": "Service continuity remained strong at the end. Keep that operational picture beside the evidence as you assess the overall response.",
+      "durationSeconds": 9.92
+    },
+    "reviewAligned": {
+      "text": "You tested a working reading with a source that supported it. That connection between prediction and evidence is worth retaining.",
+      "durationSeconds": 8.6
+    },
+    "reviewNoStrength": {
+      "text": "There is no strongly assessed decision to highlight. Keep that gap visible as you review where the response lost its margin.",
+      "durationSeconds": 8.49
+    },
+    "reviewReading": {
+      "text": "Next time, record a working reading before each check. Choose a source that can test it, then compare the result with your prediction.",
+      "durationSeconds": 8.95
+    },
+    "reviewDecisions": {
+      "text": "Next time, revisit the weak evidence decisions. Compare what each alternative preserves, disrupts, or leaves unresolved before making the call.",
+      "durationSeconds": 10.47
+    },
+    "reviewServices": {
+      "text": "Next time, check the limiting operational readings before each intervention. Leave enough margin for the decisions still ahead.",
+      "durationSeconds": 8.69
+    },
+    "reviewPractice": {
+      "text": "On the next run, explain the evidence you expect before each check, then compare it with the result. Keep that habit.",
+      "durationSeconds": 7.85
     }
   }
 }

@@ -6,7 +6,7 @@ Play the current release at [breach-command.vercel.app](https://breach-command.v
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
-The 27 recorded lines cover confirmed findings, unsuccessful checks, uncertain
+The 50 recorded lines cover confirmed findings, unsuccessful checks, uncertain
 signals, new developments and service pressure. Voice is on by default, using bundled recordings of a
 calm male Captain with a British English voice. An explicit saved Off setting is
 respected. Every spoken line is also readable, with Listen and Skip voice
@@ -14,16 +14,24 @@ controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Bot Commander
 practice runs remain silent. Each line plays automatically once per operation;
 Listen can replay a line, so repeated checks do not cause repeated chatter.
+Opening the after-action review plays a short spoken debrief: the actual
+recovery grade or loss cause, a well-assessed evidence decision or supported
+strength, and one improvement grounded in the record. The three clips play in
+sequence using the same voice and media element, with complete captions and
+whole-debrief replay or skip. A finished operation is required; play never waits
+for the narration. Printed reviews omit the spoken transcript.
 
 `components/game/captain-voice-lazy.tsx` loads voice only when enabled;
 `components/game/captain-voice.tsx` owns the transcript and controls,
-`lib/captain-voice.ts` selects updates from public findings and meter crossings,
+`lib/captain-update.ts` selects updates from public findings and meter crossings,
 and `lib/captain-speech.ts` handles recorded audio playback, cancellation and
 failure. The preference stays in the existing device-local settings record;
 the game and saved-session schemas are unchanged. Audio provenance and the exact
 recorded scripts are in `public/audio/captain/README.md` and `manifest.json`.
 `scripts/render-captain-voice.py` regenerates changed scripts offline; it is a
 maintainer tool and adds no runtime dependencies.
+`lib/captain-debrief.ts` selects the recorded review only after an operation ends
+and loads with the optional voice player.
 
 ## What the player does
 
