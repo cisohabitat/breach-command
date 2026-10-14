@@ -5,7 +5,7 @@ export const settingsDialogMessages = {
   "settingsDialog.proceduralAudioFor": "Procedural audio for discoveries, warnings and outcomes.",
   "settingsDialog.adaptiveScore": "Adaptive score",
   "settingsDialog.captainVoice": "Captain voice",
-  "settingsDialog.voicePilot": "Recorded male Captain across all ten cases: briefings, investigation updates, response guidance and closing assessments. On by default; every line has text and can be skipped.",
+  "settingsDialog.voicePilot": "Captain voice for all ten cases and the after-action review. On by default, with captions, replay and skip.",
   "settingsDialog.sectorSpecificCommand": "Sector-specific command ambience intensifies as operational pressure rises.",
   "settingsDialog.hapticFeedback": "Haptic feedback",
   "settingsDialog.shortVibrationCues": "Short vibration cues on supported mobile devices.",

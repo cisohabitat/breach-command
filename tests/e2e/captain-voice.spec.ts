@@ -1,20 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
-import { newGame, playTurn, resolveResponse } from "../../lib/advanced-game";
+import { getOutcome, newGame, playTurn, resolveResponse } from "../../lib/advanced-game";
 import { captainVoiceMessages } from "../../lib/i18n/en/captain-voice";
+import { captainDebriefFor } from "../../lib/captain-debrief";
 import { openWithSave, pendingDecisionGame, responsePhaseGame } from "./fixtures";
 
 declare global {
   interface Window {
-    captainSpeechProbe: { lines: string[]; cancellations: number; refuse: boolean };
+    captainSpeechProbe: { lines: string[]; cancellations: number; refuse: boolean; finish: () => void };
   }
 }
 
 async function mockSpeech(page: Page, available = true) {
   const lines = Object.fromEntries(Object.entries(captainVoiceMessages).map(([key, text]) => [key.replace("captainVoice.", ""), text]));
   await page.addInitScript(({ available, lines }) => {
-    window.captainSpeechProbe = { lines: [], cancellations: 0, refuse: false };
+    window.captainSpeechProbe = { lines: [], cancellations: 0, refuse: false, finish: () => {} };
     class Audio {
       src: string;
       volume = 1;
@@ -26,6 +27,7 @@ async function mockSpeech(page: Page, available = true) {
         if (!available || window.captainSpeechProbe.refuse) return Promise.reject(new Error("playback refused"));
         const cue = this.src.split("/").at(-1)!.replace(".mp3", "");
         window.captainSpeechProbe.lines.push(lines[cue]);
+        window.captainSpeechProbe.finish = () => this.onended?.();
         this.onplaying?.();
         return Promise.resolve();
       }
@@ -164,9 +166,41 @@ test("response and closing assessments play once and do not overlap", async ({ p
   await expect(page.locator(".resolution")).toBeVisible();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(4);
   await page.locator(".end-banner button").click();
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(5);
   await page.keyboard.press("Escape");
   await page.waitForTimeout(1200);
-  expect(await page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(4);
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(5);
+});
+
+test("spoken debrief follows the result, plays three segments, and respects skip and replay", async ({ page }) => {
+  const initial = responsePhaseGame();
+  const finished = ["isolate", "preserve", "rebuild"].reduce((game, choice) => resolveResponse(game, choice), initial);
+  const lines = captainDebriefFor(finished, getOutcome(finished).grade).map(cue => captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);
+  await mockSpeech(page);
+  await openWithSave(page, initial, false, voicePreferences);
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
+  await page.locator(".end-banner button").click();
+  const voice = page.getByRole("dialog").getByRole("region", { name: "Incident Captain" });
+  await expect(voice).toContainText(lines.join(" "));
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(lines[0]);
+  await page.evaluate(() => window.captainSpeechProbe.finish());
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(lines[1]);
+  await voice.getByRole("button", { name: "Skip voice" }).click();
+  await page.evaluate(() => window.captainSpeechProbe.finish());
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(lines[1]);
+  await voice.getByRole("button", { name: "Listen" }).click();
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(lines[0]);
+  await page.evaluate(() => window.captainSpeechProbe.finish());
+  await page.evaluate(() => window.captainSpeechProbe.finish());
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(lines[2]);
+  await page.evaluate(() => window.captainSpeechProbe.finish());
+  await expect(voice.getByRole("button", { name: "Listen" })).toHaveAttribute("aria-disabled", "false");
+  const count = await page.evaluate(() => window.captainSpeechProbe.lines.length);
+  await page.keyboard.press("Escape");
+  await page.locator(".end-banner button").click();
+  await page.waitForTimeout(1100);
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(count);
 });
 
 test("all cases receive matching voiced findings and their own opening", async ({ page }) => {
@@ -199,6 +233,7 @@ test("an unsuccessful investigation check gets guidance without blocking another
 });
 
 test("voice controls and captions fit phones and tablets", async ({ page }) => {
+  test.setTimeout(90_000);
   await mockSpeech(page);
   const finished = ["isolate", "preserve", "rebuild"].reduce((game, choice) => resolveResponse(game, choice), responsePhaseGame());
   // Finished saves are deliberately not resumable, so exercise the closing
@@ -206,7 +241,12 @@ test("voice controls and captions fit phones and tablets", async ({ page }) => {
   expect(finished.status).toBe("won");
   await openWithSave(page, responsePhaseGame(), false, voicePreferences, "/?locale=en-XA");
   await page.locator(".resume-card button").first().click();
-  for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280]) {
+  for (const surface of ["response", "debrief"]) {
+    if (surface === "debrief") {
+      for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
+      await page.locator(".end-banner button").click();
+    }
+    for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     const voice = page.locator(".captain-voice");
     await expect(voice).toBeVisible();
@@ -219,6 +259,7 @@ test("voice controls and captions fit phones and tablets", async ({ page }) => {
     await page.addScriptTag({ content: axeSource });
     const violations = await page.evaluate(async () => (await window.axe.run(document, { resultTypes: ["violations"] })).violations);
     expect(violations, `voice surface at ${width}px`).toEqual([]);
-    if (width === 375 || width === 1280) await page.screenshot({ path: test.info().outputPath(`voice-${width}.png`), fullPage: true });
+    if (width === 375 || width === 1280) await page.screenshot({ path: test.info().outputPath(`voice-${surface}-${width}.png`), fullPage: true });
+    }
   }
 });

@@ -15,6 +15,13 @@ import { useMessages } from "@/hooks/use-messages";
 import { debriefDialogMessages } from "@/lib/i18n/en/debrief-dialog";
 import { register } from "@/lib/i18n";
 import { sameMessage, withForm } from "@/lib/i18n/message";
+import dynamic from "next/dynamic";
+
+const CaptainDebrief = dynamic(() => import("./captain-debrief-player").then(module => module.CaptainDebrief, () => UnavailableVoice), { ssr: false });
+function UnavailableVoice() {
+  const { t } = useMessages();
+  return <p role="status">{t("voice.unavailable")}</p>;
+}
 
 register(debriefDialogMessages);
 
@@ -83,6 +90,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           )}
         </DialogHeader>
         {game && outcome && <>
+          {debrief && session.voiceEnabled && !session.botRun && !session.settings && !session.rules && !session.newConfirm && <CaptainDebrief game={game} grade={outcome.grade} history={session.voiceHistory} />}
           <section className="first-read" aria-label={t("debriefDialog.beforeTheDetail")}>
             {(() => {
               const review = getBeginnerReview(game);

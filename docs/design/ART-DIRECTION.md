@@ -79,7 +79,7 @@ default, and silence is one switch away in Settings; nothing in the game
 depends on hearing a cue.
 
 The Captain speaks across all ten cases, with an opening grounded in each
-published briefing. Its 27 recordings also cover findings, unsuccessful checks,
+published briefing. Its 50 recordings also cover findings, unsuccessful checks,
 low-confidence leads, new reports, service pressure and stabilisation,
 containment, assurance, recovery and three closing assessments.
 Speech and captions use the same catalogue text.
@@ -94,6 +94,12 @@ music and cues, and stops on dismissal, mute, navigation or a hidden tab.
 The male voice and measured delivery were approved during the first-case pilot.
 Each distinct update speaks once automatically; repeat checks can be replayed
 with Listen. Cues depend on public evidence and outcomes, never hidden answers.
+Opening a finished operation's review adds three spoken segments: its actual
+grade or loss cause, one supported strength, and a coaching point tied to the
+record. The sequence uses one media element, keeps the mix quiet throughout,
+and cancels in full on skip, mute, closing the review or hiding the tab.
+The complete transcript stays readable; replay repeats the whole debrief.
+It speaks once automatically per operation and is omitted from printed reports.
 
 ## Open for the designer
 
