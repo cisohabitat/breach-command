@@ -78,9 +78,11 @@ The adaptive score under play follows tension and the sector. Sound is on by
 default, and silence is one switch away in Settings; nothing in the game
 depends on hearing a cue.
 
-The Captain voice pilot covers **The quiet intrusion** only. Its short
-opening, first and connected findings, pressure crossing, response handover and
-three closing assessments use the same catalogue text for speech and captions.
+The Captain speaks across all ten cases, with an opening grounded in each
+published briefing. Its 27 recordings also cover findings, unsuccessful checks,
+low-confidence leads, new reports, service pressure and stabilisation,
+containment, assurance, recovery and three closing assessments.
+Speech and captions use the same catalogue text.
 Each beat speaks once per operation, with Listen and Skip voice controls. It is
 on by default and independent of sound cues and music; M silences all three.
 Explicit saved Off settings remain off. Bundled neural male British English
@@ -89,8 +91,9 @@ consistent volume and no radio distortion. No live TTS service is needed.
 An unavailable recording
 leaves the complete text. Speech takes the mix while it plays, quieting both
 music and cues, and stops on dismissal, mute, navigation or a hidden tab.
-Validate pacing and character with this case before expanding the
-corpus. Routine procedure results remain at the player's reading pace.
+The male voice and measured delivery were approved during the first-case pilot.
+Each distinct update speaks once automatically; repeat checks can be replayed
+with Listen. Cues depend on public evidence and outcomes, never hidden answers.
 
 ## Open for the designer
 

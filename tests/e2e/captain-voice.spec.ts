@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
-import { resolveResponse } from "../../lib/advanced-game";
+import { newGame, playTurn, resolveResponse } from "../../lib/advanced-game";
 import { captainVoiceMessages } from "../../lib/i18n/en/captain-voice";
 import { openWithSave, pendingDecisionGame, responsePhaseGame } from "./fixtures";
 
@@ -156,21 +156,46 @@ test("response and closing assessments play once and do not overlap", async ({ p
   await openWithSave(page, responsePhaseGame(), false, voicePreferences);
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.response"]);
-  for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
+  await page.locator(".response-options > button").first().click();
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.assurance"]);
+  await page.locator(".response-options > button").first().click();
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.recovery"]);
+  await page.locator(".response-options > button").first().click();
   await expect(page.locator(".resolution")).toBeVisible();
-  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(2);
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(4);
   await page.locator(".end-banner button").click();
   await page.keyboard.press("Escape");
   await page.waitForTimeout(1200);
-  expect(await page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(2);
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(4);
 });
 
-test("other cases retain their existing presentation", async ({ page }) => {
+test("all cases receive matching voiced findings and their own opening", async ({ page }) => {
+  test.setTimeout(90_000);
   await mockSpeech(page);
   const other = { ...pendingDecisionGame(), scenario: 1 };
   await openWithSave(page, other, true, voicePreferences);
   await page.getByRole("button", { name: "Resume", exact: true }).click();
-  await expect(page.getByRole("region", { name: "Incident Captain" })).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.firstFinding"]);
+  for (let scenario = 0; scenario < 10; scenario++) {
+    await openWithSave(page, null, false, voicePreferences);
+    await page.locator(".mission-selector button").nth(scenario).click();
+    await page.getByRole("button", { name: /Begin investigation/i }).first().click();
+    const key = scenario === 0 ? "captainVoice.opening" : `captainVoice.opening${scenario}` as keyof typeof captainVoiceMessages;
+    await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages[key]);
+  }
+});
+
+test("an unsuccessful investigation check gets guidance without blocking another action", async ({ page }) => {
+  const opening = { ...newGame(0, "training", () => 0), injectDeck: [] };
+  const failed = playTurn(opening, "dns", 1);
+  expect(failed.turns.at(-1)?.success).toBe(false);
+  await mockSpeech(page);
+  await openWithSave(page, failed, false, voicePreferences);
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  // Reopen the latest report from the investigation record.
+  await page.getByRole("button", { name: /^Briefing/ }).first().click();
+  await page.locator(".log-entry").first().click();
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.failedCheck"]);
 });
 
 test("voice controls and captions fit phones and tablets", async ({ page }) => {
