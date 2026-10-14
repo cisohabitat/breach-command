@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { captainVoiceMessages } from "../lib/i18n/en/captain-voice.ts";
-import { newGame, playTurn, resolveDecision, attacks } from "../lib/advanced-game.ts";
+import { newGame, playTurn, resolveDecision, responseOptionsFor, attacks } from "../lib/advanced-game.ts";
+import { captainReactionFor } from "../lib/captain-reaction.ts";
 import { captainOpeningFor } from "../lib/captain-voice.ts";
 import { captainUpdateFor } from "../lib/captain-update.ts";
 import { captainDebriefFor } from "../lib/captain-debrief.ts";
@@ -11,12 +12,51 @@ import { speakCaptain, type CaptainSpeechState } from "../lib/captain-speech.ts"
 test("bundled recordings match the authored captions and fit the playback deadline", () => {
   const directory = new URL("../public/audio/captain/", import.meta.url);
   const manifest = JSON.parse(readFileSync(new URL("manifest.json", directory), "utf8"));
-  assert.equal(Object.keys(manifest.clips).length, 50);
+  assert.equal(Object.keys(manifest.clips).length, 64);
   for (let scenario = 0; scenario < 10; scenario++) assert.ok(manifest.clips[captainOpeningFor(scenario)], "every case has a recorded opening");
   for (const [cue, clip] of Object.entries(manifest.clips) as [string, { text: string; durationSeconds: number }][]) {
     assert.equal(clip.text, captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);
     assert.ok(clip.durationSeconds > 1 && clip.durationSeconds < 20);
     assert.ok(readFileSync(new URL(`${cue}.mp3`, directory)).length > 1000);
+  }
+});
+
+test("live decision reactions ignore grades and hidden answers, and have one key per decision", () => {
+  const initial = { ...newGame(0, "training", () => 0), injectDeck: [] };
+  const found = playTurn(initial, attacks.find(attack => attack.id === initial.chain[0])!.detect[0], 20);
+  assert.equal(captainReactionFor({ game: found, beat: "decision" }), null);
+  for (const choice of ["contain", "notify", "act", "observe", "attribute"] as const) {
+    const game = resolveDecision(found, choice);
+    const reaction = captainReactionFor({ game, beat: "decision" });
+    assert.equal(reaction?.cue, { contain: "decisionContain", notify: "decisionNotify", act: "decisionAct", observe: "decisionObserve", attribute: "decisionAttribute" }[choice]);
+    assert.equal(reaction?.playbackKey, "decision:1");
+    const hiddenChanged = { ...game, chain: [...game.chain].reverse(), objective: "fraud" as const, decisions: game.decisions.map(item => ({ ...item, quality: 0, adaptedTo: "hidden" })) };
+    assert.deepEqual(captainReactionFor({ game: hiddenChanged, beat: "decision" }), reaction);
+    assert.equal(captainReactionFor({ game: { ...game, status: "lost" }, beat: "decision" }), null);
+    assert.equal(captainReactionFor({ game: { ...game, turns: [...game.turns, { ...game.turns[0], revealed: null, injectReveal: null }] }, beat: "decision" }), null);
+    assert.equal(captainReactionFor({ game: { ...game, decisions: [...game.decisions, game.decisions[0]] }, beat: "decision" })?.playbackKey, "decision:2");
+  }
+});
+
+test("response reactions reflect each sector's published residual risk, including recovery and losses", () => {
+  for (let scenario = 0; scenario < 10; scenario++) {
+    const initial = newGame(scenario, "training", () => 0);
+    const profile = responseOptionsFor(initial);
+    for (const [index, phase] of (["containment", "assurance", "recovery"] as const).entries()) {
+      for (const option of profile[phase]) {
+        const game = { ...initial, status: index === 2 ? "won" as const : "response" as const, responseChoices: [...Array<string>(index).fill("previous"), option.id] };
+        const beat = index === 2 ? "ending" as const : "response" as const;
+        const expected = phase + option.residual;
+        const reaction = captainReactionFor({ game, beat, profile });
+        assert.equal(reaction?.cue, expected, `case ${scenario}, ${phase}, ${option.id}`);
+        const rewritten = { ...game, chain: [...game.chain].reverse(), objective: "fraud" as const, responseScore: 999 };
+        assert.deepEqual(captainReactionFor({ game: rewritten, beat, profile }), reaction);
+        assert.equal(captainReactionFor({ game: { ...game, status: "lost" }, beat: "ending", profile })?.cue, "lost");
+        assert.equal(captainReactionFor({ game: { ...game, responseChoices: ["unknown"] }, beat: "response", profile }), null);
+      }
+    }
+    assert.equal(captainReactionFor({ game: initial, beat: "ending", profile }), null);
+    assert.equal(captainReactionFor({ game: initial, beat: "response", profile }), null);
   }
 });
 

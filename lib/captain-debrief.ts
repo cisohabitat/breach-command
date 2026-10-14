@@ -1,7 +1,7 @@
 import type { Game } from "./advanced-game.ts";
-import type { CaptainVoiceCue } from "./captain-voice.ts";
+import type { CaptainVoiceCue, CaptainReactionCue } from "./captain-voice.ts";
 
-export type RecordedCaptainCue = Exclude<CaptainVoiceCue, "debrief">;
+export type RecordedCaptainCue = Exclude<CaptainVoiceCue, "debrief"> | CaptainReactionCue;
 
 // Loaded with the optional voice player. A review can assess the full record,
 // but never selects or reveals an answer while the operation is in progress.

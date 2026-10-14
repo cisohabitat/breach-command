@@ -79,7 +79,7 @@ default, and silence is one switch away in Settings; nothing in the game
 depends on hearing a cue.
 
 The Captain speaks across all ten cases, with an opening grounded in each
-published briefing. Its 50 recordings also cover findings, unsuccessful checks,
+published briefing. Its 64 recordings also cover findings, unsuccessful checks,
 low-confidence leads, new reports, service pressure and stabilisation,
 containment, assurance, recovery and three closing assessments.
 Speech and captions use the same catalogue text.
@@ -100,6 +100,13 @@ record. The sequence uses one media element, keeps the mix quiet throughout,
 and cancels in full on skip, mute, closing the review or hiding the tab.
 The complete transcript stays readable; replay repeats the whole debrief.
 It speaks once automatically per operation and is omitted from printed reports.
+Live decision reactions acknowledge each evidence verb and its tradeoff, with
+one autoplay per recorded decision. Response reactions use the selected
+option's published residual risk, keeping sector differences audible. They
+never read a live quality grade, hidden response fit or undisclosed technique.
+Reactions share the approved voice, captions, replay, skip and cancellation.
+An evidence reaction sits below the procedures, preserving the phone's first
+action; a phase reaction occupies the existing response narration surface.
 
 ## Open for the designer
 

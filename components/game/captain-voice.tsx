@@ -4,6 +4,7 @@ import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import type { Game, Turn } from "@/lib/advanced-game";
 import type { RecordedCaptainCue } from "@/lib/captain-debrief";
 import { captainUpdateFor } from "@/lib/captain-update";
+import { captainReactionFor, type CaptainReaction } from "@/lib/captain-reaction";
 import { speakCaptain, type CaptainSpeechState } from "@/lib/captain-speech";
 import { register } from "@/lib/i18n";
 import { captainVoiceMessages } from "@/lib/i18n/en/captain-voice";
@@ -61,17 +62,39 @@ const lineKeys = {
   reviewDecisions: "captainVoice.reviewDecisions",
   reviewServices: "captainVoice.reviewServices",
   reviewPractice: "captainVoice.reviewPractice",
+  decisionContain: "captainVoice.decisionContain",
+  decisionNotify: "captainVoice.decisionNotify",
+  decisionAct: "captainVoice.decisionAct",
+  decisionObserve: "captainVoice.decisionObserve",
+  decisionAttribute: "captainVoice.decisionAttribute",
+  containmentLow: "captainVoice.containmentLow",
+  containmentModerate: "captainVoice.containmentModerate",
+  containmentHigh: "captainVoice.containmentHigh",
+  assuranceLow: "captainVoice.assuranceLow",
+  assuranceModerate: "captainVoice.assuranceModerate",
+  assuranceHigh: "captainVoice.assuranceHigh",
+  recoveryLow: "captainVoice.recoveryLow",
+  recoveryModerate: "captainVoice.recoveryModerate",
+  recoveryHigh: "captainVoice.recoveryHigh",
 } as const;
 
 // Mounted at a visible narrative beat, never under a closed dialog.
-type VoiceProps = { cue: CaptainVoiceCue | { game: Game; turn: Turn }; lines?: readonly RecordedCaptainCue[]; enabled: boolean; history: RefObject<Set<CaptainVoiceCue>> };
+type VoiceProps = { cue: CaptainVoiceCue | { game: Game; turn: Turn; reaction?: boolean } | CaptainReaction; lines?: readonly RecordedCaptainCue[]; enabled: boolean; history: RefObject<Set<string>> };
 
 export function CaptainVoice(props: VoiceProps) {
+  if (typeof props.cue !== "string" && "beat" in props.cue) {
+    const reaction = captainReactionFor(props.cue);
+    return reaction ? <CaptainLine {...props} {...reaction} /> : null;
+  }
+  if (typeof props.cue !== "string" && props.cue.reaction && props.cue.turn.number === props.cue.game.turns.length) {
+    const reaction = captainReactionFor({ game: props.cue.game, beat: "decision" });
+    if (reaction) return <CaptainLine {...props} {...reaction} />;
+  }
   const cue = typeof props.cue === "string" ? props.cue : captainUpdateFor(props.cue.game, props.cue.turn);
   return cue ? <CaptainLine {...props} cue={cue} /> : null;
 }
 
-function CaptainLine({ cue, lines, enabled, history }: Omit<VoiceProps, "cue"> & { cue: CaptainVoiceCue }) {
+function CaptainLine({ cue, playbackKey = cue, lines, enabled, history }: Omit<VoiceProps, "cue"> & { cue: CaptainVoiceCue | RecordedCaptainCue; playbackKey?: string }) {
   const { t, locale } = useMessages();
   const cues = lines ?? (cue === "debrief" ? [] : [cue]);
   const text = cues.map(line => t(lineKeys[line])).join(" ");
@@ -81,7 +104,7 @@ function CaptainLine({ cue, lines, enabled, history }: Omit<VoiceProps, "cue"> &
   const play = () => {
     if (pending.current !== null) clearTimeout(pending.current);
     pending.current = null;
-    history.current.add(cue);
+    history.current.add(playbackKey);
     cancel.current();
     cancel.current = speakCaptain(cues, setState);
   };
@@ -89,12 +112,12 @@ function CaptainLine({ cue, lines, enabled, history }: Omit<VoiceProps, "cue"> &
   const skip = () => {
     if (pending.current !== null) clearTimeout(pending.current);
     pending.current = null;
-    history.current.add(cue);
+    history.current.add(playbackKey);
     cancel.current();
   };
 
   useEffect(() => {
-    if (enabled && !history.current.has(cue) && !document.hidden) pending.current = setTimeout(() => autoPlay(), 900);
+    if (enabled && !history.current.has(playbackKey) && !document.hidden) pending.current = setTimeout(() => autoPlay(), 900);
     const stop = () => {
       if (pending.current !== null) clearTimeout(pending.current);
       pending.current = null;
@@ -103,7 +126,7 @@ function CaptainLine({ cue, lines, enabled, history }: Omit<VoiceProps, "cue"> &
     const hide = () => { if (document.hidden) stop(); };
     document.addEventListener("visibilitychange", hide);
     return () => { stop(); document.removeEventListener("visibilitychange", hide); };
-  }, [enabled, cue, text, locale, history]);
+  }, [enabled, playbackKey, text, locale, history]);
 
   if (!enabled || !cues.length) return null;
   const busy = state === "speaking" || state === "waiting";

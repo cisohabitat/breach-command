@@ -1,10 +1,9 @@
 import { useLayoutEffect, type RefObject } from "react";
 import type { Game } from "@/lib/advanced-game";
-import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import { captainDebriefFor } from "@/lib/captain-debrief";
 import { CaptainVoice } from "./captain-voice";
 
-export function CaptainDebrief({ game, grade, history }: { game: Game; grade: string; history: RefObject<Set<CaptainVoiceCue>> }) {
+export function CaptainDebrief({ game, grade, history }: { game: Game; grade: string; history: RefObject<Set<string>> }) {
   const lines = captainDebriefFor(game, grade);
   useLayoutEffect(() => {
     // The deferred transcript can arrive after the player has tabbed onward.

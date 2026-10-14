@@ -6,7 +6,7 @@ Play the current release at [breach-command.vercel.app](https://breach-command.v
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
-The 50 recorded lines cover confirmed findings, unsuccessful checks, uncertain
+The 64 recorded lines cover confirmed findings, unsuccessful checks, uncertain
 signals, new developments and service pressure. Voice is on by default, using bundled recordings of a
 calm male Captain with a British English voice. An explicit saved Off setting is
 respected. Every spoken line is also readable, with Listen and Skip voice
@@ -14,6 +14,11 @@ controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Bot Commander
 practice runs remain silent. Each line plays automatically once per operation;
 Listen can replay a line, so repeated checks do not cause repeated chatter.
+Evidence decisions receive a brief reaction to observation, intervention,
+attribution, containment or notification. Each recorded decision speaks once;
+returning to its workspace does not repeat it. Containment, assurance and
+recovery reactions reflect the selected option's published residual risk across
+all ten sectors. Live reactions do not read hidden answers or quality grades.
 Opening the after-action review plays a short spoken debrief: the actual
 recovery grade or loss cause, a well-assessed evidence decision or supported
 strength, and one improvement grounded in the record. The three clips play in
@@ -32,6 +37,7 @@ recorded scripts are in `public/audio/captain/README.md` and `manifest.json`.
 maintainer tool and adds no runtime dependencies.
 `lib/captain-debrief.ts` selects the recorded review only after an operation ends
 and loads with the optional voice player.
+`lib/captain-reaction.ts` selects decision reactions inside that deferred player.
 
 ## What the player does
 

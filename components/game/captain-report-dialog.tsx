@@ -42,8 +42,8 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   // The turn that ends an operation is headed by how it ended: "Evidence
   // confirmed." with a green tick sat above "OPERATION LOST".
   const lostHere = !!(ended && report && game && report.number === game.turns.length && game.status !== "won");
-  const voiceCue: CaptainVoiceCue | { game: Game; turn: Game["turns"][number] } | null = report && game
-    ? ended ? game.status as "won" | "lost" | "exercise" : { game, turn: report }
+  const voiceCue: CaptainVoiceCue | { game: Game; turn: Game["turns"][number]; reaction: boolean } | null = report && game
+    ? ended ? game.status as "won" | "lost" | "exercise" : { game, turn: report, reaction: session.voiceDecision.current > 0 && session.voiceDecision.current === game.decisions.length }
     : null;
   const content = useRef<HTMLDivElement>(null);
   const optionList = useRef<HTMLDivElement>(null);
