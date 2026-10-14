@@ -24,7 +24,7 @@ export function EndState({ session }: { session: GameSession }) {
   if (!game) return null;
   const loss = getLossReason(game);
   const openDebrief = () => setDebrief(true);
-  const voice = game.scenario === 0 && !session.botRun && (game.status === "won" || game.status === "lost" || game.status === "exercise")
+  const voice = !session.botRun && (game.status === "won" || game.status === "lost" || game.status === "exercise")
     ? <CaptainVoice cue={game.status} enabled={session.voiceEnabled && !session.report && !session.debrief && !session.settings && !session.rules} history={session.voiceHistory} />
     : null;
 

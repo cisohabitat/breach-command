@@ -3,13 +3,14 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { captainVoiceMessages } from "../lib/i18n/en/captain-voice.ts";
 import { newGame, playTurn, attacks } from "../lib/advanced-game.ts";
-import { captainUpdateFor } from "../lib/captain-voice.ts";
+import { captainOpeningFor, captainUpdateFor } from "../lib/captain-voice.ts";
 import { speakCaptain, type CaptainSpeechState } from "../lib/captain-speech.ts";
 
 test("bundled recordings match the authored captions and fit the playback deadline", () => {
   const directory = new URL("../public/audio/captain/", import.meta.url);
   const manifest = JSON.parse(readFileSync(new URL("manifest.json", directory), "utf8"));
-  assert.equal(Object.keys(manifest.clips).length, 8);
+  assert.equal(Object.keys(manifest.clips).length, 27);
+  for (let scenario = 0; scenario < 10; scenario++) assert.ok(manifest.clips[captainOpeningFor(scenario)], "every case has a recorded opening");
   for (const [cue, clip] of Object.entries(manifest.clips) as [string, { text: string; durationSeconds: number }][]) {
     assert.equal(clip.text, captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);
     assert.ok(clip.durationSeconds > 1 && clip.durationSeconds < 20);
@@ -25,13 +26,21 @@ test("Captain updates follow public findings, not hidden answers", () => {
   assert.equal(captainUpdateFor(found, turn), "firstFinding");
   const hiddenChanged = { ...found, chain: [...found.chain].reverse(), objective: "fraud" as const, adversaryProfile: "ember" as const };
   assert.equal(captainUpdateFor(hiddenChanged, turn), "firstFinding");
-  assert.equal(captainUpdateFor({ ...found, scenario: 1 }, turn), null);
+  for (let scenario = 0; scenario < 10; scenario++) assert.equal(captainUpdateFor({ ...found, scenario }, turn), "firstFinding");
   assert.equal(captainUpdateFor({ ...found, status: "lost" }, turn), null);
   assert.equal(captainUpdateFor(found, { ...turn, number: 0 }), null);
   assert.equal(captainUpdateFor({ ...found, revealed: found.chain.slice(0, 2) }, turn), "connectedFindings");
+  assert.equal(captainUpdateFor({ ...found, revealed: found.chain.slice(0, 3) }, turn), "thirdFinding");
+  assert.equal(captainUpdateFor(found, { ...turn, windfall: true }), "unexpectedFinding");
   const empty = { ...turn, revealed: null, injectReveal: null, impactChange: 8, continuityChange: 0 };
   assert.equal(captainUpdateFor({ ...found, revealed: [], impact: 76 }, empty), "pressure");
-  assert.equal(captainUpdateFor({ ...found, revealed: [], impact: 84 }, empty), null, "no pressure narration every turn above the threshold");
+  assert.equal(captainUpdateFor({ ...found, revealed: [], impact: 84 }, empty), "noFinding", "no pressure narration every turn above the threshold");
+  assert.equal(captainUpdateFor({ ...found, revealed: [] }, { ...empty, success: false }), "failedCheck");
+  assert.equal(captainUpdateFor({ ...found, revealed: [], continuity: 61 }, { ...empty, continuityChange: 10 }), "serviceStabilising");
+  assert.equal(captainUpdateFor({ ...found, revealed: [], evidence: [{ ...found.evidence[0], turn: empty.number, confidence: "LOW" }] }, empty), "weakSignal");
+  assert.equal(captainUpdateFor({ ...found, revealed: [] }, { ...empty, inject: { id: "test", reason: empty.narrative } }), "newDevelopment");
+  const second = { ...empty, number: 2 };
+  assert.equal(captainUpdateFor({ ...found, revealed: [], turns: [empty, second] }, second), "noFindingAgain");
 });
 
 function installAudio() {

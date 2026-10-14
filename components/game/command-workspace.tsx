@@ -33,7 +33,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
           sat two screens down with nothing on screen saying one was waiting. */}
       {activeWorkspace === "command" && game.status === "playing" && <CommandEvent game={game} onChoose={command} />}
       {activeWorkspace === "command" && game.status === "playing" && <SectorSetPiece game={game} onChoose={sectorDecision} />}
-      {activeWorkspace === "command" && game.status === "response" && game.scenario === 0 && !session.botRun && <CaptainVoice cue="response" enabled={session.voiceEnabled && !session.report && !session.settings && !session.rules && !session.debrief} history={session.voiceHistory} />}
+      {activeWorkspace === "command" && game.status === "response" && !session.botRun && <CaptainVoice cue={game.responseChoices.length === 0 ? "response" : game.responseChoices.length === 1 ? "assurance" : "recovery"} enabled={session.voiceEnabled && !session.report && !session.settings && !session.rules && !session.debrief} history={session.voiceHistory} />}
       {activeWorkspace === "command" && (ended ? (
         <EndState session={session} />
       ) : game.status === "response" ? (
