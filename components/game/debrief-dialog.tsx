@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { StoryArt } from "./story-art";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
@@ -27,6 +27,7 @@ register(debriefDialogMessages);
 
 export function DebriefDialog({ session }: { session: GameSession }) {
   const { t, rich, say } = useMessages();
+  const content = useRef<HTMLDivElement>(null);
   const {
     debrief, setDebrief, game, outcome, activeScenario, campaign, finalEnding,
     resetToBriefing, setScenarioChoice, campaignChange, playRecommended, replayWithBot,
@@ -71,7 +72,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
 
   return (
     <Dialog open={debrief} onOpenChange={setDebrief}>
-      <DialogContent className="game-dialog paper-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onCloseAutoFocus={returnFocusToAwaiting}>
+      <DialogContent ref={content} className="game-dialog paper-dialog wide-dialog debrief-dialog" data-outcome={game?.status ?? "none"} onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }} onCloseAutoFocus={returnFocusToAwaiting}>
         {game && <FacilitatorSheet game={game} />}
         <DialogHeader>
           <div className="eyebrow">{rich("debriefDialog.formBc3002", {  }, { span: chunk => <span className="separator">{chunk}</span>, span2: chunk => <span>{chunk}</span> })}</div>
