@@ -3447,6 +3447,40 @@ body {
   align-items:center;
   gap:10px;
 }
+/* Original role emblems share one transparent atlas; the name stays the label. */
+.specialist-name {
+  --kit-y:66.326531%;
+}
+.specialist-name::after {
+  content:"";
+  display:inline-block;
+  inline-size:28px;
+  block-size:28px;
+  flex-shrink:0;
+  margin-inline-start:auto;
+  background-image:url("/art/icons/field-kit.webp");
+  background-size:640% 426.666667%;
+  background-position:var(--kit-x,0.617284%) var(--kit-y);
+  background-repeat:no-repeat;
+}
+.specialist-name:has(img[src$="/hunter.webp"]) {
+  --kit-x:0.617284%;
+}
+.specialist-name:has(img[src$="/forensics.webp"]) {
+  --kit-x:20.370370%;
+}
+.specialist-name:has(img[src$="/identity.webp"]) {
+  --kit-x:40.123457%;
+}
+.specialist-name:has(img[src$="/ot.webp"]) {
+  --kit-x:59.876543%;
+}
+.specialist-name:has(img[src$="/continuity.webp"]) {
+  --kit-x:79.629630%;
+}
+.specialist-name:has(img[src$="/communications.webp"]) {
+  --kit-x:99.382716%;
+}
 .story-art {
   display:block;
   inline-size:100%;
@@ -3486,7 +3520,7 @@ body {
   max-block-size:140px;
 }
 @media print {
-  .sector-illustration,.story-art,.specialist-portrait {
+  .sector-illustration,.story-art,.specialist-portrait,.specialist-name::after {
     display:none;
   }
 }

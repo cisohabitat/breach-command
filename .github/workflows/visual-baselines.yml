@@ -7,6 +7,8 @@
 name: Record visual baselines
 
 on:
+  push:
+    branches: [art/field-kit-icons]
   workflow_dispatch:
 
 permissions:

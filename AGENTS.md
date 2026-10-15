@@ -313,3 +313,12 @@ the frame and handles loaded, cached and failed assets; the fade uses
 decorative and out of the service worker precache. The share card carries its
 scenario id for a muted local sector scene; a failed or stalled image must
 still save the complete text result. No rules, scores or stored schema change.
+
+Field-kit art (15 October 2026): the user explicitly requested procedure icons,
+evidence-source miniatures and specialist emblems. This replaces the earlier
+number-only procedure treatment. Use the original transparent raster atlas at
+`public/art/icons/field-kit.webp`, documented in its README, with full text labels
+beside it. Keep the ruled procedure list, portraits and larger source scenes.
+The miniatures read collection-source ids only, never the hidden chain. All art
+is decorative, reserves its space and is hidden in print; do not add the atlas
+to service-worker precache. `docs/design/ART-DIRECTION.md` records the decision.

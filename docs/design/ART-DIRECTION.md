@@ -19,7 +19,7 @@ yet been decided by a human designer.
 | Sectors | Differ by name, scene and copy, never by hue | Ten accent colours read as a theme picker. |
 | Faces | IBM Plex Sans Condensed (self-hosted) for titles and figures; the system face for prose | Every wrap and fold measurement was taken against the system face. |
 | Panels | Flat: rules and hairlines, corners of 2 to 4 px, no glow, gradient or grid | Cards in cards, glows and grids were each named as template tells. |
-| Icons | Only where they carry information: warnings, topbar links, close and copy, a link's arrow | An icon on every heading was the strongest remaining tell. The topbar keeps icons with words beside them, and hides the words below 431 px. |
+| Icons | Functional Lucide controls, plus original charcoal-and-bone artwork for procedures, evidence sources and specialist roles | The user requested all three art sets on 15 October 2026. Compact object silhouettes support recognition beside complete text labels; they do not decorate every heading or use state colours. |
 
 ## Type system
 
@@ -167,3 +167,19 @@ opacity behind the header. Loading has a deadline; an unavailable scene leaves
 the complete original text form. No hidden technique reaches the image.
 Generated originals remain outside the repository in `generated_images`;
 only downscaled, budgeted WebP assets are committed.
+
+## Field-kit icon art, 15 October 2026
+
+The user requested procedure icons, evidence-source miniatures and specialist
+emblems together. One original transparent atlas holds 12 procedure symbols
+(the eleven shared sources and a paired-ledger reconciliation for sector checks),
+six specialist-role emblems, and six neutral source objects. It follows the
+existing charcoal-and-bone etching style. The larger portraits and evidence
+illustrations remain, with compact emblems alongside the specialist names.
+
+The procedure list and its action sheet share the same symbol. Source miniatures
+use the completed finding's collection-source id, including a generic record
+for partner disclosures; they never read the hidden technique. Art is decorative
+and its adjacent labels remain complete. CSS reserves each frame, so failed
+downloads leave the text and controls usable. The local WebP atlas is fetched
+once when needed, cached by the existing service worker, and hidden in print.
