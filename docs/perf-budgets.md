@@ -216,3 +216,11 @@ The stylesheets consolidated (0.9.17): rules for the same selectors, rules
 with the same declarations and blocks for the same query merged where the
 cascade allows. The linked sheet is 85,053 B and the game's about 123.6 KB
 as served, from 85,997 B and about 127.8 KB; the budgets are unchanged.
+
+Signal and confidence (15 October 2026) add a shared evidence assessment,
+source-comparison read and four-combination Training guide to the lazy game
+bundle. The previous main's runner measured 1,169,970 B by play start, leaving
+30 B under its cap. The operation script budget deliberately rises by 10,000 B
+to 1,180,000 B (less than one per cent) for this feature. The assignment's initial
+and idle script budgets, style budgets, paint and layout-shift limits are
+unchanged. CI measures the complete production flow against those limits.
