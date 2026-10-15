@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, type RefObject } from "react";
+import { getConfidenceChanges } from "@/lib/advanced-game";
+import type { CaptainVoiceCue } from "@/lib/captain-voice";
+import { CaptainVoice } from "./captain-voice-lazy";
 import { EvidenceAssessment, SignalGuide } from "./evidence-assessment";
 import { ArrowUp, Check, Link2, X } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
@@ -11,9 +14,16 @@ import { register } from "@/lib/i18n";
 
 register(evidenceWorkspaceMessages);
 
-export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void }) {
+export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, voiceHistory }: { game: Game; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void; voiceEnabled: boolean; voiceHistory: RefObject<Set<CaptainVoiceCue>> }) {
   const { t, rich, say } = useMessages();
   const [selected, setSelected] = useState<string[]>([]);
+  // Only a comparison made here triggers feedback. Loading a saved record must
+  // not announce an old gain or replay narration. Object identity also prevents
+  // a new operation with the same finding ids from inheriting this notice.
+  const [compared, setCompared] = useState<{ first: Game["evidence"][number]; index: number; turn: number } | null>(null);
+  const changed = compared && compared.first === game.evidence[0] && compared.turn === game.turns.length ? getConfidenceChanges(game, compared.index) : [];
+  const changedIds = changed.map(item => item.id);
+  const sources = compared ? game.correlations[compared.index]?.evidence.map(id => game.evidence.find(item => item.id === id)).filter(item => !!item).map(item => say(item.source)).join(" + ") : "";
   // Nothing is chosen until the player chooses: preselected, "Causal sequence"
   // was tested by players who had not yet decided anything.
   const [assessment, setAssessment] = useState<"causal" | "coincidental" | null>(null);
@@ -46,7 +56,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
               kind each is or a beginner reads every row as a technique they found. */}
           <summary>{rich("evidenceWorkspace.findingsSpanConfirmed", { confirmed, evidence: game.evidence.length - confirmed, selected: selected.length }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="evidence-timeline" role="group" aria-label={t("evidenceWorkspace.evidenceTimeline")}>{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
-          <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} data-source={item.id.replace(/^E\d+-/, "")} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
+          <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} data-source={item.id.replace(/^E\d+-/, "")} className={[selected.includes(item.id) ? "selected" : "", changedIds.includes(item.id) ? "confidence-strengthened" : ""].join(" ")} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
             <span>{t("evidenceWorkspace.turn2", { turn: item.turn })}</span><strong>{say(item.title)}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{t("evidenceWorkspace.at", { source: say(item.source), system: say(item.system) })}</small><em>{item.supports ? t("evidenceWorkspace.confirmedAStage") : t("evidenceWorkspace.foundNoStage2")}</em><EvidenceAssessment game={game} item={item} />
           </button>)}</div>
         </details>
@@ -56,8 +66,12 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
           <button className={assessment === "coincidental" ? "active" : ""} aria-pressed={assessment === "coincidental"} onClick={() => setAssessment("coincidental")}>{t("evidenceWorkspace.coincidentalOverlap")}</button>
         </div>
         <p className="relationship-helper">{selected.length === 0 ? t("evidenceWorkspace.selectTwoFindings") : selected.length === 1 ? t("evidenceWorkspace.oneFindingSelected") : assessment ? t("evidenceWorkspace.twoFindingsSelected") : t("evidenceWorkspace.twoFindingsSelected2")}{t("evidenceWorkspace.oneFindingEnabled")}</p>
-        <button className="correlate-button" disabled={selected.length !== 2 || !assessment || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { if (!assessment) return; onCorrelate(selected as [string, string], assessment); setSelected([]); setAssessment(null); }}><Link2 size={17} />{t("evidenceWorkspace.testAssessment")}</button>
+        <button className="correlate-button" disabled={selected.length !== 2 || !assessment || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { if (!assessment) return; onCorrelate(selected as [string, string], assessment); setCompared({ first: game.evidence[0], index: game.correlations.length, turn: game.turns.length }); setSelected([]); setAssessment(null); }}><Link2 size={17} />{t("evidenceWorkspace.testAssessment")}</button>
       </>}
+      {!!changed.length && <section className="confidence-change" key={compared!.index}>
+        <p role="status"><strong>{t("evidenceWorkspace.confidenceStrengthened")}</strong> {t("evidenceWorkspace.confidenceChanged", { count: changed.length, sources })}</p>
+        <CaptainVoice cue="confidenceStrengthened" enabled={voiceEnabled && game.status === "playing"} history={voiceHistory} />
+      </section>}
       {!!game.correlations.length && <div className="correlation-results">{game.correlations.slice(-2).reverse().map((record, index) => <div key={`${record.evidence.join("-")}-${index}`} className={record.correct ? "valid" : "invalid"}>{record.correct ? <Check size={16} /> : <X size={16} />}<p><strong>{record.correct ? t("evidenceWorkspace.assessmentSupported") : t("evidenceWorkspace.assessmentChallenged")}</strong><span>{say(record.finding)}</span><small className="correlation-effect">{!record.correct ? t("evidenceWorkspace.businessImpact4") : record.valid ? t("evidenceWorkspace.businessImpact3") : t("evidenceWorkspace.businessImpact32")}</small></p></div>)}</div>}
       {/* The prompts bring a player down here, three screens below the cards on a
           phone; this takes them back to where the next turn starts. */}

@@ -1,5 +1,6 @@
 // Recorded Captain scripts. Captions and audio must use these exact words.
 export const captainVoiceMessages = {
+  "captainVoice.confidenceStrengthened": "The second source supports the connection. Confidence in the explanation is stronger. That does not confirm the whole incident.",
   "captainVoice.captain": "Incident Captain",
   "captainVoice.listen": "Listen",
   "captainVoice.skip": "Skip voice",

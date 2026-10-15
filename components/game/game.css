@@ -2160,6 +2160,31 @@
 .signal-guide li {
   margin-block:8px;
 }
+.evidence-cards button.confidence-strengthened {
+  animation:confidence-strengthened calc(2 * var(--motion-float)) var(--ease-settle);
+}
+@keyframes confidence-strengthened {
+  from {
+    border-color:var(--lime);
+  }
+  to {
+    border-color:#41454a;
+  }
+}
+.confidence-change {
+  margin-block:16px;
+  padding-inline-start:12px;
+  border-inline-start:2px solid var(--lime);
+}
+.confidence-change>p {
+  color:var(--text-soft);
+  font-size:var(--type-caption);
+  line-height:var(--leading-base);
+}
+.confidence-change>p>strong {
+  display:block;
+  color:var(--lime);
+}
 .evidence-cards span {
   display:block;
   font:500 var(--type-micro) var(--font-mono);
@@ -4062,15 +4087,15 @@ still sees the meter marked as crossed once the ring is suppressed. */
 }
 /* The review's headline: the grade, the score and what the operation found. */
 @media(prefers-reduced-motion:reduce) {
+  .evidence-cards button.confidence-strengthened,.meter-delta {
+    animation:none;
+  }
   .workspace-tabs {
     backdrop-filter:none;
   }
   .incident-flow span,.topology-nodes button.affected:not(.isolated) {
     animation:none;
     transition:none;
-  }
-  .meter-delta {
-    animation:none;
   }
   .meter-crossing {
     animation:none;

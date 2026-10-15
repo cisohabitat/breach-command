@@ -21,6 +21,14 @@ export function getEvidenceAssessment(game: Game, item: Game["evidence"][number]
 }
 
 // Each read is a message: the engine's words, or the content's, kept as text.
+export function getConfidenceChanges(game: Game, comparison: number) {
+  const record = game.correlations[comparison];
+  if (!record) return [];
+  const before = { ...game, correlations: game.correlations.slice(0, comparison) };
+  const after = { ...game, correlations: game.correlations.slice(0, comparison + 1) };
+  return game.evidence.filter(item => record.evidence.includes(item.id) && getEvidenceAssessment(before, item).confidence === "weak" && getEvidenceAssessment(after, item).confidence === "strong");
+}
+
 export function getAttributionRead(game: Game): { title: Message; confidence: string; detail: Message } {
   const profile = getAdversaryProfile(game);
   const evidence = game.revealed.length;

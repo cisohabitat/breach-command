@@ -134,7 +134,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
         {!game.pendingCommand && !game.pendingSetPiece && <KnownFacts game={game} />}
         <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
         <SpecialistTransmission game={game} />
-        <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} />
+        <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} voiceEnabled={session.voiceEnabled && !session.botRun && !session.settings && !session.rules && !session.newConfirm && !session.report && !session.selected && !session.rolling && !session.missionBriefing && !session.debrief && !session.tutorial} voiceHistory={session.voiceHistory} />
       </details>
       <div className="investigation-actions" role="region" aria-label={t("investigateWorkspace.investigationActions")} tabIndex={0}>
         {inlineReport && (

@@ -11,7 +11,7 @@ import { speakCaptain, type CaptainSpeechState } from "../lib/captain-speech.ts"
 test("bundled recordings match the authored captions and fit the playback deadline", () => {
   const directory = new URL("../public/audio/captain/", import.meta.url);
   const manifest = JSON.parse(readFileSync(new URL("manifest.json", directory), "utf8"));
-  assert.equal(Object.keys(manifest.clips).length, 50);
+  assert.equal(Object.keys(manifest.clips).length, 51);
   for (let scenario = 0; scenario < 10; scenario++) assert.ok(manifest.clips[captainOpeningFor(scenario)], "every case has a recorded opening");
   for (const [cue, clip] of Object.entries(manifest.clips) as [string, { text: string; durationSeconds: number }][]) {
     assert.equal(clip.text, captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);

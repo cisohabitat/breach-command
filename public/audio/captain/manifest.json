@@ -4,6 +4,10 @@
   "speed": 0.94,
   "language": "en-gb",
   "clips": {
+    "confidenceStrengthened": {
+      "text": "The second source supports the connection. Confidence in the explanation is stronger. That does not confirm the whole incident.",
+      "durationSeconds": 8.49
+    },
     "opening": {
       "text": "Captain here. Two workstation reports and unexpected outbound traffic. Services are still running. We need to establish what connects those signals.",
       "durationSeconds": 10.71
