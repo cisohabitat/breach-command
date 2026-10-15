@@ -102,6 +102,13 @@ music and cues, and stops on dismissal, mute, navigation or a hidden tab.
 The male voice and measured delivery were approved during the first-case pilot.
 Each distinct update speaks once automatically; repeat checks can be replayed
 with Listen. Cues depend on public evidence and outcomes, never hidden answers.
+Routine narration waits for 1.5 seconds without pointer, keyboard or wheel input,
+leaves a gap after another line, and waits while an evidence or response decision
+is pending. Listen remains available during those decisions. A public pressure
+threshold crossing takes precedence over finding milestones and speaks after
+300 ms, as does a loss; these urgent lines may interrupt routine speech.
+Dismissal, Skip, mute and hiding the tab cancel queued speech too. A queued line
+is only marked heard when playback is attempted.
 Opening a finished operation's review adds three spoken segments: its actual
 grade or loss cause, one supported strength, and a coaching point tied to the
 record. The sequence uses one media element, keeps the mix quiet throughout,

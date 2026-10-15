@@ -6,7 +6,7 @@ import { newGame, playTurn, resolveDecision, attacks } from "../lib/advanced-gam
 import { captainOpeningFor } from "../lib/captain-voice.ts";
 import { captainUpdateFor } from "../lib/captain-update.ts";
 import { captainDebriefFor } from "../lib/captain-debrief.ts";
-import { speakCaptain, type CaptainSpeechState } from "../lib/captain-speech.ts";
+import { scheduleCaptain, speakCaptain, type CaptainSpeechState } from "../lib/captain-speech.ts";
 
 test("bundled recordings match the authored captions and fit the playback deadline", () => {
   const directory = new URL("../public/audio/captain/", import.meta.url);
@@ -60,6 +60,8 @@ test("Captain updates follow public findings, not hidden answers", () => {
   assert.equal(captainUpdateFor({ ...found, revealed: found.chain.slice(0, 2) }, turn), "connectedFindings");
   assert.equal(captainUpdateFor({ ...found, revealed: found.chain.slice(0, 3) }, turn), "thirdFinding");
   assert.equal(captainUpdateFor(found, { ...turn, windfall: true }), "unexpectedFinding");
+  assert.equal(captainUpdateFor({ ...found, impact: 76 }, { ...turn, impactChange: 8 }), "pressure", "a finding cannot suppress an urgent pressure crossing");
+  assert.equal(captainUpdateFor({ ...found, continuity: 34 }, { ...turn, continuityChange: -8, windfall: true }), "pressure");
   const empty = { ...turn, revealed: null, injectReveal: null, impactChange: 8, continuityChange: 0 };
   assert.equal(captainUpdateFor({ ...found, revealed: [], impact: 76 }, empty), "pressure");
   assert.equal(captainUpdateFor({ ...found, revealed: [], impact: 84 }, empty), "noFinding", "no pressure narration every turn above the threshold");
@@ -99,6 +101,41 @@ function installAudio() {
     },
   };
 }
+
+test("routine speech waits for input to settle and urgent speech preempts it", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 100_000 });
+  const { probe, restore } = installAudio();
+  const activity = new EventTarget();
+  const stops: (() => void)[] = [];
+  let starts = 0;
+  try {
+    stops.push(scheduleCaptain(["firstFinding"], () => {}, () => starts++, activity));
+    t.mock.timers.tick(1000);
+    activity.dispatchEvent(new Event("keydown"));
+    t.mock.timers.tick(1000);
+    assert.equal(starts, 0);
+    t.mock.timers.tick(500);
+    assert.equal(starts, 1);
+    stops.push(scheduleCaptain(["weakSignal"], () => {}, () => starts++, activity));
+    t.mock.timers.tick(1500);
+    assert.equal(starts, 1, "routine speech cannot interrupt a playing line");
+    stops.push(scheduleCaptain(["pressure"], () => {}, () => starts++, activity, true));
+    activity.dispatchEvent(new Event("pointerdown"));
+    t.mock.timers.tick(300);
+    assert.equal(starts, 2);
+    assert.equal(probe.cancellations, 1);
+    assert.equal(probe.clips.at(-1)!.src, "/audio/captain/pressure.mp3");
+    probe.clips.at(-1)!.onended?.();
+    t.mock.timers.tick(1200);
+    assert.equal(starts, 2, "leave a breathing gap after another line ends");
+    t.mock.timers.tick(1500);
+    assert.equal(starts, 3);
+    const cancel = scheduleCaptain(["newDevelopment"], () => {}, () => starts++, activity);
+    cancel();
+    t.mock.timers.tick(3000);
+    assert.equal(starts, 3, "a canceled queue cannot speak or mark a line heard");
+  } finally { for (const stop of stops) stop(); restore(); }
+});
 
 test("recorded clips replace rather than overlap and stop without stale callbacks", t => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
