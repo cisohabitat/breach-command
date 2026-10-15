@@ -4,17 +4,17 @@ import { retryableLoad } from "../lib/lazy-load.ts";
 
 test("a failed module download can be retried and successful loads stay shared", async () => {
   let attempts = 0;
-  const module = { ready: true };
+  const loaded = { ready: true };
   const load = retryableLoad(async () => {
     if (++attempts === 1) throw new Error("Connection interrupted");
-    return module;
+    return loaded;
   });
   const first = load();
   assert.equal(load(), first, "concurrent callers share the download");
   await assert.rejects(first, /Connection interrupted/);
   const second = load();
   assert.notEqual(second, first, "a rejection does not poison the next attempt");
-  assert.equal(await second, module);
+  assert.equal(await second, loaded);
   assert.equal(load(), second, "a successful module is kept");
   assert.equal(attempts, 2);
 });
