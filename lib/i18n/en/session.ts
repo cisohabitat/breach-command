@@ -3,6 +3,7 @@
 // briefing's answers and the challenge code's replies (hooks/), loaded with
 // the page, since the session runs from the first render.
 export const sessionMessages = {
+  "session.gameLoadFailed": "Game download failed. Check your connection and try again.",
   "session.botReviewing": "Reviewing the mission briefing before the first move.",
   "session.newInvestigation": "New investigation started.",
   "session.responseWon": "Response complete. The incident is standing down. The after-action review is ready when you are.",

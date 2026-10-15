@@ -174,7 +174,10 @@ export function useGameSession() {
 
   async function start(index = scenarioChoice) {
     if (busyRef.current) return;
-    await loadGame();
+    try { await loadGame(); } catch {
+      setStorageNotice(msg("session.gameLoadFailed"));
+      return;
+    }
     clearStoredSession();
     importedRef.current = null;
     recordedRef.current = false;
@@ -478,15 +481,16 @@ export function useGameSession() {
         writeLedger(restoredLedger);
         setLedger(restoredLedger);
       }
+      let storedSession = true;
       if (restoredSession) {
-        if (parkNewerSave()) writeStored(SESSION_KEY, loadedGame().session.serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
-        else setStorageNotice(msg("session.storageMemory"));
+        storedSession = parkNewerSave() && writeStored(SESSION_KEY, loadedGame().session.serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
+        if (!storedSession) setStorageNotice(msg("session.storageMemory"));
         setSavedSession(restoredSession);
         // While an operation is in play its own saves would overwrite the restored
         // one, and returning to assignments would delete it. Hold it until then.
         importedRef.current = game ? restoredSession : null;
       }
-      if (!storedCampaign) setBackupMessage(msg("session.restoredNoStorage"));
+      if (!storedCampaign || !storedSession) setBackupMessage(msg("session.restoredNoStorage"));
       else if (typeof payload.session === "string" && !restoredSession) setBackupMessage(msg("session.restoredWithoutSession"));
       else if (restoredSession && game) setBackupMessage(msg("session.restoredReturn"));
       else if (restoredSession) setBackupMessage(msg("session.restoredReady"));

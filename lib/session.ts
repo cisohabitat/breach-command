@@ -121,6 +121,7 @@ export function parseSession(raw: string): SavedSession | null {
     // A finished operation holds no blocking state, so a save that claims both is
     // settled here rather than resumed into a choice nothing will accept.
     const finished = game.status === "won" || game.status === "lost" || game.status === "exercise";
+    if (!finished && game.pendingCommand != null && !isKnown(commandEvents, game.pendingCommand)) return null;
     const profile = game.adversaryProfile && adversaryProfiles[game.adversaryProfile] ? game.adversaryProfile : "ghost";
     // Topologies vary per scenario, so a restored session is re-keyed to the
     // nodes that exist on this incident's map. Legacy or stale node ids become
