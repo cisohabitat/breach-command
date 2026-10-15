@@ -1,5 +1,6 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import { StoryArt } from "./story-art";
+import { EvidenceAssessment } from "./evidence-assessment";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
 import { FacilitatorSheet } from "@/components/game/facilitator-sheet";
@@ -200,7 +201,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             </div>
           )}
           <section className="counterfactuals"><details className="debrief-fold"><summary>{rich("debriefDialog.whatMightHave2", { getCounterfactuals: getCounterfactuals(game).length }, { span: chunk => <span>{chunk}</span> })}</summary>{getCounterfactuals(game).map((item, index) => <p key={index}>{say(item)}</p>)}</details></section>
-          <section className="evidence-review"><details className="debrief-fold"><summary>{t("debriefDialog.evidenceReconstruction")}<span>{t("debriefDialog.finding2Plural", { count: game.evidence.length })}{t("debriefDialog.confirmedAStage", { count: game.evidence.filter(item => item.supports).length })}</span></summary>{game.evidence.map(item => <div key={item.id}><strong>{t("debriefDialog.turn2", { turn: item.turn, itemTitle: say(item.title) })}</strong><span>{t("debriefDialog.atConfidence", { source: say(item.source), system: say(item.system), confidence: item.confidence.toLowerCase() })}</span><p>{say(item.detail)}</p></div>)}</details></section>
+          <section className="evidence-review"><details className="debrief-fold"><summary>{t("debriefDialog.evidenceReconstruction")}<span>{t("debriefDialog.finding2Plural", { count: game.evidence.length })}{t("debriefDialog.confirmedAStage", { count: game.evidence.filter(item => item.supports).length })}</span></summary>{game.evidence.map(item => <div key={item.id}><strong>{t("debriefDialog.turn2", { turn: item.turn, itemTitle: say(item.title) })}</strong><span>{t("debriefDialog.atSource", { source: say(item.source), system: say(item.system) })}</span><EvidenceAssessment game={game} item={item} /><p>{say(item.detail)}</p></div>)}</details></section>
           <details className="debrief-fold debrief-chain-fold" id="debrief-chain">
             <summary>{rich("debriefDialog.theAttackChain2", { revealed: game.revealed.length }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="debrief-chain">

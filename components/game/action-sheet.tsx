@@ -67,6 +67,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
             <div role="group" aria-label={t("actionSheet.intensity")}><span className="eyebrow">{t("actionSheet.intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureIntensities[id].modifier), meterEffect(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && t("actionSheet.sourceRestsLonger", { count: procedureIntensities[id].cooldown })]} /></button>)}</div></div>
           </div>
           <p className="muted small">{t("actionSheet.successRevealsStage")}</p>
+          <p className="relationship-helper">{t("actionSheet.evidenceConfidence")}</p>
           <button className="primary-button full" onClick={() => run(proc.id)}>{t("actionSheet.runProcedure")}</button>
         </>}
       </SheetContent>

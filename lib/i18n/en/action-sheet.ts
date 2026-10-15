@@ -1,5 +1,6 @@
 // The strings of components/game/action-sheet.tsx (app/page.tsx for page), loaded with it.
 export const actionSheetMessages = {
+  "actionSheet.evidenceConfidence": "Successful exhaustive collection gives strong confidence within its source's coverage; rapid or balanced collection needs a supported causal comparison across different sources to strengthen its interpretation. Signal strength depends on the finding, not the roll total.",
   "actionSheet.scope": " scope",
   "actionSheet.and": " and ",
   "actionSheet.analysis": " analysis",

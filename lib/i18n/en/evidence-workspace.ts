@@ -28,7 +28,6 @@ export const evidenceWorkspaceMessages = {
   "evidenceWorkspace.businessImpact32": "Business impact −3 better, adversary progress −6 better and next roll +2.",
   "evidenceWorkspace.turn2": "Turn {turn}",
   "evidenceWorkspace.at": "{source} at {system}",
-  "evidenceWorkspace.confidence": ", {confidence} confidence",
   "evidenceWorkspace.strongNoFindings": "<strong>No findings filed.</strong> Successful procedures will place findings here. A check can succeed and still settle nothing — that is recorded too. Select two findings to test whether they form a causal sequence.",
   "evidenceWorkspace.findingsSpanConfirmed": "Findings<span>{confirmed} confirmed a stage, {evidence} found no stage, {selected} selected</span>",
   "evidenceWorkspace.correlationsTested": { one: "{count} correlation tested", other: "{count} correlations tested" },

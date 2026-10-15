@@ -1,5 +1,6 @@
 // Every message key, as types only: importing this pulls no catalogue into a bundle.
 import type { en } from "./en.ts";
+import type { evidenceAssessmentMessages } from "./en/evidence-assessment.ts";
 import type { actionSheetMessages } from "./en/action-sheet.ts";
 import type { botControlMessages } from "./en/bot-control.ts";
 import type { briefingScreenMessages } from "./en/briefing-screen.ts";
@@ -35,6 +36,7 @@ import type { sectorSetPieceMessages } from "./en/sector-set-piece.ts";
 import type { settingsDialogMessages } from "./en/settings-dialog.ts";
 import type { tutorialCoachMessages } from "./en/tutorial-coach.ts";
 export type MessageKey = keyof typeof en
+  | keyof typeof evidenceAssessmentMessages
   | keyof typeof actionSheetMessages
   | keyof typeof botControlMessages
   | keyof typeof briefingScreenMessages
@@ -69,4 +71,4 @@ export type MessageKey = keyof typeof en
   | keyof typeof sectorSetPieceMessages
   | keyof typeof settingsDialogMessages
   | keyof typeof tutorialCoachMessages;
-export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "effect-list", "engine", "end-state", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach"];
+export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "effect-list", "engine", "end-state", "evidence-assessment", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach"];

@@ -13,6 +13,7 @@ import { register, type Locale, type MessageKey } from "@/lib/i18n";
 import { legacyText, say as sayIn, withForm } from "@/lib/i18n/message";
 import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import { CaptainVoice } from "./captain-voice-lazy";
+import { EvidenceAssessment, SignalGuide } from "./evidence-assessment";
 
 register(captainReportDialogMessages);
 
@@ -148,6 +149,8 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               {decision && (
                 <div className="evidence-decision">
                   <span className="eyebrow">{t("captainReportDialog.operationalDecisionRequired")}</span>
+                  {game.evidence.filter(item => item.supports === game.pendingDecision).map(item => <EvidenceAssessment key={item.id} game={game} item={item} />)}
+                  {game.difficulty === "training" && game.mode !== "expert" && game.decisions.length === 0 && <SignalGuide />}
                   {/* The count says how many there are: the last of five sat below the fold
                       of a laptop screen with nothing saying it was there. */}
                   <h3>{t("captainReportDialog.chooseOneOf2", { attackTitle: decision.attack.title })}{["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length}{t("captainReportDialog.commandResponses")}</h3>

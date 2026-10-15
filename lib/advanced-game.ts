@@ -29,4 +29,5 @@ export { correlateEvidence, newGame, playTurn, resolveCommand, resolveDecision, 
 export { getBeginnerReview, getCounterfactuals, getHypothesisLedger, getOutcome, getResultSummary, getShareCard, getScoreBreakdown, getScoreRows, countRevisions, recommendNext } from "./engine/review.ts";
 export type { Recommendation, ShareCard } from "./engine/review.ts";
 export type { Effect } from "./engine/rules.ts";
+export { getEvidenceAssessment } from "./engine/reads.ts";
 export { words } from "./engine/words.ts";

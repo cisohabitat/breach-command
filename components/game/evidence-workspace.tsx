@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { EvidenceAssessment, SignalGuide } from "./evidence-assessment";
 import { ArrowUp, Check, Link2, X } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { adversaryObjectives, attacks, getObjectiveRead, hypotheses, stages, type AdversaryObjectiveId, type Game } from "@/lib/advanced-game";
@@ -33,6 +34,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
   return (
     <section className="evidence-workspace" aria-label={t("evidenceWorkspace.evidenceCorrelationWorkspace")} tabIndex={-1}>
       <div className="map-heading"><div><h2>{t("evidenceWorkspace.evidenceWorkspace")}</h2></div><span className="focus-instruction">{t("evidenceWorkspace.correlationsTested", { count: game.correlations.length })}</span></div>
+      {game.difficulty === "training" && game.mode !== "expert" && <SignalGuide />}
       <div className="case-theory">
         <div><span><strong>{t("evidenceWorkspace.caseTheory")}</strong><small>{t("evidenceWorkspace.declareIntentThen")}{objective.confidence === "LOW" ? t("evidenceWorkspace.theObjectiveCan") : t("evidenceWorkspace.currentAssessmentConfidence", { objectiveTheoryTitle: objectiveTheory[game.objective].title.toLowerCase(), confidence: say(withForm(level(objective.confidence), "lower")) })}</small></span></div>
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">{t("endState.recorded")}</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
@@ -45,7 +47,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory }: { game: Game;
           <summary>{rich("evidenceWorkspace.findingsSpanConfirmed", { confirmed, evidence: game.evidence.length - confirmed, selected: selected.length }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="evidence-timeline" role="group" aria-label={t("evidenceWorkspace.evidenceTimeline")}>{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
           <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} data-source={item.id.replace(/^E\d+-/, "")} className={selected.includes(item.id) ? "selected" : ""} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
-            <span>{t("evidenceWorkspace.turn2", { turn: item.turn })}</span><strong>{say(item.title)}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{t("evidenceWorkspace.at", { source: say(item.source), system: say(item.system) })}</small><em className={`confidence-${item.confidence.toLowerCase()}`}>{item.supports ? t("evidenceWorkspace.confirmedAStage") : t("evidenceWorkspace.foundNoStage2")}{t("evidenceWorkspace.confidence", { confidence: say(withForm(level(item.confidence), "lower")) })}</em>
+            <span>{t("evidenceWorkspace.turn2", { turn: item.turn })}</span><strong>{say(item.title)}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{t("evidenceWorkspace.at", { source: say(item.source), system: say(item.system) })}</small><em>{item.supports ? t("evidenceWorkspace.confirmedAStage") : t("evidenceWorkspace.foundNoStage2")}</em><EvidenceAssessment game={game} item={item} />
           </button>)}</div>
         </details>
         <div className="relationship-assessment" role="group" aria-label={t("evidenceWorkspace.relationshipAssessment")}>

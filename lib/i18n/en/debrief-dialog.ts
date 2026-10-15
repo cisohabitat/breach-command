@@ -109,7 +109,7 @@ export const debriefDialogMessages = {
   "debriefDialog.qualityOf5": "Quality {quality} of 5",
   "debriefDialog.ofABest": "{score} of a best {best}, {confidence} confidence, {residual} residual risk",
   "debriefDialog.confirmedAStage": ", {count} confirmed a stage",
-  "debriefDialog.atConfidence": "{source} at {system}, {confidence} confidence",
+  "debriefDialog.atSource": "{source} at {system}",
   "debriefDialog.stage2": "Stage {index}: {stagesName}",
   "debriefDialog.mitreAttCk2": "MITRE ATT&CK lens: {tactic}, nearest technique ",
   "debriefDialog.detectableWith2": "Detectable with {list}",
