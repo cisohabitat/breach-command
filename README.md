@@ -234,6 +234,13 @@ The interface is built with Next.js 16, React 19 and TypeScript and deployed as 
 
 ## Contributing and documentation
 
+For human first-session testing, use the [newcomer round guide](docs/playtests/README.md),
+[observer protocol](docs/playtests/PROTOCOL.md) and [blank results sheet](docs/playtests/TEMPLATE.md).
+They cover five newcomers across phone and laptop, plus signal/confidence
+understanding and Captain voice pacing. Supplemental questions come after the
+original questions and are scored separately. The pack is ready to use; human
+sessions must supply the results.
+
 Review both this README and [`AGENTS.md`](AGENTS.md) against every final change,
 including follow-up fixes. Update affected feature descriptions, commands,
 requirements, architecture and contributor guidance in the same commit or pull
