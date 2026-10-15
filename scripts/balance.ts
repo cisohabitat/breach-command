@@ -32,11 +32,13 @@ function apply(game: Game, action: BotAction): Game {
 
 const percent = (count: number, total: number) => `${(100 * count / total).toFixed(1)}%`;
 const rows = [];
+const scenarioRows = [];
 const byProfile: Record<string, Record<string, { won: number; total: number }>> = {};
 for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) {
   const tally = { won: 0, lost: 0, exercise: 0, score: 0, hypothesis: 0, reasons: {} as Record<string, number> };
   let total = 0;
   for (let scenario = 0; scenario < scenarios.length; scenario++) {
+    const scenarioTally = { won: 0, lost: 0, exercise: 0 };
     for (let index = 0; index < perScenario; index++) {
       const seed = 900000 + scenario * 1000 + index;
       let game = newGame(scenario, difficulty, seededChallengeRandom(seed), { seed, campaignTier });
@@ -45,6 +47,10 @@ for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) 
         if (action.type === "complete") break;
         game = apply(game, action);
       }
+      if (game.status !== "won" && game.status !== "lost" && game.status !== "exercise") {
+        throw new Error(`Unfinished operation: ${difficulty}, scenario ${scenario}, seed ${seed}`);
+      }
+      scenarioTally[game.status]++;
       total++;
       const cell = ((byProfile[game.adversaryProfile] ??= {})[difficulty] ??= { won: 0, total: 0 });
       cell.total++;
@@ -58,6 +64,14 @@ for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) 
       tally.score += breakdown.total;
       tally.hypothesis += breakdown.hypothesis;
     }
+    scenarioRows.push({
+      difficulty,
+      scenario: scenarios[scenario].title,
+      operations: perScenario,
+      won: percent(scenarioTally.won, perScenario),
+      lost: percent(scenarioTally.lost, perScenario),
+      exercise: percent(scenarioTally.exercise, perScenario),
+    });
   }
   rows.push({
     difficulty,
@@ -72,6 +86,7 @@ for (const difficulty of ["training", "operational", "crisis"] as Difficulty[]) 
 }
 console.log(`Campaign tier ${campaignTier}, ${perScenario} operations per scenario and difficulty`);
 console.table(rows);
+console.table(scenarioRows);
 // A profile's own rate mixes in the scenarios that draw it, so read it against
 // the difficulty's overall rate, not against another profile's.
 console.table(Object.fromEntries(Object.entries(byProfile).map(([profile, cells]) => [profile, Object.fromEntries(Object.entries(cells).map(([difficulty, cell]) => [difficulty, `${percent(cell.won, cell.total)} of ${cell.total}`]))])));

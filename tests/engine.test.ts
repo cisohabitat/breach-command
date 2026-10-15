@@ -471,6 +471,27 @@ test("draws a command event the operation has not met", () => {
   }
 });
 
+test("keeps the terminal deadline survivable without removing late or tempo pressure", () => {
+  const opening: Game = {
+    ...newGame(3, "operational", () => 0, { specialist: "hunter" }),
+    injectDeck: [], established: [], sectorHealth: 10, adversaryTempo: 0,
+    adversaryProfile: "ghost",
+  };
+  const early = playTurn(opening, "email", 2);
+  assert.equal(early.turns[0].sectorChange, -9, "includes the tempo gained on a failed check");
+  assert.equal(early.sectorHealth, 1, "a failed early check leaves a chance to intervene");
+  assert.equal(early.status, "playing");
+
+  const fourth: Game = { ...opening, turns: Array(3).fill(early.turns[0]) };
+  const late = playTurn(fourth, "email", 2);
+  assert.equal(late.turns[3].sectorChange, -10, "the fourth turn still increases erosion");
+  assert.equal(late.status, "lost", "the schedule deadline still closes the operation");
+  assert.equal(playTurn({ ...fourth, sectorHealth: 100, adversaryTempo: 1 }, "email", 2).turns[3].sectorChange, -12, "tempo still counts double");
+  const training = playTurn({ ...fourth, difficulty: "training" }, "email", 2);
+  assert.equal(training.sectorHealth, 1, "Training retains its one-point relief");
+  assert.equal(training.status, "playing");
+});
+
 test("erodes the sector margin more slowly at Training", () => {
   // It ended more than a third of Training losses on a meter beginners do not
   // watch. The same turn costs a point less there, and nothing else changes.
