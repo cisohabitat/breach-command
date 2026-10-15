@@ -10,12 +10,13 @@ presentation only; no hidden state may select a colour. See ART-DIRECTION.md.
 
 These instructions apply to the entire repository. Preserve the game as a polished, public, single-player incident-response simulation. Changes should strengthen the player experience.
 
-## Keeping these instructions current
+## Keeping contributor documentation current
 
-- Review `AGENTS.md` against the final diff for every task, including follow-up fixes. Do not report a task complete until this review is done.
+- Review both `AGENTS.md` and `README.md` against the final diff for every task, including follow-up fixes. Do not report a task complete until both reviews are done.
 - Update affected guidance in the same commit or pull request as the implementation. Cover changed behaviour, architecture, constraints, verification, release procedures and lessons from regressions; do not leave the documentation for a later task.
+- Keep `README.md` accurate for current player features, setup requirements, commands, architecture, persistence, accessibility, audio and verification. Update its affected sections with the implementation rather than relying on a separate changelog or a later documentation task.
 - Correct or replace stale instructions rather than accumulating contradictory notes. Keep this file useful as current contributor guidance, not a chronological changelog. Keep referenced design and contributor documents consistent when their guidance changes.
-- State in the pull request which guidance was updated. If the final change needs no instruction change, explicitly record that `AGENTS.md` was reviewed and why it remains accurate. Use `.github/pull_request_template.md` for this check.
+- State in the pull request which documentation was updated. If either file needs no change, explicitly record that it was reviewed and why it remains accurate. Use `.github/pull_request_template.md` for both checks.
 
 ## Product boundaries
 
@@ -277,7 +278,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - Avoid broad refactors during a feature or bug fix unless they are required for correctness.
 - Do not edit generated build output or vendored files in `components/ui` for ordinary styling changes.
 - Do not add dependencies when the existing stack can implement the requirement.
-- Update `README.md` whenever commands, architecture, game modes, persistence or major systems change.
+- Follow the documentation review and update requirements above for both `README.md` and `AGENTS.md`.
 
 ## Required verification
 

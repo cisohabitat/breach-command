@@ -11,13 +11,13 @@ Play the current release at [breach-command.vercel.app](https://breach-command.v
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
-The 50 recorded lines cover confirmed findings, unsuccessful checks, uncertain
+The 51 recorded clips cover confirmed findings, unsuccessful checks, uncertain
 signals, new developments and service pressure. Voice is on by default, using bundled recordings of a
 calm male Captain with a British English voice. An explicit saved Off setting is
 respected. Every spoken line is also readable, with Listen and Skip voice
 controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Bot Commander
-practice runs remain silent. Each line plays automatically once per operation;
+practice runs remain silent. Automatic lines play at most once per operation;
 Listen can replay a line, so repeated checks do not cause repeated chatter.
 Opening the after-action review plays a short spoken debrief: the actual
 recovery grade or loss cause, a well-assessed evidence decision or supported
@@ -25,6 +25,13 @@ strength, and one improvement grounded in the record. The three clips play in
 sequence using the same voice and media element, with complete captions and
 whole-debrief replay or skip. A finished operation is required; play never waits
 for the narration. Printed reviews omit the spoken transcript.
+
+Routine commentary waits for 1.5 seconds without pointer, keyboard or wheel
+input and pauses while an evidence or response decision is pending. Listen is
+still available during those choices. Urgent pressure warnings and operation
+losses take priority after 300 ms and may interrupt routine speech. Skip,
+closing the view, muting or hiding the tab cancels queued speech as well as
+playback.
 
 `components/game/captain-voice-lazy.tsx` loads voice only when enabled;
 `components/game/captain-voice.tsx` owns the transcript and controls,
@@ -84,6 +91,7 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Signal and confidence:** findings distinguish direct stage evidence from support for its causal interpretation. Exhaustive collection and supported comparisons across different sources strengthen confidence; Training teaches all four combinations. The same assessment appears before command decisions and in the review. See [the model](docs/design/SIGNAL-CONFIDENCE.md).
 - **Confidence feedback:** a comparison that strengthens confidence briefly highlights affected findings and names the supporting sources. An optional recorded Captain line explains the change, with captions, replay and skip. Reduced motion keeps the text without the animation; resumed comparisons stay quiet.
 - **Linked evidence and source reviews:** selected findings preview an untested connection; tested links retain their supported, disputed or no-causal-link status and explanation. Specialist portraits identify source-review expertise without changing the on-call bonus or Captain narration.
+- **State colors:** muted blue marks selected evidence and untested connections; teal marks supported assessments, strong confidence and stable services; amber marks weak confidence, disputed links or degraded services; coral marks critical states. Signal strength stays neutral and separately labelled. Words, icons and connection stroke patterns remain, with dark state inks on paper and high-contrast support.
 - **Five decision verbs:** every confirmed technique offers observe, act, attribute, contain and notify. Each verb moves the operational picture by its own terms across impact, continuity, sector condition, adversary tempo and objective progress, and the after-action review records the exact consequence of the chosen verb.
 - **Operational decisions:** technique decisions, twenty-six command events, a twenty-card inject deck and three crises per sector change pressure, continuity, sector condition and actor progress. Eight adversary profiles each punish a different habit, and a campaign remembers the beats it met recently so an act does not repeat them. The campaign's three acts open with a director's briefing and a development keyed to the route, its ending states the command's own record, and each specialist develops with rapport: a request, a disagreement, a change of role.
 - **Mechanically distinct sector systems:** every sector combines its own base loss, tempo weighting, containment cost and recovery terms, so the same action has different consequences from one incident to the next.
@@ -156,13 +164,19 @@ pnpm test:responsive:install # first run only; or set PLAYWRIGHT_CHROMIUM_EXECUT
 pnpm test:responsive
 pnpm test:a11y
 pnpm test:persistence
-pnpm test:visual       # pixel baselines; --update-snapshots after a deliberate change
+pnpm test:visual       # check pixel baselines; record updates on a GitHub runner
 pnpm test:performance  # script, style and paint budgets on a throttled phone
 pnpm test:browsers     # adds WebKit and Firefox where installed
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm build
 ```
+
+After a deliberate visual change, use the
+[Record visual baselines workflow](.github/workflows/visual-baselines.yml).
+It records on the same GitHub runner used for comparison and writes to
+`ci/visual-baselines`. Review every changed image before bringing the baselines
+into the change; local font rendering can differ from the runner.
 
 `pnpm balance:check` is the smoke version CI runs: 600 seeded operations per difficulty and 300 campaigns, failing by name if a figure moves more than three points from `scripts/balance-expected.json`. `pnpm validate:content` runs the content tests alone for authors, and `pnpm new-scenario <slug>` scaffolds a new sector's tables (`docs/CONTENT.md`). Releases follow `docs/RELEASING.md`: the version in `package.json`, an entry in `CHANGELOG.md`, and a tag once Verify passes on `main`.
 
@@ -177,10 +191,11 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `app/page.tsx` | Application shell: topbar, workspace switch, live regions and overlay mounting |
 | `hooks/use-game-session.ts` | Game, session and campaign state, every transition, effect and derived readout |
 | `hooks/use-preferences.ts` | Audio, haptics and contrast, loaded once and persisted after |
+| `hooks/use-recover-focus.ts` | Focus recovery and investigation navigation; deferred recovery preserves a control the player has already focused |
 | `hooks/use-challenge-code.ts` | Seed, challenge code and whether the operation is reproducible |
 | `lib/operation-setup.ts` | Starting resources and variants, neutral for shared challenges and campaign-derived for ordinary operations |
-| `app/globals.css`, `components/game/game.css` | What the assignment screen needs, linked by the page, and the game's own styles, loaded with it. Case-file visual system (ink, paper and bone; flat ruled panels; the report, brief and review as paper documents with ink stamps; the attack chain as a redacted evidence sheet), motion and responsive layouts |
-| `app/fonts/` | Self-hosted IBM Plex Sans Condensed (headings, labels and figures), loaded through `next/font/local` |
+| `app/globals.css`, `components/game/game.css` | Assignment styles linked by the page, and game styles loaded with the game bundle. Charcoal and bone with semantic state colors, flat ruled panels, paper documents with form cells and a redacted evidence sheet; motion and responsive layouts |
+| `app/fonts/` | Self-hosted IBM Plex Sans Condensed for headings and figures, loaded through `next/font/local` |
 | `components/game/` | Workspaces, gameplay boards, maps, dialogs, end states and the tutorial |
 | `components/ui/` | The interface primitives the game actually imports |
 | `lib/game.ts` | Scenario, procedure and attack data |
@@ -204,7 +219,7 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 | `lib/last-operation.ts` | The last operation and the review's suggested next one, kept on the device for a returning player |
 | `tests/*.test.ts` | Engine, campaign, reads, session, content and simulation suites (`node --test`) |
 | `tests/saves.test.ts` | A save from every session version since 10 migrates and plays on |
-| `tests/e2e/visual.spec.ts` | Pixel baselines for eight screens at four widths |
+| `tests/e2e/visual.spec.ts` | Pixel baselines for eight game screens, evidence connections and campaign states at four widths |
 | `tests/e2e/performance.spec.ts` | Script, style, paint and layout-shift budgets on a throttled phone |
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
@@ -215,7 +230,17 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 
 The interface is built with Next.js 16, React 19 and TypeScript and deployed as a native Next.js application on Vercel.
 
-See [`AGENTS.md`](AGENTS.md) for repository-wide contribution rules, game-engine invariants and required verification.
+## Contributing and documentation
+
+Review both this README and [`AGENTS.md`](AGENTS.md) against every final change,
+including follow-up fixes. Update affected feature descriptions, commands,
+requirements, architecture and contributor guidance in the same commit or pull
+request as the implementation. The
+[pull request checklist](.github/pull_request_template.md) records both reviews;
+if a file needs no update, explain why its current documentation remains accurate.
+Keep these documents current rather than treating them as changelogs.
+
+`AGENTS.md` also records the game-engine invariants and required verification.
 
 ## Limits
 
