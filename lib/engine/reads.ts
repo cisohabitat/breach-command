@@ -6,6 +6,20 @@ import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type
 import { availableIn, carryModifier, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
 import { infrastructureTopologies } from "../phase8.ts";
 import { lit, msg, ref, type Message } from "../i18n/message.ts";
+// Confidence concerns causal interpretation, not whether a revealed stage
+// happened. Only visible collection and comparison records may affect it.
+export function getEvidenceAssessment(game: Game, item: Game["evidence"][number]) {
+  const sourceId = (id: string) => id.replace(/^E\d+-/, "");
+  const corroborated = game.correlations.some(record => record.correct && record.valid && record.evidence.includes(item.id) && record.evidence.some(id => id !== item.id && sourceId(id) !== sourceId(item.id)));
+  const turn = game.turns.find(turn => turn.number === item.turn && sourceId(item.id) === turn.procedure);
+  const basis = corroborated ? "corroborated" : turn?.plan.intensity === "exhaustive" ? "exhaustive" : turn ? "single" : "recorded";
+  return {
+    signal: item.supports ? "strong" : "weak",
+    confidence: corroborated || basis === "exhaustive" || (!turn && item.confidence === "HIGH") ? "strong" : "weak",
+    basis,
+  } as const;
+}
+
 // Each read is a message: the engine's words, or the content's, kept as text.
 export function getAttributionRead(game: Game): { title: Message; confidence: string; detail: Message } {
   const profile = getAdversaryProfile(game);
