@@ -30,6 +30,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
       <SheetContent
         ref={content}
         className="action-sheet"
+        data-procedure={proc?.id}
         side="right"
         // The first tabbable control in this sheet is a plan toggle, so the dialog's own
         // autofocus would put the keys used to read a dialog — Space to scroll, Tab to

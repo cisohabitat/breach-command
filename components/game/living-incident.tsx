@@ -107,7 +107,7 @@ export function SpecialistTransmission({ game }: { game: Game }) {
         : readyToCorrelate(game)
           ? t("livingIncident.theEvidencePicture", { nodeLabel: node.label })
           : t("livingIncident.focusCollectionOn", { nodeLabel: node.label, voice: specialist.voice });
-  return <section className="specialist-transmission" aria-live="polite">
+  return <section className="specialist-transmission" data-specialist={game.specialist} aria-live="polite">
     <div><small>{specialist.callsign}, {attribution.confidence === "ATTRIBUTED" ? t("livingIncident.attributed") : t("livingIncident.confidenceAttribution", { confidence: say(withForm(level(attribution.confidence), "lower")) })}</small><strong>{specialist.name}</strong><p>{advice}</p></div>
   </section>;
 }

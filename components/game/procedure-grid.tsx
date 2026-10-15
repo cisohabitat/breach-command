@@ -26,7 +26,7 @@ export function ProcedureGrid({
   const routeSources = game.hypothesis ? hypothesisSources(game, game.hypothesis) : [];
   return (
     <div className="procedure-grid">
-      {proceduresFor(game).map((procedure, index) => {
+      {proceduresFor(game).map(procedure => {
         const cooldown = availableIn(game, procedure.id);
         const established = game.established.includes(procedure.id);
         const aligned = routeSources.includes(procedure.id);
@@ -47,9 +47,7 @@ export function ProcedureGrid({
             aria-label={`${procedure.title}${established ? t("procedureGrid.establishedPlus2") : ""}${aligned ? t("procedureGrid.supportsCurrentHypothesis") : ""}${aligned && blind ? t("procedureGrid.cannotSeeThis") : ""}${seesOther ? t("procedureGrid.canAlsoTest2") : ""}${read && read.spent ? t("procedureGrid.checkedTimesWith", { spent: read.spent }) : read && read.inconclusive ? t("procedureGrid.attemptsFailedWithout", { inconclusive: read.inconclusive }) : ""}${cooldown ? t("procedureGrid.availableInTurns", { cooldown }) : ""}`}
           >
             <div className="procedure-top">
-              {/* A procedure's number in the manual, not an icon: a glyph on every
-                  card read as a feature grid, and the sector action shared a bank icon. */}
-              <span className="procedure-code">{String(index + 1)}</span>
+              <span className="procedure-code" aria-hidden="true" />
               {/* The badge carries the cooldown only. The established bonus is stated
                   once, in the footer; a "+2" badge said it a second time. */}
               {cooldown > 0 && <span className="procedure-badge">{t("procedureGrid.turnPlural", { count: cooldown })}</span>}

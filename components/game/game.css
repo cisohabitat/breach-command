@@ -2119,6 +2119,8 @@
   border-radius:3px;
   padding:12px;
   text-align:start;
+  --kit-x:99.382716%;
+  --kit-y:95.918367%;
 }
 .evidence-cards button.selected {
   border-color:#e6c463;
@@ -6315,7 +6317,7 @@ span.effect-list>span.effect.pace.worse>em {
   /* With a reading recorded, the board becomes a bar: what is declared, how it is
      holding up, and the way to change it. The premises and the sources live one
      tap down in the comparison, so the grid is on screen when the player acts. */
-  .operation-status .turn-progress,.hypothesis-board.has-reading .hypothesis-standing p,.hypothesis-board .hypothesis-heading small,.investigation-dashboard .procedure-card .procedure-code,.investigation-dashboard .procedure-bottom,.hypothesis-board.has-reading .hypothesis-heading {
+  .operation-status .turn-progress,.hypothesis-board.has-reading .hypothesis-standing p,.hypothesis-board .hypothesis-heading small,.investigation-dashboard .procedure-bottom,.hypothesis-board.has-reading .hypothesis-heading {
     display:none;
   }
   .case-meters {
@@ -6378,16 +6380,27 @@ span.effect-list>span.effect.pace.worse>em {
     margin-bottom:4px;
     justify-content:flex-end;
   }
+  .investigation-dashboard .procedure-badge {
+    margin-inline-end:32px;
+  }
+  .investigation-dashboard .procedure-code {
+    position:absolute;
+    inset-block-start:10px;
+    inset-inline-end:8px;
+    inline-size:26px;
+    block-size:26px;
+  }
+  .investigation-dashboard .procedure-card h3 {
+    padding-inline-end:32px;
+    font-size:var(--type-caption);
+    line-height:1.2;
+  }
   /* The footer is the only place the established bonus is stated, so on an
      established card it stays, compact and without the chevron. */
   .investigation-dashboard .procedure-card.established:not(.cooling) .procedure-bottom {
     display:flex;
     padding-top:6px;
     font-size:var(--type-micro);
-  }
-  .investigation-dashboard .procedure-card h3 {
-    font-size:var(--type-caption);
-    line-height:1.2;
   }
   .investigation-dashboard .procedure-card p {
     font-size:var(--type-micro);
@@ -6860,4 +6873,114 @@ span.effect-list>span.effect.pace.worse>em {
 }
 .captain-voice-status {
   margin-block: 0.5rem 0;
+}
+/* The generated atlas has six columns and four rows, with quiet padding around
+   each object. Positions select a 120px square in its 768x512 delivery copy. */
+.procedure-card,.action-sheet {
+  --kit-x:99.382716%;
+  --kit-y:36.734694%;
+}
+.procedure-code,.action-sheet [data-slot=sheet-title]::before,.evidence-cards button::before,.specialist-transmission strong::before {
+  display:block;
+  inline-size:32px;
+  block-size:32px;
+  flex-shrink:0;
+  background-image:url("/art/icons/field-kit.webp");
+  background-size:640% 426.666667%;
+  background-position:var(--kit-x) var(--kit-y);
+  background-repeat:no-repeat;
+}
+.action-sheet [data-slot=sheet-title]::before,.evidence-cards button::before,.specialist-transmission strong::before {
+  content:"";
+  float:inline-start;
+  margin-inline-end:10px;
+}
+.investigation-dashboard .procedure-code {
+  align-self:center;
+}
+[data-procedure=endpoint] {
+  --kit-x:0.617284%;
+  --kit-y:7.142857%;
+}
+[data-procedure=identity] {
+  --kit-x:20.370370%;
+  --kit-y:7.142857%;
+}
+[data-procedure=network] {
+  --kit-x:40.123457%;
+  --kit-y:7.142857%;
+}
+[data-procedure=firewall] {
+  --kit-x:59.876543%;
+  --kit-y:7.142857%;
+}
+[data-procedure=email] {
+  --kit-x:79.629630%;
+  --kit-y:7.142857%;
+}
+[data-procedure=dns] {
+  --kit-x:99.382716%;
+  --kit-y:7.142857%;
+}
+[data-procedure=server] {
+  --kit-x:0.617284%;
+  --kit-y:36.734694%;
+}
+[data-procedure=cloud] {
+  --kit-x:20.370370%;
+  --kit-y:36.734694%;
+}
+[data-procedure=forensic] {
+  --kit-x:40.123457%;
+  --kit-y:36.734694%;
+}
+[data-procedure=hunt] {
+  --kit-x:59.876543%;
+  --kit-y:36.734694%;
+}
+[data-procedure=intel] {
+  --kit-x:79.629630%;
+  --kit-y:36.734694%;
+}
+.specialist-transmission {
+  --kit-x:0.617284%;
+  --kit-y:66.326531%;
+}
+.specialist-transmission[data-specialist=forensics] {
+  --kit-x:20.370370%;
+}
+.specialist-transmission[data-specialist=identity] {
+  --kit-x:40.123457%;
+}
+.specialist-transmission[data-specialist=ot] {
+  --kit-x:59.876543%;
+}
+.specialist-transmission[data-specialist=continuity] {
+  --kit-x:79.629630%;
+}
+.specialist-transmission[data-specialist=communications] {
+  --kit-x:99.382716%;
+}
+.evidence-cards button:is([data-source=email],[data-source=intel],[data-source=hunt],[data-source=partner]) {
+  --kit-x:0.617284%;
+}
+.evidence-cards button:is([data-source=endpoint],[data-source=server],[data-source=cloud]) {
+  --kit-x:20.370370%;
+}
+.evidence-cards button:is([data-source=network],[data-source=firewall],[data-source=dns]) {
+  --kit-x:40.123457%;
+}
+.evidence-cards button[data-source=identity] {
+  --kit-x:59.876543%;
+}
+.evidence-cards button[data-source=forensic] {
+  --kit-x:79.629630%;
+}
+.paper-dialog .specialist-name::after {
+  filter:brightness(.25);
+}
+@media print {
+  .procedure-code,.action-sheet [data-slot=sheet-title]::before,.evidence-cards button::before,.specialist-transmission strong::before {
+    display:none;
+  }
 }

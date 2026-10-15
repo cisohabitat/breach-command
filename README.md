@@ -1,5 +1,10 @@
 # Breach Command
 
+Original charcoal-and-bone field-kit art accompanies the procedures, evidence
+sources and six specialist roles. The 24 symbols share one transparent local
+WebP atlas, with text labels retained and no game state encoded in the art.
+See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
+
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
