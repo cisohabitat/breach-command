@@ -103,7 +103,7 @@ export function GameScreen({ session }: { session: GameSession }) {
               </span>
             )}
           </div>
-          <div className={`continuity-meter ${game.continuity <= CONTINUITY_AT_RISK ? "critical" : ""} ${meterPulse?.continuityAtRisk ? "crossing" : ""}`}>
+          <div className={`continuity-meter ${game.continuity <= CONTINUITY_AT_RISK ? "critical" : game.continuity <= 75 ? "degraded" : ""} ${meterPulse?.continuityAtRisk ? "crossing" : ""}`}>
             <span className="mono">{getOperationalLabel(game)}</span><strong>{game.continuity}</strong>
             <Progress value={game.continuity} aria-label={getOperationalLabel(game)} />
             <small>{game.continuity > 75 ? t("gameScreen.stable") : game.continuity > CONTINUITY_AT_RISK ? t("gameScreen.degraded") : t("gameScreen.atRisk")}</small>

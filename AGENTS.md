@@ -1,5 +1,13 @@
 # Breach Command contributor instructions
 
+State colour (15 October 2026, user approved): extend the earlier hue rule with
+muted blue for selected evidence and untested connections, teal for supported
+assessments and stable continuity, and amber for weak confidence, disputed links
+and degraded continuity. Keep signal strength neutral and separately labelled.
+Keep critical meters coral, unrelated links neutral, and all existing words,
+icons and stroke patterns. Paper uses dark inks with AA contrast. This changes
+presentation only; no hidden state may select a colour. See ART-DIRECTION.md.
+
 These instructions apply to the entire repository. Preserve the game as a polished, public, single-player incident-response simulation. Changes should strengthen the player experience.
 
 ## Product boundaries
