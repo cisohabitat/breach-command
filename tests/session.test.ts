@@ -72,6 +72,13 @@ test("refuses names the game does not have and settles a finished save", () => {
   assert.equal(tampered({objective:"conquest"}),null,"an unknown objective is refused before a screen looks it up");
   assert.equal(tampered({mode:"arcade"}),null);
   assert.equal(tampered({specialist:"wizard"}),null);
+  for (const pendingCommand of ["missing-event", "toString", 7]) assert.equal(tampered({ pendingCommand }), null, "an unknown pending command cannot reach the engine");
+  for (const pendingSetPiece of ["sector-99", "sector-1", "missing-crisis", 7]) assert.equal(tampered({ pendingSetPiece }), null, "a sector decision must belong to this case");
+  assert.ok(tampered({ pendingCommand: "leadership" }), "a real command still resumes");
+  assert.ok(tampered({ pendingSetPiece: "sector-0" }), "a real sector decision still resumes");
+  const finishedWithStaleCommand = tampered({ status: "lost", pendingCommand: "removed-event" });
+  assert.ok(finishedWithStaleCommand);
+  assert.equal(finishedWithStaleCommand.game.pendingCommand, null, "finished saves clear stale blocking state");
   assert.equal(tampered({status:"won"}),null,"a win needs a confirmed chain and a completed response");
   assert.equal(tampered({status:"response",revealed:[...sound.chain],responseChoices:["a","b","c"]}),null,"a response with nothing left to choose is refused");
   const lostWithDecision=tampered({status:"lost",revealed:[sound.chain[0]],pendingDecision:sound.chain[0]});

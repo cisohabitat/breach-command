@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { newGame, type Game } from "../../lib/advanced-game";
+import { newGame, scenarios, type Game } from "../../lib/advanced-game";
 import { PARKED_SESSION_KEY, SESSION_KEY, SESSION_VERSION, serialiseSession } from "../../lib/session";
 import { CAMPAIGN_KEY, defaultCampaign } from "../../lib/campaign";
 import { encodeChallenge } from "../../lib/challenge";
@@ -179,6 +179,41 @@ test.describe("local persistence", () => {
     expect(operation.guided).toBe(false);
     expect(operation.fastResolve).toBe(true);
   });
+  test("a failed restored-session write is reported even when the campaign was saved", async ({ page }) => {
+    const previous = serialiseSession(newGame(0, "training", () => 0), true, false);
+    const restored = serialiseSession(newGame(4, "crisis", () => 0), false, true);
+    await page.addInitScript(([key, value]) => {
+      if (!localStorage.getItem("breach-command.seeded")) {
+        localStorage.clear();
+        localStorage.setItem("breach-command.tutorial-complete", "true");
+        localStorage.setItem(key, value);
+        localStorage.setItem("breach-command.seeded", "1");
+      }
+      const original = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (name, content) {
+        if (name === key) throw new DOMException("Full quota", "QuotaExceededError");
+        return original.call(this, name, content);
+      };
+    }, [SESSION_KEY, previous] as const);
+    await page.goto("/", { waitUntil: "networkidle" });
+    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Game settings" }).click();
+    const campaign = { ...defaultCampaign, xp: 75 };
+    await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign, session: restored }));
+    await page.getByRole("button", { name: "Restore backup" }).click();
+    await page.getByRole("button", { name: "Replace this device’s progress" }).click();
+    await expect(page.locator(".backup-console").first()).toContainText("not allowing saved data");
+    expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toBe(previous);
+    expect(JSON.parse(await page.evaluate(key => localStorage.getItem(key)!, CAMPAIGN_KEY)).xp).toBe(75);
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await expect(page.locator(".game-screen")).toBeVisible();
+    await expect(page.locator(".game-screen")).toContainText(scenarios[4].title);
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).game.scenario, SESSION_KEY)).toBe(0);
+  });
+
   test("the first operation's record survives a reload and travels in the backup", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
     await page.addInitScript(() => {

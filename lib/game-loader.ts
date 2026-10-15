@@ -3,15 +3,15 @@
 // screen, or when a saved operation has to be read. Until then the first load
 // carries none of the engine.
 import type * as Bundle from "../components/game/game-bundle.ts";
+import { retryableLoad } from "./lazy-load.ts";
 
 export type GameBundle = typeof Bundle;
 
 let bundle: GameBundle | null = null;
-let loading: Promise<GameBundle> | null = null;
+const load = retryableLoad(() => import("../components/game/game-bundle.ts").then(module => (bundle = module)));
 
 export function loadGame(): Promise<GameBundle> {
-  loading ??= import("../components/game/game-bundle.ts").then(module => (bundle = module));
-  return loading;
+  return load();
 }
 
 // The loaded bundle, for code that only runs once an operation exists: there is

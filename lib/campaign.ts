@@ -90,17 +90,20 @@ export function parseCampaign(raw: string | null): CampaignState {
     return {
       completed: Array.isArray(value.completed) ? value.completed.filter(Number.isInteger) : [],
       xp: Number.isFinite(value.xp) ? Math.max(0, Number(value.xp)) : 0,
-      bestScores: value.bestScores && typeof value.bestScores === "object" ? value.bestScores : {},
+      bestScores: numericRecord(value.bestScores, 100),
       operations: Number.isFinite(value.operations) ? Math.max(0, Number(value.operations)) : 0,
       leadershipTrust: Number.isFinite(value.leadershipTrust) ? Math.max(0, Math.min(100, Number(value.leadershipTrust))) : 50,
       readiness: Number.isFinite(value.readiness) ? Math.max(0, Math.min(100, Number(value.readiness))) : 50,
       streak: Number.isFinite(value.streak) ? Math.max(0, Number(value.streak)) : 0,
-      specialistFatigue: value.specialistFatigue && typeof value.specialistFatigue === "object" ? value.specialistFatigue : {},
-      mastery: value.mastery && typeof value.mastery === "object" ? value.mastery : {},
-      commandPosture: value.commandPosture && typeof value.commandPosture === "object" ? value.commandPosture : { observe: 0, act: 0 },
+      specialistFatigue: numericRecord(value.specialistFatigue, 6),
+      mastery: numericRecord(value.mastery, 3),
+      commandPosture: {
+        observe: numericRecord(value.commandPosture).observe ?? 0,
+        act: numericRecord(value.commandPosture).act ?? 0,
+      },
       unresolvedThreads: Number.isFinite(value.unresolvedThreads) ? Math.max(0, Number(value.unresolvedThreads)) : 0,
-      actorSightings: value.actorSightings && typeof value.actorSightings === "object" ? value.actorSightings : {},
-      specialistBonds: value.specialistBonds && typeof value.specialistBonds === "object" ? value.specialistBonds : {},
+      actorSightings: numericRecord(value.actorSightings),
+      specialistBonds: numericRecord(value.specialistBonds, 100),
       routeHistory: Array.isArray(value.routeHistory) ? value.routeHistory.filter(item => typeof item === "string").slice(-12) : [],
       recentCommands: Array.isArray(value.recentCommands) ? value.recentCommands.filter(item => typeof item === "string").slice(-RECENT_COMMANDS) : [],
       recentInjects: Array.isArray(value.recentInjects) ? value.recentInjects.filter(item => typeof item === "string").slice(-RECENT_INJECTS) : [],
@@ -110,6 +113,15 @@ export function parseCampaign(raw: string | null): CampaignState {
   } catch {
     return defaultCampaign;
   }
+}
+
+// Nested counters must be numbers too: an array, null member or string would
+// otherwise survive migration and poison the next operation's arithmetic.
+function numericRecord(value: unknown, maximum = Number.MAX_SAFE_INTEGER): Record<string, number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value)
+    .filter((entry): entry is [string, number] => typeof entry[1] === "number" && Number.isFinite(entry[1]))
+    .map(([key, number]) => [key, Math.max(0, Math.min(maximum, number))]));
 }
 
 // Highest first: a command holds the first rank whose threshold it has reached.

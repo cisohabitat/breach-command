@@ -70,6 +70,27 @@ test("tells a damaged campaign record from a missing one", () => {
   assert.deepEqual(parseCampaign("null"),defaultCampaign);
 });
 
+test("malformed nested campaign fields cannot poison later progression", () => {
+  const parsed = parseCampaign(JSON.stringify({
+    commandPosture: [], bestScores: [], specialistFatigue: { hunter: "six", identity: 99 },
+    mastery: { "0": null, "1": 99 }, actorSightings: { ghost: "many" },
+    specialistBonds: { hunter: false, identity: 120 },
+  }));
+  assert.deepEqual(parsed.commandPosture, { observe: 0, act: 0 });
+  assert.deepEqual(parsed.bestScores, {});
+  assert.deepEqual(parsed.specialistFatigue, { identity: 6 });
+  assert.deepEqual(parsed.mastery, { "1": 3 });
+  assert.deepEqual(parsed.actorSightings, {});
+  assert.deepEqual(parsed.specialistBonds, { identity: 100 });
+  const partial = parseCampaign(JSON.stringify({ commandPosture: { observe: 4, act: "2" } }));
+  assert.deepEqual(partial.commandPosture, { observe: 4, act: 0 });
+  const after = recordCampaignResult(parsed, { ...newGame(0, "training", () => 0), status: "lost" }, 30);
+  assert.ok(Number.isFinite(after.commandPosture.observe));
+  assert.ok(Number.isFinite(after.commandPosture.act));
+  assert.ok(Number.isFinite(after.specialistBonds.hunter));
+  assert.deepEqual(parseCampaign(JSON.stringify(after)), after, "the repaired campaign survives the next save");
+});
+
 test("rests the team between operations", () => {
   // Without rest, a player who kept the default specialist started every
   // operation after the first at five of six, where the bonus no longer applies.
