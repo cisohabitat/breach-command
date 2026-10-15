@@ -86,7 +86,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
           </dl>}
         </DialogHeader>
         {report && game && <>
-          {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
+          {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
           {/* The turn that ends an operation is still reported as a turn, so its
               headline can be good news on a lost operation. Say how it ended first. */}
           {ended && report.number === game.turns.length && game.status !== "won" && (

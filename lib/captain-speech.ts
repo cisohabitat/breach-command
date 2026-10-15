@@ -4,6 +4,43 @@ import type { RecordedCaptainCue } from "./captain-debrief.ts";
 
 export type CaptainSpeechState = "idle" | "waiting" | "speaking" | "unavailable";
 let activeStop: (() => void) | null = null;
+let lastFinished = -Infinity;
+
+// Routine speech waits for a quiet moment and never interrupts another line.
+// Urgent public warnings may interrupt; an explicit Listen bypasses this queue.
+export function scheduleCaptain(
+  cues: readonly RecordedCaptainCue[],
+  onState: (state: CaptainSpeechState) => void,
+  onStart: () => void,
+  activity: EventTarget,
+  urgent = false,
+): () => void {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let stopSpeech = () => {};
+  let stopped = false;
+  const events = ["pointerdown", "keydown", "wheel"];
+  const detach = () => { for (const event of events) activity.removeEventListener(event, arm); };
+  const attempt = () => {
+    timer = null;
+    if (stopped) return;
+    if (!urgent && (activeStop || Date.now() - lastFinished < 1500)) { arm(); return; }
+    detach();
+    onStart();
+    stopSpeech = speakCaptain(cues, onState);
+  };
+  function arm() {
+    if (timer !== null) clearTimeout(timer);
+    timer = setTimeout(attempt, urgent ? 300 : 1500);
+  }
+  if (!urgent) for (const event of events) activity.addEventListener(event, arm);
+  arm();
+  return () => {
+    stopped = true;
+    if (timer !== null) clearTimeout(timer);
+    detach();
+    stopSpeech();
+  };
+}
 
 // Bundled recordings give every device the same Captain. Playback failures
 // leave the transcript usable and always release the music and cue mix.
@@ -24,7 +61,7 @@ export function speakCaptain(cue: Exclude<CaptainVoiceCue, "debrief"> | readonly
       audio.onerror = null;
       try { audio.pause(); audio.removeAttribute("src"); audio.load(); } catch {}
     }
-    if (activeStop === stop) activeStop = null;
+    if (activeStop === stop) { activeStop = null; lastFinished = Date.now(); }
     setNarrationActive(false);
     onState(state);
   };

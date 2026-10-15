@@ -161,12 +161,15 @@ test("voice defaults on, explicit opt-out survives reload, and recordings can be
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.cancellations)).toBe(2);
 });
 
-test("findings have matching text, skip works, and M mutes voice", async ({ page }) => {
+test("routine findings wait during a decision, Listen works, and M mutes voice", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   const voice = page.getByRole("region", { name: "Incident Captain" });
   await expect(voice).toContainText(captainVoiceMessages["captainVoice.firstFinding"]);
+  await page.waitForTimeout(2000);
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
+  await voice.getByRole("button", { name: "Listen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.firstFinding"]);
   await page.keyboard.press("m");
   await expect(voice).toHaveCount(0);
@@ -174,11 +177,36 @@ test("findings have matching text, skip works, and M mutes voice", async ({ page
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.cancellations)).toBeGreaterThan(0);
 });
 
+test("an urgent pressure warning speaks even while an evidence decision is pending", async ({ page }) => {
+  await mockSpeech(page);
+  const game = pendingDecisionGame();
+  game.impact = 76;
+  game.turns.at(-1)!.impactChange = 8;
+  await openWithSave(page, game, true, voicePreferences);
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(page.locator(".report-gate")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([captainVoiceMessages["captainVoice.pressure"]]);
+  await page.getByRole("button", { name: "Skip voice", exact: true }).click();
+  await page.locator(".evidence-decision button").first().click();
+  await expect(page.locator(".report-gate")).toHaveCount(0);
+});
+
+test("a deferred finding speaks after its decision is resolved", async ({ page }) => {
+  await mockSpeech(page);
+  await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: "Skip voice", exact: true }).waitFor();
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
+  await page.locator(".evidence-decision button").first().click();
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([captainVoiceMessages["captainVoice.firstFinding"]]);
+});
+
 test("unavailable recordings leaves the text and game controls usable", async ({ page }) => {
   await mockSpeech(page, false);
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   const voice = page.getByRole("region", { name: "Incident Captain" });
+  await voice.getByRole("button", { name: "Listen", exact: true }).click();
   await expect(voice.getByRole("status")).toContainText("Voice is unavailable");
   expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
   await expect(voice).toContainText(captainVoiceMessages["captainVoice.firstFinding"]);
@@ -192,6 +220,7 @@ test("a browser that refuses audio playback still accepts the evidence decision"
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
   await page.evaluate(() => { window.captainSpeechProbe.refuse = true; });
   await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: "Listen", exact: true }).click();
   await expect(page.locator(".captain-voice-status")).toContainText("Voice is unavailable");
   await page.locator(".evidence-decision button").first().click();
   await expect(page.locator(".report-gate")).toHaveCount(0);
@@ -221,14 +250,19 @@ test("an unavailable optional voice download never blocks the operation", async 
   await expect(page.locator(".game-screen")).toBeVisible();
 });
 
-test("response and closing assessments play once and do not overlap", async ({ page }) => {
+test("response guidance waits for Listen while closing assessments play once", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, responsePhaseGame(), false, voicePreferences);
   await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.waitForTimeout(2000);
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
+  await page.getByRole("button", { name: "Listen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.response"]);
   await page.locator(".response-options > button").first().click();
+  await page.getByRole("button", { name: "Listen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.assurance"]);
   await page.locator(".response-options > button").first().click();
+  await page.getByRole("button", { name: "Listen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.recovery"]);
   await page.locator(".response-options > button").first().click();
   await expect(page.locator(".resolution")).toBeVisible();
@@ -277,6 +311,7 @@ test("all cases receive matching voiced findings and their own opening", async (
   const other = { ...pendingDecisionGame(), scenario: 1 };
   await openWithSave(page, other, true, voicePreferences);
   await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: "Listen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.firstFinding"]);
   for (let scenario = 0; scenario < 10; scenario++) {
     await openWithSave(page, null, false, voicePreferences);
