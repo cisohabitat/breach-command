@@ -44,6 +44,18 @@ test("source miniatures follow completed collection sources and leave findings r
   await page.locator(".evidence-cards").screenshot({ path: info.outputPath("source-miniatures.png") });
 });
 
+test("phone cooldown text does not overlap procedure art", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await openWithSave(page, twoStagesGame());
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(page.locator(".procedure-card.cooling").first()).toBeVisible();
+  for (const card of await page.locator(".procedure-card.cooling").all()) {
+    const icon = await card.locator(".procedure-code").boundingBox();
+    const badge = await card.locator(".procedure-badge").boundingBox();
+    expect(icon!.x + icon!.width <= badge!.x || badge!.x + badge!.width <= icon!.x).toBe(true);
+  }
+});
+
 test("an unavailable atlas leaves procedure selection usable", async ({ page }) => {
   await page.route("**/art/icons/field-kit.webp", route => route.abort());
   await openWithSave(page, setHypothesis(newGame(0, "training", () => 0), "identity"));

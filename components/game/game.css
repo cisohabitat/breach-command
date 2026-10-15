@@ -6380,6 +6380,9 @@ span.effect-list>span.effect.pace.worse>em {
     margin-bottom:4px;
     justify-content:flex-end;
   }
+  .investigation-dashboard .procedure-badge {
+    margin-inline-end:32px;
+  }
   .investigation-dashboard .procedure-code {
     position:absolute;
     inset-block-start:10px;
