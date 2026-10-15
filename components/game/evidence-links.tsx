@@ -1,0 +1,29 @@
+import { getEvidenceLinks, type Game } from "@/lib/advanced-game";
+import { useMessages } from "@/hooks/use-messages";
+import { register } from "@/lib/i18n";
+import { evidenceLinksMessages } from "@/lib/i18n/en/evidence-links";
+
+register(evidenceLinksMessages);
+
+// A selected pair is only a question. Never inspect supports, stage, route or
+// the hidden chain to draw a connection the player has not yet tested.
+export function EvidenceLinks({ game, selected }: { game: Game; selected: string[] }) {
+  const { t, say } = useMessages();
+  const links = getEvidenceLinks(game, selected);
+  return <section className="evidence-links" aria-label={t("evidenceLinks.title")}>
+    <h3>{t("evidenceLinks.title")}</h3>
+    <p>{t("evidenceLinks.explanation")}</p>
+    {!links.length ? <p>{t("evidenceLinks.selectPair")}</p> : <ul>{links.map(link => {
+      const [first, second] = link.ids.map(id => game.evidence.find(item => item.id === id));
+      if (!first || !second) return null;
+      return <li key={link.ids.join("/")} data-relationship={link.status}>
+        <div className="evidence-link-row">
+          <span className="evidence-link-node"><small>{t("evidenceLinks.turn", { turn: first.turn })}</small><strong>{say(first.title)}</strong></span>
+          <span className="evidence-link-connector"><span>{t(link.status === "supported" ? "evidenceLinks.supported" : link.status === "unrelated" ? "evidenceLinks.unrelated" : link.status === "disputed" ? "evidenceLinks.disputed" : "evidenceLinks.untested")}</span></span>
+          <span className="evidence-link-node"><small>{t("evidenceLinks.turn", { turn: second.turn })}</small><strong>{say(second.title)}</strong></span>
+        </div>
+        <p>{link.finding ? say(link.finding) : t("evidenceLinks.noInference")}</p>
+      </li>;
+    })}</ul>}
+  </section>;
+}

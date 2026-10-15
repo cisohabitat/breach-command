@@ -224,3 +224,11 @@ bundle. The previous main's runner measured 1,169,970 B by play start, leaving
 to 1,180,000 B (less than one per cent) for this feature. The assignment's initial
 and idle script budgets, style budgets, paint and layout-shift limits are
 unchanged. CI measures the complete production flow against those limits.
+
+Linked evidence and specialist source reviews (15 October 2026) add a view,
+localized relationship explanations and source-expertise attribution to the lazy
+game bundle. Deliberately allow 5,000 B more for both the warmed assignment and
+operation script budgets, to 1,175,000 B and 1,185,000 B. This is under half a
+per cent. The initial script, style, timing and layout-shift budgets stay fixed;
+existing portrait files are reused and fetched lazily. The full runner suite
+measures the delivered production build before merge.

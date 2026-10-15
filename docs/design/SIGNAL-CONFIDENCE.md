@@ -43,3 +43,20 @@ the connection using the existing recorded voice, captions and Listen/Skip
 controls. Automatic narration follows the existing once-per-cue-per-operation
 policy; the player can replay it. A comparison that changes no confidence
 does not trigger this feedback.
+
+The linked-evidence view draws only recorded comparisons, plus an explicitly
+untested preview of the selected pair. A valid causal relationship is labelled
+supported even when the player incorrectly called it coincidental. An invalid
+causal assertion is disputed; a correctly identified coincidence says no causal
+link. Those labels describe the relationship, with the existing comparison
+explanation below. Collection order never implies causal direction. A previously
+tested pair cannot be submitted again. The view derives entirely from public
+findings and comparison records; it never reads the hidden chain or objective.
+
+Each source assessment carries a portrait and textual source-review attribution.
+Prefer the on-call specialist when the procedure is in their expertise; otherwise
+use the first specialist whose published expertise covers it, falling back to the
+on-call specialist for partner or sector-specific records. This is desk-review
+attribution, not a claim that a different specialist collected the finding or
+supplied a game bonus. The original portraits are decorative and text remains
+complete if they fail. Captain narration remains reserved for command updates.
