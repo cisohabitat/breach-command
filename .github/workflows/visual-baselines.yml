@@ -7,8 +7,6 @@
 name: Record visual baselines
 
 on:
-  push:
-    branches: [feature/state-colours]
   workflow_dispatch:
 
 permissions:
