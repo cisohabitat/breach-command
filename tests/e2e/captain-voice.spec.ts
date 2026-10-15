@@ -110,8 +110,13 @@ test("confidence gain animates when motion is allowed and stays visible with voi
   await expect(page.locator(".confidence-change")).toContainText("Confidence strengthened");
   expect(await page.locator(".confidence-strengthened").first().evaluate(element => getComputedStyle(element).animationName)).toBe("confidence-strengthened");
   await page.keyboard.press("Tab");
-  await page.locator(".confidence-strengthened").first().focus();
-  expect(await page.locator(".confidence-strengthened").first().evaluate(element => element.matches(":focus-visible") && getComputedStyle(element).outlineStyle === "solid")).toBe(true);
+  const highlighted = page.locator(".confidence-strengthened").first();
+  await highlighted.focus();
+  // Focus recovery uses animation frames. Check after both frames so a delayed
+  // recovery cannot take the player's focus back after an immediate assertion.
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  await expect(highlighted).toBeFocused();
+  await expect.poll(() => highlighted.evaluate(element => element.matches(":focus-visible") && getComputedStyle(element).outlineStyle === "solid")).toBe(true);
   await expect(page.locator(".confidence-change .captain-voice")).toHaveCount(0);
   expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
 });
