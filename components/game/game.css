@@ -2141,7 +2141,7 @@
   display:inline-flex;
   align-items:center;
   gap:5px;
-  color:var(--foreground);
+  color:var(--lime);
   font:500 var(--type-micro) var(--font-mono);
 }
 .evidence-assessment svg {
@@ -2150,7 +2150,7 @@
 .evidence-assessment small {
   display:block;
   margin-block:4px;
-  color:#a9a292;
+  color:var(--text-soft);
   font:400 var(--type-caption) var(--font-ui);
   line-height:1.5;
 }

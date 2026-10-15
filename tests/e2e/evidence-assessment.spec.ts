@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
 import { getEvidenceAssessment } from "../../lib/advanced-game";
 import { openWithSave, pendingDecisionGame, twoStagesGame } from "./fixtures";
+
+const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
 for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280]) {
   test(`signal and confidence remain readable at ${width}px`, async ({ page }, info) => {
@@ -48,11 +52,16 @@ test("a causal comparison strengthens visible confidence and survives resume", a
   await resumed.close();
 });
 
-test("the decision reports both axes before the response is chosen", async ({ page }) => {
+test("the decision reports both axes before the response is chosen", async ({ page }, info) => {
   await openWithSave(page, { ...pendingDecisionGame(), difficulty: "training" });
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   const decision = page.locator(".evidence-decision");
   await expect(decision.locator(".evidence-assessment")).toContainText("Signal: strong");
   await expect(decision.locator(".evidence-assessment")).toContainText("Confidence: weak");
   await expect(decision.locator(".signal-guide summary")).toBeVisible();
+  await decision.locator(".signal-guide summary").click();
+  await decision.locator(".evidence-assessment").screenshot({ path: info.outputPath("decision-assessment.png") });
+  await page.addScriptTag({ content: axeSource });
+  const violations = await page.evaluate(async () => (await window.axe.run(document, { resultTypes: ["violations"] })).violations);
+  expect(violations).toEqual([]);
 });
