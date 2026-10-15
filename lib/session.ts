@@ -1,4 +1,4 @@
-import { attacks, scenarios, difficulties, infrastructureTopologies, adversaryProfiles, adversaryObjectives, commandEvents, gameModes, specialists, setPieceById, type Game, type GameStatus } from "./advanced-game.ts";
+import { attacks, scenarios, difficulties, infrastructureTopologies, adversaryProfiles, adversaryObjectives, commandEvents, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
 import type { CarriedSource, NodePosture } from "./advanced-game";
 import { injects } from "./engine/content.ts";
 import { isMessage, legacy, msg, type Message } from "./i18n/message.ts";
@@ -122,7 +122,6 @@ export function parseSession(raw: string): SavedSession | null {
     // settled here rather than resumed into a choice nothing will accept.
     const finished = game.status === "won" || game.status === "lost" || game.status === "exercise";
     if (!finished && game.pendingCommand != null && !isKnown(commandEvents, game.pendingCommand)) return null;
-    if (!finished && game.pendingSetPiece != null && (typeof game.pendingSetPiece !== "string" || !new RegExp(`^sector-${game.scenario}(-[bc])?$`).test(game.pendingSetPiece) || setPieceById(game.pendingSetPiece, game.scenario).id !== game.pendingSetPiece)) return null;
     const profile = game.adversaryProfile && adversaryProfiles[game.adversaryProfile] ? game.adversaryProfile : "ghost";
     // Topologies vary per scenario, so a restored session is re-keyed to the
     // nodes that exist on this incident's map. Legacy or stale node ids become

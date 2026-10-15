@@ -87,6 +87,7 @@ export function parseCampaign(raw: string | null): CampaignState {
   if (!raw) return defaultCampaign;
   try {
     const value = JSON.parse(raw) as Partial<CampaignState>;
+    const posture = numericRecord(value.commandPosture);
     return {
       completed: Array.isArray(value.completed) ? value.completed.filter(Number.isInteger) : [],
       xp: Number.isFinite(value.xp) ? Math.max(0, Number(value.xp)) : 0,
@@ -98,8 +99,8 @@ export function parseCampaign(raw: string | null): CampaignState {
       specialistFatigue: numericRecord(value.specialistFatigue, 6),
       mastery: numericRecord(value.mastery, 3),
       commandPosture: {
-        observe: numericRecord(value.commandPosture).observe ?? 0,
-        act: numericRecord(value.commandPosture).act ?? 0,
+        observe: posture.observe ?? 0,
+        act: posture.act ?? 0,
       },
       unresolvedThreads: Number.isFinite(value.unresolvedThreads) ? Math.max(0, Number(value.unresolvedThreads)) : 0,
       actorSightings: numericRecord(value.actorSightings),
@@ -120,7 +121,7 @@ export function parseCampaign(raw: string | null): CampaignState {
 function numericRecord(value: unknown, maximum = Number.MAX_SAFE_INTEGER): Record<string, number> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return Object.fromEntries(Object.entries(value)
-    .filter((entry): entry is [string, number] => typeof entry[1] === "number" && Number.isFinite(entry[1]))
+    .filter((entry): entry is [string, number] => Number.isFinite(entry[1]))
     .map(([key, number]) => [key, Math.max(0, Math.min(maximum, number))]));
 }
 

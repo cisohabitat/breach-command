@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { retryableLoad } from "../lib/lazy-load.ts";
+import { retryableLoad } from "../lib/game-loader.ts";
 
 test("a failed module download can be retried and successful loads stay shared", async () => {
   let attempts = 0;

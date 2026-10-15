@@ -3,9 +3,21 @@
 // screen, or when a saved operation has to be read. Until then the first load
 // carries none of the engine.
 import type * as Bundle from "../components/game/game-bundle.ts";
-import { retryableLoad } from "./lazy-load.ts";
 
 export type GameBundle = typeof Bundle;
+
+// Share an in-flight load and keep a successful module, but let a failed
+// download be tried again when the connection is available.
+export function retryableLoad<T>(load: () => Promise<T>): () => Promise<T> {
+  let pending: Promise<T> | null = null;
+  return () => {
+    pending ??= Promise.resolve().then(load).catch(error => {
+      pending = null;
+      throw error;
+    });
+    return pending;
+  };
+}
 
 let bundle: GameBundle | null = null;
 const load = retryableLoad(() => import("../components/game/game-bundle.ts").then(module => (bundle = module)));
