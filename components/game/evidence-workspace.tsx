@@ -3,6 +3,7 @@ import { getConfidenceChanges } from "@/lib/advanced-game";
 import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import { CaptainVoice } from "./captain-voice-lazy";
 import { EvidenceAssessment, SignalGuide } from "./evidence-assessment";
+import { EvidenceLinks } from "./evidence-links";
 import { ArrowUp, Check, Link2, X } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { adversaryObjectives, attacks, getObjectiveRead, hypotheses, stages, type AdversaryObjectiveId, type Game } from "@/lib/advanced-game";
@@ -29,6 +30,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, v
   const [assessment, setAssessment] = useState<"causal" | "coincidental" | null>(null);
   const toggle = (id: string) => setSelected(current => current.includes(id) ? current.filter(item => item !== id) : current.length < 2 ? [...current, id] : [current[1], id]);
   const confirmed = game.evidence.filter(item => item.supports).length;
+  const alreadyCompared = selected.length === 2 && game.correlations.some(record => record.evidence.every(id => selected.includes(id)));
   // The objective read the case-theory prompt refers to, shown where the theory
   // is chosen. It is what the game already shows elsewhere once two stages are
   // confirmed, and nothing before that.
@@ -60,13 +62,14 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, v
             <span>{t("evidenceWorkspace.turn2", { turn: item.turn })}</span><strong>{say(item.title)}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{t("evidenceWorkspace.at", { source: say(item.source), system: say(item.system) })}</small><em>{item.supports ? t("evidenceWorkspace.confirmedAStage") : t("evidenceWorkspace.foundNoStage2")}</em><EvidenceAssessment game={game} item={item} />
           </button>)}</div>
         </details>
+        {game.evidence.length >= 2 && <EvidenceLinks game={game} selected={selected} />}
         <div className="relationship-assessment" role="group" aria-label={t("evidenceWorkspace.relationshipAssessment")}>
           <span>{t("evidenceWorkspace.yourAssessment")}</span>
           <button className={assessment === "causal" ? "active" : ""} aria-pressed={assessment === "causal"} onClick={() => setAssessment("causal")}>{t("evidenceWorkspace.causalSequence")}</button>
           <button className={assessment === "coincidental" ? "active" : ""} aria-pressed={assessment === "coincidental"} onClick={() => setAssessment("coincidental")}>{t("evidenceWorkspace.coincidentalOverlap")}</button>
         </div>
-        <p className="relationship-helper">{selected.length === 0 ? t("evidenceWorkspace.selectTwoFindings") : selected.length === 1 ? t("evidenceWorkspace.oneFindingSelected") : assessment ? t("evidenceWorkspace.twoFindingsSelected") : t("evidenceWorkspace.twoFindingsSelected2")}{t("evidenceWorkspace.oneFindingEnabled")}</p>
-        <button className="correlate-button" disabled={selected.length !== 2 || !assessment || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { if (!assessment) return; onCorrelate(selected as [string, string], assessment); setCompared({ first: game.evidence[0], index: game.correlations.length, turn: game.turns.length }); setSelected([]); setAssessment(null); }}><Link2 size={17} />{t("evidenceWorkspace.testAssessment")}</button>
+        <p className="relationship-helper">{alreadyCompared ? t("evidenceWorkspace.alreadyCompared") : selected.length === 0 ? t("evidenceWorkspace.selectTwoFindings") : selected.length === 1 ? t("evidenceWorkspace.oneFindingSelected") : assessment ? t("evidenceWorkspace.twoFindingsSelected") : t("evidenceWorkspace.twoFindingsSelected2")}{t("evidenceWorkspace.oneFindingEnabled")}</p>
+        <button className="correlate-button" disabled={selected.length !== 2 || !assessment || alreadyCompared || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { if (!assessment) return; onCorrelate(selected as [string, string], assessment); setCompared({ first: game.evidence[0], index: game.correlations.length, turn: game.turns.length }); setSelected([]); setAssessment(null); }}><Link2 size={17} />{t("evidenceWorkspace.testAssessment")}</button>
       </>}
       {!!changed.length && <section className="confidence-change" key={compared!.index}>
         <p role="status"><strong>{t("evidenceWorkspace.confidenceStrengthened")}</strong> {t("evidenceWorkspace.confidenceChanged", { count: changed.length, sources })}</p>

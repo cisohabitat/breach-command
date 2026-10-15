@@ -1,11 +1,18 @@
 // Everything shown to the player during an operation. Nothing here may read the hidden chain beyond what has been revealed, with the Training clue as the single stated exception.
 import { attacks, scenarios, stages, hypotheses, scenarioDynamics, type HypothesisId } from "../game.ts";
-import { adversaryObjectives, sectorSystems } from "../command-systems.ts";
+import { adversaryObjectives, sectorSystems, specialists, type SpecialistId } from "../command-systems.ts";
 import { decisionChoices, decisionLanguageFor, decisionText, decisionTitles, inSentence, sectorDecisionTerms } from "./content.ts";
 import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type Game, type GuidanceLevel, type HypothesisStanding, type KnownFacts, type LossCause, type ReadingOdds, type SectorRead, type TrainingPrompt } from "./types.ts";
 import { availableIn, carryModifier, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
 import { infrastructureTopologies } from "../phase8.ts";
 import { lit, msg, ref, type Message } from "../i18n/message.ts";
+// Review attribution follows collection expertise, never a hidden technique.
+export function getEvidenceSpecialist(game: Game, item: Game["evidence"][number]): SpecialistId {
+  const source = item.id.replace(/^E\d+-/, "");
+  if (specialists[game.specialist].procedures.some(id => id === source)) return game.specialist;
+  return (Object.keys(specialists) as SpecialistId[]).find(id => specialists[id].procedures.some(procedure => procedure === source)) ?? game.specialist;
+}
+
 // Confidence concerns causal interpretation, not whether a revealed stage
 // happened. Only visible collection and comparison records may affect it.
 export function getEvidenceAssessment(game: Game, item: Game["evidence"][number]) {
@@ -21,6 +28,12 @@ export function getEvidenceAssessment(game: Game, item: Game["evidence"][number]
 }
 
 // Each read is a message: the engine's words, or the content's, kept as text.
+export function getEvidenceLinks(game: Game, selected: string[]) {
+  const tested = game.correlations.map(record => ({ ids: record.evidence, status: record.valid ? "supported" : record.correct ? "unrelated" : "disputed", finding: record.finding } as const));
+  const pending = selected.length === 2 && selected[0] !== selected[1] && selected.every(id => game.evidence.some(item => item.id === id)) && !tested.some(link => link.ids.every(id => selected.includes(id)));
+  return [...(pending ? [{ ids: selected, status: "untested" as const, finding: null }] : []), ...[...tested].reverse()];
+}
+
 export function getConfidenceChanges(game: Game, comparison: number) {
   const record = game.correlations[comparison];
   if (!record) return [];

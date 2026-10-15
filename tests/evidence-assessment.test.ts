@@ -1,12 +1,44 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { correlateEvidence, getConfidenceChanges, getEvidenceAssessment, newGame, playTurn, setHypothesis, type Game } from "../lib/advanced-game.ts";
+import { correlateEvidence, getConfidenceChanges, getEvidenceAssessment, getEvidenceLinks, getEvidenceSpecialist, newGame, playTurn, setHypothesis, specialists, type Game } from "../lib/advanced-game.ts";
 import { parseSession, serialiseSession } from "../lib/session.ts";
 
 function collect(source: string, intensity: "rapid" | "balanced" | "exhaustive") {
   const game = setHypothesis({ ...newGame(0, "training", () => 0), chain: ["phish", "spray", "task", "https"], injectDeck: [] }, "endpoint");
   return playTurn(game, source, 18, { scope: "focused", intensity });
 }
+
+test("linked evidence exposes no untested relationships and distinguishes comparison outcomes", () => {
+  const first = collect("email", "balanced");
+  const second = { ...first.evidence[0], id: "E2-identity", supports: "spray", turn: 2 };
+  const game: Game = { ...first, pendingDecision: null, evidence: [...first.evidence, second] };
+  const pair: [string, string] = [game.evidence[0].id, second.id];
+  assert.deepEqual(getEvidenceLinks(game, []), []);
+  assert.equal(getEvidenceLinks(game, pair)[0].status, "untested");
+  assert.deepEqual(getEvidenceLinks({ ...game, chain: [], objective: "fraud", evidence: game.evidence.map(item => ({ ...item, supports: null })) }, pair), getEvidenceLinks(game, pair));
+  assert.deepEqual(getEvidenceLinks(game, [pair[0], "unknown"]), []);
+  assert.deepEqual(getEvidenceLinks(game, [pair[0], pair[0]]), []);
+  for (const assessment of ["causal", "coincidental"] as const) {
+    const compared = correlateEvidence(game, pair, assessment);
+    assert.equal(getEvidenceLinks(compared, [...pair].reverse()).length, 1, "tested pairs do not also appear as untested");
+    assert.equal(getEvidenceLinks(compared, pair)[0].status, "supported", "the relationship is supported even when the player missed it");
+    const unrelated: Game = { ...game, evidence: [game.evidence[0], { ...second, supports: null }] };
+    assert.equal(getEvidenceLinks(correlateEvidence(unrelated, pair, assessment), [])[0].status, assessment === "causal" ? "disputed" : "unrelated");
+  }
+});
+
+test("source-review portraits follow public expertise and preserve on-call attribution", () => {
+  const game = collect("email", "balanced");
+  assert.equal(getEvidenceSpecialist(game, game.evidence[0]), "identity");
+  for (const specialist of Object.keys(specialists) as (keyof typeof specialists)[]) {
+    for (const procedure of specialists[specialist].procedures) {
+      const source = { ...game.evidence[0], id: `E1-${procedure}` };
+      assert.equal(getEvidenceSpecialist({ ...game, specialist }, source), specialist);
+      assert.equal(getEvidenceSpecialist({ ...game, specialist, chain: [], objective: "fraud" }, { ...source, supports: null }), specialist);
+    }
+    assert.equal(getEvidenceSpecialist({ ...game, specialist }, { ...game.evidence[0], id: "E1-partner" }), specialist);
+  }
+});
 
 test("signal and confidence vary independently, without using roll magnitude", () => {
   const combinations = new Set<string>();

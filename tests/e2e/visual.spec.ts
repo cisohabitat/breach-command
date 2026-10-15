@@ -42,6 +42,11 @@ async function snap(page: Page, name: string, fullPage = false) {
   await expect(page).toHaveScreenshot(name, { fullPage, mask: masked(page), animations: "disabled", caret: "hide", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
 }
 
+async function snapLinks(page: Page, name: string) {
+  await imagesSettled(page);
+  await expect(page.locator(".evidence-links")).toHaveScreenshot(name, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+}
+
 // A campaign part-way through, and one finished with its conclusion: the
 // assignment then carries a record, a mastery tally on the case strip, an act
 // and a conclusion with their art, which a new player's screen never shows.
@@ -89,6 +94,16 @@ test.describe("visual baselines", () => {
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
       await snap(page, `${width}-investigate.png`);
+
+      const reference = page.locator(".reference-fold");
+      if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
+      await page.locator(".evidence-detail").evaluate(element => { (element as HTMLDetailsElement).open = true; });
+      await page.locator(".evidence-cards button").nth(0).click();
+      await page.locator(".evidence-cards button").nth(1).click();
+      await snapLinks(page, `${width}-links-untested.png`);
+      await page.getByRole("button", { name: "Causal sequence", exact: true }).click();
+      await page.getByRole("button", { name: "Test assessment", exact: true }).click();
+      await snapLinks(page, `${width}-links-supported.png`);
 
       await openWithSave(page, pendingDecisionGame(), false, { voice: false });
       await resume(page);

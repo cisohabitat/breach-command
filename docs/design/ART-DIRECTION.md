@@ -1,5 +1,13 @@
 # Art direction
 
+Linked evidence and source reviews (15 October 2026): use neutral ruled
+connections with explicit supported, disputed, untested or no-causal-link words.
+Solid, dashed and dotted strokes supplement those words; no status relies on
+colour. Stack connections vertically on phones and keep the full comparison
+explanation readable. Existing specialist portraits accompany source reviews
+at 36 px with complete name and role text. They imply expertise, never a new
+game bonus. Keep the Captain for command narration and reuse the original art.
+
 This records the decisions the game's look rests on, so the designer Phase 3
 of [the roadmap](../ROADMAP.md) calls for starts from what is decided and why,
 rather than from the screens. Every entry is open to that designer. A decision
