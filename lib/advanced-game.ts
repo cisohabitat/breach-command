@@ -30,4 +30,5 @@ export { getBeginnerReview, getCounterfactuals, getHypothesisLedger, getOutcome,
 export type { Recommendation, ShareCard } from "./engine/review.ts";
 export type { Effect } from "./engine/rules.ts";
 export { getEvidenceAssessment } from "./engine/reads.ts";
+export { getConfidenceChanges } from "./engine/reads.ts";
 export { words } from "./engine/words.ts";

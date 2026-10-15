@@ -33,3 +33,13 @@ command decisions and the evidence reconstruction show the same assessment.
 Training includes a four-combination guide in every Training scenario and at
 the first decision. No save schema changes are required: resumed operations
 derive the readout from their collection and comparison history.
+
+After a player makes a comparison that actually strengthens confidence, the
+affected findings receive a brief border highlight and a persistent text notice names
+the supporting sources, the weak-to-strong change and the unchanged signal.
+Reduced motion disables the border animation. Loading or revisiting a saved
+comparison does not replay the effect. With voice enabled, the Captain explains
+the connection using the existing recorded voice, captions and Listen/Skip
+controls. Automatic narration follows the existing once-per-cue-per-operation
+policy; the player can replay it. A comparison that changes no confidence
+does not trigger this feedback.

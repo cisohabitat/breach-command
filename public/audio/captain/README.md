@@ -1,6 +1,6 @@
 # Incident Captain recordings
 
-Fifty original fictional scripts, matching `lib/i18n/en/captain-voice.ts`.
+Fifty-one original fictional scripts, matching `lib/i18n/en/captain-voice.ts`.
 Rendered offline using [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M),
 an Apache-2.0 licensed model, via kokoro-onnx 0.6.1 (MIT).
 Voice: `bm_george`, British English, speed 0.94. This is a synthetic stock voice,

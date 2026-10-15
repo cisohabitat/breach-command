@@ -11,6 +11,7 @@ import { captainVoiceMessages } from "@/lib/i18n/en/captain-voice";
 register(captainVoiceMessages);
 
 const lineKeys = {
+  confidenceStrengthened: "captainVoice.confidenceStrengthened",
   opening: "captainVoice.opening",
   opening1: "captainVoice.opening1",
   opening2: "captainVoice.opening2",

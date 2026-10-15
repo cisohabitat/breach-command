@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { getOutcome, newGame, playTurn, resolveResponse } from "../../lib/advanced-game";
 import { captainVoiceMessages } from "../../lib/i18n/en/captain-voice";
 import { captainDebriefFor } from "../../lib/captain-debrief";
-import { openWithSave, pendingDecisionGame, responsePhaseGame } from "./fixtures";
+import { openWithSave, pendingDecisionGame, responsePhaseGame, twoStagesGame } from "./fixtures";
 
 declare global {
   interface Window {
@@ -42,21 +42,89 @@ async function mockSpeech(page: Page, available = true) {
 const voicePreferences = { voice: true, music: false, sound: false, haptics: false };
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
-test("the bundled Captain recording decodes and plays in the browser", async ({ page }) => {
+for (const cue of ["opening", "confidenceStrengthened"]) test(`the bundled Captain ${cue} recording decodes and plays in the browser`, async ({ page }) => {
   await openWithSave(page, null, false, voicePreferences);
-  await page.evaluate(() => {
-    const audio = new Audio("/audio/captain/opening.mp3");
+  await page.evaluate(cue => {
+    const audio = new Audio(`/audio/captain/${cue}.mp3`);
     audio.id = "captain-real-audio";
     const button = document.createElement("button");
     button.textContent = "Play Captain test recording";
     button.onclick = () => { void audio.play(); };
     document.body.append(audio, button);
-  });
+  }, cue);
   await page.getByRole("button", { name: "Play Captain test recording" }).click();
   await expect.poll(() => page.locator("#captain-real-audio").evaluate((audio: HTMLAudioElement) => audio.currentTime)).toBeGreaterThan(0);
   const duration = await page.locator("#captain-real-audio").evaluate((audio: HTMLAudioElement) => { audio.pause(); return audio.duration; });
   expect(duration).toBeGreaterThan(8);
   expect(duration).toBeLessThan(15);
+});
+
+async function compareFindings(page: Page, assessment: "causal" | "coincidental" = "causal") {
+  const reference = page.locator(".reference-fold");
+  if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
+  await page.locator(".evidence-detail").evaluate(element => { (element as HTMLDetailsElement).open = true; });
+  const findings = page.locator(".evidence-cards button").filter({ has: page.locator('[data-signal="strong"]') });
+  await findings.nth(0).click();
+  await findings.nth(1).click();
+  await page.getByRole("button", { name: assessment === "causal" ? "Causal sequence" : "Coincidental overlap", exact: true }).click();
+  await page.getByRole("button", { name: "Test assessment", exact: true }).click();
+}
+
+for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280]) test(`confidence feedback explains and narrates the actual gain at ${width}px`, async ({ page }, info) => {
+  await page.setViewportSize({ width, height: 900 });
+  await mockSpeech(page);
+  await openWithSave(page, twoStagesGame(), false, voicePreferences);
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(page.locator(".confidence-change")).toHaveCount(0);
+  await compareFindings(page);
+  const notice = page.locator(".confidence-change");
+  await expect(notice).toContainText("2 findings changed from weak to strong confidence");
+  await expect(notice).toContainText("Supporting sources:");
+  await expect(notice).toContainText("Signal strength is unchanged");
+  await expect(page.locator(".confidence-strengthened")).toHaveCount(2);
+  expect(await page.locator(".confidence-strengthened").first().evaluate(element => getComputedStyle(element).animationName)).toBe("none");
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines)).toContain(captainVoiceMessages["captainVoice.confidenceStrengthened"]);
+  await page.evaluate(() => window.captainSpeechProbe.finish());
+  await notice.getByRole("button", { name: "Listen", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.length)).toBe(2);
+  await notice.getByRole("button", { name: "Skip voice", exact: true }).click();
+  await notice.screenshot({ path: info.outputPath("confidence-feedback.png") });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.addScriptTag({ content: axeSource });
+  const violations = await page.evaluate(async () => (await window.axe.run(document, { resultTypes: ["violations"] })).violations);
+  expect(violations).toEqual([]);
+  const resumed = await page.context().newPage();
+  await resumed.goto("/", { waitUntil: "networkidle" });
+  await resumed.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(resumed.locator(".evidence-cards [data-confidence=strong]")).toHaveCount(2);
+  await expect(resumed.locator(".confidence-change")).toHaveCount(0);
+  await resumed.close();
+});
+
+test("confidence gain animates when motion is allowed and stays visible with voice off", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await mockSpeech(page);
+  await openWithSave(page, twoStagesGame(), false, { ...voicePreferences, voice: false });
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await compareFindings(page);
+  await expect(page.locator(".confidence-change")).toContainText("Confidence strengthened");
+  expect(await page.locator(".confidence-strengthened").first().evaluate(element => getComputedStyle(element).animationName)).toBe("confidence-strengthened");
+  await page.keyboard.press("Tab");
+  await page.locator(".confidence-strengthened").first().focus();
+  expect(await page.locator(".confidence-strengthened").first().evaluate(element => element.matches(":focus-visible") && getComputedStyle(element).outlineStyle === "solid")).toBe(true);
+  await expect(page.locator(".confidence-change .captain-voice")).toHaveCount(0);
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
+});
+
+test("an unsupported assessment never announces a confidence gain", async ({ page }) => {
+  await mockSpeech(page);
+  await openWithSave(page, twoStagesGame(), false, voicePreferences);
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await compareFindings(page, "coincidental");
+  await expect(page.locator(".correlation-results")).toContainText("Assessment challenged");
+  await expect(page.locator(".confidence-change")).toHaveCount(0);
+  await expect(page.locator(".confidence-strengthened")).toHaveCount(0);
+  expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
 });
 
 test("voice defaults on, explicit opt-out survives reload, and recordings can be replayed", async ({ page }) => {

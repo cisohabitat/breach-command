@@ -1,5 +1,7 @@
 // The strings of components/game/evidence-workspace.tsx (app/page.tsx for page), loaded with it.
 export const evidenceWorkspaceMessages = {
+  "evidenceWorkspace.confidenceStrengthened": "Confidence strengthened",
+  "evidenceWorkspace.confidenceChanged": { one: "One finding changed from weak to strong confidence. Supporting sources: {sources}. Signal strength is unchanged.", other: "{count} findings changed from weak to strong confidence. Supporting sources: {sources}. Signal strength is unchanged." },
   "evidenceWorkspace.evidenceCorrelationWorkspace": "Evidence correlation workspace",
   "evidenceWorkspace.evidenceWorkspace": "Evidence workspace",
   "evidenceWorkspace.caseTheory": "Case theory",

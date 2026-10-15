@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { correlateEvidence, getEvidenceAssessment, newGame, playTurn, setHypothesis, type Game } from "../lib/advanced-game.ts";
+import { correlateEvidence, getConfidenceChanges, getEvidenceAssessment, newGame, playTurn, setHypothesis, type Game } from "../lib/advanced-game.ts";
 import { parseSession, serialiseSession } from "../lib/session.ts";
 
 function collect(source: string, intensity: "rapid" | "balanced" | "exhaustive") {
@@ -31,12 +31,20 @@ test("only a supported causal comparison across different sources strengthens in
   const game: Game = { ...first, pendingDecision: null, evidence: [...first.evidence, second] };
   const before = JSON.stringify(game);
   const compared = correlateEvidence(game, [game.evidence[0].id, second.id], "causal");
+  assert.deepEqual(getConfidenceChanges(compared, 0).map(item => item.id), game.evidence.map(item => item.id));
+  assert.deepEqual(getConfidenceChanges(compared, 1), []);
+  const thorough: Game = { ...game, turns: game.turns.map(turn => ({ ...turn, plan: { ...turn.plan, intensity: "exhaustive" } })) };
+  const oneGain = correlateEvidence(thorough, [game.evidence[0].id, second.id], "causal");
+  assert.deepEqual(getConfidenceChanges(oneGain, 0).map(item => item.id), [second.id], "a finding already at strong confidence is not counted again");
+  assert.deepEqual(getConfidenceChanges({ ...compared, correlations: [...compared.correlations, compared.correlations[0]] }, 1), [], "an already corroborated finding is not reported as a new gain");
   for (const item of compared.evidence) assert.equal(getEvidenceAssessment(compared, item).confidence, "strong");
   assert.equal(JSON.stringify(game), before, "assessment and comparison preserve the input state");
   const wrong = correlateEvidence(game, [game.evidence[0].id, second.id], "coincidental");
+  assert.deepEqual(getConfidenceChanges(wrong, 0), []);
   assert.equal(getEvidenceAssessment(wrong, game.evidence[0]).confidence, "weak");
   const sameSource: Game = { ...game, evidence: [game.evidence[0], { ...second, id: "E2-email" }] };
   const repeated = correlateEvidence(sameSource, [sameSource.evidence[0].id, "E2-email"], "causal");
+  assert.deepEqual(getConfidenceChanges(repeated, 0), []);
   assert.equal(getEvidenceAssessment(repeated, repeated.evidence[0]).confidence, "weak");
   const unrelated = { ...game, evidence: [game.evidence[0], { ...second, supports: null }] };
   const coincidence = correlateEvidence(unrelated, [unrelated.evidence[0].id, second.id], "coincidental");
