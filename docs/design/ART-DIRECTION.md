@@ -97,7 +97,7 @@ default, and silence is one switch away in Settings; nothing in the game
 depends on hearing a cue.
 
 The Captain speaks across all ten cases, with an opening grounded in each
-published briefing. Its 50 recordings also cover findings, unsuccessful checks,
+published briefing. Its 51 recordings also cover findings, unsuccessful checks,
 low-confidence leads, new reports, service pressure and stabilisation,
 containment, assurance, recovery and three closing assessments.
 Speech and captions use the same catalogue text.
