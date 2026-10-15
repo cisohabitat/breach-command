@@ -17,7 +17,12 @@ import { useEffect, type RefObject } from "react";
 export function landOnInvestigation(moveFocus = false) {
   const dashboard = document.querySelector<HTMLElement>(".investigation-dashboard");
   if (!dashboard) return false;
+  const previousFocus = document.activeElement;
   requestAnimationFrame(() => {
+    // Recovery may already have waited one frame before queuing this one. A
+    // player who moved to another control in between keeps both focus and scroll.
+    const active = document.activeElement;
+    if (moveFocus && active && active !== previousFocus && active !== document.body) return;
     // The workspace tabs stay pinned at the top of the screen, so the landing
     // clears them rather than tucking the reading's heading underneath.
     const tabs = document.querySelector<HTMLElement>(".workspace-tabs");
