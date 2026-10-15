@@ -6,6 +6,41 @@
 /* The sector margin once it is low enough to end the operation within a few
    turns: a full-width line under the readouts, in words and an icon as well as
    colour. */
+:root {
+  --state-focus:#99bfd8;
+  --state-supported:#8dc9bc;
+  --state-caution:#e8c968;
+}
+.evidence-assessment {
+  --confidence-color:var(--state-caution);
+}
+.evidence-assessment[data-confidence=strong] {
+  --confidence-color:var(--state-supported);
+}
+.evidence-assessment .evidence-axes>span:last-child {
+  --axis-color:var(--confidence-color);
+}
+.evidence-links [data-relationship=untested] .evidence-link-connector {
+  color:var(--state-focus);
+}
+.evidence-links [data-relationship=supported] .evidence-link-connector {
+  color:var(--state-supported);
+}
+.evidence-links [data-relationship=disputed] .evidence-link-connector {
+  color:var(--state-caution);
+}
+.continuity-meter {
+  --continuity-color:var(--state-supported);
+}
+.continuity-meter.degraded {
+  --continuity-color:var(--state-caution);
+}
+.continuity-meter strong,.continuity-meter small {
+  color:var(--continuity-color);
+}
+.continuity-meter>[data-slot=progress]>div {
+  background:var(--continuity-color);
+}
 .sector-alert {
   flex-basis:100%;
   width:100%;
@@ -2123,8 +2158,9 @@
   --kit-y:95.918367%;
 }
 .evidence-cards button.selected {
-  border-color:#e6c463;
-  background:#332c19;
+  --evidence-border:var(--state-focus);
+  border-color:var(--state-focus);
+  background:#1b2933;
 }
 .evidence-assessment,.evidence-cards .evidence-assessment {
   display:block;
@@ -2141,7 +2177,7 @@
   display:inline-flex;
   align-items:center;
   gap:5px;
-  color:var(--lime);
+  color:var(--axis-color,var(--lime));
   font:500 var(--type-micro) var(--font-mono);
 }
 .evidence-assessment svg {
@@ -2215,6 +2251,7 @@
   line-height:var(--leading-base);
 }
 .evidence-link-connector {
+  color:var(--text-soft);
   position:relative;
   text-align:center;
   font-size:var(--type-caption);
@@ -2224,7 +2261,7 @@
   position:absolute;
   inset-inline:0;
   top:50%;
-  border-top:2px solid var(--lime);
+  border-top:2px solid currentColor;
 }
 .evidence-link-connector>span {
   position:relative;
@@ -2253,7 +2290,7 @@
     top:0;
     bottom:0;
     border-top:0;
-    border-inline-start:2px solid var(--lime);
+    border-inline-start:2px solid currentColor;
   }
   .evidence-links [data-relationship=untested] .evidence-link-connector::before {
     border-inline-start-style:dotted;
@@ -2270,20 +2307,20 @@
 }
 @keyframes confidence-strengthened {
   from {
-    border-color:var(--lime);
+    border-color:var(--state-supported);
   }
   to {
-    border-color:#41454a;
+    border-color:var(--evidence-border,#41454a);
   }
 }
 .confidence-change {
   margin-block:16px;
   padding-inline-start:12px;
-  border-inline-start:2px solid var(--lime);
+  border-inline-start:2px solid var(--state-supported);
 }
 .confidence-change>p>strong {
   display:block;
-  color:var(--lime);
+  color:var(--state-supported);
 }
 .evidence-cards span {
   display:block;
@@ -2801,7 +2838,7 @@
 }
 .impact-meter small,.continuity-meter small,.objective-meter small {
   display:block;
-  color:var(--text-soft);
+  color:var(--continuity-color,var(--text-soft));
   font-size:var(--type-caption);
   margin-top:4px;
 }
@@ -3435,6 +3472,9 @@
   scroll-padding-block-end:72px;
 }
 .game-dialog.paper-dialog {
+  --state-focus:#1f5a85;
+  --state-supported:#24685b;
+  --state-caution:#6f5200;
   --lime:#1d1b18;
   --text-soft:#4a463e;
   --line:#c9bfac;

@@ -1,6 +1,16 @@
 # Art direction
 
-Linked evidence and source reviews (15 October 2026): use neutral ruled
+State colour (15 October 2026, user approved): keep the charcoal-and-bone
+foundation, adding muted blue for selected evidence and untested connections,
+teal for supported comparisons and strong confidence, and amber for weak
+confidence or disputed links. Signal strength stays neutral: a strong signal
+does not establish confidence. Connection words and solid/dashed/dotted strokes
+remain. Stable continuity is teal, degraded continuity amber, and at-risk
+continuity coral, using the existing labelled thresholds. Paper documents use
+dark blue, teal and amber inks rather than desk pastels. These state uses extend
+the earlier hue rule. Decorative art and sector accents remain unchanged.
+
+Linked evidence and source reviews (15 October 2026): use ruled
 connections with explicit supported, disputed, untested or no-causal-link words.
 Solid, dashed and dotted strokes supplement those words; no status relies on
 colour. Stack connections vertically on phones and keep the full comparison
@@ -23,7 +33,7 @@ yet been decided by a human designer.
 | --- | --- | --- |
 | Ground | A dark desk, with paper for documents | Paper everywhere was tried; two cold reviews read cream, ink and a condensed face as generated-page house style, and the documents were lost against a page of the same paper. |
 | Accent | One, bone (`--lime`, `#ede2c9`) | A replacement must match its luminance or the accent's text falls below AA. |
-| Hue | Warning amber, danger coral, adversary plum, four stage colours, nothing else | Colour carries state; a hue used for decoration reads as state. |
+| Hue | Selection blue, supported teal, warning amber, danger coral, adversary plum and four stage colours | User-approved evidence states extend the palette; colour supplements labels and never suggests a hidden answer. |
 | Sectors | Differ by name, scene and copy, never by hue | Ten accent colours read as a theme picker. |
 | Faces | IBM Plex Sans Condensed (self-hosted) for titles and figures; the system face for prose | Every wrap and fold measurement was taken against the system face. |
 | Panels | Flat: rules and hairlines, corners of 2 to 4 px, no glow, gradient or grid | Cards in cards, glows and grids were each named as template tells. |
