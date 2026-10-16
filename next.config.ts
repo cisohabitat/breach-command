@@ -4,7 +4,27 @@ import packageJson from "./package.json" with { type: "json" };
 // The game is a static, single-origin client application with no backend and no
 // third-party requests, so these headers cost nothing and close the ordinary
 // framing, sniffing and referrer-leak gaps on the public deployment.
+const isDev = process.env.NODE_ENV === "development";
+// Static prerendering needs Next's inline bootstrap. This policy constrains
+// destinations and embedding; unsafe-inline is not an XSS injection defence.
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' blob: data:",
+  "font-src 'self'",
+  `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+  "media-src 'self'",
+  "worker-src 'self'",
+  "object-src 'none'",
+  "frame-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 const securityHeaders = [
+  { key: "Content-Security-Policy", value: csp },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "same-origin" },
@@ -12,6 +32,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   // The commit a build came from, shown in a fault's diagnostic so a report can
   // be matched to the code that produced it.
   // The version comes from package.json and is shown in the footer and Settings;

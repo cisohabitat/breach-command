@@ -12,9 +12,6 @@ updates:
         patterns: ["next", "react", "react-dom", "@types/react", "@types/react-dom", "eslint-config-next"]
       playwright:
         patterns: ["@playwright/test", "playwright"]
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-patch"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

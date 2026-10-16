@@ -33,7 +33,7 @@ export function resolveRef(path: string): string | undefined {
   let value: unknown = contentTables;
   for (const segment of path.split(".")) {
     if (Array.isArray(value)) value = value.find(item => item && typeof item === "object" && (item as { id?: unknown }).id === segment) ?? value[Number(segment)];
-    else if (value && typeof value === "object") value = (value as Record<string, unknown>)[segment];
+    else if (value && typeof value === "object" && Object.hasOwn(value, segment)) value = (value as Record<string, unknown>)[segment];
     else return undefined;
   }
   return typeof value === "string" ? value : undefined;
@@ -56,7 +56,25 @@ export const legacyText = (message: Message | null | undefined) => message && "k
 // attribution, objective and evidence confidence. The rules compare the
 // English value; this is how it is shown.
 const levels: Record<string, MessageKey> = { low: "level.low", moderate: "level.moderate", high: "level.high", strong: "level.strong", developing: "level.developing", limited: "level.limited" };
-export const level = (value: string): Message => levels[value.toLowerCase()] ? msg(levels[value.toLowerCase()]) : lit(value);
+export const level = (value: string): Message => Object.hasOwn(levels, value.toLowerCase()) ? msg(levels[value.toLowerCase()]) : lit(value);
 // A message's key, if it is one.
 export const keyOf = (message: Message | null | undefined) => message && "key" in message ? message.key : null;
-export const isMessage = (value: unknown): value is Message => !!value && typeof value === "object" && ("key" in value || "ref" in value || ("text" in value && Object.keys(value).every(key => key === "text" || key === "form")));
+export function isMessage(value: unknown): value is Message {
+  let remaining = 256;
+  function valid(input: unknown, depth: number): boolean {
+    if (--remaining < 0 || depth > 12 || !input || typeof input !== "object" || Array.isArray(input)) return false;
+    const record = input as Record<string, unknown>;
+    const kinds = ["key", "ref", "text"].filter(key => Object.hasOwn(record, key));
+    if (kinds.length !== 1 || Object.keys(record).some(key => ![kinds[0], "params", "form"].includes(key))) return false;
+    const text = record[kinds[0]];
+    if (typeof text !== "string" || text.length > 2000) return false;
+    if (record.form !== undefined && !["inSentence", "lower", "lowerFirst", "capital"].includes(record.form as string)) return false;
+    if (record.params === undefined) return true;
+    if (kinds[0] === "text" || !record.params || typeof record.params !== "object" || Array.isArray(record.params)) return false;
+    const entries = Object.entries(record.params);
+    return entries.length <= 32 && entries.every(([name, param]) => /^[a-zA-Z][a-zA-Z0-9_]{0,127}$/.test(name)
+      && name !== "constructor" && name !== "prototype"
+      && (typeof param === "string" ? param.length <= 2000 : typeof param === "number" ? Number.isFinite(param) : valid(param, depth + 1)));
+  }
+  return valid(value, 0);
+}

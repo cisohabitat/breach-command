@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.34**: see the [release notes](CHANGELOG.md#0934-16-october-2026).
+Release **0.9.35**: see the [release notes](CHANGELOG.md#0935-16-october-2026).
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
@@ -109,7 +109,7 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **After-action review:** scoring, timelines, decision quality, evidence reconstruction, actor adaptation and counterfactuals support facilitated learning. The detail lists fold behind summaries that say what they hold, so the plain-language read and the score come first on a phone. A hypothesis ledger explains the accuracy score turn by turn — naming the route each stage actually used, and marking the turns where a shared source exposed something further along the chain than the one being tested — what was predicted, which stage it was tested against, whether the procedure could have exposed that stage, and why the turn did or did not score — and a sticky section index makes the long review navigable.
 - **First move on the first screen:** on a phone the assignment screen opens with a quick-start strip that resumes the saved operation or starts the selected one, and a first operation defaults to Training. In play, Command leads with whatever is waiting for the player — a decision, the response, the ending — and the situation picture follows.
 - **Accessible, responsive play:** dedicated phone, tablet and desktop layouts that recompose at nine width breakpoints, plus optional procedural sound, adaptive music, haptics, high contrast (applied to every dialog and sheet as well as the page), reduced motion and guided reflection. The single-key shortcuts — F field guide, M mute, G guided reflection — can be turned off in settings for speech-input users. `pnpm test:a11y` runs axe against the assignment screen, the overlays and the command workspace from 320 px to 1280 px and requires zero violations.
-- **Offline and local-first play:** the installable PWA caches the page and the scripts and styles it references when it installs, so one visit is enough to play offline, and only complete same-origin responses are ever cached. Sessions, campaign progress, settings and anonymous balance counters remain on the device. A browser that refuses local storage still plays a complete operation from memory and says so. Portable backup text can transfer progress without an account.
+- **Offline and local-first play:** the installable PWA caches the page and the scripts and styles it references when it installs, so one visit is enough to play offline. Its cache is isolated to this game's namespace and published documents/assets; arbitrary endpoints, query variants, authenticated requests and private responses are excluded. Sessions, campaign progress, settings and anonymous balance counters remain on the device. A browser that refuses local storage still plays a complete operation from memory and says so. Portable backup text can transfer progress without an account; imports have size, nesting and message-shape limits. CSV exports neutralise formula markers in imported fields.
 
 The game does not call an AI service, inspect real systems or transmit incident information.
 
@@ -163,6 +163,7 @@ Run the verification suite. GitHub Actions (`.github/workflows/verify.yml`) runs
 
 ```bash
 pnpm test
+pnpm security:audit    # fail on new advisories; one bounded lint-tool exception
 pnpm test:responsive:install # first run only; or set PLAYWRIGHT_CHROMIUM_EXECUTABLE to an installed Chromium
 pnpm test:responsive
 pnpm test:a11y
@@ -174,6 +175,10 @@ pnpm lint
 pnpm exec tsc --noEmit
 pnpm build
 ```
+
+The [security review](docs/SECURITY-REVIEW.md) records the reviewed boundaries,
+production header policy and the one unfixed development-only lint advisory.
+The audit gate rejects new findings and a newly published fix for that exception.
 
 After a deliberate visual change, use the
 [Record visual baselines workflow](.github/workflows/visual-baselines.yml).

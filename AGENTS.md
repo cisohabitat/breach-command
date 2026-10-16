@@ -33,6 +33,12 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Technical baseline
 
+- Treat portable backups and stored operations as untrusted. `lib/safe-json.ts` limits input to 2,097,152 UTF-16 code units, depth 32, 100,000 visited values and 5,000 entries per collection; reject prototype-related property names. Keep the newer-build parking check separate so an unreadable future save is preserved. Validate nested `Message` values before they reach `say`, and use own-property lookups for identifiers and content references. CSV quoting must also neutralise formula markers in imported strings.
+- The service worker may delete and read only `breach-command-` caches and may store only published game documents/assets, never arbitrary endpoints, query variants, authorised requests, RSC data or private/no-store responses. Preserve offline shell fallback for locale query navigations and caching of camel-case Captain audio filenames. Test cache isolation as well as successful offline play.
+- Production CSP constrains destinations and framing, but permits inline script/style for static Next.js bootstrap and current component styles. Do not describe it as a strict XSS policy. Production must not allow `unsafe-eval`; development alone may allow eval and WebSockets. Any stronger CSP must preserve static/offline rendering and pass production browser checks.
+- Run `pnpm security:audit` with dependency changes and before releases. CI fails on new advisories and registry errors; its sole reviewed exception is the unfixed development-only `braces` advisory documented in `docs/SECURITY-REVIEW.md`. It fails if a patch becomes available or the advisory appears outside the reviewed lint path. Keep transitive security overrides bounded, the seven-day package-age policy intact, and GitHub Actions pinned to reviewed commit SHAs. Dependabot patch updates must remain enabled.
+- Security remediation 0.9.35 adds 3,103 B of warmed production script over 0.9.34 (local Turbopack measure). The warmed assignment/operation budgets are deliberately 1,182,000/1,192,000 B; initial script, style, paint and shift limits are unchanged. See `docs/perf-budgets.md` for the measurements and reason; do not expand them silently for future work.
+
 - Framework: Next.js 16 with React 19, built and hosted natively on Vercel.
 - Language: TypeScript with strict checking.
 - Translation placeholders start with a letter and may contain digits or underscores (`stage2`, `source_id`). Interpolation and pseudo-localisation must recognise the same names; tests must check numbered placeholders in English and `en-XA`, including distinct found and tested stage numbers in later-stage reports.
@@ -292,6 +298,7 @@ When fixing a CI failure, verify the failing scenario and the full required chec
 
 ```bash
 pnpm test
+pnpm security:audit
 pnpm lint
 pnpm exec tsc --noEmit
 pnpm build

@@ -32,6 +32,7 @@ import { encodeChallenge, seededChallengeRandom } from "@/lib/challenge";
 import { lit, msg, type Message } from "@/lib/i18n/message";
 import { register } from "@/lib/i18n";
 import { sessionMessages } from "@/lib/i18n/en/session";
+import { parseSaveJson } from "@/lib/safe-json";
 
 register(sessionMessages);
 
@@ -454,7 +455,7 @@ export function useGameSession() {
   async function importProgress() {
     await loadGame();
     try {
-      const payload = JSON.parse(backupInput) as { format?: string; campaign?: unknown; session?: string | null; telemetry?: unknown; ledger?: unknown };
+      const payload = parseSaveJson(backupInput) as { format?: string; campaign?: unknown; session?: string | null; telemetry?: unknown; ledger?: unknown };
       if (payload.format !== "breach-command-backup") throw new Error("format");
       // A backup without a readable campaign would otherwise restore the empty
       // default over the player's progress and call that a restore.
