@@ -238,6 +238,6 @@ focus styles, native disclosures and a responsive stage-fact row. The GitHub
 runner measured 220,419 B of decoded style, versus 219,342 B before this work.
 The total-style budget deliberately rises from 220,000 B to 222,000 B for these
 controls. The linked sheet remains 87,752 B, below its unchanged 95,000 B cap.
-Initial script is 654,978 B, warmed assignment script 1,174,242 B and operation
-script 1,184,287 B, all under the existing limits. Throttled LCP was 1.06–1.08 s
+Initial script is 654,978 B, warmed assignment script 1,174,273 B and operation
+script 1,184,318 B, all under the existing limits. Throttled LCP was 1.02–1.04 s
 and CLS 0.008–0.009; their limits and all script budgets remain unchanged.
