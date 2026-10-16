@@ -51,6 +51,14 @@ long confidence basis opens on request; findings elsewhere retain their full
 assessment text. Failed checks say that nothing was ruled out and show ready
 sources from the public reading coverage, with no source guidance in Expert.
 
+Progressive learning keeps the same form language: the current stage question
+heads the reading, and evidence responses retain their letter, short tradeoff
+and exact costs. Native disclosure markers remain visible. Each longer rationale is a sibling disclosure, so
+reading it never records a choice. A resolved response leads its report with
+actual meter directions and exact changes. Training introduces the optional
+theory form and comparison controls when the record makes them useful; the
+reference material remains available. See [the roadmap](INFORMATION-LOAD.md).
+
 ## Type system
 
 Two faces, three weights, one scale (`--type-*`, a 1.25 ratio from 16 px).

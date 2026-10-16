@@ -4,6 +4,24 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.34, 16 October 2026
+
+- **One question at a time.** The working reading leads with the question
+  for the first unconfirmed stage, including on phones after a reading is
+  declared. Training keeps the case-theory form available on request until
+  two stages are confirmed and introduces comparison controls once two
+  findings exist.
+- **Shorter evidence decisions.** Each response shows its name, a short
+  tradeoff and exact effects. Its longer rationale opens separately without
+  recording a choice. Signal and confidence remain labelled with their
+  causal limits; completed checks finding no stage now explain their
+  bounded assessment in the report too.
+- **Clearer consequences.** A recorded evidence response leads its report
+  with the chosen action, actual meter directions and exact changes. The
+  fuller explanation remains available on request. Rules, scoring and save
+  formats are unchanged. The information-load roadmap records the delivery
+  steps and follow-up measures for the public beta.
+
 ## 0.9.33, 16 October 2026
 
 - **Clearer Captain reports.** Results, the tested stage and confirmed stages

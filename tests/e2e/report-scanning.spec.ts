@@ -48,6 +48,16 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     await expect(lastChoice).toBeFocused();
     await expect(lastChoice).toBeInViewport({ ratio: 0.95 });
     await expect(report.locator("button[data-response]")).toHaveCount(5);
+    const rationale = report.locator(".choice-rationale").last();
+    await expect(rationale).toHaveJSProperty("open", false);
+    await rationale.locator("summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(rationale.locator("p").first()).toBeVisible();
+    await expect(report.locator("button[data-response]")).toHaveCount(5);
+    await expect(lastChoice.locator(".decision-effect")).toBeVisible();
+    await rationale.locator("summary").press("Enter");
+    await lastChoice.focus();
+
     const covered = await lastChoice.evaluate(element => {
       const rect = element.getBoundingClientRect();
       const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);

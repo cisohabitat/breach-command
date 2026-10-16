@@ -241,3 +241,12 @@ controls. The linked sheet remains 87,752 B, below its unchanged 95,000 B cap.
 Initial script is 654,978 B, warmed assignment script 1,174,273 B and operation
 script 1,184,318 B, all under the existing limits. Throttled LCP was 1.02–1.04 s
 and CLS 0.008–0.009; their limits and all script budgets remain unchanged.
+
+Progressive learning (0.9.34, 16 October 2026) adds the stage questions,
+contextual lessons, native rationale disclosures and recorded consequence
+summaries to the game bundle. The runner measures 1,176,676 B for warmed
+assignment script and 1,186,721 B by play start, each 2,403 B above 0.9.33.
+Deliberately add 3,000 B to each warmed-script budget, to 1,178,000 B and
+1,188,000 B. Initial script remains 654,978 B; linked style remains 87,752 B
+and total style is 220,433 B. Throttled LCP is about 1.0 s and CLS
+0.008–0.009. Initial-load, style, timing and layout-shift limits are unchanged.

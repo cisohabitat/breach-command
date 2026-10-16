@@ -1,5 +1,7 @@
 // The strings of components/game/evidence-workspace.tsx (app/page.tsx for page), loaded with it.
 export const evidenceWorkspaceMessages = {
+  "evidenceWorkspace.theoryWhenReady": "Case theory: assess the objective",
+  "evidenceWorkspace.collectAnotherFinding": "Collect another finding before comparing how they connect.",
   "evidenceWorkspace.alreadyCompared": "This pair is already tested. Its result is in Linked evidence. Select a different pair to make another assessment.",
   "evidenceWorkspace.confidenceStrengthened": "Confidence strengthened",
   "evidenceWorkspace.confidenceChanged": { one: "One finding changed from weak to strong confidence. Supporting sources: {sources}. Signal strength is unchanged.", other: "{count} findings changed from weak to strong confidence. Supporting sources: {sources}. Signal strength is unchanged." },

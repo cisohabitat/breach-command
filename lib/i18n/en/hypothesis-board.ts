@@ -1,5 +1,9 @@
 // The strings of components/game/hypothesis-board.tsx (app/page.tsx for page), loaded with it.
 export const hypothesisBoardMessages = {
+  "hypothesisBoard.questionEntry": "How did they get in?",
+  "hypothesisBoard.questionMovement": "Where did they go, and as whom?",
+  "hypothesisBoard.questionPersistence": "How do they keep access?",
+  "hypothesisBoard.questionOutbound": "What leaves, and how?",
   "hypothesisBoard.ruledOutAt": "Ruled out at the ",
   "hypothesisBoard.stage": " stage",
   "hypothesisBoard.workingHypothesis": "Working hypothesis",

@@ -1,5 +1,5 @@
 import { evidenceArtFor, StoryArt } from "./story-art";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { Fragment, useEffect, useRef, useState, type RefObject } from "react";
 import { Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { attacks, availableIn, decisionRollShift, describePart, injectCard, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, proceduresFor, sourceSeesReading, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game, meterEffect, rollEffect } from "@/lib/advanced-game";
@@ -117,9 +117,27 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               {game.status === "lost" && <p>{say(getLossReason(game).detail)}</p>}
             </div>
           )}
+              {/* Once a response is chosen, the report says what it did there and
+                  then rather than leaving it all to the debrief. */}
+              {!decision && game.decisions.filter(item => item.stage === report.revealed || item.stage === report.injectReveal).map(item => (
+                <div key={item.stage} className="decision-recorded" role="status">
+                  <span className="eyebrow">{t("captainReportDialog.responseRecorded")}</span>
+                  <strong>{say(item.title)}</strong>
+                  <p>{t("captainReportDialog.actualChanges", { changes: ([
+                    [item.impactChange, "captainReportDialog.impactEased", "captainReportDialog.impactRose"],
+                    [item.continuityChange, "captainReportDialog.serviceFell", "captainReportDialog.serviceImproved"],
+                    [item.sectorChange, "captainReportDialog.marginFell", "captainReportDialog.marginImproved"],
+                    [item.objectiveChange, "captainReportDialog.progressSlowed", "captainReportDialog.progressAdvanced"],
+                  ] as const).filter(([change]) => change !== 0).map(([change, down, up]) => t(change < 0 ? down : up)).join("; ") || t("captainReportDialog.metersUnchanged") })}</p>
+                  <EffectList items={[meterEffect(game, "impact", item.impactChange), meterEffect(game, "continuity", item.continuityChange), meterEffect(game, "sector", item.sectorChange), meterEffect(game, "objective", item.objectiveChange), report.number === game.turns.length && game.nextModifierSources.some(item => ("key" in item.source && item.source.key === "engine.source.decision") || !!legacyText(item.source)?.startsWith("Evidence decision")) && { kind: "roll", which: "next", amount: game.nextModifier, cap: null, carried: game.nextModifierSources.length > 1 }]} />
+                  <details className="decision-primer"><summary>{t("captainReportDialog.whyThisResponse")}</summary><p>{say(item.effect)}</p><p>{t("captainReportDialog.howWellIt")}</p></details>
+                </div>
+              ))}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
             <section className="report-summary" aria-label={t("captainReportDialog.procedureResult")}>
               {report.revealed && <div className="discovery"><StoryArt kind="evidence" name={evidenceArtFor(report.procedure, game.scenario)} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short}: {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>{t("captainReportDialog.onTheRoute", { title: hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase() })}</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">{t("captainReportDialog.yourReadingWas2", { title: hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase() })}</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">{t("captainReportDialog.thisIsStage2", { stage: attacks.find(attack => attack.id === report.revealed)!.stage + 1, stage2: attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1 })}</small>}</div></div>}
+              {!decision && report.success && game.evidence.filter(item => item.turn === report.number && !item.supports).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}
+              {!decision && report.success && !report.revealed && !report.injectReveal && game.difficulty === "training" && game.mode !== "expert" && game.evidence[0]?.turn === report.number && <SignalGuide />}
               {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
               <details key={report.number} className="report-collection-details">
                 <summary>{t("captainReportDialog.collectionDetails")}</summary>
@@ -152,17 +170,6 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   <p>{say(standing.detail)}</p>
                 </div>
               )}
-              {/* Once a response is chosen, the report says what it did there and
-                  then rather than leaving it all to the debrief. */}
-              {!decision && game.decisions.filter(item => item.stage === report.revealed || item.stage === report.injectReveal).map(item => (
-                <div key={item.stage} className="decision-recorded" role="status">
-                  <span className="eyebrow">{t("captainReportDialog.responseRecorded")}</span>
-                  <strong>{say(item.title)}</strong>
-                  <p>{say(item.effect)}</p>
-                  <EffectList items={[meterEffect(game, "impact", item.impactChange), meterEffect(game, "continuity", item.continuityChange), meterEffect(game, "sector", item.sectorChange), meterEffect(game, "objective", item.objectiveChange), report.number === game.turns.length && game.nextModifierSources.some(item => ("key" in item.source && item.source.key === "engine.source.decision") || !!legacyText(item.source)?.startsWith("Evidence decision")) && { kind: "roll", which: "next", amount: game.nextModifier, cap: null, carried: game.nextModifierSources.length > 1 }]} />
-                  <p>{t("captainReportDialog.howWellIt")}</p>
-                </div>
-              ))}
               {report.adversaryEvent && <div className="adversary-event"><Siren size={20} /><div><span className="eyebrow">{t("captainReportDialog.situationEscalates")}</span><p>{say(report.adversaryEvent)}</p></div></div>}
               {/* With a decision waiting, the inject joins the result: beside four
                   options it pushed the last one under the fold and left this
@@ -179,21 +186,6 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   {/* The count says how many there are: the last of five sat below the fold
                       of a laptop screen with nothing saying it was there. */}
                   <h3>{t("captainReportDialog.chooseOneOf2", { attackTitle: decision.attack.title })}{["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length}{t("captainReportDialog.commandResponses")}</h3>
-                  {/* A newcomer meets five verbs described in costs they cannot yet
-                      weigh. On a Training operation's first decision, one tap says
-                      what each trades away, keyed to the icons on the options. */}
-                  {game.difficulty === "training" && game.mode !== "expert" && game.decisions.length === 0 && (
-                    <details className="decision-primer">
-                      <summary>{t("captainReportDialog.howTheseResponses")}</summary>
-                      {/* In the options' own words: "Watch" and "Act" here beside
-                          buttons titled "Trace" and "Revoke" read as two lists. */}
-                      <ul>
-                        {/* Keyed to the options' letters, as the four readings are lettered. */}
-                        {decision.options.map((option, index) => <li key={option.id}><b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b><span><b>{option.title}</b> {t(primerTrade[option.id])}</span></li>)}
-                      </ul>
-                      <p>{t("captainReportDialog.noSingleAnswer")}</p>
-                    </details>
-                  )}
                   {/* At every difficulty but Expert: the review grades every decision by this,
                       and an Operational playtest was graded on a rule it was never shown. */}
                   {game.mode !== "expert" && (
@@ -201,15 +193,17 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   )}
                   <div ref={optionList}>
                     {/* Lettered ruled entries on the report, like the readings: the
-                        letter in the margin, what the response does, its three
-                        signals one a line, and its exact effect. Tinted cards with an
-                        icon each were cards inside the paper. */}
+                        letter in the margin, the short tradeoff and exact effects.
+                        Rationale is a sibling disclosure, never inside a button. */}
                     {decision.options.map((option, index) => (
-                      <button key={option.id} id={`report-response-${option.id}`} data-response={option.id} onClick={() => decide(option.id)}>
+                      <Fragment key={option.id}>
+                      <button id={`report-response-${option.id}`} data-response={option.id} onClick={() => decide(option.id)}>
                         <b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b>
                         <strong>{option.title}</strong>
-                        <span>{option.description}<span className="option-signals"><span>{say(option.evidence)}</span><span>{say(option.risk)}</span><span>{say(option.service)}</span></span><EffectList className="decision-effect" items={previewDecision(game, option.id) ?? []} /></span>
+                        <span>{t(primerTrade[option.id])}<EffectList className="decision-effect" items={previewDecision(game, option.id) ?? []} /></span>
                       </button>
+                      <details className="choice-rationale decision-primer"><summary>{t("captainReportDialog.whyChoose", { title: option.title })}</summary><p>{option.description}</p><p className="option-signals"><span>{say(option.evidence)}</span><span>{say(option.risk)}</span><span>{say(option.service)}</span></p></details>
+                      </Fragment>
                     ))}
                   </div>
                   <OptionsBelow key={decision.attack.id} list={optionList} />
@@ -265,7 +259,7 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
     // not one waiting below.
     const count = () => {
       const edge = scroller.getBoundingClientRect().bottom;
-      setHidden([...(list.current?.children ?? [])].filter(option => option.getBoundingClientRect().bottom > edge + 1).length);
+      setHidden([...(list.current?.querySelectorAll("button[data-response]") ?? [])].filter(option => option.getBoundingClientRect().bottom > edge + 1).length);
     };
     // Once now, and again after the dialog's opening animation has settled.
     const frame = requestAnimationFrame(count);
@@ -289,7 +283,7 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
   }, [list]);
   if (!hidden) return null;
   const reveal = () => {
-    const last = list.current?.lastElementChild;
+    const last = list.current?.querySelector<HTMLButtonElement>("button[data-response]:last-of-type");
     const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (last instanceof HTMLElement) last.focus({ preventScroll: true });
     last?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "nearest" });
