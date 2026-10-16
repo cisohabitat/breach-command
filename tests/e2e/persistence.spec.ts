@@ -236,6 +236,27 @@ test.describe("local persistence", () => {
     await expect(page.locator(".game-screen")).toContainText(scenarios[0].title);
   });
 
+  test("a backup cannot amplify an imported message into huge rendered text", async ({ page }) => {
+    let message: unknown = { text: "x".repeat(64) };
+    for (let depth = 0; depth < 4; depth++) message = { key: "{text}".repeat(10), params: { text: message } };
+    const game = newGame(0, "training", () => 0);
+    const session = JSON.stringify({ version: SESSION_VERSION, game: { ...game, variant: { ...game.variant, title: message } }, guided: true, fastResolve: false });
+    await page.addInitScript(() => {
+      localStorage.clear();
+      localStorage.setItem("breach-command.tutorial-complete", "true");
+    });
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Game settings" }).click();
+    await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign: defaultCampaign, session }));
+    await page.getByRole("button", { name: "Restore backup" }).click();
+    await page.getByRole("button", { name: "Replace this device’s progress" }).click();
+    await expect.poll(() => page.evaluate(key => JSON.parse(localStorage.getItem(key) ?? "null")?.game.variant.title.key, SESSION_KEY)).toBe("engine.variant.standardTitle");
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await expect(page.locator(".game-screen")).toContainText(scenarios[0].title);
+    expect((await page.locator("body").innerText()).length).toBeLessThan(100_000);
+  });
+
   test("the first operation's record survives a reload and travels in the backup", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
     await page.addInitScript(() => {

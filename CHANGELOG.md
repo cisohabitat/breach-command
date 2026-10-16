@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.38, 16 October 2026
+
+- **Bounded message rendering.** Imported message identifiers reject template
+  syntax. Unknown keys and content references render literally, and recursive
+  rendering caps each result before further interpolation and after case
+  folding. This prevents small crafted backups from expanding into huge text
+  during play or review. Normal and legacy message wording is preserved.
+
 ## 0.9.37, 16 October 2026
 
 - **Dependency update reliability.** Align Dependabot's npm cooldown with

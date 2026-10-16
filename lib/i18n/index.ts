@@ -56,6 +56,9 @@ export function interpolate(locale: Locale, text: string, params: Params = {}) {
 }
 
 export function translate(locale: Locale, key: MessageKey, params: Params = {}) {
+  // Missing catalogues display their key. Do not interpret an unknown key's
+  // contents as a template supplied by an imported message.
+  if (!Object.hasOwn(registry, key)) return key;
   const value = lookup(locale, key);
   let text: string;
   if (typeof value === "string") text = value;
