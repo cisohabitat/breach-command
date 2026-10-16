@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.44, 16 October 2026
+
+- Replace the incident header's text brand with the approved compact,
+  bone-coloured version of the supplied Breach Command logo. Preserve the
+  accessible home link, phone header controls and original-text fallback,
+  including artwork failures before hydration.
+
 ## 0.9.43, 16 October 2026
 
 - Replace both title pictures with the supplied incident-command artwork.

@@ -66,6 +66,8 @@ for (const width of [320, 390, 820, 1280]) {
 test("missing artwork keeps the operation and result download usable", async ({ page }) => {
   await page.route("**/art/**", route => route.abort());
   await openWithSave(page, responsePhaseGame());
+  await expect(page.locator(".brand-name")).toHaveText("Breach Command");
+  await expect(page.getByRole("link", { name: "Breach Command home", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
   const download = page.waitForEvent("download");

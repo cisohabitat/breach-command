@@ -179,11 +179,10 @@ a {
   padding:16px clamp(20px,4vw,64px);
   gap:20px;
 }
-/* The wordmark is set type, not a logo tile: the name in the case-title serif
-   and the desk it belongs to in mono. */
+/* The supplied compact wordmark uses the desk's bone palette on transparency. */
 .brand {
   display:flex;
-  align-items:baseline;
+  align-items:center;
   min-width:0;
   gap:12px;
   text-decoration:none;
@@ -194,6 +193,12 @@ a {
   font-weight:600;
   letter-spacing:-.01em;
   white-space:nowrap;
+}
+.brand-logo {
+  display:block;
+  inline-size:180px;
+  block-size:60px;
+  object-fit:contain;
 }
 @media(max-width:560px) {
   .brand-light {
@@ -736,6 +741,10 @@ a {
   .brand {
     font-size:var(--type-body);
     gap:9px;
+  }
+  .brand-logo {
+    inline-size:140px;
+    block-size:46px;
   }
   .brand-light {
     padding-inline-start:9px;

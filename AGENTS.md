@@ -53,6 +53,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Repository map
 
+- The incident-header wordmark adapts the user-supplied logo to the existing bone/charcoal palette. Preserve the home link's accessible name, a readable text fallback if the image fails, and space for all phone header actions. The image ref must also handle a failed request completed before hydration attached the error handler; retain the missing-art regression. Do not bring the supplied logo's blue glow or red accent into the investigation header. Preview approval precedes publication when requested.
+
 - The refreshed title entry, labelled "Stop the Breach", floats over the lower centre of the supplied picture. Keep its background semi-transparent in both default and hover states, its text readable over bright artwork, and its keyboard outline visible. Keep the explanatory description available to assistive technology. When a user asks to test a preview, provide the branch deployment and screenshots before merging to `main`.
 
 - `app/page.tsx` is the illustrated title page; `app/play/page.tsx` opens the incident application at `/play`. Keep the supplied title posters on their own route and stylesheet, with one responsive image request, the full composition visible, and a readable keyboard-accessible "Stop the Breach" link that preserves locale. The title entry must never create or replace a saved operation. Keep direct `/play` links, educator return links and browser fixtures aligned. The worker precaches both document shells and their scripts/styles; query navigations fall back to the matching shell. Artwork failure must leave the title entry usable. Add title checks to all three browser engines and runner visual baselines.
