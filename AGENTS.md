@@ -35,6 +35,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 - Framework: Next.js 16 with React 19, built and hosted natively on Vercel.
 - Language: TypeScript with strict checking.
+- Translation placeholders start with a letter and may contain digits or underscores (`stage2`, `source_id`). Interpolation and pseudo-localisation must recognise the same names; tests must check numbered placeholders in English and `en-XA`, including distinct found and tested stage numbers in later-stage reports.
 - Package manager: pnpm. Preserve `pnpm-lock.yaml` and do not switch package managers.
 - UI primitives: reuse the components in `components/ui` when a suitable primitive already exists.
 - Icons: use `lucide-react` rather than custom icon SVGs.
@@ -83,7 +84,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 - `tests/replay.test.ts`: the weekly seed, the mastery ladder, the ledger and the share card, which is checked against every technique title over simulated operations.
 - `tests/e2e/share.spec.ts`: the result image draws and saves as a PNG in Chromium, WebKit and Firefox.
 - `lib/last-operation.ts`: the last operation and the review's suggestion (`recommendNext`), read by the landing page for a returning player. A save of it that names an unknown case or difficulty is dropped, as a damaged campaign is.
-- `lib/telemetry.ts`: device-local balance counters and the first operation's record (when it began, its first procedure, its first revision, how it ended), set once and never moved. They travel only in the player's own backup.
+- `lib/telemetry.ts`: device-local balance counters and the first operation's record (when it began, its first resolved procedure, its first revision, how it ended), set once and never moved. The start anchor is operation creation after Begin, not assignment arrival, and the procedure event is recorded after resolution. Compare observer times only with matching anchors and milestones; keep assignment-to-result time separately for the newcomer target. They travel only in the player's own backup.
 - `tests/*.test.ts`: the engine suite, run by `node --test`. One file per concern — engine, campaign, reads, session, content, simulation — so a failure in one reports without stopping the rest.
 - `tests/e2e/accessibility.spec.ts`: axe audit across the supported widths and overlays, and of the surfaces a fresh page never reaches — the sector warning, the investigation prompts, the opened map and evidence workspace, the response effects, the ending and the review's folds — built from engine fixtures. Opening the review's campaign fold found locked milestones dimmed below contrast by opacity.
 - `tests/e2e/persistence.spec.ts`: local storage survives a page load and a reload.

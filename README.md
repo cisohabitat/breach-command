@@ -240,6 +240,10 @@ They cover five newcomers across phone and laptop, plus signal/confidence
 understanding and Captain voice pacing. Supplemental questions come after the
 original questions and are scored separately. The pack is ready to use; human
 sessions must supply the results.
+Guided reflection ships ON; fast resolution and high contrast ship OFF. The
+observer records both assignment arrival and operation opening: the first-session
+target uses assignment-to-first-resolved-result time, while local telemetry uses
+operation-start-to-first-resolved-result time. Compare matching anchors only.
 
 Review both this README and [`AGENTS.md`](AGENTS.md) against every final change,
 including follow-up fixes. Update affected feature descriptions, commands,

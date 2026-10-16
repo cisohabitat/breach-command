@@ -16,15 +16,20 @@ an observer; this pack does not recruit or contact anyone.
    until observed. Arrange a practitioner to mark understanding answers.
 3. Use a fresh browser profile for each tester. Follow [the protocol](PROTOCOL.md)
    exactly, leaving game and audio defaults alone unless the tester changes
-   them. Record the scenario, difficulty and mode they actually play.
-4. Read the opening script, start the timer and observe without coaching.
+   them. Guided reflection ships ON; fast resolution and high contrast ship OFF.
+   Record the scenario, difficulty and mode they actually play.
+4. Start the observer timer at assignment arrival, read the opening script and
+   observe without coaching. Also record when the operation opens after Begin.
    Record questions, pauses, misreadings and the actual ending. A loss can
    still be a completed operation; abandonment is different.
 5. Ask the original three understanding questions and change request first.
    Then ask the supplemental signal, confidence and voice questions. This keeps
    existing first-session scores comparable and avoids teaching the labels
    before the unassisted session.
-6. Compare observer times with the local first-operation record in Settings.
+6. Compare operation-opening-to-resolved-result times with the local
+   first-operation record in Settings. Keep assignment-to-resolved-result time
+   for the first-session target; it includes player setup. Record setup and
+   pauses separately without subtracting from raw elapsed times.
    Save genuine observations and rank findings by severity and how many testers
    encountered them. Do not convert bot win rates into human results.
 

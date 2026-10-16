@@ -28,7 +28,7 @@ type Params = Record<string, string | number>;
 const accents: Record<string, string> = { a: "á", e: "é", i: "î", o: "ö", u: "ü", c: "ç", n: "ñ", s: "š", y: "ý", A: "Á", E: "É", I: "Î", O: "Ö", U: "Ü", C: "Ç", N: "Ñ", S: "Š" };
 // Placeholders and markup tags stay as they are; everything else is accented.
 export function accent(text: string) {
-  return text.split(/(\{[a-zA-Z]+\}|<\/?[a-z][a-z0-9]*>)/).map(part => /^(\{[a-zA-Z]+\}|<\/?[a-z][a-z0-9]*>)$/.test(part) ? part : [...part].map(char => accents[char] ?? char).join("")).join("");
+  return text.split(/(\{[a-zA-Z][a-zA-Z0-9_]*\}|<\/?[a-z][a-z0-9]*>)/).map(part => /^(\{[a-zA-Z][a-zA-Z0-9_]*\}|<\/?[a-z][a-z0-9]*>)$/.test(part) ? part : [...part].map(char => accents[char] ?? char).join("")).join("");
 }
 export function pseudo(text: string) {
   const pad = "·".repeat(Math.max(1, Math.round(text.length / 3)));
@@ -48,10 +48,11 @@ export function formatNumber(locale: Locale, value: number) {
   return new Intl.NumberFormat(locale === "en-XA" ? "en" : locale).format(value);
 }
 
-// Fills {name} placeholders; a number is formatted for the locale, and a
+// Fills {name} placeholders, including names such as stage2 and source_id;
+// a number is formatted for the locale, and a
 // missing parameter is left visible rather than blanked.
 export function interpolate(locale: Locale, text: string, params: Params = {}) {
-  return text.replace(/\{([a-zA-Z]+)\}/g, (whole, name: string) => name in params ? (typeof params[name] === "number" ? formatNumber(locale, params[name] as number) : String(params[name])) : whole);
+  return text.replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g, (whole, name: string) => name in params ? (typeof params[name] === "number" ? formatNumber(locale, params[name] as number) : String(params[name])) : whole);
 }
 
 export function translate(locale: Locale, key: MessageKey, params: Params = {}) {
