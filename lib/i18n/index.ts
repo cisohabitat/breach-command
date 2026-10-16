@@ -21,7 +21,7 @@ export function register(catalogue: Readonly<Record<string, Value>>) {
   Object.assign(registry, catalogue);
 }
 export function registered(key: string) {
-  return key in registry;
+  return Object.hasOwn(registry, key);
 }
 type Params = Record<string, string | number>;
 
@@ -38,7 +38,7 @@ export function pseudo(text: string) {
 function lookup(locale: Locale, key: MessageKey): Value {
   // A key whose catalogue has not loaded shows itself rather than nothing;
   // tests/i18n.test.ts checks each component registers what it reads.
-  const value = registry[key] ?? key;
+  const value = Object.hasOwn(registry, key) ? registry[key] : key;
   if (locale !== "en-XA") return value;
   if (typeof value === "string") return pseudo(value) as Value;
   return Object.fromEntries(Object.entries(value).map(([category, text]) => [category, pseudo(text as string)])) as unknown as Value;
@@ -52,7 +52,7 @@ export function formatNumber(locale: Locale, value: number) {
 // a number is formatted for the locale, and a
 // missing parameter is left visible rather than blanked.
 export function interpolate(locale: Locale, text: string, params: Params = {}) {
-  return text.replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g, (whole, name: string) => name in params ? (typeof params[name] === "number" ? formatNumber(locale, params[name] as number) : String(params[name])) : whole);
+  return text.replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g, (whole, name: string) => Object.hasOwn(params, name) ? (typeof params[name] === "number" ? formatNumber(locale, params[name] as number) : String(params[name])) : whole);
 }
 
 export function translate(locale: Locale, key: MessageKey, params: Params = {}) {

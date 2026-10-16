@@ -1,4 +1,4 @@
 {
-  "assignment": { "initialScriptBytes": 675000, "scriptBytes": 1178000, "initialStyleBytes": 95000, "styleBytes": 222000, "lcp": 3000, "cls": 0.05 },
-  "operation": { "scriptBytes": 1188000, "cls": 0.05 }
+  "assignment": { "initialScriptBytes": 675000, "scriptBytes": 1182000, "initialStyleBytes": 95000, "styleBytes": 222000, "lcp": 3000, "cls": 0.05 },
+  "operation": { "scriptBytes": 1192000, "cls": 0.05 }
 }

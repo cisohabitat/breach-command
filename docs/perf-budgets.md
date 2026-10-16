@@ -250,3 +250,14 @@ Deliberately add 3,000 B to each warmed-script budget, to 1,178,000 B and
 1,188,000 B. Initial script remains 654,978 B; linked style remains 87,752 B
 and total style is 220,433 B. Throttled LCP is about 1.0 s and CLS
 0.008–0.009. Initial-load, style, timing and layout-shift limits are unchanged.
+
+Security remediation (0.9.35, 16 October 2026) updates Next.js to 16.3.8 and
+adds bounded JSON/message validation, own-property checks and safe CSV
+exports. The local production Turbopack build measures 656,554 B initial,
+1,179,779 B warmed and 1,189,824 B by play start: 3,103 B more warmed script
+than the 0.9.34 runner. Deliberately add 4,000 B to the two warmed-script
+budgets, to 1,182,000 B and 1,192,000 B, for these security checks and framework
+patches. This is about 0.34 per cent; initial script, style, paint and shift
+limits stay fixed. Linked/total style remains 87,752/220,433 B; the local
+throttled run records LCP 1.53–1.57 s and CLS 0.001–0.002. CI verifies the
+complete build against these limits before release.

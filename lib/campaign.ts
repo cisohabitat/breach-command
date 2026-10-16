@@ -3,6 +3,7 @@ import { countRevisions } from "./engine/revisions.ts";
 import type { Game } from "./engine/types.ts";
 import { registerContent } from "./i18n/content/registry.ts";
 import { lit, msg, type Message } from "./i18n/message.ts";
+import { parseSaveJson } from "./safe-json.ts";
 
 export const CAMPAIGN_KEY = "breach-command.campaign";
 
@@ -37,7 +38,7 @@ export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores
 // is how a damaged record is told apart from one that never existed.
 export function campaignReadable(raw: string): boolean {
   try {
-    const value = JSON.parse(raw) as unknown;
+    const value = parseSaveJson(raw);
     return !!value && typeof value === "object" && !Array.isArray(value);
   } catch {
     return false;
@@ -86,7 +87,7 @@ function parseLadder(value: unknown): Record<string, LadderRungId[]> {
 export function parseCampaign(raw: string | null): CampaignState {
   if (!raw) return defaultCampaign;
   try {
-    const value = JSON.parse(raw) as Partial<CampaignState>;
+    const value = parseSaveJson(raw) as Partial<CampaignState>;
     const posture = numericRecord(value.commandPosture);
     return {
       completed: Array.isArray(value.completed) ? value.completed.filter(Number.isInteger) : [],

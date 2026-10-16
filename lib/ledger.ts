@@ -52,7 +52,12 @@ export function hypothesisTrend(entries: LedgerEntry[]) {
 }
 
 export function ledgerCsv(entries: LedgerEntry[], titleOf: (scenario: number) => string) {
-  const quote = (value: string) => /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+  // Imported mode/code fields are untrusted. CSV quoting alone does not stop a
+  // spreadsheet from executing a cell beginning with a formula marker.
+  const quote = (value: string) => {
+    const cell = /^\s*[=+@-]|^[\t\r\n]/.test(value) ? `'${value}` : value;
+    return /[",\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell;
+  };
   const rows = entries.map(entry => [new Date(entry.at).toISOString(), String(entry.scenario + 1), titleOf(entry.scenario), entry.difficulty, entry.mode, entry.outcome, String(entry.score), String(entry.hypothesis), String(entry.stages), String(entry.turns), entry.code ?? ""].map(quote).join(","));
   return ["ended,case,title,difficulty,mode,outcome,score,hypothesis,stages,turns,code", ...rows].join("\n");
 }

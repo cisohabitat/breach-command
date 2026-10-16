@@ -1,7 +1,9 @@
-import { attacks, scenarios, difficulties, infrastructureTopologies, adversaryProfiles, adversaryObjectives, commandEvents, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
+import { attacks, scenarios, difficulties, hypotheses, procedureScopes, procedureIntensities, infrastructureTopologies, adversaryProfiles, adversaryObjectives, commandEvents, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
 import type { CarriedSource, NodePosture } from "./advanced-game";
 import { injects } from "./engine/content.ts";
 import { isMessage, legacy, msg, type Message } from "./i18n/message.ts";
+import { parseSaveJson } from "./safe-json.ts";
+import { campaignRoutes } from "./phase9.ts";
 
 export { PARKED_SESSION_KEY, SESSION_KEY } from "./session-keys.ts";
 // 18: the Weekly operation mode, which an older build would read as damaged.
@@ -19,6 +21,7 @@ const optionalText = (value: unknown): Message | null => value === null || value
 // together". Each source, with its share, is read back out of it.
 const JOINED = /(, together|: [+−]\d+, capped at)$/;
 function carriedFrom(label: string, value: number): CarriedSource[] {
+  label = label.slice(0, 2000);
   if (!JOINED.test(label)) return [{ source: legacy(label), change: value }];
   return label.replace(JOINED, "").split("; ").map(entry => {
     const share = entry.match(/^(.*) ([+−])(\d+)$/);
@@ -85,19 +88,19 @@ function injectOf(value: unknown) {
   const card = value as { id?: unknown; reason?: unknown; effectLabel?: unknown };
   const content = injects.find(item => item.id === card.id);
   if (!content) return null;
-  const label = typeof card.effectLabel === "string" && card.effectLabel !== content.effectLabel ? legacy(card.effectLabel) : isMessage(card.effectLabel) ? card.effectLabel : undefined;
+  const label = typeof card.effectLabel === "string" && card.effectLabel !== content.effectLabel ? legacy(card.effectLabel.slice(0, 2000)) : isMessage(card.effectLabel) ? card.effectLabel : undefined;
   return { id: content.id, reason: text(card.reason, legacy("")), ...(label ? { effectLabel: label } : {}) };
 }
 
 export function parseSession(raw: string): SavedSession | null {
   try {
-    const parsed = JSON.parse(raw) as Partial<SavedSession>;
+    const parsed = parseSaveJson(raw) as Partial<SavedSession>;
     if (!parsed || typeof parsed !== "object" || !parsed.game) return null;
     if (parsed.version !== undefined && (!Number.isInteger(parsed.version) || Number(parsed.version) < 1)) return null;
     if (Number(parsed.version) > SESSION_VERSION) return null;
     const game = parsed.game as Game;
     if (!Number.isInteger(game.scenario) || !scenarios[game.scenario]) return null;
-    if (!difficulties[game.difficulty]) return null;
+    if (!isKnown(difficulties, game.difficulty)) return null;
     if (!Array.isArray(game.chain) || game.chain.length !== 4 || !Array.isArray(game.turns)) return null;
     if (!game.chain.every(id => attacks.some(attack => attack.id === id))) return null;
     if (!Array.isArray(game.revealed) || game.revealed.length > 4) return null;
@@ -108,11 +111,36 @@ export function parseSession(raw: string): SavedSession | null {
     if (game.objective !== undefined && !isKnown(adversaryObjectives, game.objective)) return null;
     if (game.mode !== undefined && !isKnown(gameModes, game.mode)) return null;
     if (game.specialist !== undefined && !isKnown(specialists, game.specialist)) return null;
+    if (game.hypothesis != null && !hypotheses.some(item => item.id === game.hypothesis)) return null;
+    if (game.caseTheory != null && !isKnown(adversaryObjectives, game.caseTheory)) return null;
+    if (game.campaignRoute !== undefined && !isKnown(campaignRoutes, game.campaignRoute)) return null;
+    if (game.campaignDoctrine !== undefined && !["observe", "act", "balanced"].includes(game.campaignDoctrine)) return null;
+    // A few collections are consumed directly by the engine. Reject malformed
+    // members rather than merely accepting an array and faulting on the next
+    // render or critical roll. Missing legacy collections still default below.
+    for (const field of ["decisions", "commandHistory", "evidence", "correlations", "setPieceHistory", "mapHistory", "hypothesisHistory", "caseTheoryHistory"] as const) {
+      const records = game[field];
+      if (Array.isArray(records) && records.some(record => !record || typeof record !== "object" || Array.isArray(record))) return null;
+    }
+    if (Array.isArray(game.injectDeck) && !game.injectDeck.every(index => Number.isInteger(index) && index >= 0 && index < injects.length)) return null;
+    if (Array.isArray(game.established) && !game.established.every(id => typeof id === "string")) return null;
+    const numericObject = (value: unknown) => !!value && typeof value === "object" && !Array.isArray(value) && Object.values(value).every(Number.isFinite);
+    if (game.lastUsed !== undefined && !numericObject(game.lastUsed)) return null;
+    if (game.adversaryMemory != null && (!numericObject(game.adversaryMemory.procedureCounts)
+      || ![game.adversaryMemory.observeChoices, game.adversaryMemory.actChoices, game.adversaryMemory.hypothesisChanges].every(Number.isFinite))) return null;
+    if (game.variant != null && (typeof game.variant !== "object" || typeof game.variant.id !== "string")) return null;
+    const knownAttack = (id: unknown) => typeof id === "string" && attacks.some(attack => attack.id === id);
+    if (!game.turns.every(turn => turn && typeof turn === "object"
+      && (turn.revealed == null || knownAttack(turn.revealed))
+      && (turn.hypothesisTarget == null || knownAttack(turn.hypothesisTarget))
+      && (turn.hypothesis == null || hypotheses.some(item => item.id === turn.hypothesis))
+      && (turn.plan == null || (isKnown(procedureScopes, turn.plan.scope) && isKnown(procedureIntensities, turn.plan.intensity))))) return null;
     if (game.pendingDecision && !game.revealed.includes(game.pendingDecision)) return null;
     // The response phase only exists once every stage has been revealed, so a
     // save claiming otherwise did not come from a real playthrough.
     if (game.status === "response" && game.revealed.length < 4) return null;
     const responseChoices = Array.isArray(game.responseChoices) ? game.responseChoices : [];
+    if (!responseChoices.every(id => typeof id === "string")) return null;
     if (responseChoices.length > 3) return null;
     if (game.status === "playing" && responseChoices.length) return null;
     if (game.status === "response" && responseChoices.length >= 3) return null;
@@ -122,7 +150,7 @@ export function parseSession(raw: string): SavedSession | null {
     // settled here rather than resumed into a choice nothing will accept.
     const finished = game.status === "won" || game.status === "lost" || game.status === "exercise";
     if (!finished && game.pendingCommand != null && !isKnown(commandEvents, game.pendingCommand)) return null;
-    const profile = game.adversaryProfile && adversaryProfiles[game.adversaryProfile] ? game.adversaryProfile : "ghost";
+    const profile = isKnown(adversaryProfiles, game.adversaryProfile) ? game.adversaryProfile : "ghost";
     // Topologies vary per scenario, so a restored session is re-keyed to the
     // nodes that exist on this incident's map. Legacy or stale node ids become
     // normal posture rather than an invalid map.
@@ -147,7 +175,7 @@ export function parseSession(raw: string): SavedSession | null {
       lastUsed: game.lastUsed && typeof game.lastUsed === "object" ? game.lastUsed : {},
       injectDeck: Array.isArray(game.injectDeck) ? game.injectDeck : [],
       // Version 17 remembers the campaign's recent command events; older saves met none.
-      recentCommands: Array.isArray(game.recentCommands) ? game.recentCommands.filter((id: unknown) => typeof id === "string" && id in commandEvents) : [],
+      recentCommands: Array.isArray(game.recentCommands) ? game.recentCommands.filter((id: unknown) => isKnown(commandEvents, id)) : [],
       recentCrises: Array.isArray(game.recentCrises) ? game.recentCrises.filter((id: unknown) => typeof id === "string" && /^sector-\d+(-[bc])?$/.test(id)) : [],
       responseChoices,
       seed: typeof game.seed === "number" && Number.isFinite(game.seed) ? game.seed : null,
@@ -196,7 +224,7 @@ export function parseSession(raw: string): SavedSession | null {
         // sources; an older joined label is read back into them.
         parts: Array.isArray(turn.parts) ? turn.parts.filter((part: unknown) => !!part && (typeof (part as { label?: unknown }).label === "string" || isMessage((part as { label?: unknown }).label)) && Number.isFinite((part as { value?: unknown }).value)).slice(0, 12).map((part: { label: unknown; value: number; sources?: unknown }) => {
           if (typeof part.label !== "string") return { label: part.label as Message, value: part.value, ...(Array.isArray(part.sources) ? { sources: sourcesOf({ nextModifierSources: part.sources }) } : {}) };
-          return JOINED.test(part.label) ? { label: legacy(part.label), value: part.value, sources: carriedFrom(part.label, part.value) } : { label: legacy(part.label), value: part.value };
+          return JOINED.test(part.label) ? { label: legacy(part.label.slice(0, 2000)), value: part.value, sources: carriedFrom(part.label, part.value) } : { label: legacy(part.label.slice(0, 2000)), value: part.value };
         }) : [],
         narrative: text(turn.narrative, legacy("")),
         adversaryEvent: optionalText(turn.adversaryEvent),

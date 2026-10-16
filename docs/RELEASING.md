@@ -5,7 +5,7 @@ push to `main` is a release, so it goes out only through this procedure.
 
 ## A release
 
-1. Work on a branch. Run the checks AGENTS.md requires (`pnpm test`,
+1. Work on a branch. Run the checks AGENTS.md requires (`pnpm test`, `pnpm security:audit`,
    `pnpm balance:check`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`,
    `git diff --check`) and the browser suites against the build.
 2. If the change is visual on purpose, run the **Record visual baselines**

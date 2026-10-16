@@ -4,6 +4,20 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.35, 16 October 2026
+
+- **Security fixes.** Updated Next.js and its lint configuration to 16.3.8
+  and patched vulnerable transitive dependencies. CI audits dependencies,
+  pins actions to commit hashes and accepts patch-update pull requests.
+- **Safer local data.** Backup/session parsing bounds size and structure,
+  validates nested messages and rejects prototype keys. CSV exports prevent
+  formula execution from imported text. Existing save migrations remain.
+- **Browser boundaries.** A production content-security policy limits
+  resource destinations and embedding. Offline caches read/delete only the
+  game's namespace and store only published documents/assets, excluding
+  private responses and arbitrary endpoints. The security review documents
+  one unfixed development-tool advisory and the policy's inline-script limit.
+
 ## 0.9.34, 16 October 2026
 
 - **One question at a time.** The working reading leads with the question
