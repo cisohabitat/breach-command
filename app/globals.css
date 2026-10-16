@@ -1,9 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
-/* Breach Command typographic system: one 1.25 (Major Third) modular scale anchored on a 16px
-body step, four leading roles and a 66ch prose measure. Every font-size below resolves to a
---type-* step, so the responsive overrides swap steps instead of inventing new sizes. */
+/* Breach Command typography: a 16px body, readable 14px captions and 12px
+metadata, with a 1.25 scale above body size and a 66ch prose measure.
+Responsive overrides use the same roles instead of shrinking essential text. */
 :root {
   /* Motion vocabulary: one easing for something arriving, one for something
      settling, and five durations. A document or result arrives on
@@ -39,13 +39,15 @@ body step, four leading roles and a 66ch prose measure. Every font-size below re
   --ring:#ede2c9;
   --radius:.25rem;
   --lime:#ede2c9;
-  --text-soft:#b1ab9c;
+  --text-heading:#f6f1e4;
+  --text-body:#d5d1c7;
+  --text-soft:#b4ad9e;
   --line:#30353b;
   --font-mono:var(--font-display),"Arial Narrow",sans-serif;
   --font-serif:var(--font-display),"Arial Narrow",sans-serif;
   --font-ui:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --type-micro:.64rem;
-  --type-caption:.8rem;
+  --type-micro:.75rem;
+  --type-caption:.875rem;
   --type-body:1rem;
   --type-lead:1.25rem;
   --type-title:1.5625rem;
@@ -125,6 +127,7 @@ h1,h2,h3 {
 }
 h1,h2 {
   font-family:var(--font-serif);
+  color:var(--text-heading);
   font-weight:600;
   letter-spacing:-.01em;
 }
@@ -200,7 +203,7 @@ a {
 .brand-light {
   font-size:var(--type-caption);
   font-weight:400;
-  color:#b3ad9f;
+  color:var(--text-soft);
   padding-inline-start:12px;
   border-inline-start:1px solid var(--line);
 }
@@ -214,7 +217,7 @@ a {
   align-items:center;
   gap:8px;
   font-size:var(--type-body);
-  color:#d5d1c7;
+  color:var(--text-body);
   background:transparent;
   border:0;
   min-height:40px;
@@ -329,7 +332,7 @@ a {
 .guided-control small {
   display:block;
   font-size:var(--type-caption);
-  color:#bdb6a7;
+  color:var(--text-soft);
   margin-top:4px;
 }
 /* A setting's words wrap beside its switch rather than pushing it out. */
@@ -367,7 +370,7 @@ a {
   gap:10px;
   margin-top:18px;
   font-size:var(--type-caption);
-  color:#bdb6a7;
+  color:var(--text-soft);
 }
 .mission-meta span {
   display:flex;
@@ -520,7 +523,7 @@ a {
 }
 .captain-brief {
   font-size:var(--type-body);
-  color:#cfcbc0;
+  color:var(--text-body);
   line-height:var(--leading-prose);
 }
 .captain-divider {
@@ -546,7 +549,7 @@ a {
   border:0;
   border-bottom:1px solid #383e46;
   border-radius:0;
-  color:#d0c9b9;
+  color:var(--text-body);
   padding:10px 0;
   min-height:41px;
 }
@@ -578,7 +581,7 @@ a {
 .empty-log p {
   font-size:var(--type-body);
   margin:10px 0 4px;
-  color:#d1caba;
+  color:var(--text-body);
 }
 .empty-log small {
   font-size:var(--type-caption);
@@ -879,7 +882,7 @@ a {
   text-align:start;
 }
 .difficulty-picker button:hover,.difficulty-picker button.active {
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .difficulty-picker strong {
   display:block;
@@ -982,12 +985,12 @@ a {
 }
 .resume-card strong {
   display:block;
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-size:var(--type-body);
 }
 .resume-card small {
   display:block;
-  color:#c1b9a6;
+  color:var(--text-soft);
   font-size:var(--type-caption);
   margin-top:3px;
 }
@@ -1000,7 +1003,7 @@ a {
   min-height:42px;
   border:1px solid #505965;
   background:#25292e;
-  color:#f6f1e4;
+  color:var(--text-heading);
   border-radius:3px;
   padding:9px 14px;
   font-size:var(--type-body);
@@ -1018,7 +1021,7 @@ a {
   font-size:var(--type-caption);
 }
 .procedure-card p,.brief-label,.guided-inline label,.rules-reminder {
-  color:#c3bba7;
+  color:var(--text-soft);
 }
 .muted,.section-heading p {
   color:#bcb7ac;
@@ -1169,7 +1172,7 @@ html,body {
   flex-wrap:wrap;
 }
 .mission-selector button.completed:not(.active) {
-  color:#f4eedf;
+  color:var(--text-heading);
 }
 /* A cleared case's tick hangs off its number, so the number keeps its place
    in the line; pinned to the button's corner it crowded the figure. */
@@ -1188,7 +1191,7 @@ html,body {
 .adversary-read p {
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#bfb8a6;
+  color:var(--text-soft);
   margin-top:7px;
 }
 @media(max-width:650px) {
@@ -1236,7 +1239,7 @@ html,body {
   display:none;
   font-size:var(--type-caption);
   line-height:var(--leading-compact);
-  color:#b1a997;
+  color:var(--text-soft);
   margin-top:5px;
   letter-spacing:.01em;
 }
@@ -1429,7 +1432,7 @@ html,body {
 .campaign-act-card p,.campaign-ending p {
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#bfb8a7;
+  color:var(--text-soft);
   margin-top:4px;
   letter-spacing:.01em;
 }
@@ -1513,7 +1516,7 @@ html,body {
 .challenge-load button {
   border:1px solid #596474;
   background:#2d333c;
-  color:#f6f1e4;
+  color:var(--text-heading);
   border-radius:4px;
   padding:0 13px;
 }
@@ -1632,7 +1635,7 @@ html,body {
 }
 .campaign-route-card strong {
   display:block;
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-size:var(--type-body);
   line-height:var(--leading-base);
   margin:6px 0;
@@ -1777,7 +1780,7 @@ html,body {
 .workspace-tabs button.active {
   border-bottom-color:var(--lime);
   background:none;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .workspace-tabs button:disabled {
   opacity:.45;
@@ -1920,6 +1923,8 @@ html,body {
    document, not another panel. */
 .game-dialog.paper-dialog {
   --lime:#1d1b18;
+  --text-heading:#1d1b18;
+  --text-body:#2f2c27;
   --text-soft:#4a463e;
   --line:#c9bfac;
   background:#f1ece1!important;
@@ -2319,7 +2324,7 @@ the readouts that decide the operation. */
   color:var(--foreground);
   font-weight:600;
 }
-.operation-status>span:not(.mono) {
+.operation-status>span:not(.mono),.sit-body p.sit-note {
   font-size:var(--type-caption);
   color:var(--text-soft);
 }
@@ -2405,14 +2410,14 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   margin:0;
   font-size:var(--type-body);
   line-height:var(--leading-base);
-  color:#d4d0c6;
+  color:var(--text-body);
 }
 .sit-body p+p {
   margin-top:8px;
 }
 .sit-body strong {
   font-weight:500;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .sit-body>small {
   display:block;
@@ -2424,19 +2429,15 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   height:4px;
   margin:10px 0;
 }
-.sit-body p.sit-note {
-  font-size:var(--type-caption);
-  color:#bbb4a3;
-}
 .sit-body .sector-read {
   margin-bottom:8px;
   font-size:var(--type-caption);
-  color:#bbb4a3;
+  color:var(--text-soft);
 }
 .sit-figure {
   justify-self:end;
   font:500 var(--type-lead) var(--font-mono);
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .sit-entry.adversary .sit-figure {
   color:#dab6cd;
@@ -2544,12 +2545,12 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
 }
 .mission-selector button:hover {
   border-color:transparent;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .mission-selector button.active {
   border-color:transparent;
   background:none;
-  color:#f6f1e4;
+  color:var(--text-heading);
   text-decoration:underline;
   text-decoration-color:var(--lime);
   text-decoration-thickness:2px;
@@ -2604,7 +2605,7 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
 /* Business impact takes the warning colour when it is rising, not before:
    amber beside "Contained" said warning about a meter that was not one. */
 .impact-meter strong,.variant-brief strong,.form-row.on-desk dd,.form-row.on-desk dd.open {
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .impact-meter>[data-slot=progress]>div {
   background:#d9cfb6;
@@ -3019,6 +3020,8 @@ body {
    Drawn on the dark desk, the bars read as loading placeholders. */
 .chain-sheet {
   --line:#c9bfac;
+  --text-heading:#1d1b18;
+  --text-body:#2f2c27;
   --text-soft:#4a463e;
   --lime:#1d1b18;
   padding:2px 18px;
@@ -3125,7 +3128,7 @@ body {
 .variant-brief .variant-line strong {
   display:inline;
   margin:0;
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-size:inherit;
 }
 .variant-label {
@@ -3154,13 +3157,13 @@ body {
 }
 .last-operation p {
   margin:6px 0 0;
-  color:#d7d1c3;
+  color:var(--text-body);
   font-size:var(--type-caption);
   line-height:var(--leading-base);
   max-width:var(--measure-prose);
 }
 .last-operation p strong {
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-weight:600;
 }
 /* A phone screen is 844px and the chrome above the procedure grid was taking more
@@ -3210,7 +3213,7 @@ body {
   .case-meters>div>.mono {
     grid-area:label;
     align-self:end;
-    font-size:9px;
+    font-size:var(--type-micro);
     line-height:1.15;
     overflow-wrap:normal;
     hyphens:manual;
@@ -3224,7 +3227,7 @@ body {
   .case-meters>div>small {
     grid-area:status;
     margin:0;
-    font-size:10px;
+    font-size:var(--type-micro);
     line-height:1.15;
   }
   .case-meters [data-slot=progress] {
@@ -3232,7 +3235,7 @@ body {
     height:10px;
   }
   .game-identity .eyebrow {
-    font-size:9px;
+    font-size:var(--type-micro);
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;

@@ -269,3 +269,11 @@ build. Both fit the existing 1,182,000/1,192,000 B limits; no budget changes.
 Bounded message rendering (0.9.38) adds 172 B to initial and warmed scripts.
 The local production build measures 656,726 B initial, 1,181,057 B warmed and
 1,191,102 B by play start. All existing budgets remain unchanged.
+
+Typography hierarchy (0.9.39, 16 October 2026) changes CSS only. The local
+production build measures 88,209 B linked style and 221,528 B total style,
+increases of 457 B and 1,095 B over 0.9.38. Script sizes are unchanged. The
+throttled phone checks record assignment/operation LCP of 1.424/1.232 s and
+CLS of 0.001/0.020. All budgets remain unchanged, including the 222,000 B total
+style cap; only 472 B remain under that limit, so further style changes should
+consolidate existing rules before adding more.

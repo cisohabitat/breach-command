@@ -75,7 +75,7 @@
 }
 .chain-technique {
   font-weight:600;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .revealed {
   border-color:var(--stage-color);
@@ -99,7 +99,7 @@
   align-items:flex-start;
   gap:9px;
   font-size:var(--type-body);
-  color:#bbb4a3;
+  color:var(--text-soft);
   margin:0 0 16px;
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
@@ -113,7 +113,7 @@
 }
 .guide-nudge strong {
   font-weight:500;
-  color:#f4eedf;
+  color:var(--text-heading);
 }
 .procedure-grid {
   display:grid;
@@ -300,7 +300,7 @@
   padding:12px 0;
   font-family:var(--font-mono);
   font-size:var(--type-body);
-  color:#d7d1c3;
+  color:var(--text-body);
 }
 .roll-preview b {
   color:var(--lime);
@@ -715,7 +715,7 @@
 }
 .response-heading p {
   font-size:var(--type-body);
-  color:#bfb8a6;
+  color:var(--text-soft);
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
@@ -738,7 +738,7 @@
 .response-options .option-main>span {
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#bab29f;
+  color:var(--text-soft);
   flex:1;
   letter-spacing:.01em;
 }
@@ -758,7 +758,7 @@
   margin-top:4px;
   font-family:inherit;
   font-size:var(--type-caption);
-  color:#d7d1c3;
+  color:var(--text-body);
 }
 .response-options .response-effect.ends>small,.response-options .response-effect.at-risk>small {
   color:#f0a48c;
@@ -826,10 +826,10 @@
   padding:16px 0 0;
 }
 .hypothesis-board .eyebrow {
-  color:#b1ab9c;
+  color:var(--text-soft);
 }
 .hypothesis-board button:focus-visible,.hypothesis-board summary:focus-visible {
-  outline-color:#f6f1e4;
+  outline-color:var(--text-heading);
 }
 .high-contrast .hypothesis-board {
   --text-soft:#d7d1c3;
@@ -851,11 +851,11 @@
   display:block;
   font-size:var(--type-body);
   font-weight:600;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .hypothesis-heading small {
   display:block;
-  color:#b1ab9c;
+  color:var(--text-soft);
   margin-top:4px;
 }
 /* The adversary's pace is stamped on the sheet, like the case card's OPEN. */
@@ -882,7 +882,7 @@
   justify-content:flex-start;
   align-items:stretch;
   text-align:start;
-  color:#d7d1c3;
+  color:var(--text-body);
   min-height:92px;
 }
 .hypothesis-options button:disabled {
@@ -895,12 +895,12 @@
 .hypothesis-options span {
   display:block;
   line-height:var(--leading-base);
-  color:#b1ab9c;
+  color:var(--text-soft);
   margin-top:6px;
   letter-spacing:.01em;
 }
 .hypothesis-options button.active span {
-  color:#d7d1c3;
+  color:var(--text-body);
 }
 .adversary-event {
   display:flex;
@@ -987,7 +987,7 @@
 .hypothesis-options button small {
   display:block;
   line-height:var(--leading-base);
-  color:#d7d1c3;
+  color:var(--text-body);
   margin-top:9px;
   padding-top:8px;
 }
@@ -1040,7 +1040,7 @@
   display:block;
   font-size:var(--type-body);
   margin:5px 0;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .inline-result p {
   font-size:var(--type-body);
@@ -1126,7 +1126,7 @@
   letter-spacing:.01em;
 }
 .timeline p strong {
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-weight:500;
 }
 .timeline small {
@@ -1480,7 +1480,7 @@
 .command-options .option-main>span {
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#bbb4a3;
+  color:var(--text-soft);
   letter-spacing:.01em;
 }
 /* The cost is read in the body face, as sector decisions and response options
@@ -1653,7 +1653,7 @@
   display:none;
   font-size:var(--type-caption);
   line-height:var(--leading-compact);
-  color:#b1a997;
+  color:var(--text-soft);
   margin-top:5px;
   letter-spacing:.01em;
 }
@@ -1718,7 +1718,7 @@
 }
 .tutorial-head strong {
   display:block;
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-size:var(--type-body);
   margin-top:4px;
 }
@@ -1770,7 +1770,7 @@
 .tutorial-steps p small {
   display:block;
   line-height:var(--leading-compact);
-  color:#b1a997;
+  color:var(--text-soft);
   margin-top:4px;
 }
 .procedure-planner,.procedure-planner>div>div {
@@ -2032,7 +2032,7 @@
 .challenge-load button {
   border:1px solid #596474;
   background:#2d333c;
-  color:#f6f1e4;
+  color:var(--text-heading);
   border-radius:4px;
   padding:0 13px;
 }
@@ -2356,7 +2356,7 @@
   min-height:42px;
   border:1px solid #5c6674;
   background:#2b3037;
-  color:#f6f1e4;
+  color:var(--text-heading);
   border-radius:3px;
   padding:8px 13px;
   display:flex;
@@ -2425,7 +2425,7 @@
   display:block;
   font-size:var(--type-caption);
   line-height:var(--leading-base);
-  color:#bbb4a3;
+  color:var(--text-soft);
 }
 /* The cost is what the decision turns on, so it reads in the body face at the
    response options' size, not as a ten-pixel footnote. */
@@ -2565,7 +2565,7 @@
 }
 .campaign-route-card strong {
   display:block;
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-size:var(--type-body);
   line-height:var(--leading-base);
   margin:6px 0;
@@ -2645,7 +2645,7 @@
   box-shadow:inset 0 0 0 2px #111417;
 }
 .case-theory button.active {
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .case-theory button small {
   color:var(--text-soft);
@@ -2751,7 +2751,7 @@
   min-height:40px;
   border:0;
   background:none;
-  color:#f6f1e4;
+  color:var(--text-heading);
   border-radius:0;
   padding:7px 0;
   display:flex;
@@ -2890,7 +2890,7 @@
 .workspace-tabs button.active {
   border-bottom-color:var(--lime);
   background:none;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .workspace-tabs button>span {
   display:flex;
@@ -3100,7 +3100,7 @@
 }
 .action-sheet [data-slot=sheet-description] {
   font-size:var(--type-body);
-  color:#beb7a8;
+  color:var(--text-soft);
   line-height:var(--leading-prose);
   max-width:var(--measure-prose);
   letter-spacing:.01em;
@@ -3473,6 +3473,8 @@
   --state-supported:#24685b;
   --state-caution:#6f5200;
   --lime:#1d1b18;
+  --text-heading:#1d1b18;
+  --text-body:#2f2c27;
   --text-soft:#4a463e;
   --line:#c9bfac;
   background:#f1ece1!important;
@@ -3572,13 +3574,13 @@
   border-radius:2px;
 }
 .gloss-meaning {
-  color:#d7d1c3;
+  color:var(--text-body);
   font-style:normal;
   font-weight:400;
 }
 /* The previous response phase's choice and its effect, at the head of the next. */
 .response-recorded strong {
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-weight:600;
 }
 .evidence-decision button .decision-effect,.sit-more>p+p {
@@ -3641,7 +3643,7 @@ span.effect-list>span.effect {
 span.effect-list>span.effect>span {
   display:block;
   padding:2px 0;
-  color:#d7d1c3;
+  color:var(--text-body);
   font-family:var(--font-ui);
   font-size:var(--type-caption);
   font-weight:400;
@@ -3843,7 +3845,7 @@ span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   border:1px solid #867f70;
   border-radius:3px;
   background:#2d323a;
-  color:#f6f1e4;
+  color:var(--text-heading);
   padding:9px 13px;
   font-size:var(--type-body);
 }
@@ -4013,7 +4015,7 @@ span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   border:1px solid #596474;
   border-radius:3px;
   background:#2d333c;
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-size:var(--type-body);
   font-weight:600;
 }
@@ -4625,7 +4627,7 @@ the player already holds, so neither narrows the answer for them. */
 }
 .hypothesis-standing.level-untested {
   border-inline-start-color:#383d45;
-  color:#b1ab9c;
+  color:var(--text-soft);
 }
 .hypothesis-standing.level-holding {
   border-inline-start-color:var(--lime);
@@ -5083,14 +5085,14 @@ in colour, and the carried plan is stated before the options. */
   display:inline-block;
 }
 .response-sequence li.current {
-  color:#f6f1e4;
+  color:var(--text-heading);
   text-decoration:underline;
   text-decoration-color:var(--lime);
   text-decoration-thickness:2px;
   text-underline-offset:6px;
 }
-.response-sequence li.done {
-  color:#bbb4a3;
+.response-sequence li.done,.impact-meter small {
+  color:var(--text-soft);
 }
 .response-sequence li small {
   font-size:var(--type-micro);
@@ -5149,7 +5151,7 @@ in colour, and the carried plan is stated before the options. */
 span.effect-list>span.effect.term>em {
   grid-column:2/-1;
   text-align:end;
-  color:#d7d1c3;
+  color:var(--text-body);
 }
 /* Inside a paper document a section is a running head and a hairline, never a
    fill and a border: a box holding a fold that was itself a box, inside the
@@ -5317,7 +5319,7 @@ span.effect-list>span.effect.term>em {
   place-items:center;
   border:1px solid #868b93;
   border-radius:2px;
-  color:#f6f1e4;
+  color:var(--text-heading);
   font:500 var(--type-caption) var(--font-mono);
 }
 .hypothesis-options button>*,.evidence-decision button>strong,.evidence-decision button>span {
@@ -5333,7 +5335,7 @@ span.effect-list>span.effect.term>em {
   box-shadow:inset 3px 0 0 #f6f1e4;
 }
 .hypothesis-options button.active::before {
-  border-color:#f6f1e4;
+  border-color:var(--text-heading);
   background:#f6f1e4;
   color:#111417;
 }
@@ -5436,12 +5438,12 @@ span.effect-list>span.effect.term>em {
 }
 .mission-selector button:hover {
   border-color:transparent;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .mission-selector button.active {
   border-color:transparent;
   background:none;
-  color:#f6f1e4;
+  color:var(--text-heading);
   text-decoration:underline;
   text-decoration-color:var(--lime);
   text-decoration-thickness:2px;
@@ -5598,9 +5600,6 @@ span.effect-list>span.effect.term>em {
   color:var(--lime);
   font:500 var(--type-micro) var(--font-mono);
 }
-.impact-meter small {
-  color:var(--text-soft);
-}
 .impact-meter.rising strong,.impact-meter.rising small {
   color:#e8c968;
 }
@@ -5710,7 +5709,7 @@ span.effect-list>span.effect.term>em {
   gap:1px;
 }
 .command-options .option-signals>span {
-  color:#d7d1c3;
+  color:var(--text-body);
   font-size:var(--type-caption);
 }
 /* On the report the five responses are lettered entries like the readings: the
@@ -5988,7 +5987,7 @@ span.effect-list>span.effect.term>em {
 /* An option's terms are one line under its title; the right-hand column holds
    only what the option does to the meters. */
 .option-terms-line {
-  color:#d7d1c3;
+  color:var(--text-body);
 }
 /* The map's systems are ruled rows — zone, name, state — like the chain above
    them, not a grid of bordered tiles. */
@@ -6223,7 +6222,7 @@ body {
   border-inline-start-color:#4a4f57;
 }
 .set-piece-title h2,.command-event-heading h2,.variant-brief strong,.form-row.on-desk dd,.form-row.on-desk dd.open {
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .slip-form {
   margin-bottom:10px;
@@ -6265,6 +6264,8 @@ body {
 }
 .chain-sheet {
   --line:#c9bfac;
+  --text-heading:#1d1b18;
+  --text-body:#2f2c27;
   --text-soft:#4a463e;
   --lime:#1d1b18;
   padding:2px 18px;
@@ -6396,7 +6397,7 @@ body {
   font-size:var(--type-caption);
 }
 .recorded-line strong {
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-weight:600;
 }
 .variant-brief {
@@ -6411,7 +6412,7 @@ body {
 .variant-brief .variant-line strong {
   display:inline;
   margin:0;
-  color:#f6f1e4;
+  color:var(--text-heading);
   font-size:inherit;
 }
 /* The adversary's pace is a warning only when it presses. */
@@ -6430,7 +6431,7 @@ body {
 span.effect-list>span.effect.pace>em {
   grid-column:2/-1;
   text-align:end;
-  color:#d7d1c3;
+  color:var(--text-body);
 }
 span.effect-list>span.effect.pace.worse>em {
   color:#f0a48c;
@@ -6511,11 +6512,11 @@ span.effect-list>span.effect.pace.worse>em {
   padding:14px 16px;
   border-inline-start:3px solid #ff967d;
   background:#2a1d1b;
-  color:#f6f1e4;
+  color:var(--text-heading);
 }
 .fault-notice p {
   margin:6px 0 10px;
-  color:#d7d1c3;
+  color:var(--text-body);
   font-size:var(--type-caption);
 }
 .fault-notice>div {
@@ -6528,7 +6529,7 @@ span.effect-list>span.effect.pace.worse>em {
   margin:10px 0 0;
   white-space:pre-wrap;
   overflow-wrap:anywhere;
-  color:#b1ab9c;
+  color:var(--text-soft);
   font-size:var(--type-micro);
 }
 /* The review's suggestion for the next operation, a section of the document. */
@@ -6588,7 +6589,7 @@ span.effect-list>span.effect.pace.worse>em {
   .case-meters>div>.mono {
     grid-area:label;
     align-self:end;
-    font-size:9px;
+    font-size:var(--type-micro);
     line-height:1.15;
     overflow-wrap:normal;
     hyphens:manual;
@@ -6602,7 +6603,7 @@ span.effect-list>span.effect.pace.worse>em {
   .case-meters>div>small {
     grid-area:status;
     margin:0;
-    font-size:10px;
+    font-size:var(--type-micro);
     line-height:1.15;
   }
   .case-meters [data-slot=progress] {
@@ -6610,7 +6611,7 @@ span.effect-list>span.effect.pace.worse>em {
     height:10px;
   }
   .game-identity .eyebrow {
-    font-size:9px;
+    font-size:var(--type-micro);
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;

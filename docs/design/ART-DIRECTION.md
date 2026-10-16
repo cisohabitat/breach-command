@@ -61,14 +61,23 @@ reference material remains available. See [the roadmap](INFORMATION-LOAD.md).
 
 ## Type system
 
-Two faces, three weights, one scale (`--type-*`, a 1.25 ratio from 16 px).
+Two faces and three weights, with a 16 px body and a 1.25 heading scale.
+Captions use 14 px and metadata 12 px rather than continuing the scale below
+body size: essential supporting text and mobile pressure labels were too small.
 
 | Style | Face and weight | Used for |
 | --- | --- | --- |
 | Title | Form face, 500 or 600, 20 px and up | Screen, document, section and fold titles |
 | Figure | Form face, 500, tabular | Rolls, counts, meters, case and turn numbers |
-| Label | System face, 600, 12.8 px or 10.24 px | Field labels, kickers, a table's captions |
-| Body | System face, 400, 16 px or 12.8 px, 600 for a stressed word | Prose, options, the record |
+| Label | System face, 600, 14 px or 12 px | Field labels, kickers, a table's captions |
+| Body | System face, 400, 16 px; 14 px for supporting copy, 600 for a stressed word | Prose, options, the record |
+
+Neutral text uses shared heading (`--text-heading`), body (`--text-body`) and
+secondary (`--text-soft`) roles instead of subtly different grays on each panel.
+Paper documents and the attack-chain sheet override them with dark inks.
+State colours keep their existing meanings; do not colour ordinary prose as
+a warning or assessment. Keep both CSS bundles consistent so idle loading
+never changes the assignment screen's appearance.
 
 Nothing renders heavier than 600: the browser's bold on `strong` and `b` was a
 third weight in each face, and the 700 face is no longer shipped.

@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.39, 16 October 2026
+
+- **Clearer text hierarchy.** Keep condensed headings and regular-width prose,
+  increase captions to 14 px and compact metadata to 12 px, and remove tiny
+  mobile pressure-label overrides. Shared neutral heading, body and secondary
+  colours preserve dark inks on paper and the existing labelled status hues.
+
 ## 0.9.38, 16 October 2026
 
 - **Bounded message rendering.** Imported message identifiers reject template
