@@ -1,5 +1,6 @@
 export const evidenceAssessmentMessages = {
   "evidenceAssessment.sourceReview": "Source review: {name}, {role}",
+  "evidenceAssessment.confidenceBasis": "Confidence basis",
   "evidenceAssessment.strongSignal": "Signal: strong",
   "evidenceAssessment.weakSignal": "Signal: weak",
   "evidenceAssessment.strongConfidence": "Confidence: strong",

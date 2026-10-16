@@ -39,6 +39,18 @@ yet been decided by a human designer.
 | Panels | Flat: rules and hairlines, corners of 2 to 4 px, no glow, gradient or grid | Cards in cards, glows and grids were each named as template tells. |
 | Icons | Functional Lucide controls, plus original charcoal-and-bone artwork for procedures, evidence sources and specialist roles | The user requested all three art sets on 15 October 2026. Compact object silhouettes support recognition beside complete text labels; they do not decorate every heading or use state colours. |
 
+Captain reports lead with the result and stage facts. The response index is a
+list of underlined entries on the form, naming every option and navigating to
+its full costs without committing a choice. Keep the existing lettered response
+rows and the footer that exposes off-screen choices. Roll, plan and turn-effect
+detail uses a native disclosure; each new report starts closed. The finding,
+current reading assessment, signal/confidence labels, causal-limit warning,
+decision pressure and exact option costs remain visible. Keep voice captions
+and Listen beside the finding rather than inside a fold. In reports only, the
+long confidence basis opens on request; findings elsewhere retain their full
+assessment text. Failed checks say that nothing was ruled out and show ready
+sources from the public reading coverage, with no source guidance in Expert.
+
 ## Type system
 
 Two faces, three weights, one scale (`--type-*`, a 1.25 ratio from 16 px).
