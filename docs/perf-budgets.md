@@ -281,3 +281,11 @@ consolidate existing rules before adding more.
 First-operation source wording (0.9.40) adds 22 B to the warmed game bundle:
 1,181,079 B on assignment and 1,191,124 B by play start in the local build.
 Initial script and all style sizes are unchanged; all budgets remain fixed.
+
+Focused opening guidance (0.9.41) measures 656,715 B initial script,
+1,181,773 B warmed assignment script and 1,191,818 B by play start in the
+local production build. Warmed script increases by 694 B over 0.9.40.
+Linked style stays at 88,209 B; total style increases by 166 B to 221,694 B.
+Throttled phone LCP is 1.152/1.192 s for assignment/operation and CLS is
+0.001/0.020. All budgets remain unchanged; the operation script and total
+style caps have only 182 B and 306 B of headroom respectively.

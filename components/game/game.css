@@ -2994,10 +2994,17 @@
   line-height:var(--leading-base);
 }
 /* Before a reading is recorded the four cards already are the comparison. */
-/* The reference column is a fold only on a phone; beside the actions it is
-   always open and its summary is not shown. */
+/* Phones and the guided opening fold the reference; the normal desktop
+   reference stays open without a summary. */
 .hypothesis-board:not(.has-reading) .hypothesis-compare,.reference-fold>summary {
   display:none;
+}
+.opening-reference>summary {
+  display:list-item;
+  cursor:pointer;
+  min-height:44px;
+  padding-block:10px;
+  font-size:var(--type-caption);
 }
 .hypothesis-compare-options {
   display:grid;
@@ -4810,7 +4817,7 @@ awareness. */
 .compare-findings:hover {
   background:#ede2c914;
 }
-.hypothesis-compare>summary:focus-visible,.hypothesis-compare-options button:focus-visible,.decision-primer>summary:focus-visible,.report-dialog .evidence-decision .options-below:focus-visible,.modifier-details>summary:focus-visible,.topology-detail>summary:focus-visible,.map-intel-detail>summary:focus-visible,.evidence-detail>summary:focus-visible,.known-facts>summary:focus-visible,.compare-findings:focus-visible,.training-prompt .prompt-why summary:focus-visible {
+.opening-reference>summary:focus-visible,.hypothesis-compare>summary:focus-visible,.hypothesis-compare-options button:focus-visible,.decision-primer>summary:focus-visible,.report-dialog .evidence-decision .options-below:focus-visible,.modifier-details>summary:focus-visible,.topology-detail>summary:focus-visible,.map-intel-detail>summary:focus-visible,.evidence-detail>summary:focus-visible,.known-facts>summary:focus-visible,.compare-findings:focus-visible,.training-prompt .prompt-why summary:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:2px;
 }

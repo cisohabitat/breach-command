@@ -17,6 +17,28 @@ boundaries, accessible controls, voice captions and existing saves.
 
 Implementation for 0.9.34 covers all five steps in the investigation and evidence-response flow. Command, sector and recovery panels retain their existing concise option descriptions and explicit effects; further shortening is a follow-up driven by beta observations.
 
+The 0.9.41 learning-load pass extends this to the opening and procedure reports:
+
+- Guided Training starts with one academy lesson and a folded reference area
+  on every width for the first two checks. The observation, four reading choices
+  and stage question remain available. Map, specialist, known facts and case
+  theory remain manually accessible; useful theory/comparison prompts open the
+  reference, and desktop reference expands after two checks. Optional map
+  reminders wait until the opening loop is established. Guidance-off and Expert
+  retain their normal reference layout.
+- The immediate loop uses "working reading": choose or revise it, test it,
+  interpret the result. The opening defines hypothesis as that current
+  explanation, not a confirmed finding. This does not rename engine identifiers,
+  stored messages or historical scoring categories.
+- The action sheet keeps its turn-cost warning and exact plan effects visible,
+  with longer evidence and confidence explanations in a native disclosure.
+- Every procedure report exposes recorded meter changes and their existing
+  explanation before the optional roll/plan calculations. The previous
+  response's effects remain separately labelled. No predicted or hidden state
+  is substituted for recorded deltas.
+
+These remain design hypotheses about learning, not measured human outcomes.
+
 ## Verification and release
 
 Check all eleven supported widths, short laptops, keyboard focus, native

@@ -25,7 +25,7 @@ export const captainReportDialogMessages = {
   "captainReportDialog.availableSources": "Available sources for this reading",
   "captainReportDialog.sourcesCanTest": "These sources can test the reading at this stage and are ready to use. Continue investigating to choose one.",
   "captainReportDialog.sourcesUnavailable": "No sources that can still test this reading are ready. Check the procedure cards for cooldowns or compare another reading; broader collection remains available.",
-  "captainReportDialog.collectionDetails": "Roll, collection plan and turn effects",
+  "captainReportDialog.collectionDetails": "Roll and collection plan",
   "captainReportDialog.procedureResult": "Procedure result",
   "captainReportDialog.thisTurn": "This turn",
   "captainReportDialog.whereTheReading": "Where the reading stands now",

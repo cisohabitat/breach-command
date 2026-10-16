@@ -139,6 +139,13 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               {!decision && report.success && game.evidence.filter(item => item.turn === report.number && !item.supports).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}
               {!decision && report.success && !report.revealed && !report.injectReveal && game.difficulty === "training" && game.mode !== "expert" && game.evidence[0]?.turn === report.number && <SignalGuide />}
               {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
+              <div className="turn-movement"><b>{t("captainReportDialog.thisTurn")}</b><EffectList items={[meterEffect(game, "impact", report.impactChange), meterEffect(game, "continuity", report.continuityChange), meterEffect(game, "sector", report.sectorChange), meterEffect(game, "objective", report.objectiveChange)]} /><p>{report.revealed
+                ? t("captainReportDialog.findingTheStage")
+                : report.success
+                  ? t("captainReportDialog.theCheckCompleted")
+                  : report.planningBonus > 0
+                    ? t("captainReportDialog.theCheckFailed2", { change: `${report.objectiveChange >= 0 ? "+" : "−"}${Math.abs(report.objectiveChange)}` })
+                    : t("captainReportDialog.theCheckFailed")}{injectImpact(report) ? t("captainReportDialog.theInjectBelow", { change: `${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))}` }) : ""}{report.adversaryEvent ? t("captainReportDialog.theSituationAlso") : ""}</p></div>
               <details key={report.number} className="report-collection-details">
                 <summary>{t("captainReportDialog.collectionDetails")}</summary>
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
@@ -149,13 +156,6 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
                   game going back on its word. The reason says what moved them. */}
               <p className="turn-plan">{t("captainReportDialog.planScopeAnalysis", { procedureScopesTitle: procedureScopes[report.plan.scope].title.toLowerCase(), procedureIntensitiesTitle: procedureIntensities[report.plan.intensity].title.toLowerCase() })}</p>
-              <div className="turn-movement"><b>{t("captainReportDialog.thisTurn")}</b><EffectList items={[meterEffect(game, "impact", report.impactChange), meterEffect(game, "continuity", report.continuityChange), meterEffect(game, "sector", report.sectorChange), meterEffect(game, "objective", report.objectiveChange)]} /><p>{report.revealed
-                ? t("captainReportDialog.findingTheStage")
-                : report.success
-                  ? t("captainReportDialog.theCheckCompleted")
-                  : report.planningBonus > 0
-                    ? t("captainReportDialog.theCheckFailed2", { change: `${report.objectiveChange >= 0 ? "+" : "−"}${Math.abs(report.objectiveChange)}` })
-                    : t("captainReportDialog.theCheckFailed")}{injectImpact(report) ? t("captainReportDialog.theInjectBelow", { change: `${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))}` }) : ""}{report.adversaryEvent ? t("captainReportDialog.theSituationAlso") : ""}</p></div>
               <p className="report-narrative"><Glossed text={say(report.narrative)} /></p>
               </details>
               {/* A completed check that finds nothing rules out every technique its

@@ -61,7 +61,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   if (!game) return null;
 
   // The evidence workspace and the infrastructure map sit in the reference
-  // column, where no playtest found them unprompted. A note that asks for one of
+  // column, where no playtest found them unprompted. The guided Training opening
+  // folds it on every width; a note that asks for one of
   // them takes the player there: it opens what is folded and moves focus to it.
   const jumpTo = (selector: string) => {
     const target = document.querySelector<HTMLElement>(selector);
@@ -79,6 +80,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
     });
   };
   const evidenceReady = readyForTheory(game) || readyToCorrelate(game);
+  const opening = guidance === "training" && game.turns.length < 2 && !evidenceReady;
+  const referenceFolded = phone || opening;
   // The sector decision comes after the second turn; it is named until the next procedure.
   const sectorRecorded = game.turns.length === 2 && !game.pendingSetPiece ? game.setPieceHistory.at(-1) ?? null : null;
   // Beyond Training there is no clue, and the prompt once sent the player to
@@ -88,7 +91,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   const evidenceButton = evidenceReady && <button className="compare-findings" onClick={() => jumpTo(".evidence-workspace")}>{readyForTheory(game) ? t("investigateWorkspace.recordACase") : t("investigateWorkspace.compareFindings")} <ArrowDown size={14} /></button>;
   // The map is offered as an aside to the ordinary next step, never in place of
   // it, and not alongside a note that is already sending the player elsewhere.
-  const mapHint = !evidenceReady ? getMapHint(game) : null;
+  const mapHint = !opening && !evidenceReady ? getMapHint(game) : null;
   const mapAside = mapHint && <small className="prompt-aside">{say(mapHint)}<button className="compare-findings" onClick={() => jumpTo(".infrastructure-console")}>{t("investigateWorkspace.openTheMap")}<ArrowDown size={14} /></button></small>;
 
   // After the opening lesson, keep the next action, clue and usable sources
@@ -99,7 +102,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             <span>
         <strong>{say(trainingPrompt.title)}{/[?.!]$/.test(say(trainingPrompt.title)) ? "" : "."}</strong>{foldWhy
           ? <> <details className="prompt-why"><summary>{t("investigateWorkspace.why")}</summary>{say(trainingPrompt.detail)}</details></>
-          : <> {say(trainingPrompt.detail)}</>}
+          : <> {t("investigateWorkspace.readingDefinition")}</>}
         {trainingPrompt.clue && <b className="prompt-clue">{t("investigateWorkspace.whatTheTeam")}<Glossed text={trainingPrompt.clue} /></b>}
         {!!trainingPrompt.sources.length && <b className="prompt-sources">{trainingPrompt.sources.map(source => source.title).join(", ")}</b>}
         {(trainingPrompt.step === "theory" || trainingPrompt.step === "correlate") && evidenceButton}
@@ -130,7 +133,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
           <div className="guide-nudge decision-waiting" role="status"><span><strong>A {game.pendingSetPiece ? t("investigateWorkspace.sectorDecision") : t("investigateWorkspace.commandEvent")}{t("investigateWorkspace.isWaitingOn")}</strong>{t("investigateWorkspace.resolveItThere")}<button className="compare-findings" onClick={() => setActiveWorkspace("command")}>{t("investigateWorkspace.goToCommand")}<ArrowRight size={14} /></button></span></div>
         )}
       </div>
-      <details className="investigation-context reference-fold" open={!phone || referenceOpen} onToggle={event => phone && setReferenceOpen(event.currentTarget.open)}>
+      <details className={`investigation-context reference-fold${opening ? " opening-reference" : ""}`} open={!referenceFolded || referenceOpen} onToggle={event => referenceFolded && setReferenceOpen(event.currentTarget.open)}>
         <summary>{t("investigateWorkspace.mapEvidenceAnd")}<span>{t("investigateWorkspace.mapActionPlural", { count: game.mapActionsRemaining })}, {game.evidence.length ? t("investigateWorkspace.ofFindingsConfirmed", { count: game.evidence.filter(item => item.supports).length, evidence: game.evidence.length }) : t("investigateWorkspace.noFindingsYet")}{t("investigateWorkspace.compared2", { correlations: game.correlations.length })}</span></summary>
         {!game.pendingCommand && !game.pendingSetPiece && <KnownFacts game={game} />}
         <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
@@ -171,7 +174,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
                 or the Captain's prompt. Stacked, they put the first card below the
                 fold on a desktop. */}
             {!game.hypothesis
-              ? <div className="guide-nudge hypothesis-gate" role="status"><span>{rich("investigateWorkspace.strongRecordA", {  }, { strong: chunk => <strong>{chunk}</strong> })}{game.difficulty === "training" ? t("investigateWorkspace.whatTheTeam2") : t("investigateWorkspace.whatYouKnow")}{t("investigateWorkspace.itsOwnSources2", { ownSourceBonus: OWN_SOURCE_BONUS })}</span></div>
+              ? !trainingNote && <div className="guide-nudge hypothesis-gate" role="status"><span>{rich("investigateWorkspace.strongRecordA", {  }, { strong: chunk => <strong>{chunk}</strong> })}{game.difficulty === "training" ? t("investigateWorkspace.whatTheTeam2") : t("investigateWorkspace.whatYouKnow")}{t("investigateWorkspace.itsOwnSources2", { ownSourceBonus: OWN_SOURCE_BONUS })}</span></div>
               : trainingNote
                 ? trainingNote
                 : guidance !== "off" && <div className="guide-nudge"><span><strong>{t("investigateWorkspace.captainPrompt")}</strong> {say(getCoachPrompt(game, guided))}{latestObservation && <b className="prompt-clue">{t("investigateWorkspace.latestFromThe")}<Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}

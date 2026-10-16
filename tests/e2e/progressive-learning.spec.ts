@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { newGame, playTurn, proceduresFor, resolveDecision, setHypothesis } from "../../lib/advanced-game";
+import { availableIn, newGame, playTurn, proceduresFor, resolveDecision, resolveSetPiece, setHypothesis } from "../../lib/advanced-game";
 import { openWithSave, pendingDecisionGame, twoStagesGame } from "./fixtures";
 
 for (const width of [375, 1280]) {
@@ -21,9 +21,13 @@ for (const width of [375, 1280]) {
     await page.locator(width < 650 ? ".phone-quick-start .primary-button" : ".start-button").click();
     await page.getByRole("button", { name: /Assume command/ }).click();
     const next = page.locator(".tutorial-next button");
+    await expect(page.locator(".tutorial-steps > div")).toHaveCount(1);
     await expect(next).toBeInViewport({ ratio: 1 });
     await next.click();
     await expect(page.locator("#hypothesis-heading")).toHaveText("How did they get in?");
+    await expect(page.locator(".training-prompt")).toContainText("A working reading (hypothesis) is your current explanation");
+    await expect(page.locator(".hypothesis-gate")).toHaveCount(0);
+    await expect(page.locator(".reference-fold")).toHaveJSProperty("open", false);
     await page.locator(".hypothesis-options > button").filter({ hasText: "Identity-led intrusion" }).click();
     const source = page.locator('[data-procedure="identity"]');
     await expect(source).toHaveAccessibleName(/own source for this reading/);
@@ -34,14 +38,22 @@ for (const width of [375, 1280]) {
     await next.click();
     await source.click();
     await expect(page.locator(".action-sheet")).toContainText("Starting plan:");
+    const checkHelp = page.locator(".action-sheet details").filter({ has: page.getByText("How checks affect evidence and pressure", { exact: true }) });
+    await expect(checkHelp).toHaveJSProperty("open", false);
+    await checkHelp.locator("summary").click();
+    await expect(checkHelp).toContainText("Signal strength depends on the finding");
+    await checkHelp.locator("summary").click();
     await page.getByRole("button", { name: "Run procedure", exact: true }).click();
     const report = page.locator(".report-dialog");
     await expect(report).toBeVisible({ timeout: 15_000 });
     await expect(report).toContainText("Stage tested");
     const details = report.locator(".report-collection-details");
+    await expect(details).toHaveJSProperty("open", false);
+    await expect(report.locator(".turn-movement")).toContainText("This turn");
+    await expect(report.locator(".turn-movement .effect-list")).toBeVisible();
+    await expect(details.locator(".turn-movement")).toHaveCount(0);
     await details.locator("summary").click();
-    await expect(details).toContainText("This turn");
-    await expect(details.locator(".effect-list").first()).toBeVisible();
+    await expect(details.locator(".result-roll")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
@@ -64,6 +76,59 @@ for (const width of [375, 1180]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
+
+test("early reference controls remain usable and expand after two checks without findings", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  let game = setHypothesis({ ...newGame(0, "training", () => 0), injectDeck: [] }, "identity");
+  const first = proceduresFor(game).find(source => availableIn(game, source.id) === 0)!;
+  game = playTurn(game, first.id, 1);
+  await openWithSave(page, game, true, { voice: false });
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Investigate/ }).first().click();
+  const reference = page.locator(".reference-fold");
+  await expect(reference).toHaveJSProperty("open", false);
+  await reference.locator(":scope > summary").focus();
+  await reference.locator(":scope > summary").press("Enter");
+  await expect(reference.locator(":scope > summary")).toBeFocused();
+  await expect(page.locator(".infrastructure-console")).toBeVisible();
+  await expect(page.locator(".theory-guide")).toHaveJSProperty("open", false);
+  await page.locator(".theory-guide > summary").click();
+  await expect(page.locator(".case-theory button").first()).toBeVisible();
+  const second = proceduresFor(game).find(source => availableIn(game, source.id) === 0)!;
+  game = playTurn(game, second.id, 1);
+  if (game.pendingSetPiece) game = resolveSetPiece(game, "a");
+  expect(game.evidence).toHaveLength(0);
+  await openWithSave(page, game, true, { voice: false });
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Investigate/ }).first().click();
+  await expect(reference).toHaveJSProperty("open", true);
+});
+
+test("guidance-off and Expert retain the expanded desktop reference", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  for (const expert of [false, true]) {
+    const game = newGame(0, "training", () => 0);
+    await openWithSave(page, expert ? { ...game, mode: "expert" } : game, expert, { voice: false });
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Investigate/ }).first().click();
+    await expect(page.locator(".reference-fold")).toHaveJSProperty("open", true);
+    await expect(page.locator(".training-prompt")).toHaveCount(0);
+  }
+});
+
+test("the simplified opening remains usable in the longer pseudo-locale", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 844 });
+  await openWithSave(page, newGame(0, "training", () => 0), true, { voice: false }, "/?locale=en-XA");
+  await page.locator(".phone-quick-start .primary-button").click();
+  await page.keyboard.press("Escape");
+  await page.locator(".workspace-tabs button").nth(1).click();
+  const reference = page.locator(".reference-fold");
+  await expect(page.locator(".training-prompt")).toBeVisible();
+  await expect(reference).toHaveJSProperty("open", false);
+  await reference.locator(":scope > summary").click();
+  await expect(page.locator(".infrastructure-console")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
 
 test("two confirmed stages expose theory and comparison, with the next stage question", async ({ page }) => {
   await openWithSave(page, { ...twoStagesGame(), difficulty: "training" }, true, { voice: false });
