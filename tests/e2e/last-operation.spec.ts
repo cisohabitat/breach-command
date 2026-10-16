@@ -20,7 +20,7 @@ async function open(page: import("@playwright/test").Page, stored: unknown, path
 }
 
 test("the last operation reads in the player's language", async ({ page }) => {
-  const panel = await open(page, record, "/?locale=en-XA");
+  const panel = await open(page, record, "/play?locale=en-XA");
   await expect(panel).toContainText("[thé îñvéštîgátîöñ wîñdöw çlöšéd");
   await expect(panel, "the date in the locale too").toContainText("öñ 1 Öçtöbér");
   await expect(panel).toContainText("[Thé wîñdöw çlöšéd");
@@ -29,7 +29,7 @@ test("the last operation reads in the player's language", async ({ page }) => {
 
 test("an older record of sentences reads as it was", async ({ page }) => {
   const older = { ...record, ending: "The investigation window closed", next: { ...next, title: "Case 5, A terminal under watch, at Operational", reason: "The window closed with 0 of 4 stages confirmed." } };
-  const panel = await open(page, older, "/");
+  const panel = await open(page, older, "/play");
   await expect(panel).toContainText("the investigation window closed");
   await expect(panel).toContainText("Case 5, A terminal under watch, at Operational");
   await expect(panel).toContainText("The window closed with 0 of 4 stages confirmed.");

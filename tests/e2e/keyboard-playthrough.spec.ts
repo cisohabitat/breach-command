@@ -144,7 +144,7 @@ for (const [width, height, dice] of [[1280, 800, 20261011], [390, 844, 1]] as co
         localStorage.setItem("breach-command.tutorial-complete", "true");
       } catch {}
     }, dice);
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     const player = new Player(page);
     await player.audit();
 

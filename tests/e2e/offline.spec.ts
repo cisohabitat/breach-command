@@ -15,7 +15,7 @@ test("a single visit is enough to play offline", async ({ page, context, browser
   // the result says nothing about Safari. Offline play on a real iPhone is a
   // manual check in docs/ROADMAP.md, Phase 1.
   test.skip(browserName === "webkit", "Playwright's WebKit cannot reload offline through a service worker");
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/play", { waitUntil: "networkidle" });
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
   const cached = await page.evaluate(async () => {
     const names = await caches.keys();
@@ -26,6 +26,12 @@ test("a single visit is enough to play offline", async ({ page, context, browser
   expect(cached.some(path => path.endsWith(".css")), "and its styles").toBe(true);
 
   await context.setOffline(true);
+  await page.goto("/?locale=en-XA", { waitUntil: "load" });
+  await expect(page.locator(".title-start")).toBeVisible();
+  await page.locator(".title-start").click();
+  await expect(page).toHaveURL(/\/play\?locale=en-XA$/);
+  await expect(page.locator(".briefing-screen")).toBeVisible();
+  await page.goto("/play", { waitUntil: "load" });
   await page.reload({ waitUntil: "load" });
   await expect(page.locator(".briefing-screen")).toBeVisible();
   await page.waitForLoadState("networkidle");

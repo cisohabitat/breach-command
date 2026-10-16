@@ -155,7 +155,7 @@ test.describe("responsive interaction audit", () => {
       test.setTimeout(120_000);
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await installDeterministicAudit(page);
-      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await page.goto("/play", { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading", { name: /You have the incident/i })).toBeVisible();
       await expectNoHorizontalOverflow(page, viewport.label + " assignment");
 
@@ -213,7 +213,7 @@ test.describe("responsive interaction audit", () => {
       await page.addInitScript(([key, value]) => {
         try { localStorage.setItem(key, value); } catch {}
       }, [SESSION_KEY, session] as const);
-      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await page.goto("/play", { waitUntil: "domcontentloaded" });
 
       const resume = page.getByRole("button", { name: "Resume", exact: true });
       await expectReachableTarget(page, resume, "Resume saved operation");
@@ -239,7 +239,7 @@ test.describe("responsive interaction audit", () => {
   test("hands a phone-sized practice run back to the player", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await installDeterministicAudit(page);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/play", { waitUntil: "domcontentloaded" });
     await enablePracticeRun(page);
 
     await page.getByRole("button", { name: "Pause Bot Commander" }).click();

@@ -48,7 +48,7 @@ for (const width of [320, 390, 820, 1280]) {
         localStorage.setItem(key, campaign);
         localStorage.setItem("breach-command.tutorial-complete", "true");
       }, [CAMPAIGN_KEY, JSON.stringify({ ...defaultCampaign, completed: Array.from({ length: 10 }, (_, i) => i), ...conditions })]);
-      await page.goto("/", { waitUntil: "networkidle" });
+      await page.goto("/play", { waitUntil: "networkidle" });
       const image = page.locator(".campaign-ending > .story-art");
       await loaded(image);
       await expect(image).toHaveAttribute("src", `/art/campaign/ending-${id}.webp`);

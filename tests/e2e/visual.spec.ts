@@ -64,7 +64,7 @@ async function openCampaign(page: Page, campaign: object) {
       localStorage.setItem(key, value);
     } catch {}
   }, [CAMPAIGN_KEY, JSON.stringify(campaign)] as const);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto("/play", { waitUntil: "domcontentloaded" });
   await expect(page.locator(".career-card")).toBeVisible();
   await page.waitForLoadState("networkidle");
   // A whole-page capture leaves the sticky start where the first screen put
@@ -77,6 +77,12 @@ test.describe("visual baselines", () => {
   test.skip(({ browserName }) => browserName !== "chromium", "baselines are recorded in Chromium");
 
   for (const [width, height] of widths) {
+    test(`title at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/", { waitUntil: "networkidle" });
+      await snap(page, `${width}-title.png`);
+    });
+
     test(`screens at ${width}`, async ({ page }) => {
       // The assignment previews the day's incident variant, whose line can wrap
       // to two and move everything below it, so the clock is the day the

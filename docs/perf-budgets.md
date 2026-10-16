@@ -289,3 +289,12 @@ Linked style stays at 88,209 B; total style increases by 166 B to 221,694 B.
 Throttled phone LCP is 1.152/1.192 s for assignment/operation and CLS is
 0.001/0.020. All budgets remain unchanged; the operation script and total
 style caps have only 182 B and 306 B of headroom respectively.
+
+Illustrated title entry (0.9.42) lives at `/`, with the incident desk moved
+to `/play`. The game does not request either poster or the title stylesheet.
+The local production game measures 656,727 B initial script, 1,181,785 B
+warmed assignment script and 1,191,830 B by play start; linked/total styles
+remain 88,209/221,694 B. All existing game budgets remain unchanged. The
+title uses the supplied original JPEGs, 361,385 B landscape and 378,778 B
+portrait; `<picture>` requests one according to viewport shape. They are
+separate from the script/style measures and are not precached on installation.

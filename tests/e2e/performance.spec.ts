@@ -39,7 +39,7 @@ async function measure(page: Page, open: () => Promise<void>): Promise<Measure> 
     const w = window as unknown as { __vitals: { lcp: number; cls: number } };
     return { fcp: paint ? paint.startTime : 0, lcp: w.__vitals.lcp, cls: w.__vitals.cls };
   });
-  const html = await (await page.request.get("/")).text();
+  const html = await (await page.request.get("/play")).text();
   const initial = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+\.js/g) ?? [])];
   const initialScriptBytes = initial.reduce((sum, path) => sum + (byUrl.get(path) ?? 0), 0);
   // The stylesheets the page links, which it waits for before it paints; the

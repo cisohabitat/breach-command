@@ -27,7 +27,7 @@ async function openGame(page: Page) {
       localStorage.setItem("breach-command.tutorial-complete", "true");
     } catch {}
   });
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto("/play", { waitUntil: "domcontentloaded" });
   await expect(page.locator(".briefing-screen")).toBeVisible();
   // The page is prerendered and visible before it hydrates; a click that lands
   // first opens nothing. The dev server hydrates slowly enough to show it.

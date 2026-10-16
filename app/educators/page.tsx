@@ -52,7 +52,7 @@ export default function EducatorPack() {
 
       <h2>What it is and is not</h2>
       <p>Every scenario, technique and character is original and fictional. Each technique maps to its nearest MITRE ATT&amp;CK technique, so a finding can be filed where a practitioner would file it, but the game does not claim to reproduce any real intrusion.</p>
-      <p><Link href="/">Back to the incident desk</Link></p>
+      <p><Link href="/play">Back to the incident desk</Link></p>
     </main>
   );
 }

@@ -1,4 +1,5 @@
 // Every message key, as types only: importing this pulls no catalogue into a bundle.
+import type { titleScreenMessages } from "./en/title-screen.ts";
 import type { en } from "./en.ts";
 import type { evidenceAssessmentMessages } from "./en/evidence-assessment.ts";
 import type { evidenceLinksMessages } from "./en/evidence-links.ts";
@@ -72,5 +73,6 @@ export type MessageKey = keyof typeof en
   | keyof typeof sectorBoardMessages
   | keyof typeof sectorSetPieceMessages
   | keyof typeof settingsDialogMessages
-  | keyof typeof tutorialCoachMessages;
-export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "effect-list", "engine", "end-state", "evidence-assessment", "evidence-links", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach"];
+  | keyof typeof tutorialCoachMessages
+  | keyof typeof titleScreenMessages;
+export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "effect-list", "engine", "end-state", "evidence-assessment", "evidence-links", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach", "title-screen"];

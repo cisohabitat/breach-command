@@ -9,8 +9,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { firstLoad, root } from "./first-load.ts";
 
-test("the assignment screen loads without the engine", () => {
+test("the title page does not load the incident application", () => {
   const modules = firstLoad(`${root}app/page.tsx`);
+  assert.ok(modules.includes("components/game/title-screen.tsx"));
+  assert.ok(!modules.includes("components/game/incident-app.tsx"));
+  assert.ok(!modules.includes("hooks/use-game-session.ts"));
+});
+
+test("the assignment screen loads without the engine", () => {
+  const modules = firstLoad(`${root}app/play/page.tsx`);
   assert.ok(modules.includes("components/game/briefing-screen.tsx") && modules.includes("hooks/use-game-session.ts"), "the walk reaches the assignment screen and the session hook");
   const engine = /^(lib\/advanced-game\.ts|lib\/engine\/(content|transitions|reads|review|rules)\.ts|lib\/session\.ts|lib\/game-bot\.ts|lib\/game\.ts|lib\/phase8\.ts|lib\/specialist-notes\.ts|lib\/engine\/words\.ts|lib\/glossary\.ts|lib\/i18n\/en\/engine\.ts|lib\/i18n\/engine-messages\.ts|components\/game\/(game-bundle|game-screen|action-sheet|roll-dialog|mission-briefing-dialog|captain-report-dialog|field-guide-dialog|debrief-dialog|settings-dialog|new-incident-dialog)\.tsx?)$/;
   assert.deepEqual(modules.filter(file => engine.test(file)), [], "load it through lib/game-loader.ts instead");

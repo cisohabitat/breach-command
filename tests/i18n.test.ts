@@ -217,12 +217,12 @@ test("markup in a message renders through the component's tags", () => {
 });
 
 // The engine's catalogue and the glossary are not on the first load, and are
-// loaded once: app/page.tsx takes every lazy part from the game bundle
+// loaded once: components/game/incident-app.tsx takes every lazy part from the game bundle
 // (lib/game-loader.ts), which carries them, so no component imports them, which
 // would copy them into that part's script. What the first load says is in the
 // base. And every engine key is one the engine writes.
 test("the engine's messages are loaded once, before the parts that show them, and all used", () => {
-  const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../components/game/incident-app.tsx", import.meta.url), "utf8");
   const parts = [...page.matchAll(/dynamic\(\(\) => (.*?)\.then/g)].map(match => match[1]);
   assert.ok(parts.length >= 9 && parts.every(part => part === "loadGame()"), "every part comes from the game bundle");
   const copied = componentFiles.filter(file => /@\/lib\/(i18n\/engine-messages|glossary)"/.test(readFileSync(new URL(file, import.meta.url), "utf8")));

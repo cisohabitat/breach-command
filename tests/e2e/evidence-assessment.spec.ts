@@ -45,7 +45,7 @@ test("a causal comparison strengthens visible confidence and survives resume", a
   await expect(page.locator(".evidence-cards")).toContainText("different collection sources");
   // A fresh page shares storage without rerunning openWithSave's fixture reset.
   const resumed = await page.context().newPage();
-  await resumed.goto("/");
+  await resumed.goto("/play");
   await resumed.waitForLoadState("networkidle");
   await resumed.getByRole("button", { name: "Resume", exact: true }).click();
   await expect(resumed.locator(".evidence-cards [data-confidence=strong]")).toHaveCount(2);
