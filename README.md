@@ -8,6 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
+Release **0.9.33**: see the [release notes](CHANGELOG.md#0933-16-october-2026).
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.

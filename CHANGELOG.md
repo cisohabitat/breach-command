@@ -4,6 +4,40 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.33, 16 October 2026
+
+- **Clearer Captain reports.** Results, the tested stage and confirmed stages
+  lead each report. A response index names every command choice and moves
+  focus to its full description and exact costs without choosing it. Roll,
+  collection-plan and turn-effect details open on request; findings, voice
+  captions and signal/confidence warnings remain visible. Failed checks
+  explicitly rule nothing out and show ready sources from public coverage;
+  Expert withholds this guidance.
+- **Signal and confidence.** Findings distinguish strong or weak signal from
+  strong or weak confidence in their causal interpretation. Training explains
+  all four combinations. Supported comparisons show the confidence gain,
+  identify the contributing sources and can trigger a captioned Captain line.
+  Linked findings retain their assessment and specialist source review.
+- **Art and state colours.** Original field-kit icons identify procedures,
+  evidence sources and specialist roles. Muted blue marks selections and
+  untested links, teal supported assessments and stable services, amber weak
+  confidence and degraded services, and coral critical states. Text labels,
+  connection patterns, high contrast and reduced-motion support remain.
+- **Better voice pacing.** Routine Captain speech waits for a quiet moment
+  and pauses while a decision is pending. Urgent warnings take priority.
+  Listen and Skip remain available; muting, closing a view or hiding the tab
+  cancels queued speech as well as playback.
+- **Balance and practice.** Terminal schedule pressure is eased while
+  retaining the difficulty progression. Bot Commander prioritises ready
+  sources that can test the current reading, using public coverage rather
+  than the hidden attack chain, and falls back to broader collection when
+  those sources are unavailable.
+- **Fixes and testing.** Deferred focus recovery respects the player's
+  current focus. Later-stage report placeholders render their numbers
+  correctly. The newcomer playtest pack now covers signal/confidence and
+  voice pacing with consistent timing instructions. Report scanning and
+  keyboard navigation are checked across Chromium, WebKit and Firefox.
+
 ## 0.9.32, 12 October 2026
 
 - **Keyboard play keeps its place.** Played with the keyboard alone, focus
