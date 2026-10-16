@@ -304,7 +304,7 @@ and 317,644 B portrait files and moves "Stop the Breach" over the picture.
 Only one poster loads per viewport. The local game script/style measurements
 remain identical to 0.9.42 above; all performance budgets remain unchanged.
 
-Incident-header wordmark preview uses a 56,558 B local transparent WebP,
+Incident-header wordmark (0.9.44) uses a 56,558 B local transparent WebP,
 encoded at three times its desktop display width from the supplied-logo
 adaptation. Local initial/warmed/operation scripts are
 656,887/1,181,945/1,191,990 B; linked/total styles are 88,332/221,817 B.
