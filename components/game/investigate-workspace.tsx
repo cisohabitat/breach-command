@@ -68,6 +68,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
     if (!target) return;
     const findings = target.querySelector<HTMLDetailsElement>("details.evidence-detail");
     if (findings) findings.open = true;
+    const theory = target.querySelector<HTMLDetailsElement>("details.theory-guide");
+    if (theory && readyForTheory(game)) theory.open = true;
     setReferenceOpen(true);
     // The fold opens on the next render, so the scroll waits a frame for it.
     requestAnimationFrame(() => {
@@ -89,10 +91,9 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   const mapHint = !evidenceReady ? getMapHint(game) : null;
   const mapAside = mapHint && <small className="prompt-aside">{say(mapHint)}<button className="compare-findings" onClick={() => jumpTo(".infrastructure-console")}>{t("investigateWorkspace.openTheMap")}<ArrowDown size={14} /></button></small>;
 
-  // The prompt's longer explanation folds away where the board already carries
-  // it — the reading's standing says why to test or revise — and stays inline
-  // where it is the instruction itself.
-  const foldWhy = trainingPrompt?.step === "test" || trainingPrompt?.step === "revise";
+  // After the opening lesson, keep the next action, clue and usable sources
+  // visible; disclose the longer explanation when the player wants it.
+  const foldWhy = trainingPrompt?.step !== "declare";
   const trainingNote = trainingPrompt && (
     <div className={`guide-nudge training-prompt step-${trainingPrompt.step}`}>
             <span>

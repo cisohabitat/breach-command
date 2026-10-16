@@ -19,6 +19,8 @@ import { withForm } from "@/lib/i18n/message";
 
 register(hypothesisBoardMessages);
 
+const stageQuestions = ["hypothesisBoard.questionEntry", "hypothesisBoard.questionMovement", "hypothesisBoard.questionPersistence", "hypothesisBoard.questionOutbound"] as const;
+
 export function HypothesisBoard({
   game,
   onChoose,
@@ -44,7 +46,7 @@ export function HypothesisBoard({
       <div className="hypothesis-heading">
         <div>
                     <span>
-            <strong id="hypothesis-heading">{t("hypothesisBoard.workingHypothesis")}</strong>
+            <strong id="hypothesis-heading">{underTest ? t(stageQuestions[underTest.index]) : t("hypothesisBoard.workingHypothesis")}</strong>
             <small>{t("hypothesisBoard.selectTheExplanation")}</small>
           </span>
         </div>

@@ -46,11 +46,14 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, v
   return (
     <section className="evidence-workspace" aria-label={t("evidenceWorkspace.evidenceCorrelationWorkspace")} tabIndex={-1}>
       <div className="map-heading"><div><h2>{t("evidenceWorkspace.evidenceWorkspace")}</h2></div><span className="focus-instruction">{t("evidenceWorkspace.correlationsTested", { count: game.correlations.length })}</span></div>
-      {game.difficulty === "training" && game.mode !== "expert" && <SignalGuide />}
-      <div className="case-theory">
+      {game.difficulty === "training" && game.mode !== "expert" && !!game.evidence.length && <SignalGuide />}
+      <details className="theory-guide decision-primer" open={game.difficulty !== "training" || game.mode === "expert" || confirmed >= 2 || !!game.caseTheory}>
+        <summary>{t("evidenceWorkspace.theoryWhenReady")}</summary>
+        <div className="case-theory">
         <div><span><strong>{t("evidenceWorkspace.caseTheory")}</strong><small>{t("evidenceWorkspace.declareIntentThen")}{objective.confidence === "LOW" ? t("evidenceWorkspace.theObjectiveCan") : t("evidenceWorkspace.currentAssessmentConfidence", { objectiveTheoryTitle: objectiveTheory[game.objective].title.toLowerCase(), confidence: say(withForm(level(objective.confidence), "lower")) })}</small></span></div>
         <div>{(Object.keys(adversaryObjectives) as AdversaryObjectiveId[]).map(id => <button key={id} className={game.caseTheory === id ? "active" : ""} aria-pressed={game.caseTheory === id} disabled={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => onTheory(id)}><strong>{objectiveTheory[id].title}{game.caseTheory === id && <b className="plan-selected">{t("endState.recorded")}</b>}</strong><small>{objectiveTheory[id].question}</small></button>)}</div>
       </div>
+      </details>
       {!game.evidence.length ? <div className="evidence-empty"><p>{rich("evidenceWorkspace.strongNoFindings", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div> : <>
         <details className="evidence-detail" open={game.evidence.length <= 3}>
           {/* A finding is not a stage. A check that succeeds without exposing one is
@@ -63,6 +66,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, v
           </button>)}</div>
         </details>
         {game.evidence.length >= 2 && <EvidenceLinks game={game} selected={selected} />}
+        {game.evidence.length >= 2 ? <>
         <div className="relationship-assessment" role="group" aria-label={t("evidenceWorkspace.relationshipAssessment")}>
           <span>{t("evidenceWorkspace.yourAssessment")}</span>
           <button className={assessment === "causal" ? "active" : ""} aria-pressed={assessment === "causal"} onClick={() => setAssessment("causal")}>{t("evidenceWorkspace.causalSequence")}</button>
@@ -70,6 +74,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, v
         </div>
         <p className="relationship-helper">{alreadyCompared ? t("evidenceWorkspace.alreadyCompared") : selected.length === 0 ? t("evidenceWorkspace.selectTwoFindings") : selected.length === 1 ? t("evidenceWorkspace.oneFindingSelected") : assessment ? t("evidenceWorkspace.twoFindingsSelected") : t("evidenceWorkspace.twoFindingsSelected2")}{t("evidenceWorkspace.oneFindingEnabled")}</p>
         <button className="correlate-button" disabled={selected.length !== 2 || !assessment || alreadyCompared || !!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onClick={() => { if (!assessment) return; onCorrelate(selected as [string, string], assessment); setCompared({ first: game.evidence[0], index: game.correlations.length, turn: game.turns.length }); setSelected([]); setAssessment(null); }}><Link2 size={17} />{t("evidenceWorkspace.testAssessment")}</button>
+        </> : <p className="relationship-helper">{t("evidenceWorkspace.collectAnotherFinding")}</p>}
       </>}
       {!!changed.length && <section className="confidence-change" key={compared!.index}>
         <p role="status"><strong>{t("evidenceWorkspace.confidenceStrengthened")}</strong> {t("evidenceWorkspace.confidenceChanged", { count: changed.length, sources })}</p>

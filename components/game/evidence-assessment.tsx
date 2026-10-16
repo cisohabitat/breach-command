@@ -23,7 +23,7 @@ export function EvidenceAssessment({ game, item, compact = false }: { game: Game
       <span><ShieldCheck size={14} aria-hidden="true" />{t(read.confidence === "strong" ? "evidenceAssessment.strongConfidence" : "evidenceAssessment.weakConfidence")}</span>
     </span>
     <small>{t(item.supports ? "evidenceAssessment.signalConfirmed" : "evidenceAssessment.signalEmpty")}</small>
-    {compact ? <details className="decision-primer"><summary>{t("evidenceAssessment.confidenceBasis")}</summary><p>{basis}</p></details> : <small>{basis}</small>}
+    {compact ? <details className="decision-primer"><summary>{t("evidenceAssessment.confidenceBasis")}: {t(read.confidence === "strong" ? "evidenceAssessment.supportedInterpretation" : "evidenceAssessment.seekCorroboration")}</summary><p>{basis}</p></details> : <small>{basis}</small>}
   </Root>;
 }
 
