@@ -4,10 +4,12 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
-## Unreleased
+## 0.9.43, 16 October 2026
 
-- Preview replacement title artwork with a semi-transparent Start link over
-  the lower centre of the picture, retaining keyboard focus, locale and resume access.
+- Replace both title pictures with the supplied incident-command artwork.
+- Rename the title entry to **Stop the Breach** and float it over the lower
+  centre of the picture with a semi-transparent background and hover state.
+  Retain keyboard focus, locale selection and saved-operation resume access.
 
 ## 0.9.42, 16 October 2026
 

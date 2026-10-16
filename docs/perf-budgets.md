@@ -298,3 +298,8 @@ remain 88,209/221,694 B. All existing game budgets remain unchanged. The
 title uses the supplied original JPEGs, 361,385 B landscape and 378,778 B
 portrait; `<picture>` requests one according to viewport shape. They are
 separate from the script/style measures and are not precached on installation.
+
+Title artwork refresh (0.9.43) replaces those posters with 402,043 B landscape
+and 317,644 B portrait files and moves "Stop the Breach" over the picture.
+Only one poster loads per viewport. The local game script/style measurements
+remain identical to 0.9.42 above; all performance budgets remain unchanged.

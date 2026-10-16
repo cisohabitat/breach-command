@@ -14,7 +14,7 @@ for (const [width, height, image] of [[375, 844, "portrait"], [820, 1180, "portr
     await expect(page.locator(".title-art img")).toHaveJSProperty("complete", true);
     expect(await page.locator(".title-art img").evaluate((img: HTMLImageElement) => img.currentSrc)).toContain(`${image}.jpg`);
     expect(posters).toHaveLength(1);
-    const start = page.getByRole("link", { name: "Start", exact: true });
+    const start = page.getByRole("link", { name: "Stop the Breach", exact: true });
     await expect(start).toBeInViewport({ ratio: 1 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.keyboard.press("Tab");
@@ -25,7 +25,7 @@ for (const [width, height, image] of [[375, 844, "portrait"], [820, 1180, "portr
   });
 }
 
-test("title preserves saved progress and locale through Start", async ({ page }) => {
+test("title preserves saved progress and locale through the title entry", async ({ page }) => {
   const save = serialiseSession(newGame(2, "training", () => 0), true, false);
   await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [SESSION_KEY, save]);
   await page.goto("/?locale=en-XA", { waitUntil: "networkidle" });
@@ -37,13 +37,13 @@ test("title preserves saved progress and locale through Start", async ({ page })
   expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toBe(save);
 });
 
-test("Start remains usable without artwork and title has no axe violations", async ({ page }) => {
+test("the title entry remains usable without artwork and title has no axe violations", async ({ page }) => {
   await page.route("**/art/title/**", route => route.abort());
   await page.goto("/", { waitUntil: "networkidle" });
   const require = createRequire(import.meta.url);
   await page.addScriptTag({ content: readFileSync(require.resolve("axe-core/axe.min.js"), "utf8") });
   const violations = await page.evaluate(async () => (await window.axe.run(document, {})).violations);
   expect(violations).toEqual([]);
-  await page.getByRole("link", { name: "Start", exact: true }).click();
+  await page.getByRole("link", { name: "Stop the Breach", exact: true }).click();
   await expect(page.locator(".briefing-screen")).toBeVisible();
 });

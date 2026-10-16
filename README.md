@@ -8,11 +8,11 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.42**: see the [release notes](CHANGELOG.md#0942-16-october-2026).
+Release **0.9.43**: see the [release notes](CHANGELOG.md#0943-16-october-2026).
 
-The home page opens with the supplied Breach Command theme artwork: landscape on wide screens and portrait on tall screens. Select **Start** to reach the incident desk at `/play`, where you can begin or resume an operation. You can bookmark `/play` to open the desk directly. Both entry pages remain available offline after visiting the desk; theme images are decorative and load separately from the game.
+The home page opens with the supplied Breach Command incident-command artwork: landscape on wide screens and portrait on tall screens. Select **Stop the Breach** to reach the incident desk at `/play`, where you can begin or resume an operation. You can bookmark `/play` to open the desk directly. Both entry pages remain available offline after visiting the desk; theme images are decorative and load separately from the game.
 
-Title-screen preview: replacement artwork carries a semi-transparent Start link floating near the bottom centre of the picture, with visible hover and keyboard-focus states. The explanatory text remains available to screen readers. This preview is held off `main` for visual testing.
+The entry link floats near the bottom centre of the picture with a semi-transparent background, hover feedback and a visible keyboard-focus outline. Its explanatory description remains available to screen readers.
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
@@ -213,7 +213,7 @@ The terminal's schedule erosion was reduced after comparing collection, evidence
 
 | Path | Responsibility |
 | --- | --- |
-| `app/page.tsx` | Illustrated title page with Start leading to `/play` |
+| `app/page.tsx` | Illustrated title page with Stop the Breach leading to `/play` |
 | `components/game/incident-app.tsx` | Application shell: topbar, workspace switch, live regions and overlay mounting |
 | `hooks/use-game-session.ts` | Game, session and campaign state, every transition, effect and derived readout |
 | `hooks/use-preferences.ts` | Audio, haptics and contrast, loaded once and persisted after |
