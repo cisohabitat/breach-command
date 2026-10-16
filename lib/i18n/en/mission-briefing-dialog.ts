@@ -13,5 +13,5 @@ export const missionBriefingDialogMessages = {
   "missionBriefingDialog.assumeCommand": "Assume command",
   "missionBriefingDialog.theOperationEnds2": "{plain} The operation ends if it reaches zero.",
   "missionBriefingDialog.formBc1002": "Form BC-100 <span>/</span> Mission brief, case {scenario}",
-  "missionBriefingDialog.strongYourFirst": "<strong>Your first move</strong>Assume command, open Investigate, choose a working hypothesis and run a procedure marked “Own source”.",
+  "missionBriefingDialog.strongYourFirst": "<strong>Your first move</strong>Assume command, open Investigate and choose a working reading. Then run a source that can test it at this stage.",
 } as const;

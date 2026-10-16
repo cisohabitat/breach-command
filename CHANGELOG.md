@@ -4,6 +4,20 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.41, 16 October 2026
+
+- **A focused opening loop.** Guided Training introduces one academy lesson
+  at a time during the first two checks and starts optional map, specialist
+  and evidence references folded on every width. Everything remains manually
+  accessible; desktop reference expands after two checks or when comparison
+  and theory become useful. Guidance-off and Expert keep their usual layout.
+- **Plain, consistent guidance.** Use "working reading", define hypothesis
+  alongside it, and keep longer check explanations optional while preserving
+  visible turn-cost warnings and exact plan effects.
+- **Visible consequences.** Procedure reports show recorded meter changes and
+  why they happened before optional roll/plan calculations. Game rules and
+  strategic choices are unchanged.
+
 ## 0.9.40, 16 October 2026
 
 - **Test a reading before calling it supported.** The first-operation academy

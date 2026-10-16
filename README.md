@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.40**: see the [release notes](CHANGELOG.md#0940-16-october-2026).
+Release **0.9.41**: see the [release notes](CHANGELOG.md#0941-16-october-2026).
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
@@ -114,6 +114,8 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 Typography keeps condensed headings and figures distinct from regular-width prose. Body text is 16 px, supporting captions 14 px and compact metadata 12 px, including mobile pressure labels. Shared neutral text roles distinguish titles, reading text and secondary information; paper documents use dark inks. Status colours retain their labels and icons.
 
 The first-operation academy asks players to test their reading and explains that a result may support or challenge it. Procedure labels describe own sources without claiming that an unrun check already supports the hypothesis.
+
+Guided Training keeps the first two checks focused on choosing a working reading, testing it and interpreting the result. The opening defines "hypothesis" alongside that phrase and shows one academy lesson at a time. Map, specialist and evidence reference material starts folded on every screen size, with manual access throughout; desktop reference expands after two checks or when theory/comparison becomes useful. Reports show actual turn effects and why they occurred before optional roll calculations. Longer check explanations are available on request, while turn costs and exact plan effects remain visible. Guidance-off and Expert retain their usual reference layout.
 
 The game does not call an AI service, inspect real systems or transmit incident information.
 

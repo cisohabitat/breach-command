@@ -6,7 +6,7 @@ import { register } from "@/lib/i18n";
 
 register(tutorialCoachMessages);
 
-export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game: Game; workspace: "command" | "investigate" | "briefing"; onNavigate: () => void; onDismiss: () => void }) {
+export function TutorialCoach({ game, workspace, onNavigate, onDismiss, focused }: { game: Game; workspace: "command" | "investigate" | "briefing"; onNavigate: () => void; onDismiss: () => void; focused: boolean }) {
   const { t } = useMessages();
   const steps = [
     { done: !!game.hypothesis, title: t("tutorialCoach.formAWorking"), detail: t("tutorialCoach.chooseTheAccess") },
@@ -40,7 +40,7 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss }: { game
   return (
     <section className="tutorial-coach" aria-label={t("tutorialCoach.commandAcademyTutorial")}>
       <div className="tutorial-head"><div><span className="eyebrow">{t("tutorialCoach.commandAcademy")}</span><strong>{current < 0 ? t("tutorialCoach.fieldQualificationComplete") : t("tutorialCoach.stepOf", { current: current + 1, steps: steps.length })}</strong></div><button onClick={onDismiss} aria-label={t("tutorialCoach.dismissTutorial")}><X size={17} /></button></div>
-      <div className="tutorial-steps">{steps.map((step, index) => <div key={step.title} className={step.done ? "done" : index === current ? "current" : ""}><span>{step.done ? <Check size={14} /> : index + 1}</span><p><strong>{step.title}</strong><small>{step.detail}</small></p></div>)}</div>
+      <div className="tutorial-steps">{steps.map((step, index) => (!focused || current < 0 || index === current) && <div key={step.title} className={step.done ? "done" : index === current ? "current" : ""}><span>{step.done ? <Check size={14} /> : index + 1}</span><p><strong>{step.title}</strong><small>{step.detail}</small></p></div>)}</div>
       <div className="tutorial-next"><div><span className="eyebrow">{t("tutorialCoach.yourNextMove")}</span><p>{nextMove}</p></div>{actionLabel && <button onClick={current < 0 ? onDismiss : onNavigate}>{actionLabel} <ArrowRight size={16} /></button>}</div>
     </section>
   );

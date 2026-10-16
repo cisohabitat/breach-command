@@ -151,7 +151,7 @@ export function GameScreen({ session }: { session: GameSession }) {
 
       <div className="game-layout workspace-shell" ref={shell}>
         <div className="table-area" hidden={activeWorkspace === "briefing"}>
-          {activeWorkspace !== "briefing" && tutorial && game.status === "playing" && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <TutorialCoach game={game} workspace={activeWorkspace} onNavigate={() => setActiveWorkspace("investigate")} onDismiss={dismissTutorial} />}
+          {activeWorkspace !== "briefing" && tutorial && game.status === "playing" && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece && <TutorialCoach game={game} workspace={activeWorkspace} focused={session.guidance === "training" && game.turns.length < 2} onNavigate={() => setActiveWorkspace("investigate")} onDismiss={dismissTutorial} />}
           <FaultBoundary name="Command workspace"><CommandWorkspace session={session} /></FaultBoundary>
           {activeWorkspace === "investigate" && game.status === "playing" && <FaultBoundary name="Investigate workspace"><InvestigateWorkspace session={session} /></FaultBoundary>}
         </div>

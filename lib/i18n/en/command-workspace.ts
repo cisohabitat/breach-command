@@ -9,6 +9,6 @@ export const commandWorkspaceMessages = {
   "commandWorkspace.confirmed": "Confirmed",
   "commandWorkspace.awaitingEvidence": "Awaiting evidence",
   "commandWorkspace.of4Revealed2": "{revealed} of 4 revealed",
-  "commandWorkspace.strongBuildAnd": "<strong>Build and test a working hypothesis.</strong> Select an explanation, focus the relevant infrastructure and run one evidence procedure.",
+  "commandWorkspace.strongBuildAnd": "<strong>Choose or revise your working reading, then test it.</strong> Run a source that can test the current stage; use the result to keep or change your explanation.",
   "commandWorkspace.campaignRouteSmall": "Campaign route<small>{campaignRoutesTitle}</small>",
 } as const;

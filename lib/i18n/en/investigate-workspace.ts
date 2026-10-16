@@ -1,5 +1,6 @@
 // The strings of components/game/investigate-workspace.tsx (app/page.tsx for page), loaded with it.
 export const investigateWorkspaceMessages = {
+  "investigateWorkspace.readingDefinition": "A working reading (hypothesis) is your current explanation, not a confirmed finding. Match it to what the team noticed; revise it as evidence changes.",
   "investigateWorkspace.openTheMap": "Open the map ",
   "investigateWorkspace.why": "Why",
   "investigateWorkspace.whatTheTeam": "What the team is seeing: ",
@@ -36,5 +37,5 @@ export const investigateWorkspaceMessages = {
   "investigateWorkspace.itsOwnSources2": ". Its own sources then earn the +{ownSourceBonus} own-source bonus.",
   "investigateWorkspace.mapActionPlural": { one: "{count} map action", other: "{count} map actions" },
   "investigateWorkspace.sectorDecisionRecorded2": "Sector decision recorded: <strong>{sectorRecordedTitle}</strong>",
-  "investigateWorkspace.strongRecordA": "<strong>Record a working hypothesis to unlock procedures.</strong> Choose the explanation that best fits ",
+  "investigateWorkspace.strongRecordA": "<strong>Choose a working reading to unlock procedures.</strong> Match it to ",
 } as const;
