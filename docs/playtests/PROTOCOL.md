@@ -20,9 +20,14 @@ Record the device, browser and screen size for each.
    device holds no campaign, settings or first-session record.
    Record the build shown in diagnostics and whether it matches the intended
    tested release; a merge alone does not verify the deployed build.
-2. Settings: leave everything at its default. Do not switch on fast
-   resolution, guided reflection or high contrast unless the tester asks.
-3. Start a timer when the tester first sees the assignment screen.
+2. Settings: leave everything at its shipped default. Guided reflection is
+   ON, fast resolution is OFF and high contrast is OFF on a fresh profile.
+   Record any changes the tester requests; do not switch guidance off to
+   match an older protocol. Verify diagnostics before the participant arrives.
+3. Start an observer timer when the tester first sees the assignment screen.
+   Record a second anchor when the new operation opens after Begin investigation
+   (the mission brief appears). Telemetry starts at operation creation, not
+   assignment arrival. Keep both anchors; they measure different parts of play.
 
 ## What the tester is told
 
@@ -41,10 +46,19 @@ the question word for word.
 
 During play, in the results template (`TEMPLATE.md`):
 
-- Time to first procedure (from the assignment screen to the first roll).
-- Time to the first revision of a reading, if any.
+- Time from assignment arrival to the first resolved procedure (its report or
+  inline result appears), including setup within the player's session. This is
+  the first-session measure used for the phone median.
+- Operation opening to that same resolved procedure, to the first revision of
+  a reading, if any, and to the ending. Only these operation-relative times are
+  compared with the local record. Do not stop at selecting a procedure or at
+  the start of the die animation.
 - Whether the operation finished, and how (won, lost and to what, exercise).
 - Total time.
+- Setup time (assignment arrival to operation opening) and pauses, with their
+  reason and duration, separately. Keep raw elapsed times intact; do not remove
+  reading, Listen or decision time as overhead. Observer setup before arrival
+  belongs outside the session. Note tool delays separately in automated runs.
 - Every question the tester asked, word for word.
 - Every place the tester was stuck for more than thirty seconds, with what
   was on screen.
@@ -58,8 +72,11 @@ During play, in the results template (`TEMPLATE.md`):
   These observations judge pacing; use automated tests for millisecond timing.
 
 After the operation ends, from Settings, copy the local record's first
-operation lines into the template. They should agree with the observer's
-times to within a few seconds; a disagreement is itself a finding.
+operation lines into the template. Compare them only with the observer's
+operation-relative times, using the same resolved-result milestone. They should
+agree within a few seconds; assignment-relative times include setup and will
+be longer. A remaining disagreement is a finding. Earlier runs without both
+anchors cannot be directly compared or reconstructed by guessing setup time.
 
 ## The three questions
 

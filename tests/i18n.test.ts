@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
 import ts from "typescript";
 import { en } from "../lib/i18n/en.ts";
-import { formatNumber, pseudo, register, translate } from "../lib/i18n/index.ts";
+import { formatNumber, interpolate, pseudo, register, translate } from "../lib/i18n/index.ts";
 import { catalogueFiles } from "../lib/i18n/keys.ts";
 import { richText } from "../lib/i18n/rich.ts";
 
@@ -31,11 +31,27 @@ test("messages interpolate, pluralise by Intl and format numbers", () => {
   }
 });
 
+test("later-stage reports interpolate both the found and tested stages", () => {
+  for (const [found, tested] of [[2, 1], [3, 2]]) {
+    const english = translate("en", "captainReportDialog.thisIsStage2", { stage: found, stage2: tested });
+    assert.equal(english, `This is stage ${found}, further along the chain. The stage you were testing, stage ${tested}, is still open, and a find here says nothing about the route it used.`);
+    for (const locale of ["en", "en-XA"] as const) {
+      const report = translate(locale, "captainReportDialog.thisIsStage2", { stage: found, stage2: tested });
+      assert.doesNotMatch(report, /[{}]/, `${locale} leaves no raw or accented placeholder`);
+      assert.match(report, new RegExp(`${found}.*${tested}`));
+    }
+  }
+  const template = "{source_id}: {stage2}; {missing2}";
+  assert.equal(interpolate("en", template, { source_id: "DNS", stage2: 12500 }), "DNS: 12,500; {missing2}");
+  assert.ok(pseudo(template).includes("{source_id}"));
+  assert.ok(pseudo(template).includes("{missing2}"));
+});
+
 test("the pseudo-locale lengthens every string by about a third and keeps its placeholders", () => {
   for (const [key, value] of every) {
     for (const text of typeof value === "string" ? [value] : Object.values(value)) {
       const out = pseudo(text);
-      for (const placeholder of text.match(/\{[a-zA-Z]+\}/g) ?? []) assert.ok(out.includes(placeholder), `${key} keeps ${placeholder}`);
+      for (const placeholder of text.match(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g) ?? []) assert.ok(out.includes(placeholder), `${key} keeps ${placeholder}`);
       assert.ok(out.length >= text.length * 1.3, `${key} is lengthened`);
     }
   }

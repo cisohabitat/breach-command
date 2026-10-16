@@ -18,16 +18,26 @@ Practitioner marking the answers:
 
 ## Timings and outcome
 
-| # | First procedure | First revision | Finished? | Ending | Total time |
-| --- | --- | --- | --- | --- | --- |
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+Record both anchors. First procedure means its result has resolved and appeared,
+not the initial click or die animation. Use raw elapsed time, including pauses.
+
+| # | Assignment arrival timestamp | Operation opening timestamp | Assignment → first result | Operation → first result | Operation → first revision | Operation → ending | Finished? / ending | Assignment → ending |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | | | | | | | | |
+| 2 | | | | | | | | |
+| 3 | | | | | | | | |
+| 4 | | | | | | | | |
+| 5 | | | | | | | | |
+
+Setup and pauses, recorded separately without subtracting from raw times:
+
+| Tester # | Setup duration (assignment → operation) | Pause start / duration | Reason (reading, Listen, observer, tool, other) |
+| --- | --- | --- | --- |
+| | | | |
 
 Local record (Settings, "First operation on this device") for each tester,
-pasted as shown:
+pasted as shown. Compare only with operation-relative times above; record any
+difference and its known cause, without inferring a missing timestamp:
 
 1.
 2.
@@ -102,7 +112,9 @@ the protocol rubric. These do not alter the original three-question score.
 
 - Completion: _ of 5
 - Understanding (all three accepted): _ of 5
-- Median time to first procedure: phone _, laptop _
+- Median assignment → first resolved procedure: phone _, laptop _
+- Median operation → first resolved procedure: phone _, laptop _
+- Telemetry discrepancies after matching operation anchors and milestones:
 - Supplemental question 1 accepted / asked: _ / _
 - Supplemental question 2 accepted / asked: _ / _
 - Supplemental question 3 accepted / asked: _ / _
