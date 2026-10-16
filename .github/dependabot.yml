@@ -6,6 +6,10 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # Match pnpm's seven-day minimumReleaseAge before selecting a candidate.
+    # Otherwise the updater pins a fresh release that pnpm correctly refuses.
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 3
     groups:
       framework:

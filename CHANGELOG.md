@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.37, 16 October 2026
+
+- **Dependency update reliability.** Align Dependabot's npm cooldown with
+  pnpm's seven-day package-age limit. The updater now defers fresh candidates
+  before lockfile generation, preserving the installer protection that rejected
+  the too-young releases in its previous runs.
+
 ## 0.9.36, 16 October 2026
 
 - **Nested backup records.** Reject malformed evidence identifiers,
