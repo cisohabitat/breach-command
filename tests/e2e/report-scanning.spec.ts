@@ -18,6 +18,15 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     await expect(index).toBeInViewport({ ratio: 1 });
     await expect(report.locator(".report-fields")).toContainText("Stage tested");
     await expect(report.locator(".report-fields")).toContainText("Stage 1: Initial compromise");
+    // The narrowest form still keeps the result's word intact.
+    const resultLines = await report.locator(".report-fields dd.confirmed").evaluate(element => {
+      const text = element.firstChild!;
+      const range = document.createRange();
+      range.setStart(text, "Stage ".length);
+      range.setEnd(text, text.textContent!.length);
+      return range.getClientRects().length;
+    });
+    expect(resultLines).toBe(1);
     const details = report.locator(".report-collection-details");
     await expect(details).toHaveJSProperty("open", false);
     const assessment = report.locator(".evidence-assessment");

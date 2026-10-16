@@ -6188,10 +6188,10 @@ body {
     display:grid;
     grid-template-columns:repeat(6,minmax(0,1fr));
   }
-  .report-fields>div:nth-child(2),.report-fields>.report-stage-fact {
+  .report-fields>div:nth-child(3),.report-fields>.report-stage-fact {
     grid-column:span 3;
   }
-  .report-fields>div:nth-child(3) {
+  .report-fields>div:nth-child(2) {
     grid-column:span 2;
   }
   .report-fields>.report-stage-fact {
