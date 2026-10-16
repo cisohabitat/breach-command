@@ -12,7 +12,7 @@ export const captainReportDialogMessages = {
   "captainReportDialog.failedSettlesNothing": "This check failed. It rules out no route or source; the reading remains untested by this attempt.",
   "captainReportDialog.availableSources": "Available sources for this reading",
   "captainReportDialog.sourcesCanTest": "These sources can test the reading at this stage and are ready to use. Continue investigating to choose one.",
-  "captainReportDialog.sourcesCooling": "All sources that can test this reading are cooling down. The procedure cards show when they return; broader collection remains available.",
+  "captainReportDialog.sourcesUnavailable": "No sources that can still test this reading are ready. Check the procedure cards for cooldowns or compare another reading; broader collection remains available.",
   "captainReportDialog.collectionDetails": "Roll, collection plan and turn effects",
   "captainReportDialog.procedureResult": "Procedure result",
   "captainReportDialog.thisTurn": "This turn",

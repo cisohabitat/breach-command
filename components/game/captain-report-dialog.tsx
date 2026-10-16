@@ -106,7 +106,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
           {!report.success && <p className="report-inconclusive" role="status">{t("captainReportDialog.failedSettlesNothing")}</p>}
           {canReviewSources && <section className="report-available-sources" aria-label={t("captainReportDialog.availableSources")}>
             <h3>{t("captainReportDialog.availableSources")}</h3>
-            {availableSources.length ? <><p>{t("captainReportDialog.sourcesCanTest")}</p><ul>{availableSources.map(procedure => <li key={procedure.id}>{procedure.title}</li>)}</ul></> : <p>{t("captainReportDialog.sourcesCooling")}</p>}
+            {availableSources.length ? <><p>{t("captainReportDialog.sourcesCanTest")}</p><ul>{availableSources.map(procedure => <li key={procedure.id}>{procedure.title}</li>)}</ul></> : <p>{t("captainReportDialog.sourcesUnavailable")}</p>}
           </section>}
           {/* The turn that ends an operation is still reported as a turn, so its
               headline can be good news on a lost operation. Say how it ended first. */}
