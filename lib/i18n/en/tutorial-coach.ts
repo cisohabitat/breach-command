@@ -15,7 +15,7 @@ export const tutorialCoachMessages = {
   "tutorialCoach.chooseTheExplanation": "Choose the explanation that best fits the current intelligence. The procedures it predicts will be marked as its own sources.",
   "tutorialCoach.openInvestigateThen": "Open Investigate, then choose the explanation that best fits the current intelligence.",
   "tutorialCoach.chooseAProcedure": "Choose a procedure, review its roll modifier and operational cost, then run it.",
-  "tutorialCoach.openInvestigateAnd": "Open Investigate and run an evidence procedure that supports your hypothesis.",
+  "tutorialCoach.openInvestigateAnd": "Choose a source that can test your reading at this stage. Its result may support or challenge your explanation.",
   "tutorialCoach.continueTestingEvidence": "Continue testing evidence. When a stage is confirmed, the report offers five responses; “How these responses differ” says what each one trades away.",
   "tutorialCoach.confirmASecond": "Confirm a second attack stage. Then use the Evidence Workspace to declare what you think the actor wants.",
   "tutorialCoach.useTheEvidence": "Use the Evidence Workspace to declare the actor's likely objective. You can revise it as evidence changes.",

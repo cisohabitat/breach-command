@@ -2,6 +2,50 @@ import { expect, test } from "@playwright/test";
 import { newGame, playTurn, proceduresFor, resolveDecision, setHypothesis } from "../../lib/advanced-game";
 import { openWithSave, pendingDecisionGame, twoStagesGame } from "./fixtures";
 
+for (const width of [375, 1280]) {
+  test(`a fresh player's first check tests a reading without promising support at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    // Start with the shipped defaults and the academy still enabled, rather
+    // than the saved-session helper which marks the tutorial complete.
+    await page.addInitScript(() => {
+      localStorage.clear();
+      Object.defineProperty(Crypto.prototype, "getRandomValues", {
+        configurable: true,
+        value(array: ArrayBufferView) {
+          new Uint8Array(array.buffer, array.byteOffset, array.byteLength).fill(17);
+          return array;
+        },
+      });
+    });
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.locator(width < 650 ? ".phone-quick-start .primary-button" : ".start-button").click();
+    await page.getByRole("button", { name: /Assume command/ }).click();
+    const next = page.locator(".tutorial-next button");
+    await expect(next).toBeInViewport({ ratio: 1 });
+    await next.click();
+    await expect(page.locator("#hypothesis-heading")).toHaveText("How did they get in?");
+    await page.locator(".hypothesis-options > button").filter({ hasText: "Identity-led intrusion" }).click();
+    const source = page.locator('[data-procedure="identity"]');
+    await expect(source).toHaveAccessibleName(/own source for this reading/);
+    await expect(source).not.toHaveAccessibleName(/supports current hypothesis/);
+    await page.getByRole("button", { name: /^Command/ }).first().click();
+    await expect(page.locator(".tutorial-next")).toContainText("Its result may support or challenge your explanation.");
+    await expect(next).toBeInViewport({ ratio: 1 });
+    await next.click();
+    await source.click();
+    await expect(page.locator(".action-sheet")).toContainText("Starting plan:");
+    await page.getByRole("button", { name: "Run procedure", exact: true }).click();
+    const report = page.locator(".report-dialog");
+    await expect(report).toBeVisible({ timeout: 15_000 });
+    await expect(report).toContainText("Stage tested");
+    const details = report.locator(".report-collection-details");
+    await details.locator("summary").click();
+    await expect(details).toContainText("This turn");
+    await expect(details.locator(".effect-list").first()).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+}
+
 for (const width of [375, 1180]) {
   test(`Training introduces reference concepts when useful at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

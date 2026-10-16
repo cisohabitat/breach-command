@@ -4,7 +4,7 @@ export const procedureGridMessages = {
   "procedureGrid.canAlsoTest": "Can also test this reading",
   "procedureGrid.failedInconclusive": " failed, inconclusive",
   "procedureGrid.establishedPlus2": ", established, plus 2",
-  "procedureGrid.supportsCurrentHypothesis": ", supports current hypothesis",
+  "procedureGrid.ownSourceForReading": ", own source for this reading",
   "procedureGrid.cannotSeeThis": ", cannot see this stage for the current hypothesis",
   "procedureGrid.canAlsoTest2": ", can also test the current hypothesis",
   "procedureGrid.checkedTimesWith": ", checked {spent} times with no stage found",

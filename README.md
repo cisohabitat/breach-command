@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.39**: see the [release notes](CHANGELOG.md#0939-16-october-2026).
+Release **0.9.40**: see the [release notes](CHANGELOG.md#0940-16-october-2026).
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
@@ -112,6 +112,8 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Offline and local-first play:** the installable PWA caches the page and the scripts and styles it references when it installs, so one visit is enough to play offline. Its cache is isolated to this game's namespace and published documents/assets; arbitrary endpoints, query variants, requests carrying an Authorization header and private responses are excluded. Sessions, campaign progress, settings and anonymous balance counters remain on the device. A browser that refuses local storage still plays a complete operation from memory and says so. Portable backup text can transfer progress without an account; imports validate nested records and have size, nesting and message-shape limits. CSV exports neutralise formula markers in imported fields.
 
 Typography keeps condensed headings and figures distinct from regular-width prose. Body text is 16 px, supporting captions 14 px and compact metadata 12 px, including mobile pressure labels. Shared neutral text roles distinguish titles, reading text and secondary information; paper documents use dark inks. Status colours retain their labels and icons.
+
+The first-operation academy asks players to test their reading and explains that a result may support or challenge it. Procedure labels describe own sources without claiming that an unrun check already supports the hypothesis.
 
 The game does not call an AI service, inspect real systems or transmit incident information.
 

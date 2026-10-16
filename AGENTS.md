@@ -210,6 +210,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Experience requirements
 
+- Before a check runs, an own source is a way to test a reading, never evidence that supports it. Keep procedure accessible names neutral (including own-source membership and any explicit inability to test this stage), and teach that a result may support or challenge the reading. The fresh-profile regression in `progressive-learning.spec.ts` keeps the academy enabled and follows the first check through to its actual turn effects on phone and desktop; saved-session helpers deliberately skip that academy and cannot substitute for this coverage.
 - The game must remain fully usable with mouse, keyboard and touch.
 - Maintain visible focus states, semantic controls, accessible names and live announcements for material state changes.
 - Support widths from 320 px mobile screens through desktop without horizontal page overflow, clipped text or unreachable controls.

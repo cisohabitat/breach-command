@@ -4,6 +4,15 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.40, 16 October 2026
+
+- **Test a reading before calling it supported.** The first-operation academy
+  now asks for a source that can test the current reading and explains that
+  the result may support or challenge it. Procedure accessible names identify
+  own sources without implying an unrun check has already supported the
+  hypothesis. Fresh-profile phone and desktop checks cover the academy,
+  first procedure and recorded turn effects; game rules are unchanged.
+
 ## 0.9.39, 16 October 2026
 
 - **Clearer text hierarchy.** Keep condensed headings and regular-width prose,

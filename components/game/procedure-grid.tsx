@@ -44,7 +44,7 @@ export function ProcedureGrid({
             className={`procedure-card ${established ? "established" : ""} ${cooldown ? "cooling" : ""} ${aligned ? "hypothesis-aligned" : ""}`}
             disabled={disabled || cooldown > 0 || !!game.pendingDecision}
             onClick={() => onChoose(procedure.id)}
-            aria-label={`${procedure.title}${established ? t("procedureGrid.establishedPlus2") : ""}${aligned ? t("procedureGrid.supportsCurrentHypothesis") : ""}${aligned && blind ? t("procedureGrid.cannotSeeThis") : ""}${seesOther ? t("procedureGrid.canAlsoTest2") : ""}${read && read.spent ? t("procedureGrid.checkedTimesWith", { spent: read.spent }) : read && read.inconclusive ? t("procedureGrid.attemptsFailedWithout", { inconclusive: read.inconclusive }) : ""}${cooldown ? t("procedureGrid.availableInTurns", { cooldown }) : ""}`}
+            aria-label={`${procedure.title}${established ? t("procedureGrid.establishedPlus2") : ""}${aligned ? t("procedureGrid.ownSourceForReading") : ""}${aligned && blind ? t("procedureGrid.cannotSeeThis") : ""}${seesOther ? t("procedureGrid.canAlsoTest2") : ""}${read && read.spent ? t("procedureGrid.checkedTimesWith", { spent: read.spent }) : read && read.inconclusive ? t("procedureGrid.attemptsFailedWithout", { inconclusive: read.inconclusive }) : ""}${cooldown ? t("procedureGrid.availableInTurns", { cooldown }) : ""}`}
           >
             <div className="procedure-top">
               <span className="procedure-code" aria-hidden="true" />
