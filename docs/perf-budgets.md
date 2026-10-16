@@ -261,3 +261,7 @@ patches. This is about 0.34 per cent; initial script, style, paint and shift
 limits stay fixed. Linked/total style remains 87,752/220,433 B; the local
 throttled run records LCP 1.53–1.57 s and CLS 0.001–0.002. CI verifies the
 complete build against these limits before release.
+
+Nested-record validation (0.9.36) adds 1,106 B to the warmed scripts, measuring
+1,180,885 B on assignment and 1,190,930 B by play start in the local production
+build. Both fit the existing 1,182,000/1,192,000 B limits; no budget changes.

@@ -1,4 +1,4 @@
-import { attacks, scenarios, difficulties, hypotheses, procedureScopes, procedureIntensities, infrastructureTopologies, adversaryProfiles, adversaryObjectives, commandEvents, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
+import { attacks, scenarios, difficulties, hypotheses, procedureScopes, procedureIntensities, responseOptionsFor, infrastructureTopologies, adversaryProfiles, adversaryObjectives, commandEvents, gameModes, specialists, type Game, type GameStatus } from "./advanced-game.ts";
 import type { CarriedSource, NodePosture } from "./advanced-game";
 import { injects } from "./engine/content.ts";
 import { isMessage, legacy, msg, type Message } from "./i18n/message.ts";
@@ -130,7 +130,25 @@ export function parseSession(raw: string): SavedSession | null {
       || ![game.adversaryMemory.observeChoices, game.adversaryMemory.actChoices, game.adversaryMemory.hypothesisChanges].every(Number.isFinite))) return null;
     if (game.variant != null && (typeof game.variant !== "object" || typeof game.variant.id !== "string")) return null;
     const knownAttack = (id: unknown) => typeof id === "string" && attacks.some(attack => attack.id === id);
-    if (!game.turns.every(turn => turn && typeof turn === "object"
+    const idText = (id: unknown) => typeof id === "string" && id.length > 0 && id.length <= 200;
+    const evidence = Array.isArray(game.evidence) ? game.evidence : [];
+    if (!evidence.every(item => idText(item.id) && Number.isFinite(item.turn)
+      && ["LOW", "MODERATE", "HIGH"].includes(item.confidence)
+      && (item.supports == null || knownAttack(item.supports)))) return null;
+    const evidenceIds = new Set(evidence.map(item => item.id));
+    if (evidenceIds.size !== evidence.length) return null;
+    if (Array.isArray(game.correlations) && !game.correlations.every(record => Array.isArray(record.evidence)
+      && record.evidence.length === 2 && record.evidence[0] !== record.evidence[1]
+      && record.evidence.every(id => idText(id) && evidenceIds.has(id)))) return null;
+    if (Array.isArray(game.mapHistory) && !game.mapHistory.every(record => idText(record.node)
+      && ["monitor", "isolate"].includes(record.action) && Number.isFinite(record.turn))) return null;
+    if (Array.isArray(game.hypothesisHistory) && !game.hypothesisHistory.every(record => Number.isFinite(record.turn)
+      && hypotheses.some(item => item.id === record.id))) return null;
+    if (Array.isArray(game.caseTheoryHistory) && !game.caseTheoryHistory.every(record => Number.isFinite(record.turn)
+      && isKnown(adversaryObjectives, record.objective))) return null;
+    if (Array.isArray(game.sectorHistory) && !game.sectorHistory.every(Number.isFinite)) return null;
+    if (!game.turns.every(turn => turn && typeof turn === "object" && !Array.isArray(turn)
+      && [turn.number, turn.raw, turn.modifier, turn.total].every(Number.isFinite) && idText(turn.procedure)
       && (turn.revealed == null || knownAttack(turn.revealed))
       && (turn.hypothesisTarget == null || knownAttack(turn.hypothesisTarget))
       && (turn.hypothesis == null || hypotheses.some(item => item.id === turn.hypothesis))
@@ -140,8 +158,10 @@ export function parseSession(raw: string): SavedSession | null {
     // save claiming otherwise did not come from a real playthrough.
     if (game.status === "response" && game.revealed.length < 4) return null;
     const responseChoices = Array.isArray(game.responseChoices) ? game.responseChoices : [];
-    if (!responseChoices.every(id => typeof id === "string")) return null;
     if (responseChoices.length > 3) return null;
+    const response = responseOptionsFor(game);
+    const phases = ["containment", "assurance", "recovery"] as const;
+    if (!responseChoices.every((id, index) => typeof id === "string" && response[phases[index]].some(option => option.id === id))) return null;
     if (game.status === "playing" && responseChoices.length) return null;
     if (game.status === "response" && responseChoices.length >= 3) return null;
     // A win is a completed response to a fully confirmed chain.

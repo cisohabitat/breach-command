@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.36, 16 October 2026
+
+- **Nested backup records.** Reject malformed evidence identifiers,
+  correlation pairs, history entries, turn values and response choices before
+  restoring an operation. A bad operation in an otherwise readable backup is
+  reported and left out while preserving the device's existing operation;
+  campaign progress can still be restored. Legacy save fixtures remain readable.
+
 ## 0.9.35, 16 October 2026
 
 - **Security fixes.** Updated Next.js and its lint configuration to 16.3.8
