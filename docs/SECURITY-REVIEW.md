@@ -3,7 +3,7 @@
 Scope: application source, local persistence and portable backups, message
 rendering, CSV/share exports, browser headers, service worker, dependencies
 and GitHub build/release workflows. Baseline: main `e41b173` (0.9.34).
-Remediation releases: 0.9.35 and 0.9.36. This is a source review with automated regression
+Remediation releases: 0.9.35–0.9.37. This is a source review with automated regression
 checks, not an independent penetration test or a guarantee of security.
 
 ## Trust boundaries
@@ -28,6 +28,15 @@ state, not the unrevealed chain.
 | Malformed nested evidence/correlation/history records and response choices | Validate evidence IDs and confidence, referenced evidence pairs, history entries, turn values and phase-specific response choices. Reject invalid operations before they reach the renderer. The browser import regression verifies the existing operation survives and the readable campaign restores with an explicit omission notice. |
 | Spreadsheet formula injection through imported ledger fields | Prefix formula/control-character starters before CSV escaping; regression tests cover formula markers, leading whitespace and newlines. |
 | Missing resource-destination policy and mutable CI action references | Add CSP, retain anti-framing/sniffing protections and remove the framework disclosure header. Pin existing action versions to resolved commit SHAs; ordinary Verify jobs do not retain Git credentials. Require a successful same-repository main push before release. Restore Dependabot patch updates. |
+
+## Dependency update policy
+
+The npm updater's seven-day cooldown matches pnpm's release-age policy.
+Earlier Dependabot jobs failed with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` after
+selecting releases published inside that window; the cooldown defers candidate
+selection while preserving the installer guard. It applies to version updates;
+GitHub handles security updates separately. Any urgent exception to the
+installer's age policy requires explicit review.
 
 ## Reviewed exception: development lint dependency
 
