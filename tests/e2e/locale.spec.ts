@@ -24,11 +24,11 @@ test("the catalogued interface holds its layout with strings a third longer", as
   });
   for (const width of widths) {
     await page.setViewportSize({ width, height: 844 });
-    await openWithSave(page, null, false, null, "/?locale=en-XA");
+    await openWithSave(page, null, false, null, "/play?locale=en-XA");
     await expect(page.locator(".topbar")).toContainText("[Fîéld güîdé");
     expect(await overflow(), `assignment at ${width}`).toBeLessThanOrEqual(0);
 
-    await openWithSave(page, twoStagesGame(), false, null, "/?locale=en-XA");
+    await openWithSave(page, twoStagesGame(), false, null, "/play?locale=en-XA");
     await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
     await page.waitForTimeout(400);
     await page.keyboard.press("Escape");
@@ -38,7 +38,7 @@ test("the catalogued interface holds its layout with strings a third longer", as
     const tabs = await page.locator(".workspace-tabs > button").evaluateAll(buttons => buttons.map(button => Math.round(button.getBoundingClientRect().top)));
     expect(new Set(tabs).size, `tabs on one line at ${width}`).toBe(1);
 
-    await openWithSave(page, responsePhaseGame(), false, null, "/?locale=en-XA");
+    await openWithSave(page, responsePhaseGame(), false, null, "/play?locale=en-XA");
     await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
     await page.waitForTimeout(400);
     for (let phase = 0; phase < 3; phase++) {
@@ -67,7 +67,7 @@ test("every word on the seeded screens comes from the catalogue or the content o
     expect(words, `${where}: English outside the pseudo-locale`).toEqual([]);
   };
   await page.setViewportSize({ width: 1280, height: 900 });
-  await openWithSave(page, null, false, null, "/?locale=en-XA");
+  await openWithSave(page, null, false, null, "/play?locale=en-XA");
   await leftOver("assignment");
   await page.getByRole("button", { name: pseudo("Game settings") }).click();
   await expect(page.locator("[role=dialog]")).toBeVisible();
@@ -84,11 +84,11 @@ test("every word on the seeded screens comes from the catalogue or the content o
   await page.addInitScript(([record, ledger]) => {
     try { localStorage.setItem("breach-command.last-operation", record); localStorage.setItem("breach-command.ledger", ledger); } catch {}
   }, [JSON.stringify(won), JSON.stringify([entry, { ...entry, outcome: "lost", score: 40 }])] as const);
-  await page.goto("/?locale=en-XA", { waitUntil: "domcontentloaded" });
+  await page.goto("/play?locale=en-XA", { waitUntil: "domcontentloaded" });
   await page.waitForLoadState("networkidle");
   await expect(page.locator(".last-operation").first()).toBeVisible();
   await leftOver("returning player's assignment");
-  await openWithSave(page, twoStagesGame(), false, null, "/?locale=en-XA");
+  await openWithSave(page, twoStagesGame(), false, null, "/play?locale=en-XA");
   await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
   await page.waitForTimeout(400);
   await page.keyboard.press("Escape");
@@ -98,7 +98,7 @@ test("every word on the seeded screens comes from the catalogue or the content o
     await page.waitForTimeout(300);
     await leftOver(tab);
   }
-  await openWithSave(page, responsePhaseGame(), false, null, "/?locale=en-XA");
+  await openWithSave(page, responsePhaseGame(), false, null, "/play?locale=en-XA");
   await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
   await page.waitForTimeout(400);
   for (let phase = 0; phase < 3; phase++) {

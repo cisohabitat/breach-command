@@ -40,7 +40,7 @@ test("the result image is drawn in the player's language", async ({ page }) => {
       return fillText.call(this, text, ...rest);
     };
   });
-  await openWithSave(page, { ...responsePhaseGame(), seed: 424242 }, false, null, "/?locale=en-XA");
+  await openWithSave(page, { ...responsePhaseGame(), seed: 424242 }, false, null, "/play?locale=en-XA");
   await page.getByRole("button", { name: /^\[Réšümé·+\]$/ }).click();
   await page.waitForLoadState("networkidle");
   for (let phase = 0; phase < 3; phase++) {

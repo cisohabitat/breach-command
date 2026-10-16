@@ -62,7 +62,7 @@ for (const width of [390, 1280]) {
       const shots: Buffer[] = [];
       for (const blocked of [true, false]) {
         const page = await browser.newPage({ viewport: { width, height: 900 } });
-        shots.push(await capture(page, "/", blocked, storage));
+        shots.push(await capture(page, "/play", blocked, storage));
         await page.close();
       }
       expect(shots[0].equals(shots[1]), "a rule in the game's stylesheet reaches the assignment screen").toBe(true);

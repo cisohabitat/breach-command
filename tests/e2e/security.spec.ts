@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("production policy permits play and blocks external connections", async ({ page }) => {
-  const response = await page.goto("/", { waitUntil: "networkidle" });
+  const response = await page.goto("/play", { waitUntil: "networkidle" });
   const headers = response!.headers();
   expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
   expect(headers["content-security-policy"]).toContain("connect-src 'self'");

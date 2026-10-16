@@ -79,7 +79,7 @@ export function mapOfferGame(): Game {
   return game;
 }
 
-export async function openWithSave(page: Page, game: Game | null, guided = false, preferences: Record<string, boolean> | null = null, path = "/") {
+export async function openWithSave(page: Page, game: Game | null, guided = false, preferences: Record<string, boolean> | null = null, path = "/play") {
   await page.addInitScript(([key, value, prefs]) => {
     try {
       localStorage.clear();

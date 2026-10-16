@@ -3,7 +3,7 @@
 // the old one is deleted on activation. It was a number bumped by hand.
 const PREFIX = "breach-command-";
 const CACHE = `${PREFIX}${new URL(self.location.href).searchParams.get("v") || "dev"}`;
-const CORE = ["/", "/manifest.webmanifest", "/favicon.svg"];
+const CORE = ["/", "/play", "/manifest.webmanifest", "/favicon.svg"];
 
 // The page's own scripts and styles are cached on install, read from the page
 // itself. Before, only the shell was: the first visit's assets loaded before the
@@ -22,9 +22,10 @@ async function precache(cache) {
   // fetched on a first visit, on whatever connection the player has. The fetch
   // handler below keeps each image the player has seen, so it is there offline
   // the next time; one never seen leaves an empty, unlabelled space.
-  const shell = await cache.match("/");
-  if (!shell) return;
-  const html = await shell.text();
+  const html = (await Promise.all(["/", "/play"].map(async path => {
+    const shell = await cache.match(path);
+    return shell ? shell.text() : "";
+  }))).join("\n");
   const assets = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) || [])];
   await Promise.all(assets.map(url => keep(url).catch(() => {})));
 }
@@ -45,9 +46,10 @@ function cacheableRequest(request) {
   return request.method === "GET" && url.origin === self.location.origin
     && (!url.search || request.mode === "navigate") && !request.headers.has("range")
     && !request.headers.has("authorization") && !request.headers.has("rsc")
-    && ((request.mode === "navigate" && (url.pathname === "/" || url.pathname === "/educators"))
+    && ((request.mode === "navigate" && (url.pathname === "/" || url.pathname === "/play" || url.pathname === "/educators"))
       || url.pathname.startsWith("/_next/static/")
       || /^\/art\/[a-z0-9/_-]+\.webp$/.test(url.pathname)
+      || /^\/art\/title\/(portrait|landscape)\.jpg$/.test(url.pathname)
       || /^\/audio\/[a-zA-Z0-9/_-]+\.(mp3|ogg|wav)$/.test(url.pathname)
       || url.pathname === "/manifest.webmanifest" || url.pathname === "/favicon.svg");
 }
@@ -86,6 +88,6 @@ self.addEventListener("fetch", event => {
     if (cached) return cached;
     // Only a navigation can fall back to the shell; handing the cached document
     // to a script or style request would break the page rather than degrade it.
-    return request.mode === "navigate" ? (await cache.match("/")) || Response.error() : Response.error();
+    return request.mode === "navigate" ? (await cache.match(new URL(request.url).pathname === "/play" ? "/play" : "/")) || Response.error() : Response.error();
   })));
 });

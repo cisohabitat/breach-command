@@ -9,7 +9,7 @@ import { consolidate } from "../scripts/css-consolidate.ts";
 
 // Every sheet: the page's, the game's (components/game/game.css) and the
 // educator pack's (app/educators/educators.css).
-const sheets = ["../app/globals.css", "../components/game/game.css", "../app/educators/educators.css"];
+const sheets = ["../app/globals.css", "../app/title.css", "../components/game/game.css", "../app/educators/educators.css"];
 const css = sheets.flatMap(path => readFileSync(new URL(path, import.meta.url), "utf8").split("\n"));
 
 test("the stylesheet uses logical properties for every inline-direction declaration", () => {

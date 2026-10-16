@@ -22,7 +22,7 @@ test.describe("local persistence", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     });
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/play", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".briefing-screen")).toBeVisible();
     await page.waitForTimeout(500);
 
@@ -45,7 +45,7 @@ test.describe("local persistence", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     });
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Game settings" }).click();
     const toggle = page.getByRole("switch").first();
     await expect(toggle).toBeVisible();
@@ -70,7 +70,7 @@ test.describe("local persistence", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     }, [SESSION_KEY, serialiseSession(finished, true, false)] as const);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/play", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".briefing-screen")).toBeVisible();
     await page.waitForTimeout(500);
     await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(0);
@@ -88,7 +88,7 @@ test.describe("local persistence", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     }, [SESSION_KEY, newer] as const);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/play", { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/written by a newer version/)).toBeVisible();
     expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY), "a newer build's save is not deleted").toEqual(newer);
   });
@@ -104,7 +104,7 @@ test.describe("local persistence", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     }, [SESSION_KEY, newer] as const);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/play", { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/written by a newer version/)).toBeVisible();
     await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: /Begin investigation/ }).click();
@@ -126,7 +126,7 @@ test.describe("local persistence", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     }, [PARKED_SESSION_KEY, inProgress] as const);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/play", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
     expect(await page.evaluate(key => localStorage.getItem(key), PARKED_SESSION_KEY), "it leaves the parking slot").toBeNull();
   });
@@ -143,7 +143,7 @@ test.describe("local persistence", () => {
         return original.call(this, name, content);
       };
     }, [SESSION_KEY, newer, PARKED_SESSION_KEY] as const);
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await expect(page.getByText(/written by a newer version/)).toBeVisible();
     await page.getByRole("button", { name: /Begin investigation/ }).click();
     await page.getByRole("button", { name: /Assume command/ }).click();
@@ -169,7 +169,7 @@ test.describe("local persistence", () => {
       localStorage.setItem("breach-command.tutorial-complete", "true");
       localStorage.setItem(key, value);
     }, [SESSION_KEY, saved] as const);
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Game settings" }).click();
     await page.getByRole("button", { name: "Export", exact: true }).click();
@@ -195,7 +195,7 @@ test.describe("local persistence", () => {
         return original.call(this, name, content);
       };
     }, [SESSION_KEY, previous] as const);
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Game settings" }).click();
     const campaign = { ...defaultCampaign, xp: 75 };
@@ -222,7 +222,7 @@ test.describe("local persistence", () => {
       localStorage.setItem("breach-command.tutorial-complete", "true");
       localStorage.setItem(key, value);
     }, [SESSION_KEY, previous] as const);
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Game settings" }).click();
     await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign: { ...defaultCampaign, xp: 75 }, session: malformed }));
@@ -245,7 +245,7 @@ test.describe("local persistence", () => {
       localStorage.clear();
       localStorage.setItem("breach-command.tutorial-complete", "true");
     });
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Game settings" }).click();
     await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign: defaultCampaign, session }));
     await page.getByRole("button", { name: "Restore backup" }).click();
@@ -268,7 +268,7 @@ test.describe("local persistence", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     });
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await page.reload({ waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Game settings" }).click();
     const record = page.getByRole("list", { name: "First operation on this device" });
@@ -287,7 +287,7 @@ test.describe("replayability records", () => {
       const code = encodeChallenge({ scenario: 0, difficulty: "operational", mode, specialist: "hunter", seed: 4242 });
       const states: Game[] = [];
       for (const campaign of [defaultCampaign, veteran]) {
-        await page.goto("/", { waitUntil: "networkidle" });
+        await page.goto("/play", { waitUntil: "networkidle" });
         await page.evaluate(([key, value]) => {
           localStorage.clear();
           localStorage.setItem("breach-command.tutorial-complete", "true");
@@ -326,7 +326,7 @@ test.describe("replayability records", () => {
         localStorage.setItem("breach-command.seeded", "1");
       } catch {}
     }, [entry] as const);
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await page.reload({ waitUntil: "networkidle" });
     await page.getByRole("button", { name: /^The quiet intrusion/ }).click();
     await expect(page.locator(".slip-ladder")).toContainText("Mastery ladder, 2 of 5: won at Crisis, won in Expert.");
@@ -368,7 +368,7 @@ test.describe("diagnostics", () => {
         localStorage.setItem("breach-command.campaign", JSON.stringify({ completed: [0, 1], xp: 120, bestScores: { "0": 88, "diagnostics-private-score": 99 } }));
       } catch {}
     });
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Game settings" }).click();
     await page.getByRole("button", { name: "Copy diagnostics" }).click();
     const text = await page.getByRole("textbox", { name: "Diagnostics" }).inputValue();

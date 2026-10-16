@@ -17,7 +17,7 @@ for (const width of [375, 1280]) {
         },
       });
     });
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/play", { waitUntil: "networkidle" });
     await page.locator(width < 650 ? ".phone-quick-start .primary-button" : ".start-button").click();
     await page.getByRole("button", { name: /Assume command/ }).click();
     const next = page.locator(".tutorial-next button");
@@ -118,7 +118,7 @@ test("guidance-off and Expert retain the expanded desktop reference", async ({ p
 
 test("the simplified opening remains usable in the longer pseudo-locale", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 844 });
-  await openWithSave(page, newGame(0, "training", () => 0), true, { voice: false }, "/?locale=en-XA");
+  await openWithSave(page, newGame(0, "training", () => 0), true, { voice: false }, "/play?locale=en-XA");
   await page.locator(".phone-quick-start .primary-button").click();
   await page.keyboard.press("Escape");
   await page.locator(".workspace-tabs button").nth(1).click();

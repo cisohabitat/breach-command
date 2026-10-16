@@ -94,7 +94,7 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
   const violations = await page.evaluate(async () => (await window.axe.run(document, { resultTypes: ["violations"] })).violations);
   expect(violations).toEqual([]);
   const resumed = await page.context().newPage();
-  await resumed.goto("/", { waitUntil: "networkidle" });
+  await resumed.goto("/play", { waitUntil: "networkidle" });
   await resumed.getByRole("button", { name: "Resume", exact: true }).click();
   await expect(resumed.locator(".evidence-cards [data-confidence=strong]")).toHaveCount(2);
   await expect(resumed.locator(".confidence-change")).toHaveCount(0);
@@ -140,7 +140,7 @@ test("voice defaults on, explicit opt-out survives reload, and recordings can be
     localStorage.setItem("breach-command.tutorial-complete", "true");
     localStorage.setItem("captain-test-seeded", "true");
   });
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/play", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Game settings" }).click();
   await expect(page.locator("#voice-setting")).toHaveAttribute("aria-checked", "true");
   await page.locator("#voice-setting").click();
@@ -347,7 +347,7 @@ test("voice controls and captions fit phones and tablets", async ({ page }) => {
   // Finished saves are deliberately not resumable, so exercise the closing
   // surface by completing a response fixture in the browser instead.
   expect(finished.status).toBe("won");
-  await openWithSave(page, responsePhaseGame(), false, voicePreferences, "/?locale=en-XA");
+  await openWithSave(page, responsePhaseGame(), false, voicePreferences, "/play?locale=en-XA");
   await page.locator(".resume-card button").first().click();
   for (const surface of ["response", "debrief"]) {
     if (surface === "debrief") {

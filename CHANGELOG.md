@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.42, 16 October 2026
+
+- Add an illustrated title page using the supplied landscape and portrait
+  artwork, with a keyboard-accessible Start link to the incident desk at `/play`.
+  Preserve the complete artwork and keep the button separate and readable.
+- Keep saved progress, direct desk access, locale selection and offline entry
+  working across the title-to-game transition. Artwork loads only on the title page.
+
 ## 0.9.41, 16 October 2026
 
 - **A focused opening loop.** Guided Training introduces one academy lesson
