@@ -1,0 +1,547 @@
+[
+  {
+    "type": "hypothesis",
+    "hypothesis": "application",
+    "reason": {
+      "key": "engine.bot.hypothesis",
+      "params": {
+        "hypothesis": {
+          "text": "Application or supplier path",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "network",
+    "plan": {
+      "scope": "focused",
+      "intensity": "exhaustive"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Network analysis",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "decision",
+    "choice": "attribute",
+    "reason": {
+      "key": "engine.bot.decision",
+      "params": {
+        "impact": 29,
+        "continuity": 98,
+        "count": 1
+      }
+    }
+  },
+  {
+    "type": "focus",
+    "nodeId": "patch",
+    "reason": {
+      "key": "engine.bot.focus",
+      "params": {
+        "node": {
+          "text": "Patch server",
+          "form": "lower"
+        },
+        "procedure": {
+          "text": "Server inspection",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "server",
+    "plan": {
+      "scope": "focused",
+      "intensity": "exhaustive"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Server inspection",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "set-piece",
+    "choice": "a",
+    "reason": {
+      "key": "engine.bot.setPiece",
+      "params": {
+        "choice": {
+          "text": "Stop the export",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "map",
+    "nodeId": "supplier",
+    "action": "monitor",
+    "reason": {
+      "key": "engine.bot.monitor",
+      "params": {
+        "node": {
+          "text": "Supplier identity",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "focus",
+    "nodeId": "config",
+    "reason": {
+      "key": "engine.bot.focus",
+      "params": {
+        "node": {
+          "text": "Plant configuration",
+          "form": "lower"
+        },
+        "procedure": {
+          "text": "Intelligence correlation",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "intel",
+    "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Intelligence correlation",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "decision",
+    "choice": "act",
+    "reason": {
+      "key": "engine.bot.decision",
+      "params": {
+        "impact": 55,
+        "continuity": 88,
+        "count": 2
+      }
+    }
+  },
+  {
+    "type": "hypothesis",
+    "hypothesis": "endpoint",
+    "reason": {
+      "key": "engine.bot.hypothesis",
+      "params": {
+        "hypothesis": {
+          "text": "Compromised host",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "case-theory",
+    "objective": "preposition",
+    "reason": {
+      "key": "engine.bot.caseTheory",
+      "params": {
+        "objective": {
+          "text": "Strategic pre-positioning",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "correlate",
+    "evidence": [
+      "E1-network",
+      "E3-intel"
+    ],
+    "assessment": "causal",
+    "reason": {
+      "key": "engine.bot.correlate",
+      "params": {
+        "first": {
+          "key": "engine.evidence.stageTitle",
+          "params": {
+            "attack": {
+              "ref": "attacks.vendor.title"
+            }
+          },
+          "form": "lower"
+        },
+        "second": {
+          "key": "engine.evidence.stageTitle",
+          "params": {
+            "attack": {
+              "ref": "attacks.githook.title"
+            }
+          },
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "focus",
+    "nodeId": "engineering",
+    "reason": {
+      "key": "engine.bot.focus",
+      "params": {
+        "node": {
+          "text": "Engineering zone",
+          "form": "lower"
+        },
+        "procedure": {
+          "text": "Targeted threat hunt",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "hunt",
+    "plan": {
+      "scope": "focused",
+      "intensity": "exhaustive"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Targeted threat hunt",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "map",
+    "nodeId": "gateway",
+    "action": "monitor",
+    "reason": {
+      "key": "engine.bot.monitor",
+      "params": {
+        "node": {
+          "text": "Maintenance gateway",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "focus",
+    "nodeId": "jump",
+    "reason": {
+      "key": "engine.bot.focus",
+      "params": {
+        "node": {
+          "text": "Maintenance jump host",
+          "form": "lower"
+        },
+        "procedure": {
+          "text": "Endpoint analysis",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "endpoint",
+    "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Endpoint analysis",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "decision",
+    "choice": "act",
+    "reason": {
+      "key": "engine.bot.decision",
+      "params": {
+        "impact": 43,
+        "continuity": 83,
+        "count": 3
+      }
+    }
+  },
+  {
+    "type": "correlate",
+    "evidence": [
+      "E1-network",
+      "E4-hunt"
+    ],
+    "assessment": "coincidental",
+    "reason": {
+      "key": "engine.bot.correlate",
+      "params": {
+        "first": {
+          "key": "engine.evidence.stageTitle",
+          "params": {
+            "attack": {
+              "ref": "attacks.vendor.title"
+            }
+          },
+          "form": "lower"
+        },
+        "second": {
+          "key": "engine.evidence.emptyTitle",
+          "params": {
+            "source": {
+              "ref": "procedures.hunt.title"
+            }
+          },
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "focus",
+    "nodeId": "patch",
+    "reason": {
+      "key": "engine.bot.focus",
+      "params": {
+        "node": {
+          "text": "Patch server",
+          "form": "lower"
+        },
+        "procedure": {
+          "text": "Forensic triage",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "forensic",
+    "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Forensic triage",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "command",
+    "choice": "a",
+    "reason": {
+      "key": "engine.bot.command",
+      "params": {
+        "choice": {
+          "text": "Engage the outside team",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "server",
+    "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Server inspection",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "focus",
+    "nodeId": "supplier",
+    "reason": {
+      "key": "engine.bot.focus",
+      "params": {
+        "node": {
+          "text": "Supplier identity",
+          "form": "lower"
+        },
+        "procedure": {
+          "text": "Email investigation",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "email",
+    "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Email investigation",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "correlate",
+    "evidence": [
+      "E1-network",
+      "E5-endpoint"
+    ],
+    "assessment": "causal",
+    "reason": {
+      "key": "engine.bot.correlate",
+      "params": {
+        "first": {
+          "key": "engine.evidence.stageTitle",
+          "params": {
+            "attack": {
+              "ref": "attacks.vendor.title"
+            }
+          },
+          "form": "lower"
+        },
+        "second": {
+          "key": "engine.evidence.stageTitle",
+          "params": {
+            "attack": {
+              "ref": "attacks.pivot.title"
+            }
+          },
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "focus",
+    "nodeId": "jump",
+    "reason": {
+      "key": "engine.bot.focus",
+      "params": {
+        "node": {
+          "text": "Maintenance jump host",
+          "form": "lower"
+        },
+        "procedure": {
+          "text": "Endpoint analysis",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "procedure",
+    "procedure": "endpoint",
+    "plan": {
+      "scope": "focused",
+      "intensity": "balanced"
+    },
+    "reason": {
+      "key": "engine.bot.procedure",
+      "params": {
+        "procedure": {
+          "text": "Endpoint analysis",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "decision",
+    "choice": "act",
+    "reason": {
+      "key": "engine.bot.decision",
+      "params": {
+        "impact": 47,
+        "continuity": 70,
+        "count": 4
+      }
+    }
+  },
+  {
+    "type": "response",
+    "choice": "isolate",
+    "reason": {
+      "key": "engine.bot.containment",
+      "params": {
+        "option": {
+          "text": "Isolate the maintenance jump host",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "response",
+    "choice": "verify",
+    "reason": {
+      "key": "engine.bot.assurance",
+      "params": {
+        "option": {
+          "text": "Validate the engineering boundary",
+          "form": "lower"
+        }
+      }
+    }
+  },
+  {
+    "type": "response",
+    "choice": "patch",
+    "reason": {
+      "key": "engine.bot.recovery",
+      "params": {
+        "option": {
+          "text": "Patch in place behind the plant boundary",
+          "form": "lower"
+        }
+      }
+    }
+  }
+]

@@ -1,5 +1,10 @@
 # Terminal schedule balance
 
+These figures use the bot policy before it prioritised stated source coverage.
+They remain a paired measurement of terminal tuning, not current bot win rates.
+See [the government-service audit](AUTHORITY-BALANCE.md) for the policy correction
+and current reference figures. The terminal rules described here are unchanged.
+
 The terminal was the hardest standard incident in the 15 October 2026 audit.
 Schedule exhaustion, rather than the investigation window, caused most of its
 losses. Lower routine schedule erosion from 6 to 5 and the surcharge beginning

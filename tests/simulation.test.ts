@@ -1,7 +1,7 @@
 // Complete playthroughs: every mode, specialist and difficulty terminates.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,scenarios,nextEvidenceSource,decisionChoices,difficulties,getTurnLimit,attackVector,getRuledOutRoutes,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId,getReadingOdds} from "../lib/advanced-game.ts";
+import {newGame,playTurn,resolveDecision,resolveResponse,resolveCommand,resolveSetPiece,resolveMapAction,correlateEvidence,setInfrastructureFocus,setHypothesis,setCaseTheory,scenarios,nextEvidenceSource,decisionChoices,difficulties,getTurnLimit,attackVector,getRuledOutRoutes,type DecisionChoice,type Difficulty,type Game,type GameMode,type SpecialistId,getReadingOdds,sourceSeesReading,proceduresFor} from "../lib/advanced-game.ts";
 import {seededChallengeRandom} from "../lib/phase8.ts";
 import {chooseBotAction,type BotAction} from "../lib/game-bot.ts";
 
@@ -106,6 +106,39 @@ test("the bot commander revises a reading the record has ruled out", () => {
     assert.notEqual(action.hypothesis,"identity");
     assert.ok(odds.candidates[action.hypothesis].open>0,"to a route that is still open");
   }
+});
+
+test("the bot prefers stated source coverage and keeps a cooldown fallback", () => {
+  const game: Game = {
+    ...setHypothesis(newGame(6, "training", () => 0, { specialist: "hunter" }), "identity"),
+    established: ["network", "dns"], focusedNode: "dgateway", mapActionsRemaining: 0,
+  };
+  assert.equal(sourceSeesReading(game, "dns"), false);
+  assert.equal(sourceSeesReading(game, "network"), false);
+  let chosen: string | undefined;
+  for (const hiddenEntry of scenarios[6].choices[0]) {
+    let candidate = { ...game, chain: [hiddenEntry, ...game.chain.slice(1)] };
+    let action = chooseBotAction(candidate);
+    if (action.type === "focus") {
+      candidate = setInfrastructureFocus(candidate, action.nodeId);
+      action = chooseBotAction(candidate);
+    }
+    assert.equal(action.type, "procedure");
+    if (action.type === "procedure") {
+      assert.equal(sourceSeesReading(candidate, action.procedure), true, "a familiar blind source never displaces an available test");
+      chosen ??= action.procedure;
+      assert.equal(action.procedure, chosen, "rewriting the hidden entry cannot change the public coverage choice");
+    }
+  }
+  const cooling = proceduresFor(game).filter(procedure => sourceSeesReading(game, procedure.id) === true);
+  let waiting = { ...game, lastUsed: Object.fromEntries(cooling.map(procedure => [procedure.id, 1])) };
+  let fallback = chooseBotAction(waiting);
+  if (fallback.type === "focus") {
+    waiting = setInfrastructureFocus(waiting, fallback.nodeId);
+    fallback = chooseBotAction(waiting);
+  }
+  assert.equal(fallback.type, "procedure", "the bot keeps moving when all relevant sources are cooling");
+  if (fallback.type === "procedure") assert.equal(sourceSeesReading(waiting, fallback.procedure), false);
 });
 
 test("never marks the route the hidden stage uses as ruled out", () => {

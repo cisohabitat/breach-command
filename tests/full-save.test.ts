@@ -1,15 +1,15 @@
 // A whole operation saved by version 18 (tests/fixtures/full/full-v18.json:
-// the Bot Commander, seed 1, the telecoms case, a campaign operation with two
+// the Bot Commander, seed 1, the energy case, a campaign operation with two
 // injects, an adaptation, map actions, comparisons, a command event and a
-// crisis). Version 19 stores what the engine writes as messages. Played again
-// from the same seed, today's engine takes the same path, and every message it
+// crisis). Version 19 stores what the engine writes as messages. Replaying the
+// recorded actions with the same seed, today's engine takes the same path, and every message it
 // stores reads, in English, exactly as version 18 stored the sentence; and the
 // old save itself migrates and reads as it did.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { carriedLabel, correlateEvidence, describePart, injectCard, newGame, playTurn, resolveCommand, resolveDecision, resolveMapAction, resolveResponse, resolveSetPiece, setCaseTheory, setHypothesis, setInfrastructureFocus, type Game } from "../lib/advanced-game.ts";
-import { chooseBotAction, type BotAction } from "../lib/game-bot.ts";
+import type { BotAction } from "../lib/game-bot.ts";
 import { seededChallengeRandom } from "../lib/phase8.ts";
 import { incidentVariant } from "../lib/phase9.ts";
 import { parseSession } from "../lib/session.ts";
@@ -19,6 +19,11 @@ import "../lib/i18n/content/tables.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("./fixtures/full/full-v18.json", import.meta.url), "utf8"));
 const old = fixture.session.game;
+// Recorded before the coverage-aware bot change, with the procedure/roll/find
+// sequence checked against the untouched v18 save. A language-compatibility
+// test must replay the historical choices, not demand that today's bot make
+// the same mistakes. All existing turn and sentence assertions remain below.
+const recordedActions: BotAction[] = JSON.parse(readFileSync(new URL("./fixtures/full/full-v18-actions.json", import.meta.url), "utf8"));
 
 function replay(): Game {
   const { seed, scenario } = fixture.setup;
@@ -48,10 +53,10 @@ function replay(): Game {
   // meets the ones version 18 met, which is the path the save records.
   const events = (old.commandHistory as { event: Game["pendingCommand"] }[]).map(record => record.event);
   const crises = (old.setPieceHistory as { event: Game["pendingSetPiece"] }[]).map(record => record.event);
-  for (let step = 0; step < 200 && (game.status === "playing" || game.status === "response"); step++) {
+  for (const action of recordedActions) {
+    assert.ok(game.status === "playing" || game.status === "response", "every recorded action belongs to the running operation");
     if (game.pendingCommand && events[game.commandHistory.length]) game = { ...game, pendingCommand: events[game.commandHistory.length] };
     if (game.pendingSetPiece && crises[game.setPieceHistory.length]) game = { ...game, pendingSetPiece: crises[game.setPieceHistory.length] };
-    const action = chooseBotAction(game);
     if (action.type === "complete") break;
     game = apply(game, action);
   }
@@ -87,8 +92,9 @@ function sentences(game: Game, read: (value: Message | string) => string) {
 }
 const english = (value: Message | string) => typeof value === "string" ? value : say(value);
 
-test("the same seed today stores messages that read as version 18's sentences", () => {
+test("the recorded choices today store messages that read as version 18's sentences", () => {
   const game = replay();
+  assert.equal(game.status, old.status, "the historical choices still reach the recorded ending");
   assert.equal(game.turns.length, old.turns.length, "the replay takes the same path");
   assert.deepEqual(game.turns.map(turn => [turn.procedure, turn.raw, turn.total, turn.revealed]), old.turns.map((turn: Game["turns"][number]) => [turn.procedure, turn.raw, turn.total, turn.revealed]));
   const before = sentences(old as Game, english);

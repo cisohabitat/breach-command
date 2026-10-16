@@ -1,4 +1,4 @@
-import { SECTOR_ALERT_AT, attacks, availableIn, commandEvents, getHypothesisStanding, getMapActionEffect, getSectorAlert, sectorSystems, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, setPieceById, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
+import { SECTOR_ALERT_AT, attacks, availableIn, commandEvents, getHypothesisStanding, getMapActionEffect, getSectorAlert, sectorSystems, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, setPieceById, sourceSeesReading, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
 import { lit, msg, withForm, type Message } from "./i18n/message.ts";
 
 export type BotAction =
@@ -119,8 +119,13 @@ function rankProcedure(game: Game) {
   const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
   const topology = infrastructureTopologies[game.scenario];
   const focus = topology.nodes.find(node => node.id === game.focusedNode);
-  return proceduresFor(game)
-    .filter(procedure => availableIn(game, procedure.id) === 0)
+  const available = proceduresFor(game).filter(procedure => availableIn(game, procedure.id) === 0);
+  // Use the coverage stated on the player's cards before weighing familiarity
+  // or fatigue. An own source can be blind at this stage; DNS never sees any
+  // stage in the government-service case. Keep broad collection as a fallback
+  // when every source that can test the current reading is cooling down.
+  const targeted = available.filter(procedure => sourceSeesReading(game, procedure.id) === true);
+  return (targeted.length ? targeted : available)
     .map(procedure => {
       const uses = game.turns.filter(turn => turn.procedure === procedure.id).length;
       const recent = game.turns.slice(-2).some(turn => turn.procedure === procedure.id);
