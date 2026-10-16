@@ -26,6 +26,17 @@ by image. Keep README, AGENTS and release notes aligned with shipped behaviour.
 
 ## Follow-up measurement
 
+An automated fresh-profile review on 16 October 2026 checked the opening on a
+375 px phone and 1280 px desktop. The academy's first navigation action was
+visible without scrolling on both. One wording defect was confirmed before
+any check ran: the tutorial requested a source that "supports your hypothesis"
+and own-source accessible names announced "supports current hypothesis".
+Those descriptions now distinguish a source's ability to test a reading from
+the result's support for it. A fresh-profile browser regression follows the
+opening through the first procedure and its recorded turn effects, retaining
+the academy and shipped guidance defaults. This is an automated review and
+regression check, not evidence of newcomer comprehension or human timing.
+
 During the public beta, record whether players can name the current question,
 explain signal versus confidence, find every response and describe their
 chosen tradeoff before opening its rationale. Compare observation notes with

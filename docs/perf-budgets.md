@@ -277,3 +277,7 @@ throttled phone checks record assignment/operation LCP of 1.424/1.232 s and
 CLS of 0.001/0.020. All budgets remain unchanged, including the 222,000 B total
 style cap; only 472 B remain under that limit, so further style changes should
 consolidate existing rules before adding more.
+
+First-operation source wording (0.9.40) adds 22 B to the warmed game bundle:
+1,181,079 B on assignment and 1,191,124 B by play start in the local build.
+Initial script and all style sizes are unchanged; all budgets remain fixed.
