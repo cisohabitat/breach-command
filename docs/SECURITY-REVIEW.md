@@ -3,7 +3,7 @@
 Scope: application source, local persistence and portable backups, message
 rendering, CSV/share exports, browser headers, service worker, dependencies
 and GitHub build/release workflows. Baseline: main `e41b173` (0.9.34).
-Remediation releases: 0.9.35–0.9.37. This is a source review with automated regression
+Remediation releases: 0.9.35–0.9.38. This is a source review with automated regression
 checks, not an independent penetration test or a guarantee of security.
 
 ## Trust boundaries
@@ -26,6 +26,7 @@ state, not the unrevealed chain.
 | Message guard accepted malformed keys, forms and nested parameters from saves | Validate complete bounded message trees; reject ambiguous shapes, non-finite numeric parameters and excessive nesting. Use own-property catalogue, interpolation and content lookups. Existing full-save fixtures check migrations and wording. |
 | Unbounded backup/session JSON and inherited identifiers | Bound input before parsing; iteratively validate depth, collection size and total values; reject prototype-related keys. Validate difficulty, hypothesis, theory, campaign route and turn-plan identifiers before resume. Newer-version detection remains separate to preserve future saves. |
 | Malformed nested evidence/correlation/history records and response choices | Validate evidence IDs and confidence, referenced evidence pairs, history entries, turn values and phase-specific response choices. Reject invalid operations before they reach the renderer. The browser import regression verifies the existing operation survives and the readable campaign restores with an explicit omission notice. |
+| Recursive text amplification from imported message identifiers | A safely reproduced 431-character payload expanded to 640,000 characters. Reject template syntax in keys/references; render unknown identifiers literally. Cap every recursive result at 16,000 UTF-16 code units, including after case folding, so a parent cannot amplify an unbounded child. Tests cover unknown references, imported fallback, trusted-template repetition, both locales and case folding. |
 | Spreadsheet formula injection through imported ledger fields | Prefix formula/control-character starters before CSV escaping; regression tests cover formula markers, leading whitespace and newlines. |
 | Missing resource-destination policy and mutable CI action references | Add CSP, retain anti-framing/sniffing protections and remove the framework disclosure header. Pin existing action versions to resolved commit SHAs; ordinary Verify jobs do not retain Git credentials. Require a successful same-repository main push before release. Restore Dependabot patch updates. |
 

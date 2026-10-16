@@ -5,8 +5,8 @@ import { runInNewContext } from "node:vm";
 import { newGame } from "../lib/advanced-game.ts";
 import { MAX_SAVE_CHARS, parseSaveJson } from "../lib/safe-json.ts";
 import { parseSession, serialiseSession } from "../lib/session.ts";
-import { isMessage, level, msg, resolveRef, say } from "../lib/i18n/message.ts";
-import { interpolate, registered, translate, type MessageKey } from "../lib/i18n/index.ts";
+import { isMessage, level, lit, MAX_MESSAGE_OUTPUT, msg, ref, resolveRef, say, type Message } from "../lib/i18n/message.ts";
+import { interpolate, register, registered, translate, type MessageKey } from "../lib/i18n/index.ts";
 import { ledgerCsv, parseLedger } from "../lib/ledger.ts";
 
 test("untrusted saves have bounded structure and cannot carry prototype keys", () => {
@@ -58,6 +58,27 @@ test("nested save records cannot fault evidence, history or response views", () 
     { status: "response", revealed: sound.chain, responseChoices: ["missing-choice"] },
   ];
   for (const override of malformed) assert.equal(parseSession(JSON.stringify({ ...saved, game: { ...sound, ...override } })), null);
+});
+
+test("imported messages cannot turn identifiers into expanding templates", () => {
+  let payload: Message = { text: "x".repeat(64) };
+  for (let depth = 0; depth < 4; depth++) payload = { key: "{text}".repeat(10) as MessageKey, params: { text: payload } };
+  assert.equal(isMessage(payload), false);
+  assert.equal(say(payload), "{text}".repeat(10), "an unknown key stays literal");
+  assert.equal(say(ref("{text}{text}", { text: "expanded" })), "{text}{text}", "an unresolved reference stays literal");
+  assert.equal(isMessage(ref("{text}{text}")), false);
+  const saved = JSON.parse(serialiseSession(newGame(0, "training", () => 0), true, false));
+  saved.game.adversaryEvent = payload;
+  assert.equal(say(parseSession(JSON.stringify(saved))!.game.adversaryEvent!), "", "the import substitutes safe fallback text");
+  // Even a trusted catalogue can legitimately reuse a parameter. Recursive
+  // messages must not amplify that reuse beyond the per-result bound.
+  register({ "security.repeat": "{text}{text}" });
+  let repeated: Message = { text: "x".repeat(64) };
+  for (let depth = 0; depth < 10; depth++) repeated = msg("security.repeat" as MessageKey, { text: repeated });
+  assert.ok(isMessage(repeated));
+  assert.equal(say(repeated).length, MAX_MESSAGE_OUTPUT);
+  assert.equal(say(repeated, "en-XA").length, MAX_MESSAGE_OUTPUT);
+  assert.equal(say(lit("İ".repeat(MAX_MESSAGE_OUTPUT), "lower")).length, MAX_MESSAGE_OUTPUT, "case folding cannot expand past the bound");
 });
 
 test("CSV exports neutralise spreadsheet formulas from imported records", () => {

@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.37**: see the [release notes](CHANGELOG.md#0937-16-october-2026).
+Release **0.9.38**: see the [release notes](CHANGELOG.md#0938-16-october-2026).
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
@@ -179,6 +179,9 @@ pnpm build
 The [security review](docs/SECURITY-REVIEW.md) records the reviewed boundaries,
 production header policy and the one unfixed development-only lint advisory.
 The audit gate rejects new findings and a newly published fix for that exception.
+Imported message identifiers reject template syntax; unknown identifiers stay
+literal, and recursive rendering has a fixed output limit to prevent text
+amplification from a small backup.
 pnpm's seven-day release-age limit and Dependabot's matching npm cooldown keep
 new package releases out of automatic updates until they have aged seven days.
 

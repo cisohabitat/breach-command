@@ -19,6 +19,7 @@ export type Form = "inSentence" | "lower" | "lowerFirst" | "capital";
 export type Message = ({ key: MessageKey; params?: Record<string, Param> } | { ref: string; params?: Record<string, Param> } | { text: string }) & { form?: Form };
 
 export const msg = (key: MessageKey, params?: Record<string, Param>): Message => params ? { key, params } : { key };
+export const MAX_MESSAGE_OUTPUT = 16_000;
 export const ref = (path: string, params?: Record<string, Param>, form?: Form): Message => ({ ref: path, ...(params ? { params } : {}), ...(form ? { form } : {}) });
 export const lit = (text: string, form?: Form): Message => form ? { text, form } : { text };
 // The same message in an English form: "lower" for a title inside a sentence.
@@ -41,11 +42,15 @@ export function resolveRef(path: string): string | undefined {
 
 export function say(message: Message, locale: Locale = "en"): string {
   const params = "params" in message ? Object.fromEntries(Object.entries(message.params ?? {}).map(([name, value]) => [name, typeof value === "object" ? say(value, locale) : value])) : {};
-  const text = "text" in message ? message.text : "ref" in message ? interpolate(locale, resolveRef(message.ref) ?? message.ref, params) : translate(locale, message.key, params);
+  const resolved = "ref" in message ? resolveRef(message.ref) : undefined;
+  // An unresolved reference is an identifier, never an untrusted template.
+  // Bound every recursive result before its parent can interpolate it again.
+  const text = ("text" in message ? message.text : "ref" in message ? resolved === undefined ? message.ref : interpolate(locale, resolved, params) : translate(locale, message.key, params)).slice(0, MAX_MESSAGE_OUTPUT);
   if (!message.form || (locale !== "en" && locale !== "en-XA")) return text;
-  if (message.form === "capital") return text.charAt(0).toUpperCase() + text.slice(1);
-  if (message.form === "lowerFirst") return text.charAt(0).toLowerCase() + text.slice(1);
-  return message.form === "lower" ? text.toLowerCase() : text.split(" ").map(word => /[A-Z].*[A-Z0-9]|\d/.test(word) ? word : word.toLowerCase()).join(" ");
+  const formed = message.form === "capital" ? text.charAt(0).toUpperCase() + text.slice(1)
+    : message.form === "lowerFirst" ? text.charAt(0).toLowerCase() + text.slice(1)
+    : message.form === "lower" ? text.toLowerCase() : text.split(" ").map(word => /[A-Z].*[A-Z0-9]|\d/.test(word) ? word : word.toLowerCase()).join(" ");
+  return formed.slice(0, MAX_MESSAGE_OUTPUT);
 }
 
 export const sameMessage = (a: Message | null | undefined, b: Message | null | undefined) => JSON.stringify(a) === JSON.stringify(b);
@@ -68,6 +73,7 @@ export function isMessage(value: unknown): value is Message {
     if (kinds.length !== 1 || Object.keys(record).some(key => ![kinds[0], "params", "form"].includes(key))) return false;
     const text = record[kinds[0]];
     if (typeof text !== "string" || text.length > 2000) return false;
+    if (kinds[0] !== "text" && !/^[A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+$/.test(text)) return false;
     if (record.form !== undefined && !["inSentence", "lower", "lowerFirst", "capital"].includes(record.form as string)) return false;
     if (record.params === undefined) return true;
     if (kinds[0] === "text" || !record.params || typeof record.params !== "object" || Array.isArray(record.params)) return false;

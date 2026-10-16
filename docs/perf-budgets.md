@@ -265,3 +265,7 @@ complete build against these limits before release.
 Nested-record validation (0.9.36) adds 1,106 B to the warmed scripts, measuring
 1,180,885 B on assignment and 1,190,930 B by play start in the local production
 build. Both fit the existing 1,182,000/1,192,000 B limits; no budget changes.
+
+Bounded message rendering (0.9.38) adds 172 B to initial and warmed scripts.
+The local production build measures 656,726 B initial, 1,181,057 B warmed and
+1,191,102 B by play start. All existing budgets remain unchanged.
