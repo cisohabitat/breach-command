@@ -214,6 +214,28 @@ test.describe("local persistence", () => {
     expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).game.scenario, SESSION_KEY)).toBe(0);
   });
 
+  test("a backup with malformed evidence records preserves the existing operation", async ({ page }) => {
+    const previous = serialiseSession(newGame(0, "training", () => 0), true, false);
+    const malformed = JSON.stringify({ ...JSON.parse(previous), game: { ...newGame(4, "crisis", () => 0), correlations: [{}] } });
+    await page.addInitScript(([key, value]) => {
+      localStorage.clear();
+      localStorage.setItem("breach-command.tutorial-complete", "true");
+      localStorage.setItem(key, value);
+    }, [SESSION_KEY, previous] as const);
+    await page.goto("/", { waitUntil: "networkidle" });
+    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Game settings" }).click();
+    await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign: { ...defaultCampaign, xp: 75 }, session: malformed }));
+    await page.getByRole("button", { name: "Restore backup" }).click();
+    await page.getByRole("button", { name: "Replace this device’s progress" }).click();
+    await expect(page.locator(".backup-console").first()).toContainText("could not be read and was left out");
+    expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toBe(previous);
+    expect(JSON.parse(await page.evaluate(key => localStorage.getItem(key)!, CAMPAIGN_KEY)).xp).toBe(75);
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await expect(page.locator(".game-screen")).toContainText(scenarios[0].title);
+  });
+
   test("the first operation's record survives a reload and travels in the backup", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => {});
     await page.addInitScript(() => {

@@ -19,7 +19,7 @@ test("untrusted saves have bounded structure and cannot carry prototype keys", (
   assert.deepEqual(parseSaveJson('{"message":"<script>text only</script>"}'), { message: "<script>text only</script>" });
   const sound = newGame(0, "training", () => 0);
   const saved = JSON.parse(serialiseSession(sound, true, false));
-  for (const override of [{ difficulty: "constructor" }, { hypothesis: "toString" }, { campaignRoute: "toString" }, { caseTheory: "__proto__" }, { turns: [{ plan: { scope: "toString", intensity: "rapid" } }] }, { injectDeck: [999] }, { adversaryMemory: {} }, { hypothesisHistory: [null] }, { lastUsed: { email: {} } }]) {
+  for (const override of [{ difficulty: "constructor" }, { hypothesis: "toString" }, { campaignRoute: "toString" }, { caseTheory: "__proto__" }, { turns: [{ number: 1, raw: 10, modifier: 0, total: 10, procedure: "network", plan: { scope: "toString", intensity: "rapid" } }] }, { injectDeck: [999] }, { adversaryMemory: {} }, { hypothesisHistory: [null] }, { lastUsed: { email: {} } }]) {
     assert.equal(parseSession(JSON.stringify({ ...saved, game: { ...sound, ...override } })), null);
   }
   assert.ok(parseSession(JSON.stringify(saved)), "ordinary saves still migrate");
@@ -40,6 +40,24 @@ test("saved messages validate their entire tree before rendering", () => {
     assert.equal(say(level(key)), key);
   }
   assert.equal(interpolate("en", "{constructor} {toString}"), "{constructor} {toString}");
+});
+
+test("nested save records cannot fault evidence, history or response views", () => {
+  const sound = newGame(0, "training", () => 0);
+  const saved = JSON.parse(serialiseSession(sound, true, false));
+  const malformed = [
+    { evidence: [{ id: {}, turn: 1, confidence: "HIGH" }] },
+    { evidence: [{ id: "E1-network", turn: 1, confidence: "invalid" }] },
+    { correlations: [{}] },
+    { correlations: [{ evidence: "E1-network" }] },
+    { correlations: [{ evidence: ["missing", "other"] }] },
+    { mapHistory: [{ node: {}, action: "monitor", turn: 1 }] },
+    { hypothesisHistory: [{ turn: 1, id: "toString" }] },
+    { caseTheoryHistory: [{ turn: 1, objective: "toString" }] },
+    { turns: [{ number: 1, raw: {}, modifier: 0, total: 1, procedure: "network" }] },
+    { status: "response", revealed: sound.chain, responseChoices: ["missing-choice"] },
+  ];
+  for (const override of malformed) assert.equal(parseSession(JSON.stringify({ ...saved, game: { ...sound, ...override } })), null);
 });
 
 test("CSV exports neutralise spreadsheet formulas from imported records", () => {

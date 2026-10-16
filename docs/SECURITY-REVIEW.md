@@ -3,7 +3,7 @@
 Scope: application source, local persistence and portable backups, message
 rendering, CSV/share exports, browser headers, service worker, dependencies
 and GitHub build/release workflows. Baseline: main `e41b173` (0.9.34).
-Remediation release: 0.9.35. This is a source review with automated regression
+Remediation releases: 0.9.35 and 0.9.36. This is a source review with automated regression
 checks, not an independent penetration test or a guarantee of security.
 
 ## Trust boundaries
@@ -25,6 +25,7 @@ state, not the unrevealed chain.
 | Service worker deleted other applications' origin caches and searched all caches during offline fallback | Read/delete only the game's namespace and current build; store only published documents/assets. Exclude queries, authorisation, RSC, ranges, redirects and private/no-store responses. Register cache-write lifetime synchronously. VM regression tests and the existing offline browser suite cover isolation and play. Locale query navigations may use the public offline shell without caching the query response. |
 | Message guard accepted malformed keys, forms and nested parameters from saves | Validate complete bounded message trees; reject ambiguous shapes, non-finite numeric parameters and excessive nesting. Use own-property catalogue, interpolation and content lookups. Existing full-save fixtures check migrations and wording. |
 | Unbounded backup/session JSON and inherited identifiers | Bound input before parsing; iteratively validate depth, collection size and total values; reject prototype-related keys. Validate difficulty, hypothesis, theory, campaign route and turn-plan identifiers before resume. Newer-version detection remains separate to preserve future saves. |
+| Malformed nested evidence/correlation/history records and response choices | Validate evidence IDs and confidence, referenced evidence pairs, history entries, turn values and phase-specific response choices. Reject invalid operations before they reach the renderer. The browser import regression verifies the existing operation survives and the readable campaign restores with an explicit omission notice. |
 | Spreadsheet formula injection through imported ledger fields | Prefix formula/control-character starters before CSV escaping; regression tests cover formula markers, leading whitespace and newlines. |
 | Missing resource-destination policy and mutable CI action references | Add CSP, retain anti-framing/sniffing protections and remove the framework disclosure header. Pin existing action versions to resolved commit SHAs; ordinary Verify jobs do not retain Git credentials. Require a successful same-repository main push before release. Restore Dependabot patch updates. |
 
