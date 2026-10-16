@@ -2,13 +2,17 @@
   height: 100svh;
   min-height: 360px;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  place-items: center;
   background: #090e13;
 }
+.title-stage {
+  position: relative;
+  width: min(100%, calc(100svh * 4 / 3));
+  aspect-ratio: 4 / 3;
+}
 .title-art {
-  display: grid;
-  place-items: center;
-  min-height: 0;
+  display: block;
+  height: 100%;
 }
 .title-art img {
   display: block;
@@ -18,34 +22,36 @@
   object-fit: contain;
 }
 .title-entry {
+  position: absolute;
+  inset-inline: 20px;
+  inset-block-end: max(24px, env(safe-area-inset-bottom));
   display: grid;
   justify-items: center;
-  gap: 10px;
-  padding: 16px 20px max(16px, env(safe-area-inset-bottom));
   text-align: center;
 }
 .title-start {
   display: grid;
   place-items: center;
   min-height: 48px;
-  width: min(100%, 280px);
-  background: var(--lime);
-  color: #111417;
+  width: min(100%, 240px);
+  background: rgb(9 14 19 / 68%);
+  color: #fff6e4;
+  backdrop-filter: blur(8px);
   font-size: var(--type-body);
   font-weight: 600;
   text-decoration: none;
-  border: 2px solid var(--lime);
+  border: 1px solid rgb(237 226 201 / 70%);
 }
 .title-start:hover {
-  background: #fff6e4;
+  background: rgb(9 14 19 / 82%);
 }
 .title-start:focus-visible {
   outline: 2px solid var(--lime);
   outline-offset: 4px;
 }
-.title-entry p {
-  margin: 0;
-  max-width: 44ch;
-  color: #c6c3ba;
-  font-size: var(--type-caption);
+@media (max-aspect-ratio: 1/1) {
+  .title-stage {
+    width: min(100%, calc(100svh * 3 / 4));
+    aspect-ratio: 3 / 4;
+  }
 }

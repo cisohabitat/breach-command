@@ -12,6 +12,8 @@ Release **0.9.42**: see the [release notes](CHANGELOG.md#0942-16-october-2026).
 
 The home page opens with the supplied Breach Command theme artwork: landscape on wide screens and portrait on tall screens. Select **Start** to reach the incident desk at `/play`, where you can begin or resume an operation. You can bookmark `/play` to open the desk directly. Both entry pages remain available offline after visiting the desk; theme images are decorative and load separately from the game.
 
+Title-screen preview: replacement artwork carries a semi-transparent Start link floating near the bottom centre of the picture, with visible hover and keyboard-focus states. The explanatory text remains available to screen readers. This preview is held off `main` for visual testing.
+
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
 The 51 recorded clips cover confirmed findings, unsuccessful checks, uncertain
