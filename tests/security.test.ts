@@ -13,7 +13,7 @@ test("untrusted saves have bounded structure and cannot carry prototype keys", (
   for (const key of ["__proto__", "constructor", "prototype"]) {
     assert.throws(() => parseSaveJson(`{"nested":{"${key}":{}}}`));
   }
-  assert.throws(() => parseSaveJson(" ".repeat(MAX_SAVE_CHARS + 1)));
+  assert.throws(() => parseSaveJson(JSON.stringify("x".repeat(MAX_SAVE_CHARS))));
   assert.throws(() => parseSaveJson("[".repeat(34) + "0" + "]".repeat(34)));
   assert.throws(() => parseSaveJson(JSON.stringify(Array(5001).fill(0))));
   assert.deepEqual(parseSaveJson('{"message":"<script>text only</script>"}'), { message: "<script>text only</script>" });
