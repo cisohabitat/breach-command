@@ -49,6 +49,7 @@ function useOpened(open: boolean) {
 export default function Home() {
   const session = useGameSession();
   const { t, say } = useMessages();
+  const [wordmarkFailed, setWordmarkFailed] = useState(false);
   const { game, ended, highContrast, announcement, criticalAnnouncement, storageNotice, rolling, setRules, setSettings, setNewConfirm, setStorageNotice, resetToBriefing } = session;
   const show = {
     actionSheet: useOpened(!!session.selected),
@@ -105,7 +106,10 @@ export default function Home() {
       )}
       <header className="topbar">
         <Link href="/play" className="brand" aria-label={t("shell.home")}>
-          <span className="brand-name">{t("gameScreen.breachCommand")}</span><span className="brand-light">{t("shell.desk")}</span>
+          {/* Native local art stays available to the offline cache; reserve its
+              dimensions and show the original text if it cannot be loaded. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <span className="brand-name">{wordmarkFailed ? t("gameScreen.breachCommand") : <img className="brand-logo" src="/art/logo.webp" alt="" ref={image => { if (image?.complete && !image.naturalWidth) setWordmarkFailed(true); }} onError={() => setWordmarkFailed(true)} />}</span><span className="brand-light">{t("shell.desk")}</span>
         </Link>
         <div className="top-actions">
           <button className="quiet-button" onClick={() => setRules(true)} aria-label={t("shell.fieldGuide")}><BookOpen size={17} /><span>{t("shell.fieldGuide")}</span></button>

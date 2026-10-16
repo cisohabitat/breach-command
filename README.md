@@ -14,6 +14,8 @@ The home page opens with the supplied Breach Command incident-command artwork: l
 
 The entry link floats near the bottom centre of the picture with a semi-transparent background, hover feedback and a visible keyboard-focus outline. Its explanatory description remains available to screen readers.
 
+Header-logo preview: the incident desk uses a compact two-line version of the supplied Breach Command wordmark in the desk's warm bone and charcoal palette. The tiny tagline is omitted for legibility; a missing image restores the original text. The transparent local WebP is about 56 KB. This visual preview remains off `main` for review.
+
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
 The 51 recorded clips cover confirmed findings, unsuccessful checks, uncertain

@@ -303,3 +303,11 @@ Title artwork refresh (0.9.43) replaces those posters with 402,043 B landscape
 and 317,644 B portrait files and moves "Stop the Breach" over the picture.
 Only one poster loads per viewport. The local game script/style measurements
 remain identical to 0.9.42 above; all performance budgets remain unchanged.
+
+Incident-header wordmark preview uses a 56,558 B local transparent WebP,
+encoded at three times its desktop display width from the supplied-logo
+adaptation. Local initial/warmed/operation scripts are
+656,887/1,181,945/1,191,990 B; linked/total styles are 88,332/221,817 B.
+Throttled assignment/operation LCP is 1.176/1.224 s and CLS 0.001/0.020.
+All budgets remain fixed. Operation script has only 10 B of local headroom;
+the CI build identifier adds 8 B, so verify the final runner build before release.
