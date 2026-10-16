@@ -7,6 +7,8 @@
 name: Record visual baselines
 
 on:
+  push:
+    branches: [ci/progressive-learning-recorder]
   workflow_dispatch:
 
 permissions:
@@ -50,6 +52,7 @@ jobs:
             curl -sf http://localhost:3000 > /dev/null && break
             sleep 1
           done
+          pnpm test:performance
           pnpm exec playwright test tests/e2e/visual.spec.ts --update-snapshots=all
       - name: Push to ci/visual-baselines
         run: |
