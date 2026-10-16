@@ -77,9 +77,14 @@ test.describe("keyboard play", () => {
 
   test("typing in a text field is not a shortcut", async ({ page }) => {
     await openWithSave(page, null);
-    await page.locator(".advanced-setup > summary").click();
-    await page.getByRole("textbox", { name: "Challenge code" }).focus();
+    const setup = page.locator(".advanced-setup");
+    await setup.locator("summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(setup).toHaveJSProperty("open", true);
+    const input = page.getByRole("textbox", { name: "Challenge code" });
+    await input.focus();
     await page.keyboard.press("f");
+    await expect(input).toHaveValue("f");
     await page.waitForTimeout(300);
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });

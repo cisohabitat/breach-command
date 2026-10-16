@@ -2,7 +2,7 @@ import { evidenceArtFor, StoryArt } from "./story-art";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { attacks, decisionRollShift, describePart, injectCard, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game, meterEffect, rollEffect } from "@/lib/advanced-game";
+import { attacks, availableIn, decisionRollShift, describePart, injectCard, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, proceduresFor, sourceSeesReading, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game, meterEffect, rollEffect } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { returnFocusToAwaiting } from "@/hooks/use-recover-focus";
 import { Glossed } from "@/components/game/glossed";
@@ -57,6 +57,12 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
   const settled = !!report && !!game && report.number === game.turns.length && report.success && (!report.revealed || report.windfall) && !report.injectReveal && !!game.hypothesis;
   const decision = game?.status === "playing" ? session.decision : null;
   const awaitingDecision = !!decision && !!game?.pendingDecision;
+  const testedStage = report?.hypothesisTarget ? attacks.find(attack => attack.id === report.hypothesisTarget)?.stage : undefined;
+  const foundStages = [...new Set([report?.revealed, report?.injectReveal]
+    .map(id => id ? attacks.find(attack => attack.id === id)?.stage : undefined)
+    .filter((stage): stage is number => stage !== undefined))];
+  const canReviewSources = !!game && !!report && !report.success && report.number === game.turns.length && game.status === "playing" && game.mode !== "expert" && !!game.hypothesis && !game.pendingDecision && !game.pendingCommand && !game.pendingSetPiece;
+  const availableSources = game && canReviewSources ? proceduresFor(game).filter(procedure => availableIn(game, procedure.id) === 0 && sourceSeesReading(game, procedure.id) === true) : [];
   const injectBox = report?.inject && <div className="inject-box"><span className="eyebrow">{rich("captainReportDialog.injectSpanSpan", { reason: say(report.inject.reason) }, { span: chunk => <span className="separator">{chunk}</span> })}</span><h3>{injectCard(report.inject.id).title}</h3><p>{injectCard(report.inject.id).text}</p><strong>{report.inject.effectLabel ? say(report.inject.effectLabel) : injectCard(report.inject.id).effectLabel}</strong></div>;
 
   return (
@@ -83,10 +89,25 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
             <div><dt>{t("captainReportDialog.turn")}</dt><dd>{report.number}</dd></div>
             <div><dt>{t("captainReportDialog.source")}</dt><dd>{procedureById(game, report.procedure)?.title}</dd></div>
             <div><dt>{t("captainReportDialog.result")}</dt><dd className={lostHere ? "failed" : report.revealed || report.injectReveal ? "confirmed" : report.success ? "" : "failed"}>{lostHere ? (game.status === "exercise" ? t("captainReportDialog.stoodDown") : t("captainReportDialog.operationLost")) : report.revealed || report.injectReveal ? t("captainReportDialog.stageConfirmed") : report.success ? t("captainReportDialog.noStageFound") : t("captainReportDialog.checkFailed")}</dd></div>
+            {testedStage !== undefined && <div className="report-stage-fact"><dt>{t("captainReportDialog.stageTested")}</dt><dd>{t("captainReportDialog.stageNumber", { number: testedStage + 1, title: stages[testedStage].name })}</dd></div>}
+            <div className="report-stage-fact"><dt>{t("captainReportDialog.stagesFound")}</dt><dd>{foundStages.length ? foundStages.map(stage => t("captainReportDialog.stageNumber", { number: stage + 1, title: stages[stage].name })).join("; ") : t("captainReportDialog.noStageFound")}</dd></div>
           </dl>}
         </DialogHeader>
         {report && game && <>
-          {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
+          {decision && <nav className="report-response-index" aria-label={t("captainReportDialog.findResponse")}>
+            <p className="eyebrow">{t("captainReportDialog.readResponses", { count: decision.options.length })}</p>
+            <ol>{decision.options.map((option, index) => <li key={option.id}><a href={`#report-response-${option.id}`} onClick={event => {
+              event.preventDefault();
+              const target = optionList.current?.querySelector<HTMLButtonElement>(`button[data-response="${option.id}"]`);
+              target?.focus({ preventScroll: true });
+              target?.scrollIntoView({ block: "nearest", behavior: "auto" });
+            }}>{t("captainReportDialog.responseIndexEntry", { letter: "ABCDEFG"[index], title: option.title })}</a></li>)}</ol>
+          </nav>}
+          {!report.success && <p className="report-inconclusive" role="status">{t("captainReportDialog.failedSettlesNothing")}</p>}
+          {canReviewSources && <section className="report-available-sources" aria-label={t("captainReportDialog.availableSources")}>
+            <h3>{t("captainReportDialog.availableSources")}</h3>
+            {availableSources.length ? <><p>{t("captainReportDialog.sourcesCanTest")}</p><ul>{availableSources.map(procedure => <li key={procedure.id}>{procedure.title}</li>)}</ul></> : <p>{t("captainReportDialog.sourcesUnavailable")}</p>}
+          </section>}
           {/* The turn that ends an operation is still reported as a turn, so its
               headline can be good news on a lost operation. Say how it ended first. */}
           {ended && report.number === game.turns.length && game.status !== "won" && (
@@ -98,6 +119,10 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
           )}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
             <section className="report-summary" aria-label={t("captainReportDialog.procedureResult")}>
+              {report.revealed && <div className="discovery"><StoryArt kind="evidence" name={evidenceArtFor(report.procedure, game.scenario)} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short}: {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>{t("captainReportDialog.onTheRoute", { title: hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase() })}</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">{t("captainReportDialog.yourReadingWas2", { title: hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase() })}</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">{t("captainReportDialog.thisIsStage2", { stage: attacks.find(attack => attack.id === report.revealed)!.stage + 1, stage2: attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1 })}</small>}</div></div>}
+              {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
+              <details key={report.number} className="report-collection-details">
+                <summary>{t("captainReportDialog.collectionDetails")}</summary>
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
                 <div><span>{t("captainReportDialog.rolledOnThe", { raw: report.raw })}{report.modifier >= 0 ? "+" : "−"} {t("captainReportDialog.modifier2", { modifier: Math.abs(report.modifier), rollParts: rollParts(t, report, locale) })}</span><strong>{report.total} <span>{t("captainReportDialog.needed2", { threshold: config.threshold })}{report.success ? t("captainReportDialog.aSuccess") : t("captainReportDialog.aFailure")}</span></strong></div>
@@ -114,7 +139,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                     ? t("captainReportDialog.theCheckFailed2", { change: `${report.objectiveChange >= 0 ? "+" : "−"}${Math.abs(report.objectiveChange)}` })
                     : t("captainReportDialog.theCheckFailed")}{injectImpact(report) ? t("captainReportDialog.theInjectBelow", { change: `${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))}` }) : ""}{report.adversaryEvent ? t("captainReportDialog.theSituationAlso") : ""}</p></div>
               <p className="report-narrative"><Glossed text={say(report.narrative)} /></p>
-              {report.revealed && <div className="discovery"><StoryArt kind="evidence" name={evidenceArtFor(report.procedure, game.scenario)} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short}: {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>{t("captainReportDialog.onTheRoute", { title: hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase() })}</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">{t("captainReportDialog.yourReadingWas2", { title: hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase() })}</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">{t("captainReportDialog.thisIsStage2", { stage: attacks.find(attack => attack.id === report.revealed)!.stage + 1, stage2: attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1 })}</small>}</div></div>}
+              </details>
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
                   is where the player is looking when it lands. A failed roll settles
@@ -149,7 +174,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               {decision && (
                 <div className="evidence-decision">
                   <span className="eyebrow">{t("captainReportDialog.operationalDecisionRequired")}</span>
-                  {game.evidence.filter(item => item.supports === game.pendingDecision).map(item => <EvidenceAssessment key={item.id} game={game} item={item} />)}
+                  {game.evidence.filter(item => item.supports === game.pendingDecision).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}
                   {game.difficulty === "training" && game.mode !== "expert" && game.decisions.length === 0 && <SignalGuide />}
                   {/* The count says how many there are: the last of five sat below the fold
                       of a laptop screen with nothing saying it was there. */}
@@ -180,7 +205,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                         signals one a line, and its exact effect. Tinted cards with an
                         icon each were cards inside the paper. */}
                     {decision.options.map((option, index) => (
-                      <button key={option.id} onClick={() => decide(option.id)}>
+                      <button key={option.id} id={`report-response-${option.id}`} data-response={option.id} onClick={() => decide(option.id)}>
                         <b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b>
                         <strong>{option.title}</strong>
                         <span>{option.description}<span className="option-signals"><span>{say(option.evidence)}</span><span>{say(option.risk)}</span><span>{say(option.service)}</span></span><EffectList className="decision-effect" items={previewDecision(game, option.id) ?? []} /></span>
@@ -246,6 +271,7 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
     const frame = requestAnimationFrame(count);
     const settled = window.setTimeout(count, 320);
     scroller.addEventListener("scroll", count, { passive: true });
+    scroller.addEventListener("toggle", count, true);
     window.addEventListener("resize", count);
     // Opening "How these responses differ" pushes the options down without a
     // scroll or a resize; the panel changing size is what says so.
@@ -256,6 +282,7 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
       cancelAnimationFrame(frame);
       window.clearTimeout(settled);
       scroller.removeEventListener("scroll", count);
+      scroller.removeEventListener("toggle", count, true);
       window.removeEventListener("resize", count);
       resized?.disconnect();
     };
@@ -264,6 +291,7 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
   const reveal = () => {
     const last = list.current?.lastElementChild;
     const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (last instanceof HTMLElement) last.focus({ preventScroll: true });
     last?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "nearest" });
   };
   return <button type="button" className="options-below" onClick={reveal}><span>{hidden === 1 ? t("captainReportDialog.oneMoreResponse") : t("captainReportDialog.moreResponsesBelow", { hidden })}</span></button>;

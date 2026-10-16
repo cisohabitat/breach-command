@@ -232,3 +232,12 @@ operation script budgets, to 1,175,000 B and 1,185,000 B. This is under half a
 per cent. The initial script, style, timing and layout-shift budgets stay fixed;
 existing portrait files are reused and fetched lazily. The full runner suite
 measures the delivered production build before merge.
+
+Scannable Captain reports (16 October 2026) add a response index, keyboard
+focus styles, native disclosures and a responsive stage-fact row. The GitHub
+runner measured 220,419 B of decoded style, versus 219,342 B before this work.
+The total-style budget deliberately rises from 220,000 B to 222,000 B for these
+controls. The linked sheet remains 87,752 B, below its unchanged 95,000 B cap.
+Initial script is 654,978 B, warmed assignment script 1,174,273 B and operation
+script 1,184,318 B, all under the existing limits. Throttled LCP was 1.02–1.04 s
+and CLS 0.008–0.009; their limits and all script budgets remain unchanged.
