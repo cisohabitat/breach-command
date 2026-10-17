@@ -1,6 +1,6 @@
 # Art direction
 
-Fullscreen title (17 October 2026, user approved): use the supplied portrait or landscape poster to cover the dynamic viewport, accepting edge cropping rather than letterboxing. Keep the entry button and release/build metadata anchored inside safe areas. The reviewed desktop, iPad portrait/landscape and tall-phone crops are approved, including the slight trimming of the logo's outer edges on tall phones.
+Fullscreen title (17 October 2026, user approved): use the supplied portrait or landscape poster to cover the dynamic viewport, accepting edge cropping rather than letterboxing. Keep the entry button and release/build metadata anchored inside safe areas. Preserve the approved desktop and iPad crops. The approved tall-phone refinement uses a dedicated taller adaptation at ratios up to 3:5, with extra sky and terrace to keep the complete logo visible.
 
 State colour (15 October 2026, user approved): keep the charcoal-and-bone
 foundation, adding muted blue for selected evidence and untested connections,

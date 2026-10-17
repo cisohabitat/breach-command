@@ -13,8 +13,9 @@ export function TitleScreen() {
       <h1 className="sr-only">{t("titleScreen.title")}</h1>
       <div className="title-stage">
         <picture className="title-art">
+          <source media="(max-aspect-ratio: 3/5)" srcSet="/art/title/phone.jpg" />
           <source media="(max-aspect-ratio: 1/1)" srcSet="/art/title/portrait.jpg" />
-          {/* Fill the viewport with the matching poster, cropping its edges.
+          {/* The tall-phone composition keeps the logo inside the cover crop.
               Picture requests one image; the heading names the game. */}
           <img src="/art/title/landscape.jpg" width="1280" height="960" alt="" fetchPriority="high" />
         </picture>
