@@ -9,13 +9,13 @@ register(rollDialogMessages);
 
 export function RollDialog({ session }: { session: GameSession }) {
   const { t } = useMessages();
-  const { rolling, die } = session;
+  const { rolling, die, dieSettled } = session;
 
   return (
     <Dialog open={rolling} onOpenChange={() => {}}>
       <DialogContent className="roll-dialog" showCloseButton={false} onEscapeKeyDown={event => event.preventDefault()} onPointerDownOutside={event => event.preventDefault()}>
         <DialogHeader><DialogTitle>{t("rollDialog.runningProcedure")}</DialogTitle><DialogDescription>{t("rollDialog.theIncidentCaptain")}</DialogDescription></DialogHeader>
-        <div className="die rolling"><Dices size={32} /><strong>{die}</strong><span>D20</span></div>
+        <div className={dieSettled ? "die" : "die rolling"}><Dices size={32} /><strong>{die}</strong><span>D20</span></div>
       </DialogContent>
     </Dialog>
   );

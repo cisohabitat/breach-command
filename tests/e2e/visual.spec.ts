@@ -77,6 +77,26 @@ test.describe("visual baselines", () => {
   test.skip(({ browserName }) => browserName !== "chromium", "baselines are recorded in Chromium");
 
   for (const [width, height] of widths) {
+    test(`settled die at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
+      await resume(page);
+      await page.locator(".procedure-card:not(:disabled)").first().click();
+      await page.evaluate(() => {
+        crypto.getRandomValues = <T extends ArrayBufferView | null>(array: T): T => {
+          if (array instanceof Uint32Array) array.fill(0);
+          return array;
+        };
+      });
+      const time = new Date("2030-01-01T00:00:00Z");
+      await page.clock.install({ time });
+      await page.clock.pauseAt(new Date(time.getTime() + 1000));
+      await page.getByRole("button", { name: "Run procedure", exact: true }).click();
+      await page.clock.runFor(850);
+      await expect(page.locator(".roll-dialog .die")).not.toHaveClass(/rolling/);
+      await expect(page.locator(".roll-dialog")).toHaveScreenshot(`${width}-settled-die.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+    });
+
     test(`decision reaction at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       // Keep playback deterministic while checking the real caption and controls.
