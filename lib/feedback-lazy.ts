@@ -5,16 +5,32 @@
 // module that fails to load is swallowed like any other feedback failure: sound
 // never throws into the game.
 import type { FeedbackContext, FeedbackCue } from "./feedback.ts";
+import { feedbackAudioContext } from "./audio-context.ts";
 
 let loaded: Promise<typeof import("./feedback.ts")> | null = null;
 const load = () => (loaded ??= import("./feedback.ts"));
 
 export function playFeedback(cue: FeedbackCue, sound = true, haptics = true, context?: FeedbackContext | null) {
   if (!sound && !haptics) return;
+  if (sound) feedbackAudioContext();
   load().then(module => module.playFeedback(cue, sound, haptics, context)).catch(() => {});
 }
 
+export function playDiceRoll(sound = true): () => void {
+  let cancelled = false;
+  let stop: (() => void) | undefined;
+  if (sound) {
+    feedbackAudioContext();
+    const started = performance.now();
+    load().then(module => {
+      if (!cancelled) stop = module.playDiceRoll(true, performance.now() - started);
+    }).catch(() => {});
+  }
+  return () => { cancelled = true; stop?.(); };
+}
+
 export function setAdaptiveScore(enabled: boolean, tension = 0, sector = 0) {
+  if (enabled) feedbackAudioContext();
   load().then(module => module.setAdaptiveScore(enabled, tension, sector)).catch(() => {});
 }
 

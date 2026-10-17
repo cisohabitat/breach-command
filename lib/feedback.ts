@@ -1,6 +1,8 @@
 // One voice per event class: opening, a check that completed, a find (a stage
 // confirmed), a failed check, a warning, a decision, and the two endings. A find
 // once shared the empty check's voice, and a lost operation the escalation's.
+import { feedbackAudioContext } from "./audio-context.ts";
+
 export type FeedbackCue = "open" | "success" | "find" | "failure" | "warning" | "decision" | "complete" | "lost";
 
 /**
@@ -77,9 +79,6 @@ const SFX_BUS_LEVEL = 1;
 const SILENCE = 0.0001;
 
 let graph: AudioGraph | null = null;
-// Set once construction has failed, so a device that cannot make audio is not
-// asked again on every cue.
-let audioUnavailable = false;
 let narrationActive = false;
 let musicLevel = SILENCE;
 
@@ -95,22 +94,9 @@ export function setNarrationActive(active: boolean) {
 }
 
 function ensureGraph(): AudioGraph | null {
-  if (typeof window === "undefined" || audioUnavailable) return null;
-  if (graph) {
-    if (graph.context.state === "suspended") void graph.context.resume();
-    return graph;
-  }
-  const AudioContextClass = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AudioContextClass) return null;
-  // The constructor throws on some devices — a hardware context limit, a
-  // sandboxed embed — and feedback must never be the reason a turn fails.
-  let context: AudioContext;
-  try {
-    context = new AudioContextClass();
-  } catch {
-    audioUnavailable = true;
-    return null;
-  }
+  const context = feedbackAudioContext();
+  if (!context) return null;
+  if (graph) return graph;
   const master = context.createGain();
   master.gain.value = MASTER_LEVEL;
   // A fast, high-ratio compressor acts as a brick-wall-ish limiter. It is the
@@ -130,7 +116,6 @@ function ensureGraph(): AudioGraph | null {
   master.connect(limiter);
   limiter.connect(context.destination);
   graph = { context, master, limiter, sfxBus, musicBus };
-  if (graph.context.state === "suspended") void graph.context.resume();
   return graph;
 }
 
@@ -488,6 +473,45 @@ let streak = 0;
 // Sound and vibration are decoration on top of the game. Any failure inside them
 // is swallowed here so that it can never interrupt the transition that asked for
 // the cue.
+// A neutral physical roll, independent of the eventual die or hidden outcome.
+// elapsed keeps a late lazy import on the original 850 ms animation timeline.
+export function playDiceRoll(sound = true, elapsed = 0): () => void {
+  const sources: AudioBufferSourceNode[] = [];
+  const stop = () => { for (const source of sources) { try { source.stop(); } catch {} } };
+  try {
+    if (!sound || !Number.isFinite(elapsed) || elapsed < 0 || elapsed >= 820 || typeof window === "undefined" || document.hidden) return stop;
+    const bus = ensureGraph();
+    if (!bus) return stop;
+    const noise = bus.context.createBuffer(1, Math.ceil(bus.context.sampleRate * 0.024), bus.context.sampleRate);
+    const samples = noise.getChannelData(0);
+    const random = mulberry32(0xd20);
+    for (let i = 0; i < samples.length; i++) samples[i] = random() * 2 - 1;
+    const now = bus.context.currentTime;
+    [0, 35, 90, 150, 230, 340, 480, 650, 820].forEach((offset, index) => {
+      if (offset < elapsed) return;
+      const source = bus.context.createBufferSource();
+      const filter = bus.context.createBiquadFilter();
+      const gain = bus.context.createGain();
+      const start = now + (offset - elapsed) / 1000;
+      source.buffer = noise;
+      filter.type = "bandpass";
+      filter.frequency.value = index === 8 ? 750 : 1100 + index % 3 * 350;
+      filter.Q.value = 0.8;
+      gain.gain.setValueAtTime(SILENCE, start);
+      gain.gain.exponentialRampToValueAtTime(index === 8 ? 0.38 : 0.28, start + 0.001);
+      gain.gain.exponentialRampToValueAtTime(SILENCE, start + 0.022);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(bus.sfxBus);
+      source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
+      source.start(start);
+      sources.push(source);
+      source.stop(start + 0.024);
+    });
+  } catch { stop(); }
+  return stop;
+}
+
 export function playFeedback(cue: FeedbackCue, sound = true, haptics = true, context?: FeedbackContext | null) {
   try {
     playFeedbackCue(cue, sound, haptics, context);

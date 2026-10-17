@@ -23,7 +23,7 @@ import { PARKED_SESSION_KEY, SESSION_KEY } from "@/lib/session-keys";
 import type { SavedSession } from "@/lib/session";
 import { campaignAct, campaignChanges, campaignEnding, campaignStory, campaignReadable, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { operationCampaign, operationSetup } from "@/lib/operation-setup";
-import { playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
+import { playDiceRoll, playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
@@ -68,6 +68,7 @@ export function useGameSession() {
   const [difficulty, setDifficulty] = useState<Difficulty>("operational");
   const [selected, setSelected] = useState<string | null>(null);
   const [rolling, setRolling] = useState(false);
+  const stopDice = useRef<(() => void) | null>(null);
   const [die, setDie] = useState(20);
   const [report, setReport] = useState<Turn | null>(null);
   const [inlineReport, setInlineReport] = useState<Turn | null>(null);
@@ -104,6 +105,7 @@ export function useGameSession() {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
   const [storageNotice, setStorageNotice] = useState<Message | null>(null);
   const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, voiceEnabled, setVoiceEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled } = usePreferences(setStorageNotice);
+  const feedbackPrefs = useRef({ sound: soundEnabled, haptics: hapticsEnabled });
   const { todaySeed, seedFor, applyCode, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
     setScenarioChoice(setup.scenario);
     setDifficulty(setup.difficulty);
@@ -268,6 +270,7 @@ export function useGameSession() {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (!quick) {
       setRolling(true);
+      if (!botRunRef.current) stopDice.current = playDiceRoll(soundEnabled);
       interval = setInterval(() => setDie(1 + Math.floor(Math.random() * 20)), 80);
       timers.current.push(interval);
     }
@@ -276,6 +279,8 @@ export function useGameSession() {
       // Whatever happens while the turn resolves, the game must not be left
       // refusing every later action.
       try { resolveRun(); } finally {
+        stopDice.current?.();
+        stopDice.current = null;
         busyRef.current = false;
         setRolling(false);
       }
@@ -302,7 +307,7 @@ export function useGameSession() {
       setPendingUndo(null);
       setRolling(false);
       setAnnouncement(msg(result.success ? "session.turnSucceeded" : "session.turnUnsuccessful", { number: result.number, impact: next.impact, label: lit(engine().getOperationalLabel(next)), continuity: next.continuity, progress: next.objectiveProgress }));
-      playFeedback(next.status === "lost" ? "lost" : result.adversaryEvent ? "warning" : result.revealed ? "find" : result.success ? "success" : "failure", soundEnabled, hapticsEnabled, {
+      playFeedback(next.status === "lost" ? "lost" : result.adversaryEvent ? "warning" : result.revealed ? "find" : result.success ? "success" : "failure", feedbackPrefs.current.sound, feedbackPrefs.current.haptics, {
         procedure: result.procedure,
         success: result.success,
         roll: result.raw,
@@ -778,7 +783,17 @@ export function useGameSession() {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [game, botActive, botPaused, rolling, missionBriefing, settings, rules, newConfirm, debrief, tutorial, selected, report]);
 
+  useEffect(() => {
+    feedbackPrefs.current = { sound: soundEnabled, haptics: hapticsEnabled };
+    const stop = () => { stopDice.current?.(); stopDice.current = null; };
+    const visibility = () => { if (document.hidden) stop(); };
+    if (!soundEnabled) stop();
+    document.addEventListener("visibilitychange", visibility);
+    return () => document.removeEventListener("visibilitychange", visibility);
+  }, [soundEnabled, hapticsEnabled]);
+
   useEffect(() => () => {
+    stopDice.current?.();
     timers.current.forEach(clearTimeout);
   }, []);
 

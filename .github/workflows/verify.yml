@@ -132,6 +132,12 @@ jobs:
       - name: Install WebKit and Firefox system dependencies
         if: steps.browsers.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps webkit firefox
+      - name: Start virtual audio output
+        run: |
+          sudo apt-get install --yes --no-install-recommends pulseaudio pulseaudio-utils
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=breach-test
+          pactl set-default-sink breach-test
       - run: pnpm build
       - name: Responsive, keyboard, persistence and offline suites
         env:
