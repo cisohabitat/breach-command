@@ -4,6 +4,12 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.48, 17 October 2026
+
+- Add an approved tall-phone title poster that keeps the complete Breach Command
+  logo visible while filling the screen. Preserve existing desktop and iPad
+  artwork, one poster request, safe-area controls and saved-game entry behavior.
+
 ## 0.9.47, 17 October 2026
 
 - Reduce startup JavaScript by grouping repeated translation-key namespaces

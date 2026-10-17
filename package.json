@@ -1,6 +1,6 @@
 {
   "name": "breach-command",
-  "version": "0.9.47",
+  "version": "0.9.48",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
