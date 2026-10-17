@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.46, 17 October 2026
+
+- Fill desktop, iPad and phone screens with the supplied title artwork,
+  cropping its edges instead of letterboxing. Keep the entry button and
+  release/build label inside safe areas as browser controls resize the view.
+- Prevent intrinsic poster sizing from overflowing iPad and desktop layouts.
+
 ## 0.9.45, 17 October 2026
 
 - Show the release version and build at the bottom-left of the title artwork,
