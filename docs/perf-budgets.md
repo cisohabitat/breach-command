@@ -311,3 +311,13 @@ adaptation. Local initial/warmed/operation scripts are
 Throttled assignment/operation LCP is 1.176/1.224 s and CLS 0.001/0.020.
 All budgets remain fixed. Operation script has only 10 B of local headroom;
 the CI build identifier adds 8 B, so verify the final runner build before release.
+
+Startup headroom (unreleased): expose only the session/browser-tool engine API
+and group catalogue keys by namespace, restoring the same full keys at runtime.
+All 37 catalogues / 1,401 entries compare equal before and after conversion;
+the 145 unit tests, including composed prose and localization, pass.
+The local production build measures 654,963 B initial script, 1,161,676 B warmed
+assignment and 1,171,721 B by play start: 20,269 B less at operation start than
+0.9.46. The narrower API accounts for 2,852 B of that reduction. Styles remain
+88,332/221,817 B; assignment/operation LCP is 1.312/1.364 s and CLS 0.001/0.020.
+No feature, offline warm-up or budget is removed or relaxed.

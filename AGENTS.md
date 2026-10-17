@@ -45,6 +45,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 - Framework: Next.js 16 with React 19, built and hosted natively on Vercel.
 - Language: TypeScript with strict checking.
+- Component/engine message catalogues use `catalogue()` from `lib/i18n/catalogue.ts`: group literal suffixes by namespace, and expand to the existing full message keys before registration. Preserve literal key/value and plural types. A representation-only conversion must compare every exported key/value with the original and pass i18n, composed-prose and startup checks; never change saved message identifiers to save bytes.
 - Translation placeholders start with a letter and may contain digits or underscores (`stage2`, `source_id`). Interpolation and pseudo-localisation must recognise the same names; tests must check numbered placeholders in English and `en-XA`, including distinct found and tested stage numbers in later-stage reports.
 - Package manager: pnpm. Preserve `pnpm-lock.yaml` and do not switch package managers.
 - UI primitives: reuse the components in `components/ui` when a suitable primitive already exists.
@@ -63,6 +64,7 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 - `components/game/incident-app.tsx`: application shell only — topbar, live regions, storage notice and overlay mounting. The game screen and every dialog load on demand: each mounts the first time it opens and stays mounted so it closes with its own focus return, all are warmed when the browser is idle (which also puts them in the offline cache, since the service worker keeps every same-origin script it sees), and the game screen keeps a `main` landmark with a heading while its script arrives. Each is wrapped in `FaultBoundary` (`components/game/fault-boundary.tsx`), so a render fault stays in its own part, says the operation is saved, and offers a diagnostic to copy: build, browser and error, nothing personal and nothing sent.
 - `hooks/use-game-session.ts`: game, session and campaign state, every transition, effect and derived readout.
+- `lib/session-engine.ts`: the named engine surface exposed across the lazy-load boundary. Add a helper here only when a session/browser-tool caller needs it; exporting the entire engine namespace retained otherwise-unused browser code. Keep the shared game bundle and offline warm-up behaviour intact.
 - `hooks/use-preferences.ts`: audio, haptics and contrast, loaded once and persisted after.
 - `hooks/use-challenge-code.ts`: the shareable configuration — seed, code field and whether the operation is reproducible.
 - `hooks/use-recover-focus.ts`: returns focus to a panel's heading when the control just used was replaced by it.

@@ -1,13 +1,19 @@
+import { catalogue } from "../catalogue.ts";
+
 // The strings of components/game/sector-board.tsx (app/page.tsx for page), loaded with it.
-export const sectorBoardMessages = {
-  "missionBriefingDialog.attribution": "Attribution",
-  "sectorBoard.confidence": "Confidence: ",
-  "sectorBoard.sectorMargin": "Sector margin",
-  "sectorBoard.whyAndWhat": "Why, and what moves it",
-  "sectorBoard.liveTransmission": "Live transmission",
-  "sectorBoard.specialist": "Specialist",
-  "sectorBoard.adversaryProgress": "Adversary progress: {objectiveTitle}",
-  "sectorBoard.adversaryObjectiveSmall": "Adversary objective<small>Confidence: {confidence}</small>",
-  "sectorBoard.spanSpanFatigue": "<span>{callsign}</span>, fatigue {specialistFatigue} of 6",
-  "sectorBoard.attributed": "attributed",
-} as const;
+export const sectorBoardMessages = catalogue({
+  missionBriefingDialog: {
+    "attribution": "Attribution",
+  },
+  sectorBoard: {
+    "confidence": "Confidence: ",
+    "sectorMargin": "Sector margin",
+    "whyAndWhat": "Why, and what moves it",
+    "liveTransmission": "Live transmission",
+    "specialist": "Specialist",
+    "adversaryProgress": "Adversary progress: {objectiveTitle}",
+    "adversaryObjectiveSmall": "Adversary objective<small>Confidence: {confidence}</small>",
+    "spanSpanFatigue": "<span>{callsign}</span>, fatigue {specialistFatigue} of 6",
+    "attributed": "attributed",
+  },
+});

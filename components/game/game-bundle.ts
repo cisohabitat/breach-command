@@ -8,7 +8,7 @@
 import "@/lib/i18n/engine-messages";
 import "./game.css";
 
-export * as engine from "@/lib/advanced-game";
+export * as engine from "@/lib/session-engine";
 export * as session from "@/lib/session";
 export * as glossary from "@/lib/glossary";
 export { chooseBotAction } from "@/lib/game-bot";

@@ -1,9 +1,13 @@
+import { catalogue } from "../catalogue.ts";
+
 // The strings of components/game/operations-map.tsx (app/page.tsx for page), loaded with it.
-export const operationsMapMessages = {
-  "operationsMap.liveIncidentOperations": "Live incident operations map",
-  "operationsMap.liveOperationsMap": " Live operations map",
-  "operationsMap.observedAttackPath": "Observed attack path",
-  "operationsMap.protectedService": "Protected service",
-  "operationsMap.suspectedActivity": "Suspected activity",
-  "operationsMap.unmapped": "Unmapped",
-} as const;
+export const operationsMapMessages = catalogue({
+  operationsMap: {
+    "liveIncidentOperations": "Live incident operations map",
+    "liveOperationsMap": " Live operations map",
+    "observedAttackPath": "Observed attack path",
+    "protectedService": "Protected service",
+    "suspectedActivity": "Suspected activity",
+    "unmapped": "Unmapped",
+  },
+});
