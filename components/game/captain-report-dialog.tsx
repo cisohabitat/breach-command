@@ -94,6 +94,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
           </dl>}
         </DialogHeader>
         {report && game && <>
+          {report.revealed && <ConfirmedFinding report={report} scenario={game.scenario} />}
           {decision && <nav className="report-response-index" aria-label={t("captainReportDialog.findResponse")}>
             <p className="eyebrow">{t("captainReportDialog.readResponses", { count: decision.options.length })}</p>
             <ol>{decision.options.map((option, index) => <li key={option.id}><a href={`#report-response-${option.id}`} onClick={event => {
@@ -135,7 +136,6 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               ))}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
             <section className="report-summary" aria-label={t("captainReportDialog.procedureResult")}>
-              {report.revealed && <div className="discovery"><StoryArt kind="evidence" name={evidenceArtFor(report.procedure, game.scenario)} /><div><span>{stages[attacks.find(attack => attack.id === report.revealed)!.stage].short}: {stages[attacks.find(attack => attack.id === report.revealed)!.stage].name}</span><strong>{attacks.find(attack => attack.id === report.revealed)?.title}</strong><small>{t("captainReportDialog.onTheRoute", { title: hypotheses.find(item => item.id === attacks.find(attack => attack.id === report.revealed)!.vector)!.title.toLowerCase() })}</small>{!report.windfall && report.hypothesis && attacks.find(attack => attack.id === report.revealed)!.vector !== report.hypothesis && <small className="windfall-note">{t("captainReportDialog.yourReadingWas2", { title: hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase() })}</small>}{report.windfall && report.hypothesisTarget && <small className="windfall-note">{t("captainReportDialog.thisIsStage2", { stage: attacks.find(attack => attack.id === report.revealed)!.stage + 1, stage2: attacks.find(attack => attack.id === report.hypothesisTarget)!.stage + 1 })}</small>}</div></div>}
               {!decision && report.success && game.evidence.filter(item => item.turn === report.number && !item.supports).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}
               {!decision && report.success && !report.revealed && !report.injectReveal && game.difficulty === "training" && game.mode !== "expert" && game.evidence[0]?.turn === report.number && <SignalGuide />}
               {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
@@ -216,6 +216,26 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
       </DialogContent>
     </Dialog>
   );
+}
+
+// Lead with the finding already disclosed by this report, before the response
+// index. Resolve public identifiers once; no unrevealed route selects art.
+function ConfirmedFinding({ report, scenario }: { report: Game["turns"][number]; scenario: Game["scenario"] }) {
+  const { t } = useMessages();
+  const attack = attacks.find(item => item.id === report.revealed);
+  if (!attack) return null;
+  const route = hypotheses.find(item => item.id === attack.vector)!;
+  const tested = attacks.find(item => item.id === report.hypothesisTarget);
+  return <div className="discovery">
+    <StoryArt kind="evidence" name={evidenceArtFor(report.procedure, scenario)} />
+    <div>
+      <span>{stages[attack.stage].short}: {stages[attack.stage].name}</span>
+      <h3>{attack.title}</h3>
+      <small>{t("captainReportDialog.onTheRoute", { title: route.title.toLowerCase() })}</small>
+      {!report.windfall && report.hypothesis && attack.vector !== report.hypothesis && <small className="windfall-note">{t("captainReportDialog.yourReadingWas2", { title: hypotheses.find(item => item.id === report.hypothesis)!.title.toLowerCase() })}</small>}
+      {report.windfall && tested && <small className="windfall-note">{t("captainReportDialog.thisIsStage2", { stage: attack.stage + 1, stage2: tested.stage + 1 })}</small>}
+    </div>
+  </div>;
 }
 
 // The exact effect of a response, read from the transition itself so the line

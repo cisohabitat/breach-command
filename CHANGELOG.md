@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.49, 17 October 2026
+
+- Refine investigation action priority, procedure title/description contrast,
+  grouped status labels and section spacing while preserving source order,
+  guidance limits, costs and keyboard behavior.
+- Align field-kit miniature sizes and report evidence proportions; use the
+  shared decorative-image loading/failure handling for specialist portraits.
+- Lead Captain reports with a clearer confirmed-finding heading before the
+  response index. Preserve every response, exact effect and supporting disclosure.
+
 ## 0.9.48, 17 October 2026
 
 - Add an approved tall-phone title poster that keeps the complete Breach Command

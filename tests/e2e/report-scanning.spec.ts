@@ -14,6 +14,11 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     await page.getByRole("button", { name: "Resume", exact: true }).click();
     const report = page.locator(".report-dialog");
     const index = report.getByRole("navigation", { name: "Find a command response" });
+    const finding = report.locator(".discovery");
+    await expect(finding.getByRole("heading", { level: 3 })).toBeVisible();
+    const findingBox = (await finding.boundingBox())!;
+    const indexBox = (await index.boundingBox())!;
+    expect(findingBox.y + findingBox.height).toBeLessThanOrEqual(indexBox.y);
     await expect(index.getByRole("link")).toHaveCount(5);
     await expect(index).toBeInViewport({ ratio: 1 });
     await expect(report.locator(".report-fields")).toContainText("Stage tested");

@@ -58,13 +58,15 @@ export function ProcedureGrid({
                 applies, but the source cannot test the reading at this stage. */}
             {/* An established source says so where the own-source tag does, under
                 the description: one sat beside it and the other below. */}
-            {established && !cooldown && <small className="alignment-label established-label">{t("procedureGrid.establishedSource")}<span className="nowrap">+2</span></small>}
-            {aligned && !cooldown && (blind
-              ? <small className="alignment-label blind">{rich("procedureGrid.ownSourceSpan", { ownSourceBonus: OWN_SOURCE_BONUS }, { span: chunk => <span className="nowrap">{chunk}</span> })}</small>
-              : <small className="alignment-label">{rich("procedureGrid.ownSourceSpan2", { ownSourceBonus: OWN_SOURCE_BONUS }, { span: chunk => <span className="nowrap">{chunk}</span> })}</small>)}
-            {seesOther && !cooldown && <small className="alignment-label other-sees">{t("procedureGrid.canAlsoTest")}</small>}
-            {read && !cooldown && read.spent > 0 && <small className="spent-label">{t("procedureGrid.checkedNoStage", { spent: read.spent })}</small>}
-            {read && !cooldown && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{t("procedureGrid.attempt2Plural", { count: read.inconclusive })}{t("procedureGrid.failedInconclusive")}</small>}
+            {!cooldown && (established || aligned || seesOther || !!read?.spent || !!read?.inconclusive) && <div className="procedure-state">
+              {established && <small className="alignment-label established-label">{t("procedureGrid.establishedSource")}<span className="nowrap">+2</span></small>}
+              {aligned && (blind
+                ? <small className="alignment-label blind">{rich("procedureGrid.ownSourceSpan", { ownSourceBonus: OWN_SOURCE_BONUS }, { span: chunk => <span className="nowrap">{chunk}</span> })}</small>
+                : <small className="alignment-label">{rich("procedureGrid.ownSourceSpan2", { ownSourceBonus: OWN_SOURCE_BONUS }, { span: chunk => <span className="nowrap">{chunk}</span> })}</small>)}
+              {seesOther && <small className="alignment-label other-sees">{t("procedureGrid.canAlsoTest")}</small>}
+              {read && read.spent > 0 && <small className="spent-label">{t("procedureGrid.checkedNoStage", { spent: read.spent })}</small>}
+              {read && !read.spent && read.inconclusive > 0 && <small className="spent-label inconclusive">{t("procedureGrid.attempt2Plural", { count: read.inconclusive })}{t("procedureGrid.failedInconclusive")}</small>}
+            </div>}
             <div className="procedure-bottom">
               {/* An ordinary source carries no label: "STANDARD" told a newcomer nothing. */}
               <span>{cooldown ? t("procedureGrid.onCooldown") : null}</span>

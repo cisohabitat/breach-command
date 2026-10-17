@@ -303,6 +303,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Change discipline
 
+- Visual hierarchy (0.9.49): investigation prompts carry a quiet margin rule; the already-available theory/comparison action uses `.next-action`. Never select a preferred procedure from hidden state or reorder sources to imply an answer. Keep procedure titles stronger than supporting descriptions, and source/status labels together in `.procedure-state`, including cooldown, blind-source and Expert withholding behavior. Field-kit miniatures use 28 px frames, report evidence art stays 3:2, and specialist portraits use `DecorativeImage` for the shared load/failure handling. A confirmed report finding has its own heading before the response index; keep all response links visible on the first report screen at the required widths. Preserve exact effects, rationale disclosures, pending-decision focus and the more-responses footer. Recheck hover contrast as well as idle controls: a later generic hover rule previously overrode the emphasized action's background. Remove obsolete overridden procedure rules rather than relaxing the CSS budget for hierarchy changes.
+
 - Use `apply_patch` for hand-authored changes.
 - Preserve unrelated user changes in a dirty worktree.
 - Avoid broad refactors during a feature or bug fix unless they are required for correctness.

@@ -188,6 +188,22 @@ and briefing provide all meaningful information. Full-resolution generated
 originals are retained separately in the workspace's `sector-illustrations`
 folder. Each is cached for offline play once it has been shown.
 
+## Investigation hierarchy, 17 October 2026
+
+Lead with the current task, then the available analytical actions, then reference
+material. A quiet margin rule identifies the task prompt; a filled bone action
+is reserved for the already-available theory/comparison step. Procedure names
+are stronger than descriptions and related status labels share a wrapping line.
+Do not rank procedures by hidden state or remove source costs and caveats.
+
+Keep field-kit procedure, evidence and specialist miniatures at 28 px. Report
+evidence pictures keep their authored 3:2 proportions; portrait frames remain
+square and use the common decorative-image load/failure handling. A confirmed
+report finding leads the response index with a distinct heading. Preserve the
+index's first-screen visibility, every response and its exact effects, supporting
+disclosures and the keyboard-safe report footer. Existing semantic state colours
+and high-contrast overrides still apply.
+
 ## Characters and story artwork, 11 October 2026
 
 The user requested all four proposed additions: six fictional specialist
