@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.50, 17 October 2026
+
+- Add a soft decelerating dice rattle and landing click to visible procedure
+  rolls. Respect Sound, tab visibility, Fast Resolution and Bot Commander;
+  cancel stale lazy playback and keep audio failures outside the turn lock.
+- Read current sound/haptic preferences when the result resolves, so muting
+  during a roll also silences its result cue.
+- Unlock the shared audio context during the user gesture before lazy sound
+  code loads, and verify native browser audio through a virtual CI output.
+
 ## 0.9.49, 17 October 2026
 
 - Refine investigation action priority, procedure title/description contrast,
