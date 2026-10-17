@@ -12,6 +12,7 @@ import { Glossed } from "@/components/game/glossed";
 import { useMessages } from "@/hooks/use-messages";
 import { investigateWorkspaceMessages } from "@/lib/i18n/en/investigate-workspace";
 import { register } from "@/lib/i18n";
+import { CaptainVoice } from "./captain-voice-lazy";
 
 register(investigateWorkspaceMessages);
 
@@ -181,6 +182,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
             <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}
+        {!!game.decisions.length && session.voiceDecision.current === game.decisions.length && !session.botRun && <CaptainVoice cue={{ game, beat: "decision" }} enabled={session.voiceEnabled && !session.report && !session.settings && !session.rules && !session.debrief && !session.newConfirm && !game.pendingCommand && !game.pendingSetPiece} history={session.voiceHistory} />}
       </div>
     </div>
   );

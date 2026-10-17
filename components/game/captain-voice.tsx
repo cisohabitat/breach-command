@@ -3,6 +3,7 @@ import { useMessages } from "@/hooks/use-messages";
 import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import type { Game, Turn } from "@/lib/advanced-game";
 import type { RecordedCaptainCue } from "@/lib/captain-debrief";
+import { captainReactionFor, type CaptainReaction } from "@/lib/captain-reaction";
 import { captainUpdateFor } from "@/lib/captain-update";
 import { scheduleCaptain, speakCaptain, type CaptainSpeechState } from "@/lib/captain-speech";
 import { register } from "@/lib/i18n";
@@ -62,43 +63,78 @@ const lineKeys = {
   reviewDecisions: "captainVoice.reviewDecisions",
   reviewServices: "captainVoice.reviewServices",
   reviewPractice: "captainVoice.reviewPractice",
+  decisionContain: "captainVoice.decisionContain",
+  decisionNotify: "captainVoice.decisionNotify",
+  decisionAct: "captainVoice.decisionAct",
+  decisionObserve: "captainVoice.decisionObserve",
+  decisionAttribute: "captainVoice.decisionAttribute",
+  containmentLow: "captainVoice.containmentLow",
+  containmentModerate: "captainVoice.containmentModerate",
+  containmentHigh: "captainVoice.containmentHigh",
+  assuranceLow: "captainVoice.assuranceLow",
+  assuranceModerate: "captainVoice.assuranceModerate",
+  assuranceHigh: "captainVoice.assuranceHigh",
+  recoveryLow: "captainVoice.recoveryLow",
+  recoveryModerate: "captainVoice.recoveryModerate",
+  recoveryHigh: "captainVoice.recoveryHigh",
 } as const;
 
 // Mounted at a visible narrative beat, never under a closed dialog.
-type VoiceProps = { cue: CaptainVoiceCue | { game: Game; turn: Turn }; lines?: readonly RecordedCaptainCue[]; enabled: boolean; decisionPending?: boolean; history: RefObject<Set<CaptainVoiceCue>> };
+type VoiceProps = { cue: CaptainVoiceCue | { game: Game; turn: Turn; reaction?: boolean } | CaptainReaction; lines?: readonly RecordedCaptainCue[]; enabled: boolean; decisionPending?: boolean; history: RefObject<Set<string>> };
 
 export function CaptainVoice(props: VoiceProps) {
+  const request: CaptainReaction | null = typeof props.cue === "string" ? null
+    : "beat" in props.cue ? props.cue
+    : props.cue.reaction && props.cue.turn.number === props.cue.game.turns.length
+      ? { game: props.cue.game, beat: "decision" } : null;
+  const reaction = request ? captainReactionFor(request) : null;
+  if (reaction && request) {
+    const turn = request.game.turns.at(-1);
+    const decision = request.game.decisions.at(-1);
+    const throughDecision = turn && decision ? { ...turn,
+      impactChange: turn.impactChange + decision.impactChange,
+      continuityChange: turn.continuityChange + decision.continuityChange,
+    } : turn;
+    // A quick choice must not replace an unheard public pressure warning.
+    // Include its recorded meter changes so the crossing is still measured
+    // from before this procedure; a choice that relieves the pressure can clear it.
+    if (request.beat === "decision" && throughDecision && !props.history.current.has("pressure") && captainUpdateFor(request.game, throughDecision) === "pressure") {
+      return <CaptainLine {...props} cue="pressure" />;
+    }
+    return <CaptainLine {...props} {...reaction} />;
+  }
+  if (typeof props.cue !== "string" && "beat" in props.cue) return null;
   const cue = typeof props.cue === "string" ? props.cue : captainUpdateFor(props.cue.game, props.cue.turn);
   return cue ? <CaptainLine {...props} cue={cue} /> : null;
 }
 
-function CaptainLine({ cue, lines, enabled, decisionPending = false, history }: Omit<VoiceProps, "cue"> & { cue: CaptainVoiceCue }) {
+function CaptainLine({ cue, playbackKey = cue, lines, enabled, decisionPending = false, history }: Omit<VoiceProps, "cue"> & { cue: CaptainVoiceCue | RecordedCaptainCue; playbackKey?: string }) {
   const { t, locale } = useMessages();
   const cues = lines ?? (cue === "debrief" ? [] : [cue]);
   const text = cues.map(line => t(lineKeys[line])).join(" ");
   const [state, setState] = useState<CaptainSpeechState>("idle");
   const cancel = useRef<() => void>(() => {});
   const play = () => {
-    history.current.add(cue);
+    history.current.add(playbackKey);
     cancel.current();
     cancel.current = speakCaptain(cues, setState);
   };
   const schedule = useEffectEvent((urgent: boolean) => {
-    cancel.current = scheduleCaptain(cues, setState, () => history.current.add(cue), document, urgent);
+    cancel.current = scheduleCaptain(cues, setState, () => history.current.add(playbackKey), document, urgent);
   });
   const skip = () => {
-    history.current.add(cue);
+    history.current.add(playbackKey);
     cancel.current();
   };
 
   useEffect(() => {
     const urgent = cue === "pressure" || cue === "lost";
-    if (enabled && (!decisionPending || urgent) && !history.current.has(cue) && !document.hidden) schedule(urgent);
+    if (enabled && (!decisionPending || urgent) && !history.current.has(playbackKey) && !document.hidden) schedule(urgent);
     const stop = () => cancel.current();
     const hide = () => { if (document.hidden) stop(); };
     document.addEventListener("visibilitychange", hide);
     return () => { stop(); document.removeEventListener("visibilitychange", hide); };
-  }, [enabled, decisionPending, cue, text, locale, history]);
+  }, [enabled, decisionPending, cue, playbackKey, text, locale, history]);
 
   if (!enabled || !cues.length) return null;
   const busy = state === "speaking" || state === "waiting";

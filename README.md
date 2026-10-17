@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.46**: see the [release notes](CHANGELOG.md#0946-17-october-2026).
+Release **0.9.47**: see the [release notes](CHANGELOG.md#0947-17-october-2026).
 
 The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones slightly trim the embedded logo's outer edges. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 
@@ -20,13 +20,16 @@ The incident desk uses a compact two-line version of the supplied Breach Command
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
-The 51 recorded clips cover confirmed findings, unsuccessful checks, uncertain
+The 65 recorded clips cover confirmed findings, unsuccessful checks, uncertain
 signals, new developments and service pressure. Voice is on by default, using bundled recordings of a
 calm male Captain with a British English voice. An explicit saved Off setting is
 respected. Every spoken line is also readable, with Listen and Skip voice
 controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Bot Commander
-practice runs remain silent. Automatic lines play at most once per operation;
+practice runs remain silent. Routine finding cues play automatically at most once per operation;
+each newly recorded evidence choice can receive one tradeoff acknowledgement,
+without replaying on resume. Response captions describe the chosen option's
+published residual risk, with Listen available while the next decision is pending.
 Listen can replay a line, so repeated checks do not cause repeated chatter.
 Opening the after-action review plays a short spoken debrief: the actual
 recovery grade or loss cause, a well-assessed evidence decision or supported

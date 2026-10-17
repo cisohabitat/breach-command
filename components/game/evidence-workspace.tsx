@@ -1,6 +1,5 @@
 import { useState, type RefObject } from "react";
 import { getConfidenceChanges } from "@/lib/advanced-game";
-import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import { CaptainVoice } from "./captain-voice-lazy";
 import { EvidenceAssessment, SignalGuide } from "./evidence-assessment";
 import { EvidenceLinks } from "./evidence-links";
@@ -15,7 +14,7 @@ import { register } from "@/lib/i18n";
 
 register(evidenceWorkspaceMessages);
 
-export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, voiceHistory }: { game: Game; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void; voiceEnabled: boolean; voiceHistory: RefObject<Set<CaptainVoiceCue>> }) {
+export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, voiceHistory }: { game: Game; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void; voiceEnabled: boolean; voiceHistory: RefObject<Set<string>> }) {
   const { t, rich, say } = useMessages();
   const [selected, setSelected] = useState<string[]>([]);
   // Only a comparison made here triggers feedback. Loading a saved record must

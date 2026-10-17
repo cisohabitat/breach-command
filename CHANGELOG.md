@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.47, 17 October 2026
+
+- Reduce startup JavaScript by grouping repeated translation-key namespaces
+  and narrowing the lazy engine API. Preserve every existing message identifier,
+  caption and plural form, with unchanged offline warm-up and performance budgets.
+- Add 14 Captain recordings for evidence-choice acknowledgements and published
+  response residual risk, bringing the library to 65. Keep current pacing,
+  captions, replay, mute, silent Bot Commander practice and historical-resume
+  protection; live reactions never disclose hidden assessments or answers.
+
 ## 0.9.46, 17 October 2026
 
 - Fill desktop, iPad and phone screens with the supplied title artwork,
