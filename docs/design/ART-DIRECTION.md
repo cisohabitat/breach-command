@@ -1,5 +1,16 @@
 # Art direction
 
+Dice and report polish (17 October 2026, user approved): use a faceted d20
+illustration in bone ink instead of a rounded dice box. Its decorative shell
+tumbles for the existing 850 ms; the upright number remains readable and the
+actual result stays still for 500 ms. Reduced motion uses a static pending die
+and a static result. Roll and report surfaces fade without zoom; prepare the
+report during the roll and let its focus trap own the handoff. The procedure
+just used receives a two-second neutral inset outline on returning from its
+report, with a static outline under reduced motion. This marks the past action,
+never a preferred next action. Compact, distinct source illustrations accompany
+confirmed findings, keeping the existing frame sizes and full written record.
+
 Fullscreen title (17 October 2026, user approved): use the supplied portrait or landscape poster to cover the dynamic viewport, accepting edge cropping rather than letterboxing. Keep the entry button and release/build metadata anchored inside safe areas. Preserve the approved desktop and iPad crops. The approved tall-phone refinement uses a dedicated taller adaptation at ratios up to 3:5, with extra sky and terrace to keep the complete logo visible.
 
 State colour (15 October 2026, user approved): keep the charcoal-and-bone

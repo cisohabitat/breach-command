@@ -21,7 +21,7 @@ for (const width of [320, 390, 820, 1280]) {
       await page.getByRole("button", { name: "Resume", exact: true }).click();
       const image = page.locator(".discovery > .story-art");
       await loaded(image);
-      await expect(image).toHaveAttribute("src", `/art/evidence/${source}.webp`);
+      await expect(image).toHaveAttribute("src", `/art/findings/${source}.webp`);
       await page.locator(".discovery").screenshot({ path: info.outputPath(`evidence-${source}.png`) });
     }
     for (const profile of Object.keys(adversaryProfiles)) {

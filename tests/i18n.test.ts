@@ -86,6 +86,17 @@ function notInterface(node: ts.Node): boolean {
     if ((ts.isStatement(statement) || ts.isClassElement(statement)) && /i18n: maintainer English/.test(statement.getFullText().slice(0, statement.getStart() - statement.getFullStart()))) return true;
   }
   const parent = node.parent;
+  // CSS values assigned to a style declaration or supplied as Web Animations
+  // keyframes are structural, just like an existing JSX style attribute.
+  if (ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isPropertyAccessExpression(parent.left) && ts.isPropertyAccessExpression(parent.left.expression) && parent.left.expression.name.text === "style") return true;
+  if (ts.isPropertyAssignment(parent) && /^(transform|boxShadow)$/.test(parent.name.getText())) {
+    let owner: ts.Node | undefined = parent;
+    while (owner && (ts.isPropertyAssignment(owner) || ts.isObjectLiteralExpression(owner) || ts.isArrayLiteralExpression(owner))) owner = owner.parent;
+    if (owner && ts.isCallExpression(owner) && ts.isPropertyAccessExpression(owner.expression) && owner.expression.name.text === "animate") {
+      const frames = owner.arguments[0];
+      if (frames && frames.pos <= node.pos && frames.end >= node.end) return true;
+    }
+  }
   if (/^\((prefers-|max-|min-|orientation|hover|pointer)[a-z-]*:/.test(literalText(node) ?? "")) return true;
   if (ts.isImportDeclaration(parent) || ts.isExportDeclaration(parent) || ts.isLiteralTypeNode(parent) || ts.isExpressionStatement(parent) || ts.isCaseClause(parent)) return true;
   if (ts.isJsxAttribute(parent)) return nonTextAttribute.test(parent.name.getText());

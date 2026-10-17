@@ -4,6 +4,18 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.52, 17 October 2026
+
+- Replace the pulsing dice box with a faceted d20 and a short tumble, keeping
+  the number upright and preserving the half-second final-result pause.
+- Fade between the prepared dice and report dialogs without zoom; preserve
+  report focus and static reduced-motion behavior.
+- Add pressed procedure feedback and a brief neutral outline on the procedure
+  just used when returning from its report.
+- Add twelve small source-specific finding illustrations in bone and charcoal.
+- Isolate the keyboard playthrough's seeded dice from accessibility-audit UUID
+  generation, preserving deterministic winning and losing coverage.
+
 ## 0.9.51, 17 October 2026
 
 - Keep the final dice number visible and still for half a second before

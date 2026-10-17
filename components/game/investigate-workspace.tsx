@@ -179,7 +179,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
               : trainingNote
                 ? trainingNote
                 : guidance !== "off" && <div className="guide-nudge"><span><strong>{t("investigateWorkspace.captainPrompt")}</strong> {say(getCoachPrompt(game, guided))}{latestObservation && <b className="prompt-clue">{t("investigateWorkspace.latestFromThe")}<Glossed text={latestObservation} /></b>}{evidenceButton}{mapAside}</span></div>}
-            <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
+            <ProcedureGrid game={game} disabled={rolling || !game.hypothesis} reportOpen={!!session.report} receipt={session.procedureReceipt} onChoose={id => fastResolve && game.turns.length > 0 ? run(id) : setSelected(id)} />
           </section>
         )}
         {!!game.decisions.length && session.voiceDecision.current === game.decisions.length && !session.botRun && <CaptainVoice cue={{ game, beat: "decision" }} enabled={session.voiceEnabled && !session.report && !session.settings && !session.rules && !session.debrief && !session.newConfirm && !game.pendingCommand && !game.pendingSetPiece} history={session.voiceHistory} />}

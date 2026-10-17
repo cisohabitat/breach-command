@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.51**: see the [release notes](CHANGELOG.md#0951-17-october-2026).
+Release **0.9.52**: see the [release notes](CHANGELOG.md#0952-17-october-2026).
 
 The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones use a dedicated composition with extra sky and terrace space to keep the embedded logo fully visible. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 
@@ -28,6 +28,13 @@ The shared Web Audio context is unlocked in the user gesture before lazy sound
 code loads. Linux browser tests need a working audio output; on speakerless
 hosts use a PulseAudio null sink. CI starts one for Firefox and WebKit so the
 audio tests check native processing and completion rather than mocked playback.
+
+The roll uses a faceted d20 with an upright number and a short tumble, then
+holds its real result before fading into the report. Reduced motion keeps the
+die still and avoids cycling numbers. Procedure buttons have a pressed state;
+the procedure just used receives a brief neutral outline after its report.
+Confirmed findings use twelve compact, distinct source illustrations, with
+the full finding text retained. See [the illustration guide](public/art/findings/README.md).
 
 The incident desk uses a compact two-line version of the supplied Breach Command wordmark in the desk's warm bone and charcoal palette. The tiny tagline is omitted for legibility; a missing image restores the original text, including when it fails before the page becomes interactive. The transparent local WebP is about 56 KB, and the home link retains its accessible name.
 
@@ -273,7 +280,7 @@ The terminal's schedule erosion was reduced after comparing collection, evidence
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
 | `tests/e2e/persistence.spec.ts` | Stored settings survive a load and a reload |
 | `tests/e2e/keyboard.spec.ts` | Initial focus in overlays, focus recovery and switchable shortcuts |
-| `tests/e2e/keyboard-playthrough.spec.ts` | A whole operation, won and lost, played with the keyboard alone, with axe on each surface |
+| `tests/e2e/keyboard-playthrough.spec.ts` | A whole operation, won and lost, played with the keyboard alone, with axe on each surface; game-only seeded draws stay separate from audit UUIDs |
 | `playwright.config.ts` | Deterministic Chromium test runner and local preview lifecycle |
 
 The interface is built with Next.js 16, React 19 and TypeScript and deployed as a native Next.js application on Vercel.

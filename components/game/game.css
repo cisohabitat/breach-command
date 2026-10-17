@@ -298,28 +298,22 @@
   line-height:var(--leading-prose);
 }
 .die {
-  border:1px solid var(--lime);
-  border-radius:18px;
   margin:20px auto;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  width:125px;
-  padding:15px;
+  display:grid;
+  place-items:center;
+  inline-size:160px;
   color:var(--lime);
-  background:#ede2c909;
+  font-family:var(--font-mono);
+}
+.die-shell,.die strong {
+  grid-area:1/1;
 }
 .die strong {
-  font-family:var(--font-mono);
   font-size:var(--type-h1);
 }
 .die span {
-  font-family:var(--font-mono);
   font-size:var(--type-caption);
   letter-spacing:.1em;
-}
-.rolling {
-  animation:pulse .4s infinite alternate;
 }
 .result-roll {
   display:flex;
@@ -7232,6 +7226,9 @@ span.effect-list>span.effect.pace.worse>em {
 }
 .evidence-cards button[data-source=forensic] {
   --kit-x:79.629630%;
+}
+.investigation-dashboard .procedure-card:not(:disabled):active {
+  box-shadow:inset 0 0 0 2px currentColor;
 }
 .paper-dialog .specialist-name::after {
   filter:brightness(.25);
