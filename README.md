@@ -252,7 +252,7 @@ The terminal's schedule erosion was reduced after comparing collection, evidence
 | `lib/last-operation.ts` | The last operation and the review's suggested next one, kept on the device for a returning player |
 | `tests/*.test.ts` | Engine, campaign, reads, session, content and simulation suites (`node --test`) |
 | `tests/saves.test.ts` | A save from every session version since 10 migrates and plays on |
-| `tests/e2e/visual.spec.ts` | Pixel baselines for eight game screens, evidence connections and campaign states at four widths |
+| `tests/e2e/visual.spec.ts` | Pixel baselines for game screens, evidence connections, campaign states and Captain acknowledgements at four widths |
 | `tests/e2e/performance.spec.ts` | Script, style, paint and layout-shift budgets on a throttled phone |
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
