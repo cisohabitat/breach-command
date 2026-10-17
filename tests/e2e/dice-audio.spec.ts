@@ -47,11 +47,37 @@ async function prepare(page: Page, sound = true, fast = false, game: Game | null
 }
 
 async function holdRoll(page: Page) {
-  // Hold the game's 850 ms result timer so a busy runner cannot miss the roll
+  // Hold the game's roll/reveal timers so a busy runner cannot miss the roll
   // or press mute after it ended. Native AudioContext time still runs normally.
   const time = new Date("2030-01-01T00:00:00Z");
   await page.clock.install({ time });
   await page.clock.pauseAt(new Date(time.getTime() + 1000));
+}
+
+for (const reducedMotion of ["reduce", "no-preference"] as const) {
+  test(`the final die stays still for 500 ms before the report (${reducedMotion})`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion });
+    await prepare(page, false);
+    await holdRoll(page);
+    await page.getByRole("button", { name: "Run procedure", exact: true }).click();
+    await page.clock.runFor(850);
+    const die = page.locator(".roll-dialog .die");
+    await expect(die).toBeVisible();
+    await expect(die).not.toHaveClass(/rolling/);
+    const number = await die.locator("strong").textContent();
+    await expect(page.locator(".report-dialog")).toHaveCount(0);
+    await page.clock.runFor(499);
+    await expect(die.locator("strong")).toHaveText(number!);
+    await expect(page.locator(".report-dialog")).toHaveCount(0);
+    await page.clock.runFor(1);
+    await expect(page.locator(".report-dialog")).toBeVisible();
+    // Let the closed Radix dialog finish its exit animation on the held clock.
+    await page.clock.runFor(300);
+    await expect(page.locator(".roll-dialog")).toHaveCount(0);
+    const turns = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).game.turns, SESSION_KEY);
+    expect(turns).toHaveLength(1);
+    expect(String(turns[0].raw)).toBe(number);
+  });
 }
 
 test("a visible roll plays real buffered impacts before its result", async ({ page }) => {
@@ -88,7 +114,7 @@ test("muting during the roll cancels its impacts and silences the result", async
   await expect.poll(() => page.evaluate(() => window.diceProbe.starts.length)).toBeGreaterThan(0);
   await page.keyboard.press("m");
   await expect.poll(() => page.evaluate(() => window.diceProbe.cancelled)).toBeGreaterThan(0);
-  await page.clock.runFor(900);
+  await page.clock.runFor(1400);
   await expect(page.locator(".report-dialog")).toBeVisible();
   expect(await page.evaluate(() => window.diceProbe.oscillators)).toBe(0);
 });

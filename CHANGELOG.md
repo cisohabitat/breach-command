@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.51, 17 October 2026
+
+- Keep the final dice number visible and still for half a second before
+  opening the Captain's report, so the result has time to register.
+- Preserve instant Fast Resolution turns and existing sound/mute behavior;
+  resolve each turn once and keep actions locked through the reveal.
+
 ## 0.9.50, 17 October 2026
 
 - Add a soft decelerating dice rattle and landing click to visible procedure

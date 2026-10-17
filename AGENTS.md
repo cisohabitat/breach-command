@@ -316,6 +316,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Required verification
 
+Dice resolution has an 850 ms rolling phase followed by a 500 ms static final-number reveal before the report and result cue. Resolve the engine turn exactly once at settlement; hold that same raw number and keep the busy lock until committing the report. Fast Resolution skips both phases after the first turn. `dieSettled` removes the rolling class during the pause, including under reduced motion. Dice audio still finishes within the 850 ms rolling phase. The clock-controlled regressions in `tests/e2e/dice-audio.spec.ts` verify the full pause in both motion preferences and compare the displayed number with the single saved turn. Advance the held clock through Radix's exit animation before asserting removal. The four settled-die pixel baselines cover the static reveal on phone, iPad and desktop.
+
 Run these checks before committing code changes. `.github/workflows/verify.yml` runs the same checks and every browser suite, against a production build, on each push to `main` and each pull request. Vercel deploys `main`, so a red run there is a broken production build: fix it before anything else.
 
 When fixing a CI failure, verify the failing scenario and the full required checks, then check the new post-merge `main` run before reporting the failure resolved. A green pull-request run alone did not catch the deferred-focus race on the subsequent `main` run. Keep regression assertions meaningful; do not hide failures by skipping tests, increasing retries or removing the behaviour they check.

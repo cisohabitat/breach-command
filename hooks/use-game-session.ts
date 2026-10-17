@@ -68,6 +68,7 @@ export function useGameSession() {
   const [difficulty, setDifficulty] = useState<Difficulty>("operational");
   const [selected, setSelected] = useState<string | null>(null);
   const [rolling, setRolling] = useState(false);
+  const [dieSettled, setDieSettled] = useState(false);
   const stopDice = useRef<(() => void) | null>(null);
   const [die, setDie] = useState(20);
   const [report, setReport] = useState<Turn | null>(null);
@@ -269,6 +270,7 @@ export function useGameSession() {
     setInlineReport(null);
     let interval: ReturnType<typeof setInterval> | null = null;
     if (!quick) {
+      setDieSettled(false);
       setRolling(true);
       if (!botRunRef.current) stopDice.current = playDiceRoll(soundEnabled);
       interval = setInterval(() => setDie(1 + Math.floor(Math.random() * 20)), 80);
@@ -276,19 +278,35 @@ export function useGameSession() {
     }
     const timeout = setTimeout(() => {
       if (interval) clearInterval(interval);
-      // Whatever happens while the turn resolves, the game must not be left
-      // refusing every later action.
-      try { resolveRun(); } finally {
+      const finish = (next: Game) => {
+        try { resolveRun(next); } finally { releaseRoll(); }
+      };
+      const releaseRoll = () => {
         stopDice.current?.();
         stopDice.current = null;
         busyRef.current = false;
         setRolling(false);
+      };
+      // Whatever happens while the turn resolves, the game must not be left
+      // refusing every later action.
+      try {
+        // Resolve once, then hold that exact number before opening the report.
+        // Keep the turn locked until the reveal finishes; never reroll it.
+        const next = engine().playTurn(current, id, undefined, plan);
+        if (quick) finish(next);
+        else {
+          setDie(next.turns.at(-1)!.raw);
+          setDieSettled(true);
+          timers.current.push(setTimeout(() => finish(next), 500));
+        }
+      } catch (error) {
+        releaseRoll();
+        throw error;
       }
     }, quick ? 0 : 850);
     timers.current.push(timeout);
 
-    const resolveRun = () => {
-      const next = engine().playTurn(current, id, undefined, plan);
+    const resolveRun = (next: Game) => {
       const result = next.turns.at(-1)!;
       // Fast resolution is the switch that means "skip the ceremony". Without it
       // every turn gets the captain's report, including the turn that found
@@ -854,6 +872,7 @@ export function useGameSession() {
     // Turn, report and decision state
     selected, setSelected,
     rolling,
+    dieSettled,
     die,
     report, setReport,
     inlineReport, setInlineReport,
