@@ -6858,6 +6858,12 @@ span.effect-list>span.effect.pace.worse>em {
   .resolution>.story-art {
     max-block-size:120px;
   }
+  .discovery {
+    padding:8px 12px;
+  }
+  .discovery span,.discovery small {
+    font-size:var(--type-micro);
+  }
   .discovery>.story-art {
     inline-size:72px;
     block-size:48px;
