@@ -133,6 +133,8 @@ test.describe("accessibility audit", () => {
       if (width < 651) await page.locator(".sector-rule-fold > summary").click();
       await expect(page.getByRole("button", { name: /Record a case theory/ })).toBeVisible();
       await expectNoViolations(page, `investigation prompts ${width}`);
+      await page.getByRole("button", { name: /Record a case theory/ }).hover();
+      await expectNoViolations(page, `investigation action hover ${width}`);
       await page.getByRole("button", { name: /Record a case theory/ }).click();
       await expect(page.locator(".evidence-workspace")).toBeVisible();
       await expectNoViolations(page, `evidence workspace ${width}`);

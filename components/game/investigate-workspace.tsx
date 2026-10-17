@@ -89,7 +89,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   // Command to read what they were reasoning from. The latest observation is
   // already on the record, so it is quoted where the reading is chosen.
   const latestObservation = game.difficulty !== "training" ? getKnownFacts(game).observations.at(-1) ?? null : null;
-  const evidenceButton = evidenceReady && <button className="compare-findings" onClick={() => jumpTo(".evidence-workspace")}>{readyForTheory(game) ? t("investigateWorkspace.recordACase") : t("investigateWorkspace.compareFindings")} <ArrowDown size={14} /></button>;
+  const evidenceButton = evidenceReady && <button className="compare-findings next-action" onClick={() => jumpTo(".evidence-workspace")}>{readyForTheory(game) ? t("investigateWorkspace.recordACase") : t("investigateWorkspace.compareFindings")} <ArrowDown size={14} /></button>;
   // The map is offered as an aside to the ordinary next step, never in place of
   // it, and not alongside a note that is already sending the player elsewhere.
   const mapHint = !opening && !evidenceReady ? getMapHint(game) : null;

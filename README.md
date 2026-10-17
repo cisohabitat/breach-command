@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.48**: see the [release notes](CHANGELOG.md#0948-17-october-2026).
+Release **0.9.49**: see the [release notes](CHANGELOG.md#0949-17-october-2026).
 
 The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones use a dedicated composition with extra sky and terrace space to keep the embedded logo fully visible. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 
@@ -123,6 +123,8 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Offline and local-first play:** the installable PWA caches the page and the scripts and styles it references when it installs, so one visit is enough to play offline. Its cache is isolated to this game's namespace and published documents/assets; arbitrary endpoints, query variants, requests carrying an Authorization header and private responses are excluded. Sessions, campaign progress, settings and anonymous balance counters remain on the device. A browser that refuses local storage still plays a complete operation from memory and says so. Portable backup text can transfer progress without an account; imports validate nested records and have size, nesting and message-shape limits. CSV exports neutralise formula markers in imported fields.
 
 Typography keeps condensed headings and figures distinct from regular-width prose. Body text is 16 px, supporting captions 14 px and compact metadata 12 px, including mobile pressure labels. Shared neutral text roles distinguish titles, reading text and secondary information; paper documents use dark inks. Status colours retain their labels and icons.
+
+Investigation task prompts use a quiet margin rule, with the available case-theory or comparison action emphasized. Procedure names lead their supporting descriptions, and related source/status labels sit together without changing source order or guidance. Sections have more separation; procedure, evidence and specialist emblems share 28 px frames, while report evidence miniatures preserve their 3:2 proportions. Confirmed report findings appear before the response index with a distinct heading; every response, exact effect, rationale and navigation control remains available.
 
 The first-operation academy asks players to test their reading and explains that a result may support or challenge it. Procedure labels describe own sources without claiming that an unrun check already supports the hypothesis.
 

@@ -6,8 +6,7 @@ export { evidenceArtFor } from "@/lib/art";
 // Decorative illustrations accompany the real, accessible game record. Plain
 // images of local WebP files: next/image would add its script for nothing.
 export function SpecialistPortrait({ specialist }: { specialist: SpecialistId }) {
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img className="specialist-portrait" src={`/art/portraits/${specialist}.webp`} alt="" width={256} height={256} loading="lazy" decoding="async" />;
+  return <DecorativeImage className="specialist-portrait" src={`/art/portraits/${specialist}.webp`} width={256} height={256} />;
 }
 
 // The width each scene is shown at, measured: an act or conclusion sits in a

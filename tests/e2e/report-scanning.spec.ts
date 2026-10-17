@@ -9,11 +9,16 @@ const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/
 
 for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280]) {
   test(`the report exposes every response without committing it at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: width >= 1024 ? 757 : 900 });
+    await page.setViewportSize({ width, height: width === 320 ? 720 : width >= 1024 ? 757 : 900 });
     await openWithSave(page, { ...pendingDecisionGame(), difficulty: "training" }, true, { voice: true, sound: false, music: false });
     await page.getByRole("button", { name: "Resume", exact: true }).click();
     const report = page.locator(".report-dialog");
     const index = report.getByRole("navigation", { name: "Find a command response" });
+    const finding = report.locator(".discovery");
+    await expect(finding.getByRole("heading", { level: 3 })).toBeVisible();
+    const findingBox = (await finding.boundingBox())!;
+    const indexBox = (await index.boundingBox())!;
+    expect(findingBox.y + findingBox.height).toBeLessThanOrEqual(indexBox.y);
     await expect(index.getByRole("link")).toHaveCount(5);
     await expect(index).toBeInViewport({ ratio: 1 });
     await expect(report.locator(".report-fields")).toContainText("Stage tested");
