@@ -1,19 +1,23 @@
+import { catalogue } from "../catalogue.ts";
+
 // The strings of components/game/procedure-grid.tsx (app/page.tsx for page), loaded with it.
-export const procedureGridMessages = {
-  "procedureGrid.establishedSource": "Established source ",
-  "procedureGrid.canAlsoTest": "Can also test this reading",
-  "procedureGrid.failedInconclusive": " failed, inconclusive",
-  "procedureGrid.establishedPlus2": ", established, plus 2",
-  "procedureGrid.ownSourceForReading": ", own source for this reading",
-  "procedureGrid.cannotSeeThis": ", cannot see this stage for the current reading",
-  "procedureGrid.canAlsoTest2": ", can also test the current reading",
-  "procedureGrid.checkedTimesWith": ", checked {spent} times with no stage found",
-  "procedureGrid.attemptsFailedWithout": ", {inconclusive} attempts failed without a result",
-  "procedureGrid.availableInTurns": ", available in {cooldown} turns",
-  "procedureGrid.onCooldown": "On cooldown",
-  "procedureGrid.checkedNoStage": "Checked {spent}×, no stage found",
-  "procedureGrid.turnPlural": { one: "{count} turn", other: "{count} turns" },
-  "procedureGrid.attempt2Plural": { one: "{count} attempt", other: "{count} attempts" },
-  "procedureGrid.ownSourceSpan": "Own source <span>+{ownSourceBonus}</span>, can't test this reading here",
-  "procedureGrid.ownSourceSpan2": "Own source <span>+{ownSourceBonus}</span>",
-} as const;
+export const procedureGridMessages = catalogue({
+  procedureGrid: {
+    "establishedSource": "Established source ",
+    "canAlsoTest": "Can also test this reading",
+    "failedInconclusive": " failed, inconclusive",
+    "establishedPlus2": ", established, plus 2",
+    "ownSourceForReading": ", own source for this reading",
+    "cannotSeeThis": ", cannot see this stage for the current reading",
+    "canAlsoTest2": ", can also test the current reading",
+    "checkedTimesWith": ", checked {spent} times with no stage found",
+    "attemptsFailedWithout": ", {inconclusive} attempts failed without a result",
+    "availableInTurns": ", available in {cooldown} turns",
+    "onCooldown": "On cooldown",
+    "checkedNoStage": "Checked {spent}×, no stage found",
+    "turnPlural": { one: "{count} turn", other: "{count} turns" },
+    "attempt2Plural": { one: "{count} attempt", other: "{count} attempts" },
+    "ownSourceSpan": "Own source <span>+{ownSourceBonus}</span>, can't test this reading here",
+    "ownSourceSpan2": "Own source <span>+{ownSourceBonus}</span>",
+  },
+});

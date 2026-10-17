@@ -207,6 +207,62 @@
     "reviewPractice": {
       "text": "On the next run, explain the evidence you expect before each check, then compare it with the result. Keep that habit.",
       "durationSeconds": 7.85
+    },
+    "decisionContain": {
+      "text": "Containment recorded. You have committed to limiting the confirmed activity. Check the service cost, and preserve the evidence still available.",
+      "durationSeconds": 9.28
+    },
+    "decisionNotify": {
+      "text": "Notification recorded. You have brought the affected teams into the response. Communication keeps people informed; it does not remove the activity we are investigating.",
+      "durationSeconds": 11.85
+    },
+    "decisionAct": {
+      "text": "Intervention recorded. You have acted on the finding. Check the changed service picture, then test whether the remaining activity has moved.",
+      "durationSeconds": 9.51
+    },
+    "decisionObserve": {
+      "text": "Observation recorded. You have kept room to gather evidence, while accepting more time for the activity to continue. Watch the pressure before the next check.",
+      "durationSeconds": 10.46
+    },
+    "decisionAttribute": {
+      "text": "Attribution work recorded. You are developing the explanation behind this finding. Keep the assessment separate from proof that the activity has stopped.",
+      "durationSeconds": 10.08
+    },
+    "containmentLow": {
+      "text": "Containment recorded with low residual risk. That is the option's stated assurance, not proof of a clean boundary. Verify it before recovery.",
+      "durationSeconds": 10.29
+    },
+    "containmentModerate": {
+      "text": "Containment recorded with moderate residual risk. Some uncertainty remains. Use the assurance gate to test what the chosen boundary still leaves open.",
+      "durationSeconds": 10.88
+    },
+    "containmentHigh": {
+      "text": "Containment recorded with high residual risk. You have accepted continuing exposure. The assurance gate now needs a clear account of what remains open.",
+      "durationSeconds": 11.03
+    },
+    "assuranceLow": {
+      "text": "Assurance recorded with low residual risk. Keep that evidence with the restoration plan. Recovery is the next call; check its service cost before committing.",
+      "durationSeconds": 11.1
+    },
+    "assuranceModerate": {
+      "text": "Assurance recorded with moderate residual risk. Carry that uncertainty into the recovery decision. Choose a restoration plan whose limits you can explain.",
+      "durationSeconds": 11.24
+    },
+    "assuranceHigh": {
+      "text": "Assurance recorded with high residual risk. The boundary still carries substantial uncertainty. Read the recovery terms carefully before restoring service.",
+      "durationSeconds": 11.39
+    },
+    "recoveryLow": {
+      "text": "Response complete. Your recovery choice carried low residual risk. Review the service cost alongside that assurance before treating this as a model for the next incident.",
+      "durationSeconds": 12.18
+    },
+    "recoveryModerate": {
+      "text": "Response complete. Your recovery choice carried moderate residual risk. Keep that remaining uncertainty visible in the handover, and review the decisions that led here.",
+      "durationSeconds": 11.59
+    },
+    "recoveryHigh": {
+      "text": "Response complete. Your recovery choice carried high residual risk. Record the accepted exposure clearly, and examine it in the after-action review.",
+      "durationSeconds": 10.72
     }
   }
 }

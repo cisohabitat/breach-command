@@ -77,6 +77,32 @@ test.describe("visual baselines", () => {
   test.skip(({ browserName }) => browserName !== "chromium", "baselines are recorded in Chromium");
 
   for (const [width, height] of widths) {
+    test(`decision reaction at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      // Keep playback deterministic while checking the real caption and controls.
+      await page.addInitScript(() => {
+        Object.defineProperty(window, "Audio", { configurable: true, value: class {
+          src = "";
+          volume = 1;
+          onplaying: (() => void) | null = null;
+          onended: (() => void) | null = null;
+          onerror: (() => void) | null = null;
+          play() { this.onplaying?.(); return Promise.resolve(); }
+          pause() {}
+          removeAttribute() {}
+          load() {}
+        } });
+      });
+      await openWithSave(page, pendingDecisionGame(), false, { voice: true, music: false, sound: false, haptics: false });
+      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.locator(".evidence-decision button").first().click();
+      const voice = page.getByRole("region", { name: "Incident Captain" });
+      await expect(voice).toContainText("Observation recorded.");
+      await voice.getByRole("button", { name: "Skip voice", exact: true }).click();
+      await expect(voice.getByRole("button", { name: "Listen", exact: true })).toHaveAttribute("aria-disabled", "false");
+      await expect(voice).toHaveScreenshot(`${width}-decision-reaction.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+    });
+
     test(`title at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.goto("/", { waitUntil: "networkidle" });

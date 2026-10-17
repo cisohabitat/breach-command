@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.46**: see the [release notes](CHANGELOG.md#0946-17-october-2026).
+Release **0.9.47**: see the [release notes](CHANGELOG.md#0947-17-october-2026).
 
 The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones slightly trim the embedded logo's outer edges. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 
@@ -20,13 +20,16 @@ The incident desk uses a compact two-line version of the supplied Breach Command
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.
-The 51 recorded clips cover confirmed findings, unsuccessful checks, uncertain
+The 65 recorded clips cover confirmed findings, unsuccessful checks, uncertain
 signals, new developments and service pressure. Voice is on by default, using bundled recordings of a
 calm male Captain with a British English voice. An explicit saved Off setting is
 respected. Every spoken line is also readable, with Listen and Skip voice
 controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Bot Commander
-practice runs remain silent. Automatic lines play at most once per operation;
+practice runs remain silent. Routine finding cues play automatically at most once per operation;
+each newly recorded evidence choice can receive one tradeoff acknowledgement,
+without replaying on resume. Response captions describe the chosen option's
+published residual risk, with Listen available while the next decision is pending.
 Listen can replay a line, so repeated checks do not cause repeated chatter.
 Opening the after-action review plays a short spoken debrief: the actual
 recovery grade or loss cause, a well-assessed evidence decision or supported
@@ -145,7 +148,7 @@ Every storage access goes through `lib/storage.ts`, which answers rather than th
 
 The settings panel can export a portable backup containing campaign progress and the current non-Ironman operation, including an operation awaiting resume on the assignment screen with its saved preferences. Finished operations and Bot Commander practice runs are left out. Restoring the text validates both halves before replacing anything: the campaign through `parseCampaign` and the operation through the same migration a local save goes through. An unreadable operation is reported and left out rather than stored, and a backup without a readable campaign is refused rather than restoring an empty one. A restored operation is offered for resume straight away; restored while another operation is in play, it replaces that one when the player returns to assignments. If storing the restored operation fails, the panel reports that progress is available for this visit only, even when the campaign was saved. Nested campaign counters are checked individually, and unknown pending command IDs are refused before resume.
 
-A failed game-bundle download can be retried by beginning the operation again; successful and in-flight downloads remain shared.
+A failed game-bundle download can be retried by beginning the operation again; successful and in-flight downloads remain shared. The lazy boundary exposes only the engine helpers used by the session and browser tool. Message catalogues group repeated namespaces and restore their existing translation keys at registration, reducing shipped script without removing wording or delaying offline support.
 
 Daily Operation always plays the day's seed, and Weekly Operation the week's, unless a loaded code says otherwise, and challenge codes use their own, allowing the same configuration to be replayed or shared. All reproducible operations start from a neutral command: no inherited rank, fatigue, doctrine, readiness, trust or unresolved access, and the variant is derived from the seed on the Common Ground route. Local campaign history cannot change their setup or results. Ordinary unseeded operations retain campaign consequences. Current challenge codes use `BC9`; earlier codes are reported as outdated. Scenario mastery awards one star for a successful recovery, two for a score of 74 or above, and three for a score of 88 or above. Past that, each case has a mastery ladder of five rungs shown on its slip: won at Crisis, won without revising, won in half the window, won with a tired specialist, and won in Expert.
 
@@ -249,7 +252,7 @@ The terminal's schedule erosion was reduced after comparing collection, evidence
 | `lib/last-operation.ts` | The last operation and the review's suggested next one, kept on the device for a returning player |
 | `tests/*.test.ts` | Engine, campaign, reads, session, content and simulation suites (`node --test`) |
 | `tests/saves.test.ts` | A save from every session version since 10 migrates and plays on |
-| `tests/e2e/visual.spec.ts` | Pixel baselines for eight game screens, evidence connections and campaign states at four widths |
+| `tests/e2e/visual.spec.ts` | Pixel baselines for game screens, evidence connections, campaign states and Captain acknowledgements at four widths |
 | `tests/e2e/performance.spec.ts` | Script, style, paint and layout-shift budgets on a throttled phone |
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |

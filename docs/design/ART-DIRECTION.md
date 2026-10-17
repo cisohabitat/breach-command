@@ -143,6 +143,11 @@ music and cues, and stops on dismissal, mute, navigation or a hidden tab.
 The male voice and measured delivery were approved during the first-case pilot.
 Each distinct update speaks once automatically; repeat checks can be replayed
 with Listen. Cues depend on public evidence and outcomes, never hidden answers.
+Newly recorded evidence choices receive a short tradeoff acknowledgement, once
+per decision rather than once per cue type. Response captions reflect only the
+chosen option's published residual risk; they keep Listen while the next choice
+is pending. Recovery and loss retain closing commentary. Historical choices do
+not replay on resume. The 65 recordings preserve the approved voice and delivery.
 Routine narration waits for 1.5 seconds without pointer, keyboard or wheel input,
 leaves a gap after another line, and waits while an evidence or response decision
 is pending. Listen remains available during those decisions. A public pressure

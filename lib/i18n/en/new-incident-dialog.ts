@@ -1,7 +1,11 @@
+import { catalogue } from "../catalogue.ts";
+
 // The strings of components/game/new-incident-dialog.tsx (app/page.tsx for page), loaded with it.
-export const newIncidentDialogMessages = {
-  "newIncidentDialog.leaveThisInvestigation": "Leave this investigation?",
-  "newIncidentDialog.yourCurrentCase": "Your current case, turn history and saved session will be cleared.",
-  "newIncidentDialog.keepInvestigating": "Keep investigating",
-  "newIncidentDialog.chooseNewIncident": "Choose a new incident",
-} as const;
+export const newIncidentDialogMessages = catalogue({
+  newIncidentDialog: {
+    "leaveThisInvestigation": "Leave this investigation?",
+    "yourCurrentCase": "Your current case, turn history and saved session will be cleared.",
+    "keepInvestigating": "Keep investigating",
+    "chooseNewIncident": "Choose a new incident",
+  },
+});

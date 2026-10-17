@@ -311,3 +311,26 @@ adaptation. Local initial/warmed/operation scripts are
 Throttled assignment/operation LCP is 1.176/1.224 s and CLS 0.001/0.020.
 All budgets remain fixed. Operation script has only 10 B of local headroom;
 the CI build identifier adds 8 B, so verify the final runner build before release.
+
+Startup headroom and Captain reactions (0.9.47): expose only the session/browser-tool engine API
+and group catalogue keys by namespace, restoring the same full keys at runtime.
+All 37 catalogues / 1,401 entries compare equal before and after conversion;
+the 145 unit tests, including composed prose and localization, pass.
+The local production build measures 654,963 B initial script, 1,161,676 B warmed
+assignment and 1,171,721 B by play start: 20,269 B less at operation start than
+0.9.46. The narrower API accounts for 2,852 B of that reduction. Styles remain
+88,332/221,817 B; assignment/operation LCP is 1.312/1.364 s and CLS 0.001/0.020.
+The integrated reactions add 473 B to the standard startup fixture: final
+initial/warmed/operation script is 655,055/1,162,149/1,172,194 B, a net saving
+of 19,796 B over 0.9.46. Final throttled LCP is 1.204/1.144 s and CLS remains
+0.001/0.020. The 14 new captions bring the separate recorded library to 65;
+all 1,401 pre-existing catalogue entries remain unchanged. These are the
+existing silent budget fixtures; enabled optional voice playback also loads
+its player and individual audio clips on demand. No feature, offline warm-up
+or budget is removed or relaxed. Check the final runner build identifier too.
+
+A separate first-mission check with default voice enabled measures all script
+through the visible opening Captain: 1,207,676 B on published 0.9.46 versus
+1,191,288 B on the local 0.9.47 candidate (16,388 B lower). Each uses a fresh
+390×844 context with workers blocked; this is a byte comparison, not a paint
+timing or a replacement for the fixed budget fixture. Build identifiers differ.
