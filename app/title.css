@@ -24,7 +24,7 @@
 .title-entry {
   position: absolute;
   inset-inline: 20px;
-  inset-block-end: max(24px, env(safe-area-inset-bottom));
+  inset-block-end: max(44px, env(safe-area-inset-bottom));
   display: grid;
   justify-items: center;
   text-align: center;
@@ -48,6 +48,17 @@
 .title-start:focus-visible {
   outline: 2px solid var(--lime);
   outline-offset: 4px;
+}
+.title-build {
+  position: absolute;
+  inset-inline-start: 12px;
+  inset-block-end: 8px;
+  margin: 0;
+  padding: 2px 6px;
+  background: rgb(9 14 19 / 78%);
+  color: #d8d9d5;
+  font-size: var(--type-micro);
+  line-height: 1.5;
 }
 @media (max-aspect-ratio: 1/1) {
   .title-stage {

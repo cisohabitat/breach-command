@@ -18,6 +18,7 @@ export function TitleScreen() {
               only the image matching the viewport; the heading names the game. */}
           <img src="/art/title/landscape.jpg" width="1280" height="960" alt="" fetchPriority="high" />
         </picture>
+        <p className="title-build build-version">{t("titleScreen.build", { version: process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown", build: process.env.NEXT_PUBLIC_BUILD_ID ?? "local" })}</p>
         <div className="title-entry">
           <a className="title-start" aria-describedby="title-description" href={locale === "en" ? "/play" : `/play?locale=${locale}`}>{t("titleScreen.start")}</a>
           <p id="title-description" className="sr-only">{t("titleScreen.description")}</p>

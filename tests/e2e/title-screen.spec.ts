@@ -16,6 +16,16 @@ for (const [width, height, image] of [[375, 844, "portrait"], [820, 1180, "portr
     expect(posters).toHaveLength(1);
     const start = page.getByRole("link", { name: "Stop the Breach", exact: true });
     await expect(start).toBeInViewport({ ratio: 1 });
+    const build = page.locator(".title-build");
+    await expect(build).toHaveText(/^v\d+\.\d+\.\d+ · Build (?:[a-f0-9]{7}|local)$/);
+    await expect(build).toBeInViewport({ ratio: 1 });
+    const labelBox = (await build.boundingBox())!;
+    const stageBox = (await page.locator(".title-stage").boundingBox())!;
+    const startBox = (await start.boundingBox())!;
+    expect(labelBox.x).toBeGreaterThanOrEqual(stageBox.x);
+    expect(labelBox.x + labelBox.width).toBeLessThanOrEqual(stageBox.x + stageBox.width);
+    expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(stageBox.y + stageBox.height);
+    expect(labelBox.y).toBeGreaterThan(startBox.y + startBox.height);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.keyboard.press("Tab");
     await expect(start).toBeFocused();
