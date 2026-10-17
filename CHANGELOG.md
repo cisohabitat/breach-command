@@ -4,6 +4,12 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.45, 17 October 2026
+
+- Show the release version and build at the bottom-left of the title artwork,
+  using the same automatic build values as the game footer. Keep the muted
+  label readable over either poster and clear of the entry button on phones.
+
 ## 0.9.44, 16 October 2026
 
 - Replace the incident header's text brand with the approved compact,

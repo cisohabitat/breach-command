@@ -10,7 +10,7 @@ Breach Command is a public, single-player incident-response card game played aga
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
 Release **0.9.44**: see the [release notes](CHANGELOG.md#0944-16-october-2026).
 
-The home page opens with the supplied Breach Command incident-command artwork: landscape on wide screens and portrait on tall screens. Select **Stop the Breach** to reach the incident desk at `/play`, where you can begin or resume an operation. You can bookmark `/play` to open the desk directly. Both entry pages remain available offline after visiting the desk; theme images are decorative and load separately from the game.
+The home page opens with the supplied Breach Command incident-command artwork: landscape on wide screens and portrait on tall screens. The bottom-left of the artwork shows the current release and build, matching the game footer. Select **Stop the Breach** to reach the incident desk at `/play`, where you can begin or resume an operation. You can bookmark `/play` to open the desk directly. Both entry pages remain available offline after visiting the desk; theme images are decorative and load separately from the game.
 
 The entry link floats near the bottom centre of the picture with a semi-transparent background, hover feedback and a visible keyboard-focus outline. Its explanatory description remains available to screen readers.
 
