@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { newGame } from "../../lib/advanced-game";
 import { serialiseSession, SESSION_KEY } from "../../lib/session";
 
-for (const [width, height, image] of [[375, 844, "portrait"], [820, 1180, "portrait"], [1280, 800, "landscape"]] as const) {
+for (const [width, height, image] of [[375, 844, "portrait"], [768, 1024, "portrait"], [820, 1180, "portrait"], [1024, 768, "landscape"], [1920, 1080, "landscape"]] as const) {
   test(`title selects one poster and opens the desk by keyboard at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const posters: string[] = [];
@@ -21,6 +21,11 @@ for (const [width, height, image] of [[375, 844, "portrait"], [820, 1180, "portr
     await expect(build).toBeInViewport({ ratio: 1 });
     const labelBox = (await build.boundingBox())!;
     const stageBox = (await page.locator(".title-stage").boundingBox())!;
+    expect(stageBox.x).toBe(0);
+    expect(stageBox.y).toBe(0);
+    expect(stageBox.width).toBe(width);
+    expect(stageBox.height).toBe(height);
+    await expect(page.locator(".title-art img")).toHaveCSS("object-fit", "cover");
     const startBox = (await start.boundingBox())!;
     expect(labelBox.x).toBeGreaterThanOrEqual(stageBox.x);
     expect(labelBox.x + labelBox.width).toBeLessThanOrEqual(stageBox.x + stageBox.width);

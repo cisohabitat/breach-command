@@ -14,8 +14,8 @@ export function TitleScreen() {
       <div className="title-stage">
         <picture className="title-art">
           <source media="(max-aspect-ratio: 1/1)" srcSet="/art/title/portrait.jpg" />
-          {/* Preserve the supplied posters' full composition. Picture requests
-              only the image matching the viewport; the heading names the game. */}
+          {/* Fill the viewport with the matching poster, cropping its edges.
+              Picture requests one image; the heading names the game. */}
           <img src="/art/title/landscape.jpg" width="1280" height="960" alt="" fetchPriority="high" />
         </picture>
         <p className="title-build build-version">{t("titleScreen.build", { version: process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown", build: process.env.NEXT_PUBLIC_BUILD_ID ?? "local" })}</p>
