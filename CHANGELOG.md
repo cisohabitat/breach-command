@@ -13,6 +13,8 @@ release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 - Add pressed procedure feedback and a brief neutral outline on the procedure
   just used when returning from its report.
 - Add twelve small source-specific finding illustrations in bone and charcoal.
+- Isolate the keyboard playthrough's seeded dice from accessibility-audit UUID
+  generation, preserving deterministic winning and losing coverage.
 
 ## 0.9.51, 17 October 2026
 

@@ -114,7 +114,7 @@ class Player {
 
 // Each width has its own seed: at 1280 px the operation is won through the
 // response; at 390 px it is lost, and the last report opens the review.
-for (const [width, height, dice] of [[1280, 800, 20261011], [390, 844, 1]] as const) {
+for (const [width, height, dice] of [[1280, 800, 1], [390, 844, 20261011]] as const) {
   test(`an operation plays from assignment to review with the keyboard alone at ${width}px`, async ({ page, browserName }) => {
     test.skip(browserName !== "chromium", "played in Chromium");
     test.setTimeout(300_000);
@@ -123,8 +123,9 @@ for (const [width, height, dice] of [[1280, 800, 20261011], [390, 844, 1]] as co
     await page.addInitScript((start: number) => {
       // The same dice every run: the engine draws from crypto.getRandomValues
       // (lib/game.ts, randomInt), so a small seeded generator stands in for it.
-      // The die's animation uses Math.random and is left alone, so how long a
-      // roll animates never changes what it rolls.
+      // Only the engine's single Uint32 draws use this stream. Axe generates
+      // UUIDs with Uint8Array; sharing its draws made audit timing change dice.
+      const nativeRandom = crypto.getRandomValues.bind(crypto);
       let seed = start;
       const next = () => {
         seed = (seed + 0x6d2b79f5) | 0;
@@ -134,8 +135,8 @@ for (const [width, height, dice] of [[1280, 800, 20261011], [390, 844, 1]] as co
       };
       Object.defineProperty(crypto, "getRandomValues", {
         value: <T extends ArrayBufferView | null>(array: T) => {
-          if (array instanceof Uint32Array) for (let index = 0; index < array.length; index++) array[index] = next();
-          else if (array) { const bytes = new Uint8Array(array.buffer, array.byteOffset, array.byteLength); for (let index = 0; index < bytes.length; index++) bytes[index] = next() & 255; }
+          if (array instanceof Uint32Array && array.length === 1) array[0] = next();
+          else return nativeRandom(array!);
           return array;
         },
       });
