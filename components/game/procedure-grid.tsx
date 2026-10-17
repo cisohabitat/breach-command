@@ -10,6 +10,7 @@ import {
 import { useMessages } from "@/hooks/use-messages";
 import { procedureGridMessages } from "@/lib/i18n/en/procedure-grid";
 import { register } from "@/lib/i18n";
+import { useEffect, useRef } from "react";
 
 register(procedureGridMessages);
 
@@ -17,15 +18,42 @@ export function ProcedureGrid({
   game,
   disabled,
   onChoose,
+  reportOpen = false,
+  receipt = 0,
 }: {
   game: Game;
   disabled: boolean;
   onChoose: (id: string) => void;
+  reportOpen?: boolean;
+  receipt?: number;
 }) {
   const { t, rich } = useMessages();
   const routeSources = game.hypothesis ? hypothesisSources(game, game.hypothesis) : [];
+  const grid = useRef<HTMLDivElement>(null);
+  const last = game.turns.at(-1);
+  const lastNumber = last?.number;
+  const shown = useRef(0);
+  useEffect(() => {
+    if (reportOpen || !receipt || receipt !== lastNumber || shown.current === receipt) return;
+    const button = grid.current?.querySelector<HTMLElement>("[data-last-used=true]");
+    if (!button) return;
+    shown.current = receipt;
+    const previous = button.style.boxShadow;
+    button.style.boxShadow = "inset 0 0 0 1px currentColor";
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const animation = !motion.matches && button.animate ? button.animate([
+      { boxShadow: "inset 0 0 0 1px currentColor", offset: 0 },
+      { boxShadow: "inset 0 0 0 1px currentColor", offset: .6 },
+      { boxShadow: "inset 0 0 0 1px transparent" },
+    ], { duration: 2000 }) : null;
+    const stop = () => { if (motion.matches) animation?.cancel(); };
+    motion.addEventListener("change", stop);
+    const clear = () => { animation?.cancel(); button.style.boxShadow = previous; };
+    const timer = setTimeout(clear, 2000);
+    return () => { clearTimeout(timer); clear(); motion.removeEventListener("change", stop); };
+  }, [lastNumber, reportOpen, receipt]);
   return (
-    <div className="procedure-grid">
+    <div className="procedure-grid" ref={grid}>
       {proceduresFor(game).map(procedure => {
         const cooldown = availableIn(game, procedure.id);
         const established = game.established.includes(procedure.id);
@@ -41,6 +69,7 @@ export function ProcedureGrid({
           <button
             key={procedure.id}
             data-procedure={procedure.id}
+            data-last-used={last?.procedure === procedure.id}
             className={`procedure-card ${established ? "established" : ""} ${cooldown ? "cooling" : ""} ${aligned ? "hypothesis-aligned" : ""}`}
             disabled={disabled || cooldown > 0 || !!game.pendingDecision}
             onClick={() => onChoose(procedure.id)}

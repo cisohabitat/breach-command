@@ -69,6 +69,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
     <Dialog open={!!report} onOpenChange={open => { if (!open) dismissReport(); }}>
       <DialogContent
         ref={content}
+        fadeOnly
         className="game-dialog paper-dialog report-dialog"
         showCloseButton={!awaitingDecision}
         onEscapeKeyDown={event => { if (awaitingDecision) event.preventDefault(); }}
@@ -227,7 +228,7 @@ function ConfirmedFinding({ report, scenario }: { report: Game["turns"][number];
   const route = hypotheses.find(item => item.id === attack.vector)!;
   const tested = attacks.find(item => item.id === report.hypothesisTarget);
   return <div className="discovery">
-    <StoryArt kind="evidence" name={evidenceArtFor(report.procedure, scenario)} />
+    <StoryArt kind="findings" name={evidenceArtFor(report.procedure, scenario)} />
     <div>
       <span>{stages[attack.stage].short}: {stages[attack.stage].name}</span>
       <h3>{attack.title}</h3>

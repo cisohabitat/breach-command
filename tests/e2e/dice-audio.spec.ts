@@ -5,13 +5,18 @@ import { twoStagesGame } from "./fixtures";
 
 declare global {
   interface Window {
-    diceProbe: { starts: number[]; ended: number; cancelled: number; oscillators: number; running: boolean; energy: number; rollSeen: boolean; audio?: { state: string; time: number } };
+    diceProbe: { starts: number[]; ended: number; cancelled: number; oscillators: number; running: boolean; energy: number; rollSeen: boolean; tumbles: number; audio?: { state: string; time: number } };
   }
 }
 
 async function prepare(page: Page, sound = true, fast = false, game: Game | null = setHypothesis(newGame(0, "training", () => 0), "identity")) {
   await page.addInitScript(() => {
-    window.diceProbe = { starts: [], ended: 0, cancelled: 0, oscillators: 0, running: false, energy: 0, rollSeen: false };
+    window.diceProbe = { starts: [], ended: 0, cancelled: 0, oscillators: 0, running: false, energy: 0, rollSeen: false, tumbles: 0 };
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (frames, options) {
+      if (this.classList.contains("die-shell")) window.diceProbe.tumbles++;
+      return animate.call(this, frames, options);
+    };
     // Observe native Web Audio; do not replace its synthesis or playback.
     const prototype = AudioContext.prototype;
     const bufferSource = prototype.createBufferSource;
@@ -60,10 +65,16 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
     await prepare(page, false);
     await holdRoll(page);
     await page.getByRole("button", { name: "Run procedure", exact: true }).click();
-    await page.clock.runFor(850);
+    await page.clock.runFor(100);
+    const shell = page.locator(".die-shell");
+    await expect(shell).toHaveAttribute("aria-hidden", "true");
+    expect(await page.evaluate(() => window.diceProbe.tumbles)).toBe(reducedMotion === "reduce" ? 0 : 1);
+    if (reducedMotion === "reduce") await expect(page.locator(".die strong")).toHaveText("—");
+    await page.clock.runFor(750);
     const die = page.locator(".roll-dialog .die");
     await expect(die).toBeVisible();
     await expect(die).not.toHaveClass(/rolling/);
+    expect(await shell.evaluate(element => element.getAnimations().length)).toBe(0);
     const number = await die.locator("strong").textContent();
     await expect(page.locator(".report-dialog")).toHaveCount(0);
     await page.clock.runFor(499);
@@ -71,6 +82,8 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
     await expect(page.locator(".report-dialog")).toHaveCount(0);
     await page.clock.runFor(1);
     await expect(page.locator(".report-dialog")).toBeVisible();
+    await expect(page.locator(".report-dialog")).toBeFocused();
+    await expect(page.locator(".report-dialog")).not.toHaveClass(/zoom-in/);
     // Let the closed Radix dialog finish its exit animation on the held clock.
     await page.clock.runFor(300);
     await expect(page.locator(".roll-dialog")).toHaveCount(0);
@@ -79,6 +92,44 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
     expect(String(turns[0].raw)).toBe(number);
   });
 }
+
+test("the used procedure gets a brief receipt after the report closes", async ({ page }) => {
+  await prepare(page, false);
+  await page.evaluate(() => {
+    crypto.getRandomValues = <T extends ArrayBufferView | null>(array: T): T => {
+      if (array instanceof Uint32Array) array.fill(0);
+      return array;
+    };
+  });
+  await holdRoll(page);
+  await page.getByRole("button", { name: "Run procedure", exact: true }).click();
+  await page.clock.runFor(1350);
+  const report = page.locator(".report-dialog");
+  await expect(report).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.clock.runFor(300);
+  await expect(report).toHaveCount(0);
+  const used = page.locator(".procedure-card[data-last-used=true]");
+  await expect(used).toHaveCount(1);
+  await expect.poll(() => used.evaluate(element => (element as HTMLElement).style.boxShadow)).toContain("inset");
+  await page.clock.runFor(2000);
+  await expect.poll(() => used.evaluate(element => (element as HTMLElement).style.boxShadow)).toBe("");
+});
+
+test("enabling reduced motion during a roll cancels its tumble and number cycling", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await prepare(page, false);
+  await holdRoll(page);
+  await page.getByRole("button", { name: "Run procedure", exact: true }).click();
+  await page.clock.runFor(100);
+  expect(await page.evaluate(() => window.diceProbe.tumbles)).toBe(1);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect.poll(() => page.locator(".die-shell").evaluate(element => element.getAnimations().length)).toBe(0);
+  await page.clock.runFor(80);
+  await expect(page.locator(".die strong")).toHaveText("—");
+  await page.clock.runFor(1170);
+  await expect(page.locator(".report-dialog")).toBeVisible();
+});
 
 test("a visible roll plays real buffered impacts before its result", async ({ page }) => {
   await prepare(page);

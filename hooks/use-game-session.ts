@@ -70,7 +70,8 @@ export function useGameSession() {
   const [rolling, setRolling] = useState(false);
   const [dieSettled, setDieSettled] = useState(false);
   const stopDice = useRef<(() => void) | null>(null);
-  const [die, setDie] = useState(20);
+  const [die, setDie] = useState<number | null>(null);
+  const [procedureReceipt, setProcedureReceipt] = useState(0);
   const [report, setReport] = useState<Turn | null>(null);
   const [inlineReport, setInlineReport] = useState<Turn | null>(null);
   const [rules, setRules] = useState(false);
@@ -270,11 +271,15 @@ export function useGameSession() {
     setInlineReport(null);
     let interval: ReturnType<typeof setInterval> | null = null;
     if (!quick) {
+      setDie(null);
       setDieSettled(false);
       setRolling(true);
       if (!botRunRef.current) stopDice.current = playDiceRoll(soundEnabled);
-      interval = setInterval(() => setDie(1 + Math.floor(Math.random() * 20)), 80);
-      timers.current.push(interval);
+      const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if (!motion.matches) {
+        interval = setInterval(() => setDie(motion.matches ? null : 1 + Math.floor(Math.random() * 20)), 80);
+        timers.current.push(interval);
+      }
     }
     const timeout = setTimeout(() => {
       if (interval) clearInterval(interval);
@@ -308,6 +313,7 @@ export function useGameSession() {
 
     const resolveRun = (next: Game) => {
       const result = next.turns.at(-1)!;
+      setProcedureReceipt(result.number);
       // Fast resolution is the switch that means "skip the ceremony". Without it
       // every turn gets the captain's report, including the turn that found
       // nothing — which is the turn whose result most needs explaining, and which
@@ -873,6 +879,7 @@ export function useGameSession() {
     selected, setSelected,
     rolling,
     dieSettled,
+    procedureReceipt,
     die,
     report, setReport,
     inlineReport, setInlineReport,

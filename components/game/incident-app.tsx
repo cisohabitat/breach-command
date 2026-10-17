@@ -55,7 +55,9 @@ export default function Home() {
     actionSheet: useOpened(!!session.selected),
     roll: useOpened(rolling),
     brief: useOpened(session.missionBriefing),
-    report: useOpened(!!session.report),
+    // Prepare the report while the die is on screen, so the handoff does not
+    // reveal the workspace for a render while its dynamic wrapper mounts.
+    report: useOpened(rolling || !!session.report),
     guide: useOpened(session.rules),
     debrief: useOpened(session.debrief),
     settings: useOpened(session.settings),

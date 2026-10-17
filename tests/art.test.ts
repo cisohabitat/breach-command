@@ -48,6 +48,7 @@ function webp(path: string, width: number, height: number, budget: number) {
 }
 
 test("new artwork meets its dimensions and budgets, and every scene has a phone copy", () => {
+  for (const source of ["identity", "network", "email", "dns", "firewall", "server", "cloud", "forensic", "hunt", "intel", "maintenance", "telemetry"]) webp(`findings/${source}`, 192, 128, 9000);
   webp("icons/field-kit", 768, 512, 110000);
   for (const source of ["network", "firewall", "dns", "server", "cloud", "forensic", "intel", "hunt"]) webp(`evidence/${source}`, 480, 320, 45000);
   for (const profile of Object.keys(adversaryProfiles)) webp(`adversaries/${profile}`, 256, 256, 15000);
