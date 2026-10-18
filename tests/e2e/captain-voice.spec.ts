@@ -25,13 +25,14 @@ async function mockSpeech(page: Page, available = true) {
       constructor(src: string) { this.src = src; }
       play() {
         if (!available || window.captainSpeechProbe.refuse) return Promise.reject(new Error("playback refused"));
+        if (this.src.endsWith("captain-ready.wav")) return Promise.resolve();
         const cue = this.src.split("/").at(-1)!.replace(".mp3", "");
         window.captainSpeechProbe.lines.push(lines[cue]);
         window.captainSpeechProbe.finish = () => this.onended?.();
         this.onplaying?.();
         return Promise.resolve();
       }
-      pause() { window.captainSpeechProbe.cancellations++; }
+      pause() { if (!this.src.endsWith("captain-ready.wav")) window.captainSpeechProbe.cancellations++; }
       removeAttribute() {}
       load() {}
     }
@@ -41,6 +42,52 @@ async function mockSpeech(page: Page, available = true) {
 
 const voicePreferences = { voice: true, music: false, sound: false, haptics: false };
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
+
+// Keep real decoding/events, but enforce Safari's per-element gesture gate even
+// on runners whose autoplay policy otherwise allows every delayed play().
+async function observeGesturePlayback(page: Page) {
+  await page.addInitScript(() => {
+    const allowed = new WeakSet<HTMLMediaElement>();
+    let gesture = false;
+    for (const event of ["pointerdown", "keydown", "click"]) document.addEventListener(event, () => {
+      gesture = true;
+      setTimeout(() => { gesture = false; }, 0);
+    }, true);
+    const nativePlay = HTMLMediaElement.prototype.play;
+    Object.defineProperty(window, "captainNativePlayback", { value: { calls: 0, blocked: 0, audio: null }, configurable: true });
+    HTMLMediaElement.prototype.play = function () {
+      const probe = (window as typeof window & { captainNativePlayback: { calls: number; blocked: number; audio: HTMLMediaElement | null } }).captainNativePlayback;
+      probe.calls++;
+      if (gesture) allowed.add(this);
+      if (!allowed.has(this)) {
+        probe.blocked++;
+        return Promise.reject(new DOMException("Gesture required for this player", "NotAllowedError"));
+      }
+      if (this.src.includes("/audio/captain/")) probe.audio = this;
+      return nativePlay.call(this);
+    };
+  });
+}
+
+for (const entry of ["begin", "resume", "enable"] as const) test(`Captain auto-plays native audio after ${entry}, without Listen or other sound`, async ({ page }) => {
+  await observeGesturePlayback(page);
+  await openWithSave(page, entry === "enable" ? twoStagesGame() : entry === "resume" ? pendingDecisionGame() : null, false, { ...voicePreferences, voice: entry !== "enable" });
+  await page.getByRole("button", { name: entry !== "begin" ? "Resume" : /Begin investigation/i }).first().click();
+  if (entry === "resume") await page.locator(".evidence-decision > div > button").first().click();
+  if (entry === "enable") {
+    expect(await page.evaluate(() => (window as typeof window & { captainNativePlayback: { calls: number } }).captainNativePlayback.calls)).toBe(0);
+    await page.getByRole("button", { name: "Game settings" }).click();
+    await page.locator("#voice-setting").click();
+    await page.keyboard.press("Escape");
+    await compareFindings(page);
+  }
+  await expect.poll(() => page.evaluate(() => {
+    const probe = (window as typeof window & { captainNativePlayback: { audio: HTMLMediaElement | null } }).captainNativePlayback;
+    return probe.audio?.currentTime ?? 0;
+  })).toBeGreaterThan(0);
+  expect(await page.evaluate(() => (window as typeof window & { captainNativePlayback: { blocked: number } }).captainNativePlayback.blocked)).toBe(0);
+  await expect(page.locator(".captain-voice-status")).toHaveCount(0);
+});
 
 for (const cue of ["opening", "confidenceStrengthened", "decisionNotify"]) test(`the bundled Captain ${cue} recording decodes and plays in the browser`, async ({ page }) => {
   await openWithSave(page, null, false, voicePreferences);

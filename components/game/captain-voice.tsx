@@ -115,9 +115,8 @@ function CaptainLine({ cue, playbackKey = cue, lines, enabled, decisionPending =
   const [state, setState] = useState<CaptainSpeechState>("idle");
   const cancel = useRef<() => void>(() => {});
   const play = () => {
-    history.current.add(playbackKey);
     cancel.current();
-    cancel.current = speakCaptain(cues, setState);
+    cancel.current = speakCaptain(cues, setState, () => history.current.add(playbackKey));
   };
   const schedule = useEffectEvent((urgent: boolean) => {
     cancel.current = scheduleCaptain(cues, setState, () => history.current.add(playbackKey), document, urgent);
