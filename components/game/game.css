@@ -4557,7 +4557,7 @@ the player already holds, so neither narrows the answer for them. */
 }
 /* The sticky index must not land on top of the heading it jumped to. */
 #debrief-score,#debrief-hypothesis,#debrief-timeline,#debrief-decisions,#debrief-chain,#debrief-campaign {
-  scroll-margin-top:90px;
+  scroll-margin-top:132px;
 }
 /* How the declared reading is holding up against the player's own results. */
 .hypothesis-standing .stage-only {
@@ -7025,7 +7025,7 @@ span.effect-list>span.effect.pace.worse>em {
     margin-top:2px;
   }
   #debrief-score,#debrief-hypothesis,#debrief-timeline,#debrief-decisions,#debrief-chain,#debrief-campaign {
-    scroll-margin-top:180px;
+    scroll-margin-top:224px;
   }
   .sector-alert .sector-rule {
     display:none;

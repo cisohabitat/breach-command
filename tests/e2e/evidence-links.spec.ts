@@ -106,9 +106,11 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     await page.locator(".debrief-index").getByRole("button", { name: "Timeline", exact: true }).click();
     const timeline = page.locator("#debrief-timeline");
     await timeline.evaluate(element => element.scrollIntoView({ behavior: "instant", block: "start" }));
-    const heading = await timeline.locator(":scope > details > summary").boundingBox();
-    const index = await page.locator(".debrief-index").boundingBox();
-    expect(heading!.y).toBeGreaterThanOrEqual(index!.y + index!.height);
+    await expect.poll(() => timeline.evaluate(element => {
+      const heading = element.querySelector(":scope > details > summary")!.getBoundingClientRect();
+      const index = document.querySelector(".debrief-index")!.getBoundingClientRect();
+      return heading.top - index.bottom;
+    })).toBeGreaterThanOrEqual(0);
     const log = timeline.locator(".complete-check-log");
     await expect(log).not.toHaveAttribute("open", "");
     await expect(timeline.locator(":scope > details > div")).toHaveCount(game.turns.filter(turn => turn.revealed || turn.injectReveal).length);
