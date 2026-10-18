@@ -90,12 +90,35 @@ test.describe("visual baselines", () => {
       const reference = page.locator(".reference-fold");
       if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
       await page.locator(".topology-detail > summary").click();
-      // Capture the whole reference panel without the unrelated sticky tabs
-      // covering its title or first node during the locator's automatic scroll.
-      const staticTabs = await page.addStyleTag({ content: ".workspace-tabs { position: static !important; }" });
-      await expect(page.locator(".infrastructure-console")).toHaveScreenshot(`${width}-infrastructure-map.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
-      await staticTabs.evaluate(element => element.parentNode?.removeChild(element));
-      await page.getByRole("button", { name: /^Briefing/ }).first().click();
+      await page.locator(".map-intel-detail > summary").click();
+      // Hide unrelated pinned navigation only while capturing this panel.
+      // Preserve its positioning and dimensions so screenshot isolation does
+      // not change the browser's scroll anchor before the workspace return.
+      const hiddenTabs = await page.addStyleTag({ content: ".workspace-tabs { visibility: hidden !important; }" });
+      try {
+        await expect(page.locator(".infrastructure-console")).toHaveScreenshot(`${width}-infrastructure-map.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+      } finally {
+        await hiddenTabs.evaluate(element => element.parentNode?.removeChild(element));
+      }
+      await expect.poll(() => page.locator(".workspace-tabs").evaluate(element => element.getBoundingClientRect().top)).toBe(0);
+      // Locator click's scrollIntoView can unpin this already-visible tab.
+      // Click where the player sees it, without an extra automation scroll.
+      const briefing = await page.getByRole("button", { name: /^Briefing/ }).first().boundingBox();
+      expect(briefing).not.toBeNull();
+      expect(briefing!.x).toBeGreaterThanOrEqual(0);
+      expect(briefing!.x + briefing!.width).toBeLessThanOrEqual(width);
+      expect(briefing!.y).toBeGreaterThanOrEqual(0);
+      expect(briefing!.y + briefing!.height).toBeLessThanOrEqual(height);
+      await page.mouse.click(briefing!.x + briefing!.width / 2, briefing!.y + briefing!.height / 2);
+      await expect(page.getByRole("button", { name: /^Briefing/ }).first()).toHaveAttribute("aria-pressed", "true");
+      await expect(page.locator(".captain-column")).toBeVisible();
+      if (width > 650) await expect(page.locator(".pinned-readouts")).toBeVisible();
+      await expect.poll(() => page.locator(".captain-label").evaluate(element => {
+        const heading = element.getBoundingClientRect();
+        const tabs = document.querySelector(".workspace-tabs")!.getBoundingClientRect();
+        const readouts = document.querySelector(".pinned-readouts")!.getBoundingClientRect();
+        return heading.top >= Math.max(tabs.bottom, readouts.bottom) && heading.bottom <= innerHeight;
+      })).toBe(true);
       await snap(page, `${width}-briefing-workspace.png`);
     });
 
@@ -219,7 +242,7 @@ test.describe("visual baselines", () => {
     });
   }
 
-  for (const [width, height] of [[844, 390], [1024, 600], [1280, 700]]) {
+  for (const [width, height] of [[844, 390], [1024, 600], [1280, 700], [1024, 768], [1080, 810], [1194, 834]]) {
     test(`compact workspaces at ${width}×${height}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });

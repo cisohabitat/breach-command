@@ -1,5 +1,12 @@
 # Art direction
 
+Landscape toolbar and expanded map reference (18 October 2026, user approved):
+compact the wordmark, header spacing and workspace tabs above 650 px wide and
+up to 850 px high in landscape, with 44 px controls and all written labels.
+Keep the pinned readouts below the tabs. Divide map notes into critical
+dependency, confirmed techniques and map controls using labelled text groups
+and quiet rules, preserving native disclosures and complete public information.
+
 D20 tray (18 October 2026, preview approved): a regular twenty-face bone die
 throws and bounces within a recessed charcoal tray, with fixed studio shading
 and a soft contact shadow. The front face agrees with the separate readable

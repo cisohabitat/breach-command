@@ -1,5 +1,15 @@
 # Performance budgets
 
+Landscape toolbar and grouped map reference (0.9.58) keep all existing limits.
+The local production build measures 656,553 B initial script, 1,169,917 B
+warmed assignment script and 1,180,791 B at operation start. Linked/total CSS
+is 88,980/221,897 B, leaving 103 B under the total-style limit. Equal-specificity
+selector factoring makes room for the layout; declarations remain unchanged.
+An isolated throttled phone run records assignment/operation LCP of
+1.172/1.164 s and CLS of 0.001/0.020. Run paint checks without other local
+browser workloads: an earlier overlapping run measured 3.136 s on assignment,
+while the isolated required check passed without changing a budget or retry.
+
 The approved 3D d20 tray (0.9.56) keeps every existing budget. Factoring
 equal-specificity selector groups in the shared/global and game sheets saves
 1,315 B compared with the first tray preview, without changing declarations.
