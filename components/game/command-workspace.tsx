@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check, Minus } from "lucide-react";
 import { CommandEvent } from "@/components/game/command-event";
 import { EndState } from "@/components/game/end-state";
 import { ResponsePanel } from "@/components/game/response-panel";
@@ -24,6 +24,10 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
   } = session;
 
   if (!game) return null;
+  // Only confirmed findings determine the open stage. Hidden techniques never
+  // select a live marker, accessible label or visual treatment.
+  const confirmed = attacks.filter(item => game.revealed.includes(item.id));
+  const currentStage = game.status === "playing" ? stages.findIndex((_, index) => !confirmed.some(item => item.stage === index)) : -1;
 
   return (
     <>
@@ -55,14 +59,16 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
             read as a feature grid. */}
         <ol className="chain-sheet">
           {stages.map((stage, index) => {
-            const attack = attacks.find(item => item.id === game.chain[index])!;
-            const revealed = game.revealed.includes(attack.id);
+            const attack = confirmed.find(item => item.stage === index);
+            const revealed = !!attack;
+            const current = index === currentStage;
+            const Marker = revealed ? Check : current ? ArrowRight : Minus;
             return (
-              <li className={revealed ? "confirmed" : "pending"} key={stage.name} style={{ "--stage-color": stage.color, "--redaction": `${[72, 58, 80, 64][index]}%` } as CSSProperties}>
+              <li className={revealed ? "confirmed" : "pending"} aria-current={current ? "step" : undefined} key={stage.name} style={{ "--stage-color": stage.color, "--redaction": `${[72, 58, 80, 64][index]}%` } as CSSProperties}>
                 <span className="chain-no">{String(index + 1)}</span>
                 <span className="chain-stage">{stage.name}</span>
                 {revealed ? <strong className="chain-technique">{attack.title}</strong> : <span className="chain-redacted"><span className="sr-only">{t("commandWorkspace.unknownTechnique")}</span></span>}
-                <span className="chain-status">{revealed ? t("commandWorkspace.confirmed") : t("commandWorkspace.awaitingEvidence")}</span>
+                <span className="chain-status"><Marker size={14} aria-hidden="true" /> {revealed ? t("commandWorkspace.confirmed") : current ? t("commandWorkspace.currentStage") : t("commandWorkspace.awaitingEvidence")}</span>
               </li>
             );
           })}

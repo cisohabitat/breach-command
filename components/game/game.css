@@ -75,7 +75,6 @@
 }
 .chain-technique {
   font-weight:600;
-  color:var(--text-heading);
 }
 .revealed {
   border-color:var(--stage-color);
@@ -1079,14 +1078,17 @@
 .timeline>.eyebrow {
   margin-bottom:9px;
 }
-.timeline>details>div {
+.timeline details>div {
   display:grid;
   grid-template-columns:30px 1fr;
   gap:10px;
   padding:10px 0;
   border-top:1px solid #2c3036;
 }
-.timeline>details>div>span,.paper-dialog .timeline>details>div>span {
+.milestone-effects {
+  grid-column:2;
+}
+.timeline details>div>span {
   font:500 var(--type-caption) var(--font-mono);
   color:var(--lime);
 }
@@ -1107,15 +1109,8 @@
   font-size:var(--type-caption);
   margin-top:4px;
 }
-.paper-dialog .timeline {
-  padding:17px;
-}
-.paper-dialog .timeline>details>div {
-  display:grid;
-  grid-template-columns:30px 1fr;
+.paper-dialog .timeline details>div {
   align-items:baseline;
-  gap:10px;
-  padding:10px 0;
   border-top:1px solid #c9bfac;
 }
 .paper-dialog .timeline p {
@@ -6284,6 +6279,14 @@ body {
 }
 .chain-sheet .chain-status {
   color:#4a463e;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  max-inline-size:112px;
+}
+.chain-sheet [aria-current=step] {
+  outline:1px solid #1f5a85;
+  outline-offset:4px;
 }
 /* Every title is set in the form face. Bold body type on Monitor and Isolate,
    the specialist's name, the case theories and the review's outcome columns

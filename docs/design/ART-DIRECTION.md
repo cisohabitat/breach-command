@@ -271,3 +271,21 @@ for partner disclosures; they never read the hidden technique. Art is decorative
 and its adjacent labels remain complete. CSS reserves each frame, so failed
 downloads leave the text and controls usable. The local WebP atlas is fetched
 once when needed, cached by the existing service worker, and hidden in print.
+
+## Evidence clarity, 18 October 2026
+
+The user approved clearer attack-chain states, evidence comparisons and review
+hierarchy. The first unconfirmed stage carries an arrow, “Investigating now”,
+an outline and `aria-current="step"`; confirmed stages carry checks and other
+unknown stages carry a neutral dash. These marks read confirmed findings only.
+No current-stage mark remains after investigation ends. Keep stage hues and the
+charcoal/bone palette; labels and shapes must work without colour.
+
+Comparison endpoints show collection source, finding and separate signal and
+confidence axes. The connector retains its tested or untested status and stroke
+pattern; collection order never supplies causal direction. The after-action
+review brings a compact milestone timeline ahead of detailed scoring, with the
+finding's response and a disclosure of its recorded effects. The full check log remains folded with
+its readings, plans and exact changes. Records without timestamps stay in the
+decisions section; no chronology is invented. These are presentation changes,
+with no balance or save-schema change.

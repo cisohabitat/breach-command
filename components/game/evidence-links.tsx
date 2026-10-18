@@ -2,6 +2,7 @@ import { getEvidenceLinks, type Game } from "@/lib/advanced-game";
 import { useMessages } from "@/hooks/use-messages";
 import { register } from "@/lib/i18n";
 import { evidenceLinksMessages } from "@/lib/i18n/en/evidence-links";
+import { EvidenceAxes } from "./evidence-assessment";
 
 register(evidenceLinksMessages);
 
@@ -18,9 +19,9 @@ export function EvidenceLinks({ game, selected }: { game: Game; selected: string
       if (!first || !second) return null;
       return <li key={link.ids.join("/")} data-relationship={link.status}>
         <div className="evidence-link-row">
-          <span className="evidence-link-node"><small>{t("evidenceLinks.turn", { turn: first.turn })}</small><strong>{say(first.title)}</strong></span>
+          <span className="evidence-link-node"><small>{t("evidenceLinks.turn", { turn: first.turn })} · {say(first.source)}</small><strong>{say(first.title)}</strong><EvidenceAxes game={game} item={first} standalone /></span>
           <span className="evidence-link-connector"><span>{t(link.status === "supported" ? "evidenceLinks.supported" : link.status === "unrelated" ? "evidenceLinks.unrelated" : link.status === "disputed" ? "evidenceLinks.disputed" : "evidenceLinks.untested")}</span></span>
-          <span className="evidence-link-node"><small>{t("evidenceLinks.turn", { turn: second.turn })}</small><strong>{say(second.title)}</strong></span>
+          <span className="evidence-link-node"><small>{t("evidenceLinks.turn", { turn: second.turn })} · {say(second.source)}</small><strong>{say(second.title)}</strong><EvidenceAxes game={game} item={second} standalone /></span>
         </div>
         <p>{link.finding ? say(link.finding) : t("evidenceLinks.noInference")}</p>
       </li>;

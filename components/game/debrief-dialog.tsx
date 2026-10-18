@@ -4,7 +4,7 @@ import { EvidenceAssessment } from "./evidence-assessment";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
 import { FacilitatorSheet } from "@/components/game/facilitator-sheet";
-import { OWN_SOURCE_BONUS, adversaryObjectives, attackMitre, countRevisions, mitreUrl, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, recommendNext, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages, meterEffect } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, adversaryObjectives, attackMitre, countRevisions, mitreUrl, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, recommendNext, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, scenarios, sectorSystems, stages, meterEffect, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { campaignRoutes, routeForCampaign, routeReason } from "@/lib/phase9";
 import { specialistArc, specialistReaction } from "@/lib/specialist-notes";
@@ -26,6 +26,49 @@ function UnavailableVoice() {
 
 register(debriefDialogMessages);
 
+// Decision records have no timestamp. Associate them with their finding;
+// never invent a turn for a command event, comparison or sector decision.
+function ReviewTimeline({ game }: { game: Game }) {
+  const { t, say } = useMessages();
+  const milestones = game.turns.filter(turn => turn.revealed || turn.injectReveal);
+  return <section className="timeline" id="debrief-timeline">
+    <details className="debrief-fold">
+      <summary>{t("debriefDialog.evidenceAndDecision")}<span>{t("debriefDialog.milestones", { count: milestones.length })}</span></summary>
+      {!milestones.length && <p>{t("debriefDialog.noMilestones")}</p>}
+      {milestones.map(turn => <div key={turn.number}>
+        <span>{turn.number}</span>
+        <p><strong>{procedureById(game, turn.procedure)?.title}</strong>
+          {[turn.revealed, turn.injectReveal].filter((id, index, ids) => id && ids.indexOf(id) === index).map(id => {
+            const finding = attacks.find(item => item.id === id);
+            const decision = game.decisions.find(item => item.stage === id);
+            return <small key={id}>
+              {t("debriefDialog.revealed", { title: finding?.title ?? "" })}
+              {decision && <><br /><strong>{t("debriefDialog.findingResponse")}</strong> {say(decision.title)}</>}
+            </small>;
+          })}
+        </p>
+        {game.decisions.some(item => item.stage === turn.revealed || item.stage === turn.injectReveal) && <details className="decision-primer milestone-effects">
+          <summary>{t("debriefDialog.recordedEffects")}</summary>
+          {game.decisions.filter(item => item.stage === turn.revealed || item.stage === turn.injectReveal).map((decision, index) => <span key={index}>
+            <strong>{say(decision.title)}</strong>
+            <EffectList items={[...([["impact", decision.impactChange], ["continuity", decision.continuityChange], ["sector", decision.sectorChange], ["objective", decision.objectiveChange]] as const).map(([meter, change]) => meterEffect(game, meter, change)), !!decision.tempoChange && { kind: "pace", faster: decision.tempoChange > 0 }]} />
+          </span>)}
+        </details>}
+      </div>)}
+      <details className="decision-primer complete-check-log">
+        <summary>{t("debriefDialog.allChecks", { count: game.turns.length })}</summary>
+        {game.turns.map(turn => <div key={turn.number}>
+          <span>{turn.number}</span>
+          <p><strong>{procedureById(game, turn.procedure)?.title}</strong>{turn.hypothesis ? t("debriefDialog.turnHypothesis", { title: hypotheses.find(item => item.id === turn.hypothesis)?.title ?? "" }) : t("debriefDialog.noHypothesisRecorded2")}
+            <small>{procedureScopes[turn.plan.scope].title}{t("debriefDialog.scopeAnalysis", { procedureIntensitiesTitle: procedureIntensities[turn.plan.intensity].title.toLowerCase() })}{say(turn.narrative)}</small>
+            <EffectList items={([["impact", turn.impactChange], ["continuity", turn.continuityChange], ["sector", turn.sectorChange], ["objective", turn.objectiveChange]] as const).map(([meter, change]) => meterEffect(game, meter, change))} />
+          </p>
+        </div>)}
+      </details>
+    </details>
+  </section>;
+}
+
 export function DebriefDialog({ session }: { session: GameSession }) {
   const { t, rich, say } = useMessages();
   const content = useRef<HTMLDivElement>(null);
@@ -45,7 +88,8 @@ export function DebriefDialog({ session }: { session: GameSession }) {
     const target = document.getElementById(id);
     if (!target) return;
     if (target instanceof HTMLDetailsElement) target.open = true;
-    target.querySelectorAll("details").forEach(fold => { fold.open = true; });
+    const fold = target.querySelector<HTMLDetailsElement>(":scope > details");
+    if (fold) fold.open = true;
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -118,6 +162,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               <button key={id} type="button" onClick={() => openSection(id)}>{label}</button>
             ))}
           </nav>
+          <ReviewTimeline game={game} />
           <div className="debrief-stats">
             <div><strong>{game.turns.filter(turn => turn.success).length}/{game.turns.length}</strong><span>{t("debriefDialog.rollsSucceeded")}</span></div>
             <div><strong>{game.impact}</strong><span>{t("debriefDialog.finalImpact")}</span></div>
@@ -168,17 +213,6 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               <div><span className="eyebrow">{t("debriefDialog.commandTeam")}</span><strong>{t("debriefDialog.fatigueOf6", { namedSpecialistsName: namedSpecialists[game.specialist].name, specialistFatigue: game.specialistFatigue })}</strong></div>
             </section>
           </details>
-          <section className="timeline" id="debrief-timeline">
-            <details className="debrief-fold">
-              <summary>{t("debriefDialog.evidenceAndDecision")}<span>{t("debriefDialog.turn3Plural", { count: game.turns.length })}{t("debriefDialog.foundAStage", { count: game.turns.filter(turn => turn.revealed).length })}</span></summary>
-            {game.turns.map(turn => (
-              <div key={turn.number}>
-                <span>{String(turn.number)}</span>
-                <p><strong>{procedureById(game, turn.procedure)?.title}</strong>{turn.hypothesis ? t("debriefDialog.turnHypothesis", { title: hypotheses.find(item => item.id === turn.hypothesis)?.title ?? "" }) : t("debriefDialog.noHypothesisRecorded2")}<small>{procedureScopes[turn.plan.scope].title}{t("debriefDialog.scopeAnalysis", { procedureIntensitiesTitle: procedureIntensities[turn.plan.intensity].title.toLowerCase() })}{turn.revealed ? t("debriefDialog.revealed", { title: String(attacks.find(attack => attack.id === turn.revealed)?.title) }) : say(turn.narrative)}</small></p>
-              </div>
-            ))}
-            </details>
-          </section>
           {(game.decisions.length > 0 || game.commandHistory.length > 0 || game.setPieceHistory.length > 0) && (
             <div className="decision-summary" id="debrief-decisions">
               <details className="debrief-fold">
