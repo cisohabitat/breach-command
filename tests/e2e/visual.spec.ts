@@ -91,9 +91,11 @@ test.describe("visual baselines", () => {
       if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
       await page.locator(".topology-detail > summary").click();
       await page.locator(".map-intel-detail > summary").click();
-      // Capture the whole reference panel without the unrelated sticky tabs
-      // covering its title or first node during the locator's automatic scroll.
-      const staticTabs = await page.addStyleTag({ content: ".workspace-tabs { position: static !important; }" });
+      // Isolate this panel from the unrelated navigation and its decorative
+      // meter copy. Making the nav static alone loses the copy's positioning
+      // anchor and can paint it across the map. Full workspace captures and
+      // interaction tests retain and verify the real pinned readout strip.
+      const staticTabs = await page.addStyleTag({ content: ".workspace-tabs { position: static !important; } .pinned-readouts { display: none !important; }" });
       await expect(page.locator(".infrastructure-console")).toHaveScreenshot(`${width}-infrastructure-map.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
       await staticTabs.evaluate(element => element.parentNode?.removeChild(element));
       await page.getByRole("button", { name: /^Briefing/ }).first().click();

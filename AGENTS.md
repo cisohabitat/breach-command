@@ -314,6 +314,9 @@ These instructions apply to the entire repository. Preserve the game as a polish
   Keep native disclosures, costs and map availability unchanged. Audit expanded
   notes in ordinary/high contrast and retain all-sector/width map checks, iPad
   toolbar checks and reviewed expanded-map/compact-workspace pixel baselines.
+  Isolated map captures suppress unrelated sticky navigation and its decorative
+  readout copy together; making only the nav static loses the copy's anchor.
+  Full workspace screenshots and interaction checks keep the real strip visible.
   Equivalent selector factoring must preserve specificity and declarations;
   never raise the CSS budget to accommodate this layout.
 
