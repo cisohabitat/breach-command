@@ -1,5 +1,12 @@
 # Art direction
 
+Unavailable controls (18 October 2026, user approved): keep names, descriptions,
+costs and reasons at readable contrast. Mute decorative icons and use dashed
+rules instead of reducing the opacity of an entire button or text-bearing
+child. Keep cooldown words and the remaining duration visible together on
+phones. Preserve native disabled states, source order and all availability
+rules; selected or recorded facts retain their existing labels and markers.
+
 Infrastructure and workspace polish (18 October 2026, user approved): use
 distinct circle, eye, shield-off and checked-circle icons beside explicit
 unassessed, monitored, isolated and restored labels. Collection counts have

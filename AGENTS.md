@@ -305,6 +305,14 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Change discipline
 
+- Disabled-control readability (0.9.55): do not fade a whole control or its
+  text-bearing children. Keep action names, costs, reasons and cooldown duration
+  at readable text contrast. Use muted decorative icons and dashed rules for
+  unavailable actions, retaining native `disabled` and existing availability.
+  Keep the cooldown footer visible on phones. Axe exempts disabled text;
+  `disabled-controls.spec.ts` separately checks its visible contrast, including
+  inherited opacity, all eleven widths and ordinary/high-contrast modes.
+
 - Infrastructure clarity (0.9.54): node icons and words show recorded control
   posture, with collection counts separately. Do not infer compromised/clear
   nodes or confirmed trust paths from node order, technique count or collection

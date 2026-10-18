@@ -175,12 +175,13 @@
 .established-label .nowrap {
   white-space:nowrap;
 }
-.cooling {
-  opacity:.48;
-  background:#1a1c20;
+.investigation-dashboard .procedure-grid .procedure-card:disabled {
+  color:var(--text-soft);
+  border-bottom:1px dashed var(--line);
+  background:var(--background);
 }
 .cooling .procedure-badge {
-  color:#d5c189;
+  color:var(--text-soft);
 }
 .captain-answer {
   font-size:var(--type-body);
@@ -2338,9 +2339,6 @@
   justify-content:center;
   gap:7px;
 }
-.correlate-button:disabled {
-  opacity:.4;
-}
 .correlation-results {
   display:grid;
   gap:7px;
@@ -2621,9 +2619,6 @@
   margin-inline-start:8px;
   font:600 var(--type-micro) var(--font-mono);
   color:var(--lime);
-}
-.case-theory button:disabled {
-  opacity:.55;
 }
 .evidence-timeline {
   display:flex;
@@ -3283,8 +3278,10 @@
 .map-command-bar>button:hover:not(:disabled) {
   border-color:var(--sector-accent);
 }
-.map-command-bar>button:disabled {
-  opacity:.42;
+.correlate-button:disabled,.case-theory button:disabled,.map-command-bar>button:disabled {
+  color:var(--text-soft);
+  border-bottom:1px dashed var(--line);
+  background:none;
 }
 .map-command-bar span {
   display:flex;
@@ -5975,14 +5972,10 @@ span.effect-list>span.effect.term>em {
   font-size:var(--type-caption);
   font-style:italic;
 }
-/* A cooling source is dimmed in its words, not filled: on a phone the whole
-   cell turned grey where the table's rules showed through its opacity. */
-.investigation-dashboard .procedure-grid .procedure-card.cooling {
-  opacity:1;
-  background:var(--background);
-}
-.investigation-dashboard .procedure-grid .procedure-card.cooling>* {
-  opacity:.5;
+/* Availability marks the frame and decorative icon, keeping names, costs and
+   cooldown explanations readable at full text contrast. */
+.procedure-card:disabled .procedure-code,.correlate-button:disabled svg {
+  opacity:.45;
 }
 .advanced-setup {
   border:0;
@@ -6602,9 +6595,7 @@ span.effect-list>span.effect.pace.worse>em {
   .procedure-section .section-heading p {
     font-size:var(--type-micro);
   }
-  /* The cards themselves: the icon row and the bottom status line both restate
-     what the badge already says, so on a phone the card keeps its title, its
-     one-line description and the labels that carry state. */
+  /* Keep a compact title and description, with availability stated in words. */
   .investigation-dashboard .procedure-card {
     min-height:0;
     padding:11px;
@@ -6629,9 +6620,8 @@ span.effect-list>span.effect.pace.worse>em {
     font-size:var(--type-body);
     line-height:1.2;
   }
-  /* The footer is the only place the established bonus is stated, so on an
-     established card it stays, compact and without the chevron. */
-  .investigation-dashboard .procedure-card.established:not(.cooling) .procedure-bottom {
+  /* Keep cooldown words beside the duration as well as established labels. */
+  .investigation-dashboard .procedure-card:is(.established,.cooling) .procedure-bottom {
     display:flex;
     padding-top:6px;
     font-size:var(--type-micro);
