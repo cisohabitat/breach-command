@@ -310,7 +310,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
   nodes or confirmed trust paths from node order, technique count or collection
   focus. Unblocked topology paths are unassessed; isolation marks incident
   paths blocked. Keep complete endpoint names on separate lines and blocked
-  text at full contrast. Panel headings share `.section-heading`; native folds
+  text at full contrast. Route verbs use `--text-soft`; audit expanded trust
+  relationships, whose old grey failed AA. Panel headings share `.section-heading`; native folds
   retain labelled summaries and plus/minus markers. Short screens compact
   spacing and place identity beside meters, preserving warnings, action costs
   and touch targets; sector alerts span the full header width.

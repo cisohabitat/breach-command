@@ -152,7 +152,8 @@ The first-operation academy asks players to test their reading and explains that
 Guided Training keeps the first two checks focused on choosing a working reading, testing it and interpreting the result. The opening defines "hypothesis" alongside that phrase and shows one academy lesson at a time. Map, specialist and evidence reference material starts folded on every screen size, with manual access throughout; desktop reference expands after two checks or when theory/comparison becomes useful. Reports show actual turn effects and why they occurred before optional roll calculations. Longer check explanations are available on request, while turn costs and exact plan effects remain visible. Guidance-off and Expert retain their usual reference layout.
 
 Workspace panels share a title and metadata hierarchy, and reference folds use
-plus/minus markers alongside their labels. On landscape screens above 650 px
+plus/minus markers alongside their labels. Expanded trust relationships retain
+readable endpoint names, verbs and status text. On landscape screens above 650 px
 wide and up to 700 px high, the case header and meters sit beside one another
 with tighter spacing. Meters, warnings, action costs and decisions stay visible.
 
