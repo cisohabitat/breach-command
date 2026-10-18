@@ -43,16 +43,16 @@ test("the rattle decelerates and lands within the visible roll", async t => {
   assert.equal(voices.length, 9);
   const starts = voices.map(voice => voice.starts[0]);
   assert.equal(starts[0], 10);
-  assert.equal(starts.at(-1), 10.82);
+  assert.equal(Math.round((starts.at(-1)! - starts[0]) * 1000), 1351);
   const gaps = starts.slice(1).map((time, index) => time - starts[index]);
   assert.ok(gaps.every((gap, index) => index === 0 || gap >= gaps[index - 1] - 1e-9));
-  assert.ok(voices.every(voice => voice.stops[0]! <= 10.85));
+  assert.ok(voices.every(voice => voice.stops[0]! <= 11.4));
 });
 
 test("muted, hidden and expired rolls create no audio context", async t => {
   const muted = await audio(t);
   muted.play(false);
-  muted.play(true, 850);
+  muted.play(true, 1400);
   assert.equal(muted.contexts(), 0);
   Object.defineProperty(globalThis, "document", { configurable: true, value: { hidden: true } });
   muted.play();
@@ -61,9 +61,9 @@ test("muted, hidden and expired rolls create no audio context", async t => {
 
 test("a late audio load schedules only the remaining impacts", async t => {
   const { play, voices } = await audio(t);
-  play(true, 500);
-  assert.deepEqual(voices.map(voice => voice.starts[0]), [10.15, 10.32]);
-  assert.ok(voices.every(voice => voice.stops[0]! <= 10.35));
+  play(true, 1100);
+  assert.deepEqual(voices.map(voice => voice.starts[0]), [10.251]);
+  assert.ok(voices.every(voice => voice.stops[0]! <= 10.3));
 });
 
 test("cancelling stops every scheduled impact, including the landing", async t => {

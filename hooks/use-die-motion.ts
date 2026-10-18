@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { DICE_ROLL_MS } from "@/lib/dice-timing";
 
 // Animate the decorative twenty-face shell within its tray. The
 // actual roll lives in the session; motion never chooses or delays its result.
@@ -16,7 +17,7 @@ export function useDieMotion(rolling: boolean, settled: boolean) {
       { transform: "translate3d(8px,12px,0) rotateX(-12deg) rotateY(20deg) rotateZ(5deg)", offset: .72 },
       { transform: "translate3d(-3px,-4px,4px) rotateX(4deg) rotateY(-6deg)", offset: .87 },
       { transform: "none" },
-    ], { duration: 850, easing: "ease-out" });
+    ], { duration: DICE_ROLL_MS, easing: "ease-out" });
     const stop = () => { if (motion.matches) animation.cancel(); };
     motion.addEventListener("change", stop);
     return () => { animation.cancel(); motion.removeEventListener("change", stop); };

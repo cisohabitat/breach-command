@@ -2,6 +2,7 @@
 // confirmed), a failed check, a warning, a decision, and the two endings. A find
 // once shared the empty check's voice, and a lost operation the escalation's.
 import { feedbackAudioContext } from "./audio-context.ts";
+import { DICE_ROLL_MS } from "./dice-timing.ts";
 
 export type FeedbackCue = "open" | "success" | "find" | "failure" | "warning" | "decision" | "complete" | "lost";
 
@@ -474,12 +475,14 @@ let streak = 0;
 // is swallowed here so that it can never interrupt the transition that asked for
 // the cue.
 // A neutral physical roll, independent of the eventual die or hidden outcome.
-// elapsed keeps a late lazy import on the original 850 ms animation timeline.
+// Keep the same decelerating pattern stretched to the visible throw timeline.
+const diceImpacts = [0, 35, 90, 150, 230, 340, 480, 650, 820].map(offset => Math.round(offset * DICE_ROLL_MS / 850));
+// elapsed keeps a late lazy import on the original animation timeline.
 export function playDiceRoll(sound = true, elapsed = 0): () => void {
   const sources: AudioBufferSourceNode[] = [];
   const stop = () => { for (const source of sources) { try { source.stop(); } catch {} } };
   try {
-    if (!sound || !Number.isFinite(elapsed) || elapsed < 0 || elapsed >= 820 || typeof window === "undefined" || document.hidden) return stop;
+    if (!sound || !Number.isFinite(elapsed) || elapsed < 0 || elapsed >= diceImpacts.at(-1)! || typeof window === "undefined" || document.hidden) return stop;
     const bus = ensureGraph();
     if (!bus) return stop;
     const noise = bus.context.createBuffer(1, Math.ceil(bus.context.sampleRate * 0.024), bus.context.sampleRate);
@@ -487,7 +490,7 @@ export function playDiceRoll(sound = true, elapsed = 0): () => void {
     const random = mulberry32(0xd20);
     for (let i = 0; i < samples.length; i++) samples[i] = random() * 2 - 1;
     const now = bus.context.currentTime;
-    [0, 35, 90, 150, 230, 340, 480, 650, 820].forEach((offset, index) => {
+    diceImpacts.forEach((offset, index) => {
       if (offset < elapsed) return;
       const source = bus.context.createBufferSource();
       const filter = bus.context.createBiquadFilter();

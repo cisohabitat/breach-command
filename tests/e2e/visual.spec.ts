@@ -114,7 +114,7 @@ test.describe("visual baselines", () => {
       await page.clock.install({ time });
       await page.clock.pauseAt(new Date(time.getTime() + 1000));
       await page.getByRole("button", { name: "Run procedure", exact: true }).click();
-      await page.clock.runFor(850);
+      await page.clock.runFor(1400);
       await expect(page.locator(".roll-dialog .die")).not.toHaveClass(/rolling/);
       await expect(page.locator(".roll-dialog")).toHaveScreenshot(`${width}-settled-die.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
     });

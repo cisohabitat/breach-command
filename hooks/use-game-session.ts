@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { DICE_ROLL_MS, DICE_REVEAL_MS } from "@/lib/dice-timing";
 import type {
   Difficulty,
   GameMode,
@@ -302,13 +303,13 @@ export function useGameSession() {
         else {
           setDie(next.turns.at(-1)!.raw);
           setDieSettled(true);
-          timers.current.push(setTimeout(() => finish(next), 500));
+          timers.current.push(setTimeout(() => finish(next), DICE_REVEAL_MS));
         }
       } catch (error) {
         releaseRoll();
         throw error;
       }
-    }, quick ? 0 : 850);
+    }, quick ? 0 : DICE_ROLL_MS);
     timers.current.push(timeout);
 
     const resolveRun = (next: Game) => {

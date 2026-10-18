@@ -60,7 +60,7 @@ async function holdRoll(page: Page) {
 }
 
 for (const reducedMotion of ["reduce", "no-preference"] as const) {
-  test(`the final die stays still for 500 ms before the report (${reducedMotion})`, async ({ page }) => {
+  test(`the throw lasts 1400 ms and the result stays for 900 ms (${reducedMotion})`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion });
     await prepare(page, false);
     await holdRoll(page);
@@ -70,14 +70,17 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
     await expect(shell).toHaveAttribute("aria-hidden", "true");
     expect(await page.evaluate(() => window.diceProbe.tumbles)).toBe(reducedMotion === "reduce" ? 0 : 1);
     if (reducedMotion === "reduce") await expect(page.locator(".die strong")).toHaveText("—");
-    await page.clock.runFor(750);
+    await page.clock.runFor(1299);
+    await expect(page.locator(".roll-dialog .die")).toHaveClass(/rolling/);
+    await expect(page.locator(".report-dialog")).toHaveCount(0);
+    await page.clock.runFor(1);
     const die = page.locator(".roll-dialog .die");
     await expect(die).toBeVisible();
     await expect(die).not.toHaveClass(/rolling/);
     expect(await shell.evaluate(element => element.getAnimations().length)).toBe(0);
     const number = await die.locator("strong").textContent();
     await expect(page.locator(".report-dialog")).toHaveCount(0);
-    await page.clock.runFor(499);
+    await page.clock.runFor(899);
     await expect(die.locator("strong")).toHaveText(number!);
     await expect(page.locator(".report-dialog")).toHaveCount(0);
     await page.clock.runFor(1);
@@ -103,7 +106,7 @@ test("the used procedure gets a brief receipt after the report closes", async ({
   });
   await holdRoll(page);
   await page.getByRole("button", { name: "Run procedure", exact: true }).click();
-  await page.clock.runFor(1350);
+  await page.clock.runFor(2300);
   const report = page.locator(".report-dialog");
   await expect(report).toBeVisible();
   await page.keyboard.press("Escape");
@@ -127,7 +130,7 @@ test("enabling reduced motion during a roll cancels its tumble and number cyclin
   await expect.poll(() => page.locator(".die-shell").evaluate(element => element.getAnimations().length)).toBe(0);
   await page.clock.runFor(80);
   await expect(page.locator(".die strong")).toHaveText("—");
-  await page.clock.runFor(1170);
+  await page.clock.runFor(2120);
   await expect(page.locator(".report-dialog")).toBeVisible();
 });
 
@@ -145,7 +148,7 @@ test("a visible roll plays real buffered impacts before its result", async ({ pa
   expect(probe.rollSeen).toBe(true);
   expect(probe.starts.length).toBeGreaterThanOrEqual(2);
   expect(probe.starts.length).toBeLessThanOrEqual(9);
-  expect(probe.starts.at(-1)! - probe.starts[0]).toBeLessThan(0.85);
+  expect(probe.starts.at(-1)! - probe.starts[0]).toBeLessThan(1.4);
   expect(probe.running).toBe(true);
   expect(probe.energy).toBeGreaterThan(0.5);
 });
@@ -165,7 +168,7 @@ test("muting during the roll cancels its impacts and silences the result", async
   await expect.poll(() => page.evaluate(() => window.diceProbe.starts.length)).toBeGreaterThan(0);
   await page.keyboard.press("m");
   await expect.poll(() => page.evaluate(() => window.diceProbe.cancelled)).toBeGreaterThan(0);
-  await page.clock.runFor(1400);
+  await page.clock.runFor(2300);
   await expect(page.locator(".report-dialog")).toBeVisible();
   expect(await page.evaluate(() => window.diceProbe.oscillators)).toBe(0);
 });
