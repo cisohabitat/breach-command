@@ -18,12 +18,14 @@ for (const width of [375, 820, 1194]) for (const reducedMotion of ["reduce", "no
   test(`finding locations highlight without changing the operation at ${width} with ${reducedMotion}`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 1194 ? 834 : 900 });
     await page.emulateMedia({ reducedMotion });
-    await openMap(page);
+    const game = twoStagesGame();
+    await openMap(page, { ...game, focusedNode: infrastructureTopologies[game.scenario].nodes[0].id });
     const before = await page.evaluate(key => localStorage.getItem(key), SESSION_KEY);
     const card = page.locator(".evidence-card").first();
     const link = card.getByRole("link", { name: /^Show location of/ });
     const target = page.locator((await link.getAttribute("href"))!);
     const selectedBefore = await page.locator(".topology-nodes [aria-pressed=true]").getAttribute("id");
+    expect(await target.getAttribute("id")).not.toBe(selectedBefore);
     await link.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator(".infrastructure-console")).toBeFocused();

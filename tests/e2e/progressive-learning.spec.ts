@@ -43,6 +43,12 @@ for (const width of [375, 1280]) {
     await expect(commit).toContainText("Focused scope · Balanced analysis");
     await expect(commit).toContainText("Costs 1 turn");
     await expect(commit.getByRole("button", { name: "Run procedure", exact: true })).toBeInViewport({ ratio: 1 });
+    await page.getByRole("group", { name: "Scope", exact: true }).getByRole("button", { name: /^Enterprise/ }).click();
+    await page.getByRole("group", { name: "Intensity", exact: true }).getByRole("button", { name: /^Rapid/ }).click();
+    await expect(commit).toContainText("Enterprise scope · Rapid analysis");
+    await page.getByRole("group", { name: "Scope", exact: true }).getByRole("button", { name: /^Focused/ }).click();
+    await page.getByRole("group", { name: "Intensity", exact: true }).getByRole("button", { name: /^Balanced/ }).click();
+    await expect(commit).toContainText("Focused scope · Balanced analysis");
     const checkHelp = page.locator(".action-sheet details").filter({ has: page.getByText("How checks affect evidence and pressure", { exact: true }) });
     await expect(checkHelp).toHaveJSProperty("open", false);
     await checkHelp.locator("summary").click();

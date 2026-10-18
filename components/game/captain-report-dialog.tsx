@@ -96,7 +96,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
         </DialogHeader>
         {report && game && <>
           {report.revealed && <ConfirmedFinding report={report} scenario={game.scenario} />}
-          {!decision && <p className="report-next"><strong>{t("captainReportDialog.next")}</strong> {game.status === "response" ? t("captainReportDialog.nextResponse") : ended ? t("captainReportDialog.nextDebrief") : t("captainReportDialog.nextInvestigation")}</p>}
+          {!decision && <p className="report-next"><strong>{t("captainReportDialog.next")}</strong> {game.status === "response" ? t("captainReportDialog.nextResponse") : ended ? t("captainReportDialog.nextDebrief") : game.pendingCommand || game.pendingSetPiece ? t("captainReportDialog.nextCommand") : t("captainReportDialog.nextInvestigation")}</p>}
           {decision && <nav className="report-response-index" aria-label={t("captainReportDialog.findResponse")}>
             <p className="eyebrow">{t("captainReportDialog.readResponses", { count: decision.options.length })}</p>
             <ol>{decision.options.map((option, index) => <li key={option.id}><a href={`#report-response-${option.id}`} onClick={event => {

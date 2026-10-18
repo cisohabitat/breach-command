@@ -6,6 +6,7 @@ export const captainReportDialogMessages = catalogue({
     "next": "Next:",
     "nextResponse": "Enter the response phase to contain and recover.",
     "nextDebrief": "Open the debrief to review the operation.",
+    "nextCommand": "Continue to Command and resolve the waiting decision before another procedure.",
     "nextInvestigation": "Continue investigating to choose your next action.",
     "actualChanges": "After this response: {changes}.",
     "whyChoose": "Why choose “{title}”?",
