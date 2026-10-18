@@ -20,7 +20,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
   return (
     <aside className="captain-column" hidden={activeWorkspace !== "briefing"}>
       <section className="captain-panel">
-        <div className="captain-label"><div><h2>{t("briefingWorkspace.incidentCaptain")}</h2><span>{t("briefingWorkspace.adaptiveComputerFacilitator")}</span></div></div>
+        <div className="captain-label section-heading"><h2>{t("briefingWorkspace.incidentCaptain")}</h2><span className="muted">{t("briefingWorkspace.adaptiveComputerFacilitator")}</span></div>
         <div className="brief-label">{t("briefingWorkspace.situation")}</div>
         <p className="captain-brief"><Glossed text={activeScenario.brief} /></p>
         <div className="captain-divider" />

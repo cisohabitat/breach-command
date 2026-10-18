@@ -1,4 +1,4 @@
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Circle, Eye, ShieldOff, CircleCheck } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
 import { attacks, words, procedureById, getMapActionEffect, infrastructureTopologies, type Game, type MapAction, meterEffect, rollEffect } from "@/lib/advanced-game";
 import { EffectList } from "@/components/game/effect-list";
@@ -30,7 +30,8 @@ function costLine(t: Translate, game: Game, nodeId: string, action: MapAction) {
 // A node's kind and its state on the map, as words: the topology keys on the
 // codes, and the catalogue says them.
 const nodeTypes: Record<string, MessageKey> = { APPLICATION: "infrastructureConsole.typeApplication", ASSET: "infrastructureConsole.typeAsset", CONTROL: "infrastructureConsole.typeControl", EDGE: "infrastructureConsole.typeEdge", EXTERNAL: "infrastructureConsole.typeExternal", IDENTITY: "infrastructureConsole.typeIdentity" };
-const nodeStates: Record<string, MessageKey> = { isolated: "infrastructureConsole.stateIsolated", monitored: "infrastructureConsole.stateMonitored", restored: "infrastructureConsole.stateRestored", affected: "infrastructureConsole.stateAffected", exposed: "infrastructureConsole.stateExposed", clear: "infrastructureConsole.stateClear" };
+const nodeStates: Record<string, MessageKey> = { isolated: "infrastructureConsole.stateIsolated", monitored: "infrastructureConsole.stateMonitored", restored: "infrastructureConsole.stateRestored", normal: "infrastructureConsole.unassessed" };
+const postureIcons = { normal: Circle, monitored: Eye, isolated: ShieldOff, restored: CircleCheck };
 export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
   const { t, rich, say } = useMessages();
   const topology = infrastructureTopologies[game.scenario];
@@ -40,32 +41,31 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
   const criticalFocus = focused.id === topology.critical;
   return (
     <section className="infrastructure-console" aria-label={t("infrastructureConsole.interactiveInfrastructureMap")} tabIndex={-1}>
-      <div className="map-heading"><div><h2>{topology.title}</h2></div><span className="focus-instruction">{t("infrastructureConsole.mapAction2Plural", { count: game.mapActionsRemaining })}{t("infrastructureConsole.left")}</span></div>
+      <div className="map-heading section-heading"><h2>{topology.title}</h2><span className="focus-instruction">{t("infrastructureConsole.mapAction2Plural", { count: game.mapActionsRemaining })}{t("infrastructureConsole.left")}</span></div>
       <div className="incident-flow" aria-hidden="true"><span style={{ width: `${Math.max(8, activeStage / 4 * 100)}%` }} /></div>
       <div className="topology-shell">
         <div className="topology-nodes">
-          {topology.nodes.map((node, index) => {
+          {topology.nodes.map(node => {
             const nodePosture = game.nodePosture[node.id] ?? "normal";
-            const state = nodePosture === "isolated" ? "isolated" : nodePosture === "restored" ? "restored" : index < activeStage ? "affected" : index === activeStage ? "exposed" : "clear";
+            const PostureIcon = postureIcons[nodePosture];
             const critical = node.id === topology.critical;
             const findings = game.evidence.filter(item => sameMessage(item.system, words.node(game.scenario, node.id)) || legacyText(item.system) === node.label).length;
-            return <button key={node.id} className={`${state} ${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
+            return <button key={node.id} className={`${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
               <small>{nodeTypes[node.type] ? t(nodeTypes[node.type]) : node.type}{critical ? t("infrastructureConsole.critical") : ""}</small><strong>{node.label}</strong>
-              {/* Selecting a node no longer hides its state: "SELECTED" in place of
-                  "AFFECTED" took the warning away from the node it was about. */}
-              <em>{game.focusedNode === node.id ? t("infrastructureConsole.selected") : ""}{nodePosture === "isolated" ? t("infrastructureConsole.stateIsolated") : nodePosture === "monitored" ? t("infrastructureConsole.stateMonitored") : nodePosture === "restored" ? t("infrastructureConsole.stateRestored") : findings ? t("infrastructureConsole.collectedHere", { findings }) : t(nodeStates[state])}</em>
+              {/* Collection focus is not proof that a system is compromised. */}
+              <em><PostureIcon size={16} aria-hidden="true" /><span>{game.focusedNode === node.id ? t("infrastructureConsole.selected") : ""}{t(nodeStates[nodePosture])}{findings > 0 && <span className="node-findings">{t("infrastructureConsole.collectedHere", { findings })}</span>}</span></em>
             </button>;
           })}
         </div>
         <details className="topology-detail">
           <summary>{rich("infrastructureConsole.trustRelationshipsSpan", { edges: topology.edges.length, count: topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length }, { span: chunk => <span>{chunk}</span> })}</summary>
-          <div className="topology-routes" role="group" aria-label={t("infrastructureConsole.trustRelationships")}>{topology.edges.map((edge, index) => {
+          <div className="topology-routes" role="group" aria-label={t("infrastructureConsole.trustRelationships")}>{topology.edges.map(edge => {
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
-          return <div className={isolated ? "route-blocked" : index < Math.max(0, activeStage - 1) ? "route-confirmed" : index === Math.max(0, activeStage - 1) ? "route-suspected" : ""} key={`${edge.from}-${edge.to}`}>
+          return <div className={isolated ? "route-blocked" : ""} key={`${edge.from}-${edge.to}`}>
             <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
             <b className="route-relation">{say(lit(edge.label, "lower"))}</b>
             <span className="route-target">{topology.nodes.find(node => node.id === edge.to)?.label}</span>
-            <i className="route-status">{isolated ? t("infrastructureConsole.blocked2") : index < Math.max(0, activeStage - 1) ? t("infrastructureConsole.confirmed") : index === Math.max(0, activeStage - 1) ? t("infrastructureConsole.suspected") : t("infrastructureConsole.unassessed")}</i>
+            <i className="route-status">{isolated ? <ShieldOff size={14} aria-hidden="true" /> : <Circle size={14} aria-hidden="true" />}{isolated ? t("infrastructureConsole.blocked2") : t("infrastructureConsole.unassessed")}</i>
           </div>;
         })}</div>
         </details>

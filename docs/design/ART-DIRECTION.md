@@ -1,5 +1,15 @@
 # Art direction
 
+Infrastructure and workspace polish (18 October 2026, user approved): use
+distinct circle, eye, shield-off and checked-circle icons beside explicit
+unassessed, monitored, isolated and restored labels. Collection counts have
+their own line; a collection location does not prove compromise. Technique
+count does not confirm trust relationships. Give each connection endpoint its
+own line, with blocked/unassessed words and markers. Keep blocked text at full
+contrast. Reuse section title/metadata hierarchy across the three workspaces
+and plus/minus markers on reference folds. At landscape widths above 650 px
+and heights up to 700 px, reduce empty spacing without concealing content.
+
 Dice and report polish (17 October 2026, user approved): use a faceted d20
 illustration in bone ink instead of a rounded dice box. Its decorative shell
 tumbles for the existing 850 ms; the upright number remains readable and the

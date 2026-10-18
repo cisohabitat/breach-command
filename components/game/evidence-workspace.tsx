@@ -44,7 +44,7 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, v
   };
   return (
     <section className="evidence-workspace" aria-label={t("evidenceWorkspace.evidenceCorrelationWorkspace")} tabIndex={-1}>
-      <div className="map-heading"><div><h2>{t("evidenceWorkspace.evidenceWorkspace")}</h2></div><span className="focus-instruction">{t("evidenceWorkspace.correlationsTested", { count: game.correlations.length })}</span></div>
+      <div className="map-heading section-heading"><h2>{t("evidenceWorkspace.evidenceWorkspace")}</h2><span className="focus-instruction">{t("evidenceWorkspace.correlationsTested", { count: game.correlations.length })}</span></div>
       {game.difficulty === "training" && game.mode !== "expert" && !!game.evidence.length && <SignalGuide />}
       <details className="theory-guide decision-primer" open={game.difficulty !== "training" || game.mode === "expert" || confirmed >= 2 || !!game.caseTheory}>
         <summary>{t("evidenceWorkspace.theoryWhenReady")}</summary>

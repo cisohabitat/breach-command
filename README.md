@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.53**: see the [release notes](CHANGELOG.md#0953-18-october-2026).
+Release **0.9.54**: see the [release notes](CHANGELOG.md#0954-18-october-2026).
 
 The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones use a dedicated composition with extra sky and terrace space to keep the embedded logo fully visible. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 
@@ -117,7 +117,7 @@ Procedure checks use a d20, but evidence-led reasoning now carries more weight t
 - **Distinct adaptive adversaries:** recurring threat groups have signature mechanics, learn from procedure use, hypotheses and command posture, and can move to less-exposed routes.
 - **Progressive attribution:** threat-group identity is withheld until the evidence supports behavioural, suspected, probable and attributed confidence levels.
 - **Focused command workspace:** Command, Investigate and Briefing views keep the immediate decision, analytical work and supporting context separate without removing information. The three readouts that decide an operation — business impact, service integrity and adversary progress — sit together above the workspaces, and the investigation window reads as context under the incident title. First-time guidance names the next move and links directly to the relevant workspace. Guidance is tiered: guided reflection offers strategic prompts and Expert disables guidance entirely. Training prompts the next step in the reasoning — record a reading, test it with one of its own evidence sources, revise it when those sources come back empty, compare two findings once you hold them — and surfaces the observation behind the next unconfirmed stage so the opening hypothesis is a judgement rather than a guess. It never names the source to click, so it cannot contradict what the cards say.
-- **Playable infrastructure command maps:** each incident has its own topology of four to seven nodes, a distinct trust-edge set, its own documented critical dependency and scarce monitoring and isolation actions with post-recovery state.
+- **Playable infrastructure command maps:** each incident has its own topology of four to seven nodes, a distinct trust-edge set, its own documented critical dependency and scarce monitoring and isolation actions with post-recovery state. Icons and words distinguish unassessed, monitored, isolated and restored systems; collection counts stay separate. A collected finding does not identify a compromised system, and an open trust path remains unassessed. Connection endpoints have full-width lines for readable names.
 - **Living incident presentation:** visible propagation, node posture, sector conditions, adaptive specialist transmissions and sector-specific ambient scoring respond to the operation. Healthcare, energy and telecommunications incidents also include dedicated live operating views for clinical services, engineering margins and routing domains.
 - **Evidence workspace:** successful actions build a timeline. Players declare an objective theory, select findings, judge the relationship as causal or coincidental, and receive consequences for unsupported inference.
 - **Signal and confidence:** findings distinguish direct stage evidence from support for its causal interpretation. Exhaustive collection and supported comparisons across different sources strengthen confidence; Training teaches all four combinations. The same assessment appears before command decisions and in the review. Reports keep both labels and the causal-limit warning visible, with the longer confidence basis available in a disclosure. See [the model](docs/design/SIGNAL-CONFIDENCE.md).
@@ -150,6 +150,11 @@ Investigation task prompts use a quiet margin rule, with the available case-theo
 The first-operation academy asks players to test their reading and explains that a result may support or challenge it. Procedure labels describe own sources without claiming that an unrun check already supports the hypothesis.
 
 Guided Training keeps the first two checks focused on choosing a working reading, testing it and interpreting the result. The opening defines "hypothesis" alongside that phrase and shows one academy lesson at a time. Map, specialist and evidence reference material starts folded on every screen size, with manual access throughout; desktop reference expands after two checks or when theory/comparison becomes useful. Reports show actual turn effects and why they occurred before optional roll calculations. Longer check explanations are available on request, while turn costs and exact plan effects remain visible. Guidance-off and Expert retain their usual reference layout.
+
+Workspace panels share a title and metadata hierarchy, and reference folds use
+plus/minus markers alongside their labels. On landscape screens above 650 px
+wide and up to 700 px high, the case header and meters sit beside one another
+with tighter spacing. Meters, warnings, action costs and decisions stay visible.
 
 The game does not call an AI service, inspect real systems or transmit incident information.
 

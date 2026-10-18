@@ -305,6 +305,18 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Change discipline
 
+- Infrastructure clarity (0.9.54): node icons and words show recorded control
+  posture, with collection counts separately. Do not infer compromised/clear
+  nodes or confirmed trust paths from node order, technique count or collection
+  focus. Unblocked topology paths are unassessed; isolation marks incident
+  paths blocked. Keep complete endpoint names on separate lines and blocked
+  text at full contrast. Panel headings share `.section-heading`; native folds
+  retain labelled summaries and plus/minus markers. Short screens compact
+  spacing and place identity beside meters, preserving warnings, action costs
+  and touch targets; sector alerts span the full header width.
+  `infrastructure-map.spec.ts` covers all eleven widths, three short heights,
+  keyboard selection and real control actions in all three browser engines.
+
 - Clarity pass 0.9.53: live attack-chain states derive only from confirmed attack IDs and their published stage, never the unrevealed chain. Mark the first open stage with `aria-current="step"`, an arrow, words and an outline; confirmed and other unknown stages retain distinct icons and labels. No current marker remains outside investigation. Evidence-link endpoints show their recorded source and reuse `EvidenceAxes`, keeping signal neutral and confidence separately labelled. Review milestones associate decisions with their recorded finding, not an invented timestamp; command and sector records without timestamps stay in the decisions section. Keep the complete check log (reading, plan, narrative and actual meter deltas) available in its own disclosure. Section-index navigation opens the containing fold without expanding its nested check log. Preserve ordinary and high-contrast layouts and the existing CSS budgets.
 
 - Visual hierarchy (0.9.49): investigation prompts carry a quiet margin rule; the already-available theory/comparison action uses `.next-action`. Never select a preferred procedure from hidden state or reorder sources to imply an answer. Keep procedure titles stronger than supporting descriptions, and source/status labels together in `.procedure-state`, including cooldown, blind-source and Expert withholding behavior. Field-kit miniatures use 28 px frames, report evidence art stays 3:2, and specialist portraits use `DecorativeImage` for the shared load/failure handling. A confirmed report finding has its own heading before the response index; keep all response links visible on the first report screen at the required widths. Preserve exact effects, rationale disclosures, pending-decision focus and the more-responses footer. Recheck hover contrast as well as idle controls: a later generic hover rule previously overrode the emphasized action's background. Remove obsolete overridden procedure rules rather than relaxing the CSS budget for hierarchy changes.
