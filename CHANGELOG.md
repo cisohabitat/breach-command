@@ -4,6 +4,15 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.55, 18 October 2026
+
+- Keep unavailable action names, costs and explanations at readable contrast.
+  Muted decorative icons and dashed rules distinguish disabled controls while
+  preserving their native disabled behavior and existing availability rules.
+- Keep the cooldown label and remaining duration visible together on phones.
+- Check disabled text contrast explicitly across phone, iPad and desktop
+  layouts, including high contrast, because accessibility audits exempt it.
+
 ## 0.9.54, 18 October 2026
 
 - Give infrastructure controls distinct icons and written states, with collection

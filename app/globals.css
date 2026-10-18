@@ -1788,7 +1788,9 @@ html,body {
   color:var(--text-heading);
 }
 .workspace-tabs button:disabled {
-  opacity:.45;
+  color:var(--text-soft);
+  border-bottom-color:var(--line);
+  border-bottom-style:dashed;
 }
 .workspace-tabs button>span {
   display:flex;

@@ -85,6 +85,7 @@ test.describe("visual baselines", () => {
       game = resolveMapAction(game, nodes[1].id, "isolate");
       await openWithSave(page, game, false, { voice: false, sound: false });
       await resume(page);
+      await expect(page.locator(".procedure-card.cooling").first()).toHaveScreenshot(`${width}-cooldown.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
       await page.getByRole("button", { name: /^Investigate/ }).first().click();
       const reference = page.locator(".reference-fold");
       if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
