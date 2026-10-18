@@ -321,6 +321,11 @@ These instructions apply to the entire repository. Preserve the game as a polish
   interaction checks keep the real strip visible. Verify the expanded-map
   return, selected tab, pinned readouts and unobscured Captain heading before
   capturing Briefing; never add a competing scroll just for its screenshot.
+  For the pinned-tab return, assert the visible control's bounds and click its
+  screen coordinates. Locator click's automatic scrollIntoView can unpin an
+  already-visible sticky tab before the click, changing the position under
+  test. Keep the real 820×1180 pointer regression across all three engines,
+  including the deliberate page-top return, and preserve focus recovery.
   Equivalent selector factoring must preserve specificity and declarations;
   never raise the CSS budget to accommodate this layout.
 

@@ -118,3 +118,31 @@ for (const [width, height] of [[1024, 768], [1080, 810], [1194, 834]]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
+
+test("expanded map returns to a readable Briefing at 820×1180", async ({ page }) => {
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await openMap(page);
+  await page.locator(".map-intel").scrollIntoViewIfNeeded();
+  const tabs = page.locator(".workspace-tabs");
+  await expect(tabs.locator(".pinned-readouts")).toBeVisible();
+  const briefing = await tabs.getByRole("button", { name: /^Briefing/ }).boundingBox();
+  expect(briefing).not.toBeNull();
+  expect(briefing!.x).toBeGreaterThanOrEqual(0);
+  expect(briefing!.x + briefing!.width).toBeLessThanOrEqual(820);
+  expect(briefing!.y).toBeGreaterThanOrEqual(0);
+  expect(briefing!.y + briefing!.height).toBeLessThanOrEqual(1180);
+  await page.mouse.click(briefing!.x + briefing!.width / 2, briefing!.y + briefing!.height / 2);
+  await expect(tabs.getByRole("button", { name: /^Briefing/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(tabs.locator(".pinned-readouts")).toBeVisible();
+  await expect.poll(() => page.locator(".captain-label").evaluate(element => {
+    const heading = element.getBoundingClientRect();
+    const readouts = document.querySelector(".pinned-readouts")!.getBoundingClientRect();
+    return heading.top >= readouts.bottom && heading.bottom <= innerHeight;
+  })).toBe(true);
+  // Someone who deliberately returned to the page top keeps that position.
+  await page.evaluate(() => window.scrollTo({ top: 0 }));
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  await tabs.getByRole("button", { name: /^Command/ }).click();
+  await expect(tabs.getByRole("button", { name: /^Command/ })).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+});

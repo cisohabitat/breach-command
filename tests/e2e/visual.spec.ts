@@ -100,7 +100,16 @@ test.describe("visual baselines", () => {
       } finally {
         await hiddenTabs.evaluate(element => element.parentNode?.removeChild(element));
       }
-      await page.getByRole("button", { name: /^Briefing/ }).first().click();
+      await expect.poll(() => page.locator(".workspace-tabs").evaluate(element => element.getBoundingClientRect().top)).toBe(0);
+      // Locator click's scrollIntoView can unpin this already-visible tab.
+      // Click where the player sees it, without an extra automation scroll.
+      const briefing = await page.getByRole("button", { name: /^Briefing/ }).first().boundingBox();
+      expect(briefing).not.toBeNull();
+      expect(briefing!.x).toBeGreaterThanOrEqual(0);
+      expect(briefing!.x + briefing!.width).toBeLessThanOrEqual(width);
+      expect(briefing!.y).toBeGreaterThanOrEqual(0);
+      expect(briefing!.y + briefing!.height).toBeLessThanOrEqual(height);
+      await page.mouse.click(briefing!.x + briefing!.width / 2, briefing!.y + briefing!.height / 2);
       await expect(page.getByRole("button", { name: /^Briefing/ }).first()).toHaveAttribute("aria-pressed", "true");
       await expect(page.locator(".captain-column")).toBeVisible();
       if (width > 650) await expect(page.locator(".pinned-readouts")).toBeVisible();
