@@ -38,6 +38,11 @@ for (const width of [375, 1280]) {
     await next.click();
     await source.click();
     await expect(page.locator(".action-sheet")).toContainText("Starting plan:");
+    const commit = page.locator(".procedure-commit");
+    await expect(commit).toContainText("Identity audit");
+    await expect(commit).toContainText("Focused scope · Balanced analysis");
+    await expect(commit).toContainText("Costs 1 turn");
+    await expect(commit.getByRole("button", { name: "Run procedure", exact: true })).toBeInViewport({ ratio: 1 });
     const checkHelp = page.locator(".action-sheet details").filter({ has: page.getByText("How checks affect evidence and pressure", { exact: true }) });
     await expect(checkHelp).toHaveJSProperty("open", false);
     await checkHelp.locator("summary").click();
@@ -49,6 +54,8 @@ for (const width of [375, 1280]) {
     await expect(report).toContainText("Stage tested");
     const details = report.locator(".report-collection-details");
     await expect(details).toHaveJSProperty("open", false);
+    await expect(report.locator(".report-narrative")).toBeVisible();
+    await expect(details.locator(".report-narrative")).toHaveCount(0);
     await expect(report.locator(".turn-movement")).toContainText("This turn");
     await expect(report.locator(".turn-movement .effect-list")).toBeVisible();
     await expect(details.locator(".turn-movement")).toHaveCount(0);

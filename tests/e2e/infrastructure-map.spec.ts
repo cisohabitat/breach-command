@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { attacks, infrastructureTopologies, newGame, type Game } from "../../lib/advanced-game";
 import { openWithSave, twoStagesGame } from "./fixtures";
+import { SESSION_KEY } from "../../lib/session";
 
 async function openMap(page: Page, game: Game = twoStagesGame()) {
   await openWithSave(page, game, false, { voice: false, sound: false });
@@ -11,6 +12,35 @@ async function openMap(page: Page, game: Game = twoStagesGame()) {
   await page.locator(".topology-detail > summary").click();
   await page.locator(".map-intel-detail > summary").click();
   return page.locator(".infrastructure-console");
+}
+
+for (const width of [375, 820, 1194]) for (const reducedMotion of ["reduce", "no-preference"] as const) {
+  test(`finding locations highlight without changing the operation at ${width} with ${reducedMotion}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 1194 ? 834 : 900 });
+    await page.emulateMedia({ reducedMotion });
+    await openMap(page);
+    const before = await page.evaluate(key => localStorage.getItem(key), SESSION_KEY);
+    const card = page.locator(".evidence-card").first();
+    const link = card.getByRole("link", { name: /^Show location of/ });
+    const target = page.locator((await link.getAttribute("href"))!);
+    const selectedBefore = await page.locator(".topology-nodes [aria-pressed=true]").getAttribute("id");
+    await link.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator(".infrastructure-console")).toBeFocused();
+    await expect(target).toHaveClass(/finding-location/);
+    await expect(target).toBeInViewport({ ratio: 1 });
+    await expect(target).toContainText("Finding location");
+    expect(await page.locator(".topology-nodes [aria-pressed=true]").getAttribute("id")).toBe(selectedBefore);
+    await expect(card.locator("button")).toHaveAttribute("aria-pressed", "false");
+    expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toBe(before);
+    // Repeat navigation restarts the temporary cue; it must not persist on reload.
+    await link.focus();
+    await page.keyboard.press("Enter");
+    await expect(target).toHaveClass(/finding-location/);
+    await expect(target).not.toHaveClass(/finding-location/, { timeout: 7000 });
+    await expect(target.locator(".node-findings")).toContainText("collected here");
+    expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toBe(before);
+  });
 }
 
 for (const width of [320, 1280]) {

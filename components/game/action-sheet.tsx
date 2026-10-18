@@ -66,13 +66,17 @@ export function ActionSheet({ session }: { session: GameSession }) {
             <div role="group" aria-label={t("actionSheet.scope2")}><span className="eyebrow">{t("actionSheet.scope2")}</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureScopes[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureScopes[id].modifier), meterEffect(game, "impact", procedureScopes[id].impact), meterEffect(game, "objective", procedureScopes[id].objective)]} /></button>)}</div></div>
             <div role="group" aria-label={t("actionSheet.intensity")}><span className="eyebrow">{t("actionSheet.intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureIntensities[id].modifier), meterEffect(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && t("actionSheet.sourceRestsLonger", { count: procedureIntensities[id].cooldown })]} /></button>)}</div></div>
           </div>
-          <p className="muted small">{t("actionSheet.turnCost")}</p>
           <details className="modifier-details" key={proc.id}>
             <summary>{t("actionSheet.checkDetails")}</summary>
             <p className="muted small">{t("actionSheet.successRevealsStage")}</p>
             <p className="relationship-helper">{t("actionSheet.evidenceConfidence")}</p>
           </details>
-          <button className="primary-button full" onClick={() => run(proc.id)}>{t("actionSheet.runProcedure")}</button>
+          <div className="procedure-commit">
+            <strong>{proc.title}</strong>
+            <small>{t("actionSheet.commitPlan", { scope: procedureScopes[actionScope].title, intensity: procedureIntensities[actionIntensity].title })}</small>
+            <p id="procedure-turn-cost">{t("actionSheet.turnCost")}</p>
+            <button className="primary-button full" aria-describedby="procedure-turn-cost" onClick={() => run(proc.id)}>{t("actionSheet.runProcedure")}</button>
+          </div>
         </>}
       </SheetContent>
     </Sheet>

@@ -77,6 +77,19 @@ test.describe("visual baselines", () => {
   test.skip(({ browserName }) => browserName !== "chromium", "baselines are recorded in Chromium");
 
   for (const [width, height] of widths) {
+    test(`recorded finding location at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
+      await resume(page);
+      const reference = page.locator(".reference-fold");
+      if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
+      await page.clock.install();
+      await page.clock.pauseAt(new Date(Date.now() + 1000));
+      await page.locator(".finding-map-link").first().click();
+      await expect(page.locator(".finding-location")).toHaveCount(1);
+      await expect(page.locator(".topology-nodes")).toHaveScreenshot(`${width}-finding-location.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+    });
+
     test(`map controls at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       let game = twoStagesGame();
@@ -127,6 +140,8 @@ test.describe("visual baselines", () => {
       await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
       await resume(page);
       await page.locator(".procedure-card:not(:disabled)").first().click();
+      await expect(page.locator(".procedure-commit .primary-button")).toBeInViewport({ ratio: 1 });
+      await expect(page.locator(".action-sheet")).toHaveScreenshot(`${width}-procedure-plan.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
       await page.evaluate(() => {
         crypto.getRandomValues = <T extends ArrayBufferView | null>(array: T): T => {
           if (array instanceof Uint32Array) array.fill(0);

@@ -3,6 +3,8 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/evidence-workspace.tsx (app/page.tsx for page), loaded with it.
 export const evidenceWorkspaceMessages = catalogue({
   evidenceWorkspace: {
+    "showLocation": "Show location on map",
+    "locateFinding": "Show location of {title} on map",
     "theoryWhenReady": "Case theory: assess the objective",
     "collectAnotherFinding": "Collect another finding before comparing how they connect.",
     "alreadyCompared": "This pair is already tested. Its result is in Linked evidence. Select a different pair to make another assessment.",

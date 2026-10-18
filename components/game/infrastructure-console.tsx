@@ -32,7 +32,7 @@ function costLine(t: Translate, game: Game, nodeId: string, action: MapAction) {
 const nodeTypes: Record<string, MessageKey> = { APPLICATION: "infrastructureConsole.typeApplication", ASSET: "infrastructureConsole.typeAsset", CONTROL: "infrastructureConsole.typeControl", EDGE: "infrastructureConsole.typeEdge", EXTERNAL: "infrastructureConsole.typeExternal", IDENTITY: "infrastructureConsole.typeIdentity" };
 const nodeStates: Record<string, MessageKey> = { isolated: "infrastructureConsole.stateIsolated", monitored: "infrastructureConsole.stateMonitored", restored: "infrastructureConsole.stateRestored", normal: "infrastructureConsole.unassessed" };
 const postureIcons = { normal: Circle, monitored: Eye, isolated: ShieldOff, restored: CircleCheck };
-export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { game: Game; blocked?: boolean; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
+export function InfrastructureConsole({ game, blocked, highlightedNode, onFocus, onAction }: { game: Game; blocked?: boolean; highlightedNode?: string | null; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
   const { t, rich, say } = useMessages();
   const topology = infrastructureTopologies[game.scenario];
   const activeStage = Math.min(4, game.revealed.length);
@@ -40,7 +40,7 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
   const posture = game.nodePosture[focused.id] ?? "normal";
   const criticalFocus = focused.id === topology.critical;
   return (
-    <section className="infrastructure-console" aria-label={t("infrastructureConsole.interactiveInfrastructureMap")} tabIndex={-1}>
+    <section id="infrastructure-map" className="infrastructure-console" aria-label={t("infrastructureConsole.interactiveInfrastructureMap")} tabIndex={-1}>
       <div className="map-heading section-heading"><h2>{topology.title}</h2><span className="focus-instruction">{t("infrastructureConsole.mapAction2Plural", { count: game.mapActionsRemaining })}{t("infrastructureConsole.left")}</span></div>
       <div className="incident-flow" aria-hidden="true"><span style={{ width: `${Math.max(8, activeStage / 4 * 100)}%` }} /></div>
       <div className="topology-shell">
@@ -50,10 +50,10 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
             const PostureIcon = postureIcons[nodePosture];
             const critical = node.id === topology.critical;
             const findings = game.evidence.filter(item => sameMessage(item.system, words.node(game.scenario, node.id)) || legacyText(item.system) === node.label).length;
-            return <button key={node.id} className={`${nodePosture} ${game.focusedNode === node.id ? "focused" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
+            return <button key={node.id} id={`infrastructure-node-${node.id}`} className={`${nodePosture} ${game.focusedNode === node.id ? "focused" : ""} ${highlightedNode === node.id ? "finding-location" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
               <small>{nodeTypes[node.type] ? t(nodeTypes[node.type]) : node.type}{critical ? t("infrastructureConsole.critical") : ""}</small><strong>{node.label}</strong>
               {/* Collection focus is not proof that a system is compromised. */}
-              <em><PostureIcon size={16} aria-hidden="true" /><span>{game.focusedNode === node.id ? t("infrastructureConsole.selected") : ""}{t(nodeStates[nodePosture])}{findings > 0 && <span className="node-findings">{t("infrastructureConsole.collectedHere", { findings })}</span>}</span></em>
+              <em><PostureIcon size={16} aria-hidden="true" /><span>{game.focusedNode === node.id ? t("infrastructureConsole.selected") : ""}{t(nodeStates[nodePosture])}{findings > 0 && <span className="node-findings" role={highlightedNode === node.id ? "status" : undefined}>{highlightedNode === node.id ? t("infrastructureConsole.findingLocation") : t("infrastructureConsole.collectedHere", { findings })}</span>}</span></em>
             </button>;
           })}
         </div>

@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.60, 18 October 2026
+
+- Keep the selected procedure, live plan, one-turn cost and Run procedure in one pinned action footer.
+- Bring report narratives into the result and state the next step, with calculations still folded away.
+- Link recorded findings to their map locations with a temporary cue that preserves collection focus, comparisons and action counts.
+- Preserve game outcomes, saved data and fixed performance budgets.
+
 ## 0.9.59, 18 October 2026
 
 - Refine the d20 with warm enamel shading, beveled edges, a tumbling arc,

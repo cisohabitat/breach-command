@@ -3,7 +3,8 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/action-sheet.tsx (app/page.tsx for page), loaded with it.
 export const actionSheetMessages = catalogue({
   actionSheet: {
-    "turnCost": "Every check uses a turn. The plan's effects add to that turn's pressure costs.",
+    "turnCost": "Costs 1 turn. Plan effects add to the turn’s pressure costs.",
+    "commitPlan": "{scope} scope · {intensity} analysis",
     "checkDetails": "How checks affect evidence and pressure",
     "evidenceConfidence": "Successful exhaustive collection gives strong confidence within its source's coverage; rapid or balanced collection needs a supported causal comparison across different sources to strengthen its interpretation. Signal strength depends on the finding, not the roll total.",
     "scope": " scope",

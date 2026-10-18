@@ -96,6 +96,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
         </DialogHeader>
         {report && game && <>
           {report.revealed && <ConfirmedFinding report={report} scenario={game.scenario} />}
+          {!decision && <p className="report-next"><strong>{t("captainReportDialog.next")}</strong> {game.status === "response" ? t("captainReportDialog.nextResponse") : ended ? t("captainReportDialog.nextDebrief") : t("captainReportDialog.nextInvestigation")}</p>}
           {decision && <nav className="report-response-index" aria-label={t("captainReportDialog.findResponse")}>
             <p className="eyebrow">{t("captainReportDialog.readResponses", { count: decision.options.length })}</p>
             <ol>{decision.options.map((option, index) => <li key={option.id}><a href={`#report-response-${option.id}`} onClick={event => {
@@ -137,6 +138,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               ))}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
             <section className="report-summary" aria-label={t("captainReportDialog.procedureResult")}>
+              <p className="report-narrative"><Glossed text={say(report.narrative)} /></p>
               {!decision && report.success && game.evidence.filter(item => item.turn === report.number && !item.supports).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}
               {!decision && report.success && !report.revealed && !report.injectReveal && game.difficulty === "training" && game.mode !== "expert" && game.evidence[0]?.turn === report.number && <SignalGuide />}
               {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
@@ -157,7 +159,6 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   "Focused: impact unchanged" in the sheet, then a rise here, as the
                   game going back on its word. The reason says what moved them. */}
               <p className="turn-plan">{t("captainReportDialog.planScopeAnalysis", { procedureScopesTitle: procedureScopes[report.plan.scope].title.toLowerCase(), procedureIntensitiesTitle: procedureIntensities[report.plan.intensity].title.toLowerCase() })}</p>
-              <p className="report-narrative"><Glossed text={say(report.narrative)} /></p>
               </details>
               {/* A completed check that finds nothing rules out every technique its
                   source could have seen, whichever reading it was run under, and this
