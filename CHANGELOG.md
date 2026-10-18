@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.61, 18 October 2026
+
+- Review all ten scenarios and correct scope, evidence and ATT&CK references,
+  including a retired impersonation ID and mappings that described another behavior.
+- State the actual starting effects of all seventy variants, including readout limits.
+- Distinguish public certificates from private keys, require validation of operational
+  changes, and separate treatment safety from proof that cyber access is removed.
+- Correct cargo-record collection to use server evidence and add exhaustive
+  technique-source, variant and response-path regressions.
+
 ## 0.9.60, 18 October 2026
 
 - Keep the selected procedure, live plan, one-turn cost and Run procedure in one pinned action footer, keeping keyboard-focused plan controls clear of it.

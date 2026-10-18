@@ -3,8 +3,9 @@
 // injects, an adaptation, map actions, comparisons, a command event and a
 // crisis). Version 19 stores what the engine writes as messages. Replaying the
 // recorded actions with the same seed, today's engine takes the same path, and every message it
-// stores reads, in English, exactly as version 18 stored the sentence; and the
-// old save itself migrates and reads as it did.
+// stores reads, in English, as version 18 stored the sentence except for the
+// explicitly reviewed variant clarification below. The old save itself still
+// migrates and reads exactly as it did.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -92,13 +93,17 @@ function sentences(game: Game, read: (value: Message | string) => string) {
 }
 const english = (value: Message | string) => typeof value === "string" ? value : say(value);
 
-test("the recorded choices today store messages that read as version 18's sentences", () => {
+test("the recorded choices retain version 18's sentences except the reviewed variant clarification", () => {
   const game = replay();
   assert.equal(game.status, old.status, "the historical choices still reach the recorded ending");
   assert.equal(game.turns.length, old.turns.length, "the replay takes the same path");
   assert.deepEqual(game.turns.map(turn => [turn.procedure, turn.raw, turn.total, turn.revealed]), old.turns.map((turn: Game["turns"][number]) => [turn.procedure, turn.raw, turn.total, turn.revealed]));
   const before = sentences(old as Game, english);
   for (const [index, turn] of (old as { turns: { inject: { effectLabel: string } | null }[] }).turns.entries()) if (turn.inject) before[`turns.${index}.inject.effectLabel`] = turn.inject.effectLabel;
+  // 0.9.61's scenario review states the actual three starting effects. Preserve
+  // the historical fixture and every other sentence and gameplay assertion.
+  assert.equal(before["variant.modifier"], "Decision latency raises impact; actor progress begins higher.");
+  before["variant.modifier"] = "Impact starts up to 4 points higher. Continuity starts up to 2 points lower. Actor progress starts up to 6 points higher.";
   assert.deepEqual(sentences(game, english), before);
   assert.equal(game.nextModifierSources.length ? say(carriedLabel(game.nextModifierSources, game.nextModifier)) : null, old.nextModifierSource, "and the carried change is named as it was");
   assert.ok(Object.keys(before).length > 60, `${Object.keys(before).length} sentences compared`);
