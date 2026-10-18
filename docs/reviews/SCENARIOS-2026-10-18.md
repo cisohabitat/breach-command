@@ -105,3 +105,10 @@ updated; its original sentences still survive migration exactly.
 Measured script sizes are 659,909 bytes initially, 1,176,860 bytes warmed on
 assignment and 1,187,734 bytes in an operation. Total CSS remains 221,936
 bytes. The existing performance budgets are unchanged.
+
+Official screenshot recording
+[39134008926](https://github.com/cisohabitat/breach-command/actions/runs/39134008926)
+passed. Reviewed all fifteen changed images and accepted six campaign pages
+at 320, 390 and 820 pixels: the more precise variant modifiers add one or two
+lines without clipping controls or the footer. Retained nine old references
+whose changes were only build-label mask widths or raster noise.
