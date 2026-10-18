@@ -36,6 +36,19 @@ export function ActionSheet({ session }: { session: GameSession }) {
         // autofocus would put the keys used to read a dialog — Space to scroll, Tab to
         // browse — onto controls that silently change the plan. Rapid sits two tabs away.
         onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
+        onFocusCapture={event => {
+          const target = event.target;
+          // Native Tab scrolling knows the sheet's edge, but not the footer
+          // covering it. Wait for that scroll, then reveal keyboard focus above
+          // the actual footer height, including long translations and zoom.
+          requestAnimationFrame(() => {
+            const sheet = content.current;
+            const footer = sheet?.querySelector<HTMLElement>(".procedure-commit");
+            if (!sheet || !footer || target === sheet || document.activeElement !== target || footer.contains(target) || !target.matches(":focus-visible")) return;
+            const covered = target.getBoundingClientRect().bottom - footer.getBoundingClientRect().top + 8;
+            if (covered > 0) sheet.scrollTop += covered;
+          });
+        }}
       >
         <SheetHeader><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc && <Glossed text={proc.description} />}</SheetDescription></SheetHeader>
         {proc && game && <p className="carried-plan" role="status">{game.turns.length ? t("actionSheet.carriedFromYour") : t("actionSheet.startingPlan")}<strong>{procedureScopes[actionScope].title}{t("actionSheet.scope")}</strong>{t("actionSheet.and")}<strong>{procedureIntensities[actionIntensity].title}{t("actionSheet.analysis")}</strong>. {game.turns.length ? t("actionSheet.theseStaySelected") : t("actionSheet.changeThemIn")}</p>}

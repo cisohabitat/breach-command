@@ -2,6 +2,34 @@ import { expect, test } from "@playwright/test";
 import { availableIn, newGame, playTurn, proceduresFor, resolveDecision, resolveSetPiece, setHypothesis } from "../../lib/advanced-game";
 import { openWithSave, pendingDecisionGame, twoStagesGame } from "./fixtures";
 
+for (const width of [375, 820, 1280]) {
+  test(`Tab keeps procedure plan controls above the commit footer at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 820 ? 1180 : 800 });
+    await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.locator(".procedure-card:not(:disabled)").first().click();
+    const sheet = page.locator(".action-sheet");
+    await expect(sheet).toBeFocused();
+    const seen = new Set<string>();
+    for (let step = 0; step < 30; step++) {
+      await page.keyboard.press("Tab");
+      const plan = sheet.locator(".procedure-planner button:focus");
+      if (await plan.count()) {
+        seen.add((await plan.innerText()).split("\n")[0]);
+        await expect.poll(() => plan.evaluate(element => {
+          const bounds = element.getBoundingClientRect();
+          const footer = document.querySelector(".procedure-commit")!.getBoundingClientRect();
+          const hit = document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + Math.min(10, bounds.height / 2));
+          return bounds.bottom <= footer.top - 4 && !!hit && element.contains(hit);
+        })).toBe(true);
+      }
+      if (await sheet.getByRole("button", { name: "Run procedure", exact: true }).evaluate(element => element === document.activeElement)) break;
+    }
+    expect(seen.size).toBe(5);
+    await expect(sheet.getByRole("button", { name: "Run procedure", exact: true })).toBeFocused();
+  });
+}
+
 for (const width of [375, 1280]) {
   test(`a fresh player's first check tests a reading without promising support at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
