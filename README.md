@@ -8,7 +8,22 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.60**: see the [release notes](CHANGELOG.md#0960-18-october-2026).
+Release **0.9.61**: see the [release notes](CHANGELOG.md#0961-18-october-2026).
+
+The [scenario correctness review](docs/reviews/SCENARIOS-2026-10-18.md) covers
+all ten cases, 96 techniques, seventy variants, thirty sector decisions and
+ninety response options. Variant modifiers describe the three starting
+readouts they actually change; increases and reductions stop at 0 and 100.
+Process safety checks support operational decisions without proving that
+attacker access is removed. The review records technical corrections and
+automated coverage; independent practitioner sign-off remains separate.
+
+Dice browser checks wait for the procedure sheet's native entry animation
+before freezing the test clock, then inspect the real throw and its cleanup.
+
+After the cargo-source correction, a fresh 9,000-operation simulation records
+95.9% / 89.0% / 73.7% wins at Training / Operational / Crisis. These measure the
+Bot Commander on seeded standard incidents, not human completion rates.
 
 The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones use a dedicated composition with extra sky and terrace space to keep the embedded logo fully visible. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 

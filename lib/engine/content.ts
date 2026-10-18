@@ -332,12 +332,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the engineering boundary", description: "Test supplier routes and support dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -9, continuity: -4, score: 14 },
       { id: "preserve", title: "Preserve support artefacts", description: "Retain jump-host and configuration evidence before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -6, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept the plant integrity check", description: "Plant instrumentation is independent of the support estate, so it can confirm what the support estate cannot.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 2, continuity: 5, score: 11 },
+      { id: "accelerate", title: "Accept the plant integrity check", description: "Independent plant readings support an operational safety check; they do not establish that the support estate is clean.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 2, continuity: 5, score: 11 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the support estate from baseline", description: "Strongest assurance, with the longest engineering-capacity gap.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -12, score: 14 },
       { id: "restore", title: "Restore validated support backups", description: "Returns maintenance capability faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -12, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place behind the plant boundary", description: "The engineering boundary holds while the support estate is patched, and the independent safety system and local field readings would show a deviation that a compromised engineering path could not hide.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -6, continuity: 7, score: 11 },
+      { id: "patch", title: "Patch in place behind the plant boundary", description: "Patch the support estate behind a validated boundary and compare independent plant readings; normal process readings do not prove the intruder is gone.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -6, continuity: 7, score: 11 },
     ],
   },
   {
@@ -359,16 +359,16 @@ export const responseProfiles: ResponseProfile[] = [
     ],
   },
   {
-    constraint: "Tenant trust boundary: control-plane exposure widens tenant risk, and unapproved scope advances the actor's objective.",
+    constraint: "Tenant trust boundary: control-plane exposure widens tenant risk, and enterprise-scope investigation advances the actor's objective.",
     containment: [
       { id: "isolate", title: "Isolate the affected tenant boundary", description: "Stops the privilege path to tenant resources and disrupts shared workloads.", disruption: "High", confidence: "Strong", residual: "Low", impact: -23, continuity: -15, score: 12 },
-      { id: "credential", title: "Revoke workload identities and keys", description: "Constrains control-plane access while dependent automation keeps running.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -18, continuity: -5, score: 12 },
+      { id: "credential", title: "Revoke workload identities and keys", description: "Constrains control-plane access; automation using revoked keys pauses until replacement credentials are deployed.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -18, continuity: -5, score: 12 },
       { id: "monitor", title: "Monitor the control plane", description: "Preserves workload availability while the privilege path stays open.", disruption: "Low", confidence: "Developing", residual: "High", impact: 5, continuity: 6, score: 9 },
     ],
     assurance: [
       { id: "verify", title: "Validate the tenant boundary", description: "Test roles, trust policies and derived keys before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
       { id: "preserve", title: "Preserve control-plane evidence", description: "Retain audit history and key material before roles change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept the provider's platform assurance", description: "The provider attests to a control plane you cannot inspect, which is the plane under investigation.", disruption: "Low", confidence: "Limited", residual: "High", impact: 2, continuity: 5, score: 4 },
+      { id: "accelerate", title: "Accept the provider's platform assurance", description: "The provider offers a general platform attestation without independently validating the affected roles and keys.", disruption: "Low", confidence: "Limited", residual: "High", impact: 2, continuity: 5, score: 4 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the workload from a trusted image", description: "Highest assurance, with the longest automation gap.", disruption: "High", confidence: "Strong", residual: "Low", impact: -18, continuity: -13, score: 14 },
@@ -431,7 +431,7 @@ export const responseProfiles: ResponseProfile[] = [
     ],
   },
   {
-    constraint: "Process safety margin: the margin resists delay, but unapproved scope and any isolation erode it sharply.",
+    constraint: "Process safety margin: the margin resists delay, but enterprise scope and any isolation erode it sharply.",
     containment: [
       { id: "isolate", title: "Isolate the engineering support zone", description: "Removes support access and moves one process area to manual supervision.", disruption: "High", confidence: "Strong", residual: "Low", impact: -21, continuity: -15, score: 12 },
       { id: "credential", title: "Revoke engineering and vendor identities", description: "Constrains support access while operations continue under normal control.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -16, continuity: -6, score: 12 },
@@ -440,12 +440,12 @@ export const responseProfiles: ResponseProfile[] = [
     assurance: [
       { id: "verify", title: "Validate the support boundary", description: "Test vendor routes and engineering dependencies before restoration.", disruption: "Moderate", confidence: "Strong", residual: "Low", impact: -8, continuity: -4, score: 13 },
       { id: "preserve", title: "Preserve historian evidence", description: "Retain historian and configuration artefacts before change.", disruption: "Moderate", confidence: "Strong", residual: "Moderate", impact: -5, continuity: -5, score: 12 },
-      { id: "accelerate", title: "Accept the treatment safety check", description: "Manual supervision and physical process limits sit outside the compromised estate and can be trusted on their own terms.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 2, continuity: 5, score: 12 },
+      { id: "accelerate", title: "Accept the treatment safety check", description: "Independent field readings and manual supervision support treatment safety; normal readings do not establish that engineering support is clean.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: 2, continuity: 5, score: 12 },
     ],
     recovery: [
       { id: "rebuild", title: "Rebuild the support environment from baseline", description: "Strongest assurance, with the longest manual-supervision period.", disruption: "High", confidence: "Strong", residual: "Low", impact: -17, continuity: -13, score: 14 },
       { id: "restore", title: "Restore validated support backups", description: "Returns engineering support faster if integrity is understood.", disruption: "Moderate", confidence: "Moderate", residual: "Moderate", impact: -11, continuity: 2, score: 11 },
-      { id: "patch", title: "Patch in place under manual supervision", description: "Supervision continues through the patch, checked against the independent safety system and local field readings rather than the screens the attacker may have touched.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -5, continuity: 7, score: 12 },
+      { id: "patch", title: "Patch in place under manual supervision", description: "Continue manual supervision and independent field checks through the support patch; those checks protect operations without proving attacker access is removed.", disruption: "Low", confidence: "Moderate", residual: "Moderate", impact: -5, continuity: 7, score: 12 },
     ],
   },
   {

@@ -4,6 +4,8 @@ Phase 6 of [the roadmap](../ROADMAP.md) asks a practitioner to read the whole
 corpus and sign off that every word could stand in a training room. This is
 the brief for that review: what to read, where it lives, what to look for,
 and how to record the result. Nothing here has been reviewed by a human yet.
+The [18 October source-based scenario audit](SCENARIOS-2026-10-18.md) records
+technical corrections and automated coverage; it is not the human sign-off.
 
 ## What to read
 
@@ -18,8 +20,8 @@ and how to record the result. Nothing here has been reviewed by a human yet.
 | Command events and injects | `lib/engine/content.ts` | 26 and 20 | Does this happen in the middle of a real incident? Is the option graded better (`quality`) the call a response lead should make? The eight added in 0.9.19 come last in `commandEvents` (`mailboxes` to `provider`); `police` and `contact` (leaving an intruder in place for investigators, and replying to an extortion message) are the ones a practitioner may grade differently. |
 | Glossary | `lib/engine/content.ts`, `plainLanguage` | about 70 | Correct, and plain enough for someone outside the field? |
 
-The game's own tests already hold the structure (every technique has three or
-more real sources, every stage four techniques across three routes, every
+The game's own tests already hold the structure (every technique lists three or
+more available sources, every stage four techniques across three routes, every
 signal word matches its numbers); this review is about whether the words are
 true.
 
@@ -31,7 +33,7 @@ certain when the table was drafted:
 | Technique | Mapped to | Doubt |
 | --- | --- | --- |
 | `ci`, Pipeline runner hijack | T1677 | Poisoned Pipeline Execution is recent; confirm the ID in the current release. |
-| `backbone`, Backbone dependency persistence | T1584.002 | A DNS record kept in configuration; Resource Development may be the wrong tactic. |
+| `backbone`, Backbone dependency persistence | T1557 | Corrected from T1584.002 in the source audit: persistent resolver configuration redirects customers rather than acquiring external infrastructure. Validate the redirection in sector context. |
 | `routepolicy`, Routing policy reinstatement | T1053 | Reinstated by an unscheduled change job; a network-device technique may fit better. |
 | `githook`, Repository hook persistence | T1546 | No dedicated technique; Event Triggered Execution is the nearest parent. |
 | `paysupport`, Payment-support component tampering | T1554 | Compromise Host Software Binary, or Data Manipulation? |
