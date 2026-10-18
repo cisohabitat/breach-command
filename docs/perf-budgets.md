@@ -1,5 +1,15 @@
 # Performance budgets
 
+The approved 3D d20 tray (0.9.56) keeps every existing budget. Factoring
+equal-specificity selector groups in the shared/global and game sheets saves
+1,315 B compared with the first tray preview, without changing declarations.
+The local production build measures 656,435 B initial script, 1,169,426 B
+warmed assignment script and 1,180,237 B at operation start. Linked/total CSS
+is 88,726/221,606 B. Throttled phone assignment/operation LCP is 1.336/1.260 s
+and CLS is 0.001/0.020. The tray adds no dependency or downloaded asset; its
+twenty planes are derived locally. Verify the final runner build identifier
+as well as the local measure before release.
+
 The performance bar in `docs/ROADMAP.md` is Lighthouse 95+ on every
 category on a mid-range phone, and first interaction under two seconds on
 4G. These are the instruments and the numbers they started from.

@@ -1,5 +1,11 @@
 # Art direction
 
+D20 tray (18 October 2026, preview approved): a regular twenty-face bone die
+throws and bounces within a recessed charcoal tray, with fixed studio shading
+and a soft contact shadow. The front face agrees with the separate readable
+result at settlement. Motion is decorative choreography, never a physical
+randomizer; preserve the existing roll/reveal timings and reduced-motion path.
+
 Unavailable controls (18 October 2026, user approved): keep names, descriptions,
 costs and reasons at readable contrast. Mute decorative icons and use dashed
 rules instead of reducing the opacity of an entire button or text-bearing
