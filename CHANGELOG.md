@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.59, 18 October 2026
+
+- Refine the d20 with warm enamel shading, beveled edges, a tumbling arc,
+  diminishing bounces and a synchronized contact shadow.
+- Keep the number display pending until the actual result settles, preserving
+  the 1.4-second throw, 900 ms result hold, sound and reduced-motion behavior.
+- Preserve game outcomes, saves and fixed performance budgets.
+
 ## 0.9.58, 18 October 2026
 
 - Compact the header and workspace toolbar on short landscape screens while

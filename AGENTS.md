@@ -341,6 +341,12 @@ These instructions apply to the entire repository. Preserve the game as a polish
   `lib/dice-timing.ts` owns the 1,400 ms throw and 900 ms result hold. Keep
   the session, Web Animation and impact schedule aligned; the browser timing
   regression checks the exact 1,399/1,400 ms and 2,299/2,300 ms boundaries.
+  Dice refinement (0.9.59): warm enamel gradients and inset triangular bevels
+  remain decorative, as does the synchronized contact shadow. Animate only
+  transforms and opacity; cancel both native animations on settlement, unmount
+  and a live reduced-motion change. Keep the separate readout pending until
+  settlement, then show the actual engine roll. Retain its report agreement,
+  shadow motion/cancellation, responsive tray and reduced-motion checks.
 
 - Disabled-control readability (0.9.55): do not fade a whole control or its
   text-bearing children. Keep action names, costs, reasons and cooldown duration
@@ -389,7 +395,7 @@ Keep the keyboard playthrough's seeded single-Uint32 game draws separate from na
 
 The d20's React 19 callback ref owns its Web Animation and cleanup: the dialog portal may attach after a parent effect has already run. Keep native animation observation in the dice browser suite; a decorative shape without a running tumble must not pass the full-motion check. The localization guard exempts structural style assignments and supported Web Animation keyframe values, never arbitrary visible component text.
 
-Visual polish 0.9.52: `useDieMotion` animates only the decorative d20 shell for 1,400 ms, never the number or game state. Cancel on settle, unmount and a live reduced-motion change. Under reduced motion the session skips cosmetic number cycling and shows a neutral pending mark until the actual roll. Roll/report dialogs use `fadeOnly` and the report mounts closed during rolling to prepare the handoff; suppress roll focus restoration only when the report takes over. Procedure feedback keys on the actual turn's ephemeral `procedureReceipt`, waits for the report to close and lasts two seconds (static under reduced motion); it never recommends a source or alters availability. Keep focus outlines independent of this inset receipt. Finding artwork uses the existing public source/sector mapping and `DecorativeImage` failure handling; retain 96×64/72×48 frames, full labels and response-index visibility. See `public/art/findings/README.md` and `docs/design/ART-DIRECTION.md`.
+Visual polish 0.9.52: `useDieMotion` animates the decorative d20 shell and contact shadow for 1,400 ms, never the number or game state. Cancel on settle, unmount and a live reduced-motion change. The readout shows a neutral pending mark until the actual roll settles; reduced motion also skips cosmetic number cycling in the session. Roll/report dialogs use `fadeOnly` and the report mounts closed during rolling to prepare the handoff; suppress roll focus restoration only when the report takes over. Procedure feedback keys on the actual turn's ephemeral `procedureReceipt`, waits for the report to close and lasts two seconds (static under reduced motion); it never recommends a source or alters availability. Keep focus outlines independent of this inset receipt. Finding artwork uses the existing public source/sector mapping and `DecorativeImage` failure handling; retain 96×64/72×48 frames, full labels and response-index visibility. See `public/art/findings/README.md` and `docs/design/ART-DIRECTION.md`.
 
 Dice resolution has a 1,400 ms rolling phase followed by a 900 ms static final-number reveal before the report and result cue. Resolve the engine turn exactly once at settlement; hold that same raw number and keep the busy lock until committing the report. Fast Resolution skips both phases after the first turn. `dieSettled` removes the rolling class during the pause, including under reduced motion. Dice audio still finishes within the 1,400 ms rolling phase. The clock-controlled regressions in `tests/e2e/dice-audio.spec.ts` verify the full pause in both motion preferences and compare the displayed number with the single saved turn. Advance the held clock through Radix's exit animation before asserting removal. The four settled-die pixel baselines cover the static reveal on phone, iPad and desktop.
 
