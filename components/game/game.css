@@ -97,7 +97,6 @@
   display:flex;
   align-items:flex-start;
   gap:9px;
-  font-size:var(--type-body);
   color:var(--text-soft);
   margin:0 0 16px;
   line-height:var(--leading-prose);
@@ -794,9 +793,6 @@
   color:#f0a48c;
 }
 .decision-summary {
-  border:1px solid #c9bfac;
-  background:#e8e1d3;
-  border-radius:3px;
   padding:16px;
 }
 .decision-summary>.eyebrow {
@@ -970,7 +966,6 @@
 }
 .counterfactuals {
   border-inline-start:2px solid #a9821c;
-  background:#f2e5c3;
   padding:16px 18px;
 }
 .counterfactuals>.eyebrow {
@@ -1129,9 +1124,6 @@
   line-height:1.4;
 }
 .timeline {
-  border:1px solid #42474e;
-  background:#171a1e;
-  border-radius:3px;
   padding:17px;
 }
 .timeline>.eyebrow {
@@ -1535,9 +1527,6 @@
   margin-top:4px;
 }
 .capability-review {
-  border:1px solid #c9bfac;
-  background:#e8e1d3;
-  border-radius:3px;
   padding:16px;
 }
 .capability-review>.eyebrow {
@@ -2388,12 +2377,6 @@
   padding:3px 5px;
   border-radius:3px;
 }
-.topology-nodes .focused em,.confidence-high,.advanced-setup>summary svg {
-  color:var(--lime);
-}
-.confidence-moderate {
-  color:#e2c46b;
-}
 .correlate-button {
   min-height:42px;
   border:1px solid #5c6674;
@@ -2469,9 +2452,6 @@
 /* The cost is what the decision turns on, so it reads in the body face at the
    response options' size, not as a ten-pixel footnote. */
 .evidence-review {
-  border:1px solid #c9bfac;
-  background:#e8e1d3;
-  border-radius:3px;
   padding:15px;
 }
 .evidence-review>.eyebrow {
@@ -2504,9 +2484,6 @@
   align-items:center;
   justify-content:space-between;
   gap:18px;
-  border:1px solid #c9bfac;
-  background:#f2e5c3;
-  border-radius:3px;
   padding:15px;
 }
 .mastery-panel strong {
@@ -2713,9 +2690,6 @@
   background:#b49b4e;
 }
 .specialist-reaction {
-  border:1px solid #c9bfac;
-  background:#e8e1d3;
-  border-radius:3px;
   padding:15px;
 }
 .specialist-reaction .specialist-arc {
@@ -2732,9 +2706,6 @@
 .campaign-finale {
   display:flex;
   gap:14px;
-  border:1px solid #a9821c;
-  background:#f2e5c3;
-  border-radius:3px;
   padding:17px;
   color:#6f5200;
 }
@@ -2963,7 +2934,7 @@
   font-size:var(--type-caption);
   line-height:var(--leading-base);
 }
-.hypothesis-detail strong {
+.topology-nodes .focused em,.advanced-setup>summary svg,.hypothesis-detail strong {
   color:var(--lime);
 }
 .hypothesis-detail span,.hypothesis-detail small,.hypothesis-compare>summary span,.hypothesis-compare-options button span {
@@ -3150,10 +3121,39 @@
 /* The fade above the sticky button hides what scrolls up to it; the solid
    shadow below covers the sheet's bottom padding, where text otherwise showed
    through under the button. */
-.action-sheet .primary-button {
+.procedure-commit {
   position:sticky;
   bottom:0;
+  z-index:1;
+  padding-top:10px;
+  border-top:1px solid var(--line);
+  background:#16191e;
   box-shadow:0 -12px 24px #16191e,0 24px 0 0 #16191e;
+}
+.procedure-commit>strong,.procedure-commit>small {
+  display:block;
+}
+.procedure-commit>small,.procedure-commit>p,.finding-map-link,.report-next {
+  font-size:var(--type-caption);
+  color:var(--text-soft);
+}
+.procedure-commit>p {
+  margin:6px 0 10px;
+}
+.evidence-card {
+  display:grid;
+  grid-template-rows:1fr auto;
+  min-width:0;
+}
+.finding-map-link {
+  display:block;
+  padding:10px 4px;
+  min-height:44px;
+  text-underline-offset:3px;
+}
+.topology-nodes button.finding-location {
+  outline:2px dashed var(--state-focus);
+  outline-offset:3px;
 }
 .relationship-assessment {
   display:grid;
@@ -4429,8 +4429,6 @@ they want without scrolling past the other nine. */
 }
 /* Why the hypothesis score is what it is, turn by turn. */
 .hypothesis-ledger {
-  border:1px solid var(--line);
-  border-radius:3px;
   padding:16px 17px 8px;
 }
 .hypothesis-ledger .ledger-rule {

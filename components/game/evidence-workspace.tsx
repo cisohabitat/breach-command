@@ -5,16 +5,16 @@ import { EvidenceAssessment, SignalGuide } from "./evidence-assessment";
 import { EvidenceLinks } from "./evidence-links";
 import { ArrowUp, Check, Link2, X } from "lucide-react";
 import { landOnInvestigation } from "@/hooks/use-recover-focus";
-import { adversaryObjectives, attacks, getObjectiveRead, hypotheses, stages, type AdversaryObjectiveId, type Game } from "@/lib/advanced-game";
+import { infrastructureTopologies, words, adversaryObjectives, attacks, getObjectiveRead, hypotheses, stages, type AdversaryObjectiveId, type Game } from "@/lib/advanced-game";
 import { objectiveTheory } from "@/lib/phase9";
 import { useMessages } from "@/hooks/use-messages";
-import { level, lit, withForm } from "@/lib/i18n/message";
+import { legacyText, sameMessage, level, lit, withForm } from "@/lib/i18n/message";
 import { evidenceWorkspaceMessages } from "@/lib/i18n/en/evidence-workspace";
 import { register } from "@/lib/i18n";
 
 register(evidenceWorkspaceMessages);
 
-export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, voiceHistory }: { game: Game; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void; voiceEnabled: boolean; voiceHistory: RefObject<Set<string>> }) {
+export function EvidenceWorkspace({ game, onLocate, onCorrelate, onTheory, voiceEnabled, voiceHistory }: { game: Game; onLocate: (node: string, finding: Game["evidence"][number]) => void; onCorrelate: (ids: [string, string], assessment: "causal" | "coincidental") => void; onTheory: (objective: AdversaryObjectiveId) => void; voiceEnabled: boolean; voiceHistory: RefObject<Set<string>> }) {
   const { t, rich, say } = useMessages();
   const [selected, setSelected] = useState<string[]>([]);
   // Only a comparison made here triggers feedback. Loading a saved record must
@@ -60,9 +60,13 @@ export function EvidenceWorkspace({ game, onCorrelate, onTheory, voiceEnabled, v
               kind each is or a beginner reads every row as a technique they found. */}
           <summary>{rich("evidenceWorkspace.findingsSpanConfirmed", { confirmed, evidence: game.evidence.length - confirmed, selected: selected.length }, { span: chunk => <span>{chunk}</span> })}</summary>
           <div className="evidence-timeline" role="group" aria-label={t("evidenceWorkspace.evidenceTimeline")}>{game.evidence.map(item => <span key={item.id} className={selected.includes(item.id) ? "selected" : ""}><b>T+{item.turn}</b><i /></span>)}</div>
-          <div className="evidence-cards">{game.evidence.map(item => <button key={item.id} data-source={item.id.replace(/^E\d+-/, "")} className={[selected.includes(item.id) ? "selected" : "", changedIds.includes(item.id) ? "confidence-strengthened" : ""].join(" ")} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
+          <div className="evidence-cards">{game.evidence.map(item => {
+            // Match only the location recorded on the finding, including legacy saves.
+            const node = infrastructureTopologies[game.scenario].nodes.find(node => sameMessage(item.system, words.node(game.scenario, node.id)) || legacyText(item.system) === node.label);
+            return <div key={item.id} className="evidence-card"><button data-source={item.id.replace(/^E\d+-/, "")} className={[selected.includes(item.id) ? "selected" : "", changedIds.includes(item.id) ? "confidence-strengthened" : ""].join(" ")} onClick={() => toggle(item.id)} aria-pressed={selected.includes(item.id)}>
             <span>{t("evidenceWorkspace.turn2", { turn: item.turn })}</span><strong>{say(item.title)}</strong>{placement(item.supports) && <b className="evidence-placement">{placement(item.supports)}</b>}<small>{t("evidenceWorkspace.at", { source: say(item.source), system: say(item.system) })}</small><em>{item.supports ? t("evidenceWorkspace.confirmedAStage") : t("evidenceWorkspace.foundNoStage2")}</em><EvidenceAssessment game={game} item={item} />
-          </button>)}</div>
+          </button>{node && <a className="finding-map-link" href={`#infrastructure-node-${node.id}`} aria-label={t("evidenceWorkspace.locateFinding", { title: say(item.title) })} onClick={event => { event.preventDefault(); onLocate(node.id, item); }}>{t("evidenceWorkspace.showLocation")}</a>}</div>;
+          })}</div>
         </details>
         {game.evidence.length >= 2 && <EvidenceLinks game={game} selected={selected} />}
         {game.evidence.length >= 2 ? <>

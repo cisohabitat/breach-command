@@ -2,6 +2,34 @@ import { expect, test } from "@playwright/test";
 import { availableIn, newGame, playTurn, proceduresFor, resolveDecision, resolveSetPiece, setHypothesis } from "../../lib/advanced-game";
 import { openWithSave, pendingDecisionGame, twoStagesGame } from "./fixtures";
 
+for (const width of [375, 820, 1280]) {
+  test(`Tab keeps procedure plan controls above the commit footer at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 820 ? 1180 : 800 });
+    await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.locator(".procedure-card:not(:disabled)").first().click();
+    const sheet = page.locator(".action-sheet");
+    await expect(sheet).toBeFocused();
+    const seen = new Set<string>();
+    for (let step = 0; step < 30; step++) {
+      await page.keyboard.press("Tab");
+      const plan = sheet.locator(".procedure-planner button:focus");
+      if (await plan.count()) {
+        seen.add((await plan.innerText()).split("\n")[0]);
+        await expect.poll(() => plan.evaluate(element => {
+          const bounds = element.getBoundingClientRect();
+          const footer = document.querySelector(".procedure-commit")!.getBoundingClientRect();
+          const hit = document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + Math.min(10, bounds.height / 2));
+          return bounds.bottom <= footer.top - 4 && !!hit && element.contains(hit);
+        })).toBe(true);
+      }
+      if (await sheet.getByRole("button", { name: "Run procedure", exact: true }).evaluate(element => element === document.activeElement)) break;
+    }
+    expect(seen.size).toBe(5);
+    await expect(sheet.getByRole("button", { name: "Run procedure", exact: true })).toBeFocused();
+  });
+}
+
 for (const width of [375, 1280]) {
   test(`a fresh player's first check tests a reading without promising support at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
@@ -38,6 +66,17 @@ for (const width of [375, 1280]) {
     await next.click();
     await source.click();
     await expect(page.locator(".action-sheet")).toContainText("Starting plan:");
+    const commit = page.locator(".procedure-commit");
+    await expect(commit).toContainText("Identity audit");
+    await expect(commit).toContainText("Focused scope · Balanced analysis");
+    await expect(commit).toContainText("Costs 1 turn");
+    await expect(commit.getByRole("button", { name: "Run procedure", exact: true })).toBeInViewport({ ratio: 1 });
+    await page.getByRole("group", { name: "Scope", exact: true }).getByRole("button", { name: /^Enterprise/ }).click();
+    await page.getByRole("group", { name: "Intensity", exact: true }).getByRole("button", { name: /^Rapid/ }).click();
+    await expect(commit).toContainText("Enterprise scope · Rapid analysis");
+    await page.getByRole("group", { name: "Scope", exact: true }).getByRole("button", { name: /^Focused/ }).click();
+    await page.getByRole("group", { name: "Intensity", exact: true }).getByRole("button", { name: /^Balanced/ }).click();
+    await expect(commit).toContainText("Focused scope · Balanced analysis");
     const checkHelp = page.locator(".action-sheet details").filter({ has: page.getByText("How checks affect evidence and pressure", { exact: true }) });
     await expect(checkHelp).toHaveJSProperty("open", false);
     await checkHelp.locator("summary").click();
@@ -49,6 +88,8 @@ for (const width of [375, 1280]) {
     await expect(report).toContainText("Stage tested");
     const details = report.locator(".report-collection-details");
     await expect(details).toHaveJSProperty("open", false);
+    await expect(report.locator(".report-narrative")).toBeVisible();
+    await expect(details.locator(".report-narrative")).toHaveCount(0);
     await expect(report.locator(".turn-movement")).toContainText("This turn");
     await expect(report.locator(".turn-movement .effect-list")).toBeVisible();
     await expect(details.locator(".turn-movement")).toHaveCount(0);

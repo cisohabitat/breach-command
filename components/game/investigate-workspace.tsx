@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowRight, X } from "lucide-react";
 import { EvidenceWorkspace } from "@/components/game/evidence-workspace";
 import { HypothesisBoard } from "@/components/game/hypothesis-board";
@@ -6,7 +6,7 @@ import { InfrastructureConsole } from "@/components/game/infrastructure-console"
 import { KnownFacts } from "@/components/game/known-facts";
 import { ProcedureGrid } from "@/components/game/procedure-grid";
 import { SpecialistTransmission } from "@/components/game/living-incident";
-import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getKnownFacts, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate, type HypothesisId } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, cooldownWindow, getCoachPrompt, getKnownFacts, getMapHint, procedureIntensities, procedureScopes, readyForTheory, readyToCorrelate, type Game, type HypothesisId } from "@/lib/advanced-game";
 import type { GameSession } from "@/hooks/use-game-session";
 import { Glossed } from "@/components/game/glossed";
 import { useMessages } from "@/hooks/use-messages";
@@ -39,6 +39,12 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   // that carries what it holds; wider layouts show it beside the actions.
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const [referenceOpen, setReferenceOpen] = useState(false);
+  const [location, setLocation] = useState<{ node: string; finding: Game["evidence"][number] } | null>(null);
+  useEffect(() => {
+    if (!location) return;
+    const timer = window.setTimeout(() => setLocation(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [location]);
 
   // Declaring a reading collapses the four premises to a bar, and the browser
   // kept the page where the tapped card had been: on a phone the procedures
@@ -65,7 +71,7 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
   // column, where no playtest found them unprompted. The guided Training opening
   // folds it on every width; a note that asks for one of
   // them takes the player there: it opens what is folded and moves focus to it.
-  const jumpTo = (selector: string) => {
+  const jumpTo = (selector: string, focusSelector = selector) => {
     const target = document.querySelector<HTMLElement>(selector);
     if (!target) return;
     const findings = target.querySelector<HTMLDetailsElement>("details.evidence-detail");
@@ -76,8 +82,8 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
     // The fold opens on the next render, so the scroll waits a frame for it.
     requestAnimationFrame(() => {
       const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
-      target.focus({ preventScroll: true });
+      target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: focusSelector === selector ? "start" : "center" });
+      document.querySelector<HTMLElement>(focusSelector)?.focus({ preventScroll: true });
     });
   };
   const evidenceReady = readyForTheory(game) || readyToCorrelate(game);
@@ -137,9 +143,12 @@ export function InvestigateWorkspace({ session }: { session: GameSession }) {
       <details className={`investigation-context reference-fold${opening ? " opening-reference" : ""}`} open={!referenceFolded || referenceOpen} onToggle={event => referenceFolded && setReferenceOpen(event.currentTarget.open)}>
         <summary>{t("investigateWorkspace.mapEvidenceAnd")}<span>{t("investigateWorkspace.mapActionPlural", { count: game.mapActionsRemaining })}, {game.evidence.length ? t("investigateWorkspace.ofFindingsConfirmed", { count: game.evidence.filter(item => item.supports).length, evidence: game.evidence.length }) : t("investigateWorkspace.noFindingsYet")}{t("investigateWorkspace.compared2", { correlations: game.correlations.length })}</span></summary>
         {!game.pendingCommand && !game.pendingSetPiece && <KnownFacts game={game} />}
-        <InfrastructureConsole game={game} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
+        <InfrastructureConsole game={game} highlightedNode={location && game.evidence.includes(location.finding) ? location.node : null} blocked={!!game.pendingDecision || !!game.pendingCommand || !!game.pendingSetPiece} onFocus={focusInfrastructure} onAction={mapAction} />
         <SpecialistTransmission game={game} />
-        <EvidenceWorkspace game={game} onCorrelate={correlate} onTheory={chooseCaseTheory} voiceEnabled={session.voiceEnabled && !session.botRun && !session.settings && !session.rules && !session.newConfirm && !session.report && !session.selected && !session.rolling && !session.missionBriefing && !session.debrief && !session.tutorial} voiceHistory={session.voiceHistory} />
+        <EvidenceWorkspace game={game} onLocate={(node, finding) => {
+          setLocation({ node, finding });
+          jumpTo(`#infrastructure-node-${node}`, ".infrastructure-console");
+        }} onCorrelate={correlate} onTheory={chooseCaseTheory} voiceEnabled={session.voiceEnabled && !session.botRun && !session.settings && !session.rules && !session.newConfirm && !session.report && !session.selected && !session.rolling && !session.missionBriefing && !session.debrief && !session.tutorial} voiceHistory={session.voiceHistory} />
       </details>
       <div className="investigation-actions" role="region" aria-label={t("investigateWorkspace.investigationActions")} tabIndex={0}>
         {inlineReport && (

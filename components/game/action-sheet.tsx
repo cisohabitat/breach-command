@@ -36,6 +36,19 @@ export function ActionSheet({ session }: { session: GameSession }) {
         // autofocus would put the keys used to read a dialog — Space to scroll, Tab to
         // browse — onto controls that silently change the plan. Rapid sits two tabs away.
         onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }}
+        onFocusCapture={event => {
+          const target = event.target;
+          // Native Tab scrolling knows the sheet's edge, but not the footer
+          // covering it. Wait for that scroll, then reveal keyboard focus above
+          // the actual footer height, including long translations and zoom.
+          requestAnimationFrame(() => {
+            const sheet = content.current;
+            const footer = sheet?.querySelector<HTMLElement>(".procedure-commit");
+            if (!sheet || !footer || target === sheet || document.activeElement !== target || footer.contains(target) || !target.matches(":focus-visible")) return;
+            const covered = target.getBoundingClientRect().bottom - footer.getBoundingClientRect().top + 8;
+            if (covered > 0) sheet.scrollTop += covered;
+          });
+        }}
       >
         <SheetHeader><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc && <Glossed text={proc.description} />}</SheetDescription></SheetHeader>
         {proc && game && <p className="carried-plan" role="status">{game.turns.length ? t("actionSheet.carriedFromYour") : t("actionSheet.startingPlan")}<strong>{procedureScopes[actionScope].title}{t("actionSheet.scope")}</strong>{t("actionSheet.and")}<strong>{procedureIntensities[actionIntensity].title}{t("actionSheet.analysis")}</strong>. {game.turns.length ? t("actionSheet.theseStaySelected") : t("actionSheet.changeThemIn")}</p>}
@@ -66,13 +79,17 @@ export function ActionSheet({ session }: { session: GameSession }) {
             <div role="group" aria-label={t("actionSheet.scope2")}><span className="eyebrow">{t("actionSheet.scope2")}</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureScopes[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureScopes[id].modifier), meterEffect(game, "impact", procedureScopes[id].impact), meterEffect(game, "objective", procedureScopes[id].objective)]} /></button>)}</div></div>
             <div role="group" aria-label={t("actionSheet.intensity")}><span className="eyebrow">{t("actionSheet.intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureIntensities[id].modifier), meterEffect(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && t("actionSheet.sourceRestsLonger", { count: procedureIntensities[id].cooldown })]} /></button>)}</div></div>
           </div>
-          <p className="muted small">{t("actionSheet.turnCost")}</p>
           <details className="modifier-details" key={proc.id}>
             <summary>{t("actionSheet.checkDetails")}</summary>
             <p className="muted small">{t("actionSheet.successRevealsStage")}</p>
             <p className="relationship-helper">{t("actionSheet.evidenceConfidence")}</p>
           </details>
-          <button className="primary-button full" onClick={() => run(proc.id)}>{t("actionSheet.runProcedure")}</button>
+          <div className="procedure-commit">
+            <strong>{proc.title}</strong>
+            <small>{t("actionSheet.commitPlan", { scope: procedureScopes[actionScope].title, intensity: procedureIntensities[actionIntensity].title })}</small>
+            <p id="procedure-turn-cost">{t("actionSheet.turnCost")}</p>
+            <button className="primary-button full" aria-describedby="procedure-turn-cost" onClick={() => run(proc.id)}>{t("actionSheet.runProcedure")}</button>
+          </div>
         </>}
       </SheetContent>
     </Sheet>

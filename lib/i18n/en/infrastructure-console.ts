@@ -3,6 +3,7 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/infrastructure-console.tsx (app/page.tsx for page), loaded with it.
 export const infrastructureConsoleMessages = catalogue({
   infrastructureConsole: {
+    "findingLocation": "↑ Finding location",
     "interactiveInfrastructureMap": "Interactive infrastructure map",
     "left": " left",
     "trustRelationships": "Trust relationships",

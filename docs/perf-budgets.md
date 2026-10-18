@@ -1,5 +1,12 @@
 # Performance budgets
 
+Turn clarity (0.9.60) preserves every fixed limit. The local production build
+measures 656,553 B initial script and 1,183,946 B at operation start. Linked/total CSS is 89,007/221,936 B;
+removing obsolete overridden declarations makes room for the action footer
+and finding links. The throttled phone check records assignment/operation
+LCP of 1.204/1.216 s and CLS of 0.001/0.020. CI’s build identifier adds
+8 B to script; verify its final build as well. No dependency or asset is added.
+
 Refined d20 materials and synchronized shadow (0.9.59) preserve every limit.
 The local production build measures 656,553 B initial script, 1,170,693 B
 warmed assignment script and 1,181,567 B at operation start. Linked/total CSS

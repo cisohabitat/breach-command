@@ -3,6 +3,11 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/captain-report-dialog.tsx (app/page.tsx for page), loaded with it.
 export const captainReportDialogMessages = catalogue({
   captainReportDialog: {
+    "next": "Next:",
+    "nextResponse": "Enter the response phase to contain and recover.",
+    "nextDebrief": "Open the debrief to review the operation.",
+    "nextCommand": "Continue to Command and resolve the waiting decision before another procedure.",
+    "nextInvestigation": "Continue investigating to choose your next action.",
     "actualChanges": "After this response: {changes}.",
     "whyChoose": "Why choose “{title}”?",
     "whyThisResponse": "Why this response has these effects",
@@ -22,7 +27,7 @@ export const captainReportDialogMessages = catalogue({
     "stagesFound": "Stages confirmed this turn",
     "stageNumber": "Stage {number}: {title}",
     "findResponse": "Find a command response",
-    "readResponses": { one: "Read the response before choosing:", other: "Read the {count} responses before choosing:" },
+    "readResponses": { one: "Next: read the response before choosing:", other: "Next: read the {count} responses before choosing:" },
     "responseIndexEntry": "{letter}. {title}",
     "failedSettlesNothing": "This check failed. It rules out no route or source; the reading remains untested by this attempt.",
     "availableSources": "Available sources for this reading",
