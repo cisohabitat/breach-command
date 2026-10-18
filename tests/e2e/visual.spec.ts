@@ -146,6 +146,9 @@ test.describe("visual baselines", () => {
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
       await snap(page, `${width}-investigate.png`);
+      await page.getByRole("button", { name: /^Command/ }).first().click();
+      await expect(page.locator(".chain-sheet")).toHaveScreenshot(`${width}-chain-states.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+      await page.getByRole("button", { name: /^Investigate/ }).first().click();
 
       const reference = page.locator(".reference-fold");
       if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
@@ -187,6 +190,10 @@ test.describe("visual baselines", () => {
       await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
       await page.waitForTimeout(600);
       await snap(page, `${width}-review.png`);
+      await page.locator(".debrief-index").getByRole("button", { name: "Timeline", exact: true }).click();
+      await expect(page.locator("#debrief-timeline > details")).toHaveAttribute("open", "");
+      await expect(page.locator("#debrief-timeline .milestone-effects").first()).toBeInViewport();
+      await expect(page.locator(".debrief-dialog")).toHaveScreenshot(`${width}-review-milestones.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
     });
   }
 

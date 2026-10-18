@@ -4,6 +4,17 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.53, 18 October 2026
+
+- Distinguish confirmed, currently investigated and unknown attack-chain stages
+  with labels and markers derived only from confirmed findings.
+- Show collection sources and separate signal/confidence ratings directly in
+  evidence comparisons, preserving tested relationship labels and patterns.
+- Bring the review's compact milestone timeline forward, pairing findings with
+  their recorded responses and effects. Keep the full check log available and
+  avoid opening nested logs when using the section index. Keep destination
+  headings below the sticky index, including wrapped phone rows.
+
 ## 0.9.52, 17 October 2026
 
 - Replace the pulsing dice box with a faceted d20 and a short tumble, keeping

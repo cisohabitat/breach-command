@@ -9,6 +9,7 @@ export const commandWorkspaceMessages = catalogue({
     "attackChain": "Attack chain",
     "unknownTechnique": "Unknown technique",
     "confirmed": "Confirmed",
+    "currentStage": "Investigating now",
     "awaitingEvidence": "Awaiting evidence",
     "of4Revealed2": "{revealed} of 4 revealed",
     "strongBuildAnd": "<strong>Choose or revise your working reading, then test it.</strong> Run a source that can test the current stage; use the result to keep or change your explanation.",

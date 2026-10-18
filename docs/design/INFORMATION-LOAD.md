@@ -41,6 +41,14 @@ These remain design hypotheses about learning, not measured human outcomes.
 
 ## Verification and release
 
+The 0.9.53 clarity pass marks the first unconfirmed stage explicitly and puts
+sources and the two evidence axes directly in comparison endpoints. The review
+places a compact milestone timeline before detailed scoring. Finding responses
+keep exact recorded effects in adjacent native disclosures; the complete check
+log stays available separately. Index navigation opens the requested section
+without expanding its nested logs. This preserves an outcome-first review and
+does not claim measured improvements in comprehension.
+
 Check all eleven supported widths, short laptops, keyboard focus, native
 folds, zero axe violations, Chromium/WebKit/Firefox, pseudo-localisation and
 production performance budgets. Review runner-recorded visual changes image
