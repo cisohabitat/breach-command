@@ -97,6 +97,7 @@ test("current stage follows confirmed findings and ignores unrevealed techniques
 for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280]) {
   test(`review milestones and complete check log at ${width}px`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 900 });
+    if (width === 1280) await page.emulateMedia({ reducedMotion: "no-preference" });
     const game = responsePhaseGame();
     await openWithSave(page, game, false, { voice: false });
     await page.getByRole("button", { name: "Resume", exact: true }).click();
@@ -105,7 +106,6 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
     await page.locator(".debrief-index").getByRole("button", { name: "Timeline", exact: true }).click();
     const timeline = page.locator("#debrief-timeline");
-    await timeline.evaluate(element => element.scrollIntoView({ behavior: "instant", block: "start" }));
     await expect.poll(() => timeline.evaluate(element => {
       const heading = element.querySelector(":scope > details > summary")!.getBoundingClientRect();
       const index = document.querySelector(".debrief-index")!.getBoundingClientRect();

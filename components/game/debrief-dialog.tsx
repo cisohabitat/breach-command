@@ -90,7 +90,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
     if (target instanceof HTMLDetailsElement) target.open = true;
     const fold = target.querySelector<HTMLDetailsElement>(":scope > details");
     if (fold) fold.open = true;
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
   };
 
   // A printed review is read away from the screen, where a fold cannot be
