@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-// Animate the decorative shell, keeping the changing number upright. The
+// Animate the decorative twenty-face shell within its tray. The
 // actual roll lives in the session; motion never chooses or delays its result.
 export function useDieMotion(rolling: boolean, settled: boolean) {
   // The dialog portal can attach after its parent's effect has run. A ref
@@ -10,9 +10,11 @@ export function useDieMotion(rolling: boolean, settled: boolean) {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (motion.matches) return;
     const animation = shell.animate([
-      { transform: "rotate(-24deg) scale(.88)" },
-      { transform: "rotate(18deg) scale(1.03)", offset: .35 },
-      { transform: "rotate(-9deg) scale(.97)", offset: .7 },
+      { transform: "translate3d(-92px,-66px,50px) rotateX(250deg) rotateY(-310deg) rotateZ(-35deg)" },
+      { transform: "translate3d(-32px,20px,0) rotateX(135deg) rotateY(-170deg) rotateZ(20deg)", offset: .3 },
+      { transform: "translate3d(22px,-24px,26px) rotateX(65deg) rotateY(-80deg) rotateZ(-12deg)", offset: .52 },
+      { transform: "translate3d(8px,12px,0) rotateX(-12deg) rotateY(20deg) rotateZ(5deg)", offset: .72 },
+      { transform: "translate3d(-3px,-4px,4px) rotateX(4deg) rotateY(-6deg)", offset: .87 },
       { transform: "none" },
     ], { duration: 850, easing: "ease-out" });
     const stop = () => { if (motion.matches) animation.cancel(); };

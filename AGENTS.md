@@ -305,6 +305,16 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Change discipline
 
+- D20 tray (0.9.56, preview approved): `lib/d20-geometry.ts` supplies twenty regular icosahedron
+  planes; the CSS 3D throw is decorative choreography, not a physics randomizer.
+  Preserve the engine's draw, 850 ms roll, 500 ms settlement, audio cancellation,
+  native reduced-motion handling and readable result outside the decorative
+  geometry. Keep equivalent selector groups at equal specificity when using
+  `:is()` to share suffixes; the tray fits the existing CSS budget by factoring
+  repeated selectors in both sheets, without changing their declarations.
+  `d20-tray.spec.ts` checks the face/result agreement and responsive tray in
+  all three engines; `d20-geometry.test.ts` checks its closed regular mesh.
+
 - Disabled-control readability (0.9.55): do not fade a whole control or its
   text-bearing children. Keep action names, costs, reasons and cooldown duration
   at readable text contrast. Use muted decorative icons and dashed rules for

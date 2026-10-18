@@ -4,6 +4,15 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.56, 18 October 2026
+
+- Replace the flat die illustration with twenty shaded 3D faces and a short
+  throw into a charcoal tray, with a soft contact shadow and readable result.
+- Preserve the engine's roll, 850 ms animation, 500 ms settled result, sound,
+  reduced motion and Fast Resolution. The throw is visual choreography.
+- Factor equivalent CSS selectors at the same specificity to keep the existing
+  performance budgets; verify mesh geometry and responsive face/result agreement.
+
 ## 0.9.55, 18 October 2026
 
 - Keep unavailable action names, costs and explanations at readable contrast.

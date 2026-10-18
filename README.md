@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.55**: see the [release notes](CHANGELOG.md#0955-18-october-2026).
+Release **0.9.56**: see the [release notes](CHANGELOG.md#0956-18-october-2026).
 
 The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones use a dedicated composition with extra sky and terrace space to keep the embedded logo fully visible. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 
@@ -29,8 +29,10 @@ code loads. Linux browser tests need a working audio output; on speakerless
 hosts use a PulseAudio null sink. CI starts one for Firefox and WebKit so the
 audio tests check native processing and completion rather than mocked playback.
 
-The roll uses a faceted d20 with an upright number and a short tumble, then
-holds its real result before fading into the report. Reduced motion keeps the
+The roll renders twenty numbered 3D faces in a charcoal tray, with
+a short animated throw and bounce, then holds the game's real result before
+fading into the report. This is visual choreography, not a physics-based random
+draw. Reduced motion keeps the
 die still and avoids cycling numbers. Procedure buttons have a pressed state;
 the procedure just used receives a brief neutral outline after its report.
 Confirmed findings use twelve compact, distinct source illustrations, with

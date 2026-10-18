@@ -920,11 +920,11 @@ a {
 /* The three readouts are a ledger line with a ruler under each number: ticks
    every ten points over the fill, so the level reads against a scale rather
    than as a glowing bar. */
-.impact-meter>[data-slot=progress],.continuity-meter>[data-slot=progress],.objective-meter>[data-slot=progress] {
+:is(.impact-meter,.continuity-meter,.objective-meter)>[data-slot=progress] {
   position:relative;
   border-radius:0;
 }
-.impact-meter>[data-slot=progress]::after,.continuity-meter>[data-slot=progress]::after,.objective-meter>[data-slot=progress]::after {
+:is(.impact-meter,.continuity-meter,.objective-meter)>[data-slot=progress]::after {
   content:none;
 }
 /* An odd readout out in a two-column brief takes the full row, rather than
@@ -2368,7 +2368,7 @@ previous result — often emptied of its content by then — sitting in the
 accessibility tree, and left its overlay intercepting the click meant for the
 control behind it. Dropping the exit animation makes the presence layer
 unmount the node in the same frame the state closes. Entrances are untouched. */
-[data-slot=dialog-content][data-state=closed], [data-slot=dialog-overlay][data-state=closed], [data-slot=alert-dialog-content][data-state=closed], [data-slot=alert-dialog-overlay][data-state=closed], [data-slot=sheet-content][data-state=closed], [data-slot=sheet-overlay][data-state=closed] {
+:is([data-slot=dialog-content],[data-slot=dialog-overlay],[data-slot=alert-dialog-content],[data-slot=alert-dialog-overlay],[data-slot=sheet-content],[data-slot=sheet-overlay])[data-state=closed] {
   animation:none;
   pointer-events:none;
 }
@@ -2996,11 +2996,11 @@ body {
 }
 /* The three readouts are rulers: a solid bar with a tick under it every ten
    points. Cut into dashes, the bar read as a loading placeholder. */
-.impact-meter>[data-slot=progress],.continuity-meter>[data-slot=progress],.objective-meter>[data-slot=progress] {
+:is(.impact-meter,.continuity-meter,.objective-meter)>[data-slot=progress] {
   height:10px;
   background:linear-gradient(#2b2f35,#2b2f35) top/100% 6px no-repeat,repeating-linear-gradient(90deg,#646a72 0 1px,transparent 1px 10%) bottom/100% 4px no-repeat,linear-gradient(90deg,transparent calc(100% - 1px),#646a72 calc(100% - 1px)) bottom/100% 4px no-repeat;
 }
-.impact-meter>[data-slot=progress]>div,.continuity-meter>[data-slot=progress]>div,.objective-meter>[data-slot=progress]>div {
+:is(.impact-meter,.continuity-meter,.objective-meter)>[data-slot=progress]>div {
   height:6px;
   flex:none;
 }
@@ -3100,7 +3100,7 @@ body {
 }
 /* What a fold holds is read at caption size in the body face. Set at 10 px in
    the condensed face, the counts read as debug scaffolding. */
-.briefing-more>summary span,.hypothesis-compare>summary span,.modifier-details>summary span,.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span,.reference-fold>summary span {
+:is(.briefing-more,.hypothesis-compare,.modifier-details,.topology-detail,.map-intel-detail,.evidence-detail,.known-facts,.reference-fold)>summary span {
   font-family:var(--font-ui);
   font-size:var(--type-caption);
   letter-spacing:0;

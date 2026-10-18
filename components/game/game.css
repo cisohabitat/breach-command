@@ -301,17 +301,67 @@
   margin:20px auto;
   display:grid;
   place-items:center;
-  inline-size:160px;
+  inline-size:100%;
   color:var(--lime);
   font-family:var(--font-mono);
 }
-.die-shell,.die strong {
-  grid-area:1/1;
+.dice-tray {
+  position:relative;
+  inline-size:100%;
+  block-size:230px;
+  perspective:800px;
+  overflow:hidden;
+  border:1px solid #53544f;
+  border-radius:18px;
+  background:radial-gradient(ellipse at 50% 40%,#353b3b,#202626 75%);
+  box-shadow:inset 0 0 0 7px #171c1e,inset 0 0 0 8px #444941,inset 0 12px 28px #0008,0 8px 18px #0003;
+}
+.die-shell {
+  position:absolute;
+  inset-inline-start:50%;
+  inset-block-start:44%;
+  transform-style:preserve-3d;
+}
+.die-face {
+  position:absolute;
+  inline-size:96px;
+  block-size:83.1384px;
+  inset-inline-start:-48px;
+  inset-block-start:-55.4256px;
+  transform-origin:50% 66.6667%;
+  backface-visibility:hidden;
+  clip-path:polygon(50% 0,100% 100%,0 100%);
+  display:grid;
+  place-items:center;
+  padding-block-start:22px;
+  color:#252a2b;
+  box-shadow:inset 0 -2px #716d60;
+}
+.die-face span {
+  font-size:24px;
+  font-weight:700;
+  letter-spacing:-.06em;
+}
+.dice-shadow {
+  position:absolute;
+  inset-inline-start:calc(50% - 66px);
+  inset-block-start:65%;
+  inline-size:132px;
+  block-size:24px;
+  border-radius:50%;
+  background:#0007;
+  filter:blur(8px);
+}
+.die-readout {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-block-start:16px;
 }
 .die strong {
   font-size:var(--type-h1);
 }
-.die span {
+.die-readout span {
   font-size:var(--type-caption);
   letter-spacing:.1em;
 }
@@ -3702,7 +3752,7 @@ span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   line-height:var(--leading-base);
 }
 /* Dense cluster copy resolves to the body step; compact labels to the caption step. */
-.topology-nodes strong,.evidence-cards strong,.procedure-planner strong,.procedure-planner small,.correlation-results p strong,.correlation-results p span,.case-theory strong,.case-theory button,.set-piece-options span,.evidence-review p,.specialist-reaction p,.hypothesis-options strong,.hypothesis-options span,.map-intel,.evidence-empty p,.guide-nudge strong,.procedure-card p,.map-command-bar strong,.specialist-transmission strong,.specialist-transmission p,.report-ending strong {
+:is(.topology-nodes,.evidence-cards,.procedure-planner,.case-theory,.hypothesis-options,.guide-nudge,.map-command-bar,.specialist-transmission,.report-ending) strong,.procedure-planner small,.correlation-results p strong,.correlation-results p span,.case-theory button,.set-piece-options span,.evidence-review p,.specialist-reaction p,.hypothesis-options span,.map-intel,.evidence-empty p,.procedure-card p,.specialist-transmission p {
   font-size:var(--type-body);
 }
 .evidence-cards small,.backup-console small,.hypothesis-heading small,.hypothesis-options button small,.case-theory small,.map-command-bar small,.tutorial-steps p strong {
@@ -4328,7 +4378,7 @@ span.effect-list>span.effect.note>span,.objective-meter>[data-slot=progress] {
     margin-top:9px;
   }
 }
-[data-slot=dialog-content][data-state=closed], [data-slot=dialog-overlay][data-state=closed], [data-slot=alert-dialog-content][data-state=closed], [data-slot=alert-dialog-overlay][data-state=closed], [data-slot=sheet-content][data-state=closed], [data-slot=sheet-overlay][data-state=closed] {
+:is([data-slot=dialog-content],[data-slot=dialog-overlay],[data-slot=alert-dialog-content],[data-slot=alert-dialog-overlay],[data-slot=sheet-content],[data-slot=sheet-overlay])[data-state=closed] {
   animation:none;
   pointer-events:none;
 }
@@ -4591,19 +4641,19 @@ awareness. */
   border-bottom:1px solid #383d45;
   border-radius:0;
 }
-.topology-detail>summary::-webkit-details-marker,.map-intel-detail>summary::-webkit-details-marker,.evidence-detail>summary::-webkit-details-marker,.known-facts>summary::-webkit-details-marker {
+:is(.topology-detail,.map-intel-detail,.evidence-detail,.known-facts)>summary::-webkit-details-marker {
   display:none;
 }
-.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span,.known-timeline,.known-unverified,.modifier-breakdown li.suppressed > strong,.form-row.on-desk dt {
+:is(.topology-detail,.map-intel-detail,.evidence-detail,.known-facts)>summary span,.known-timeline,.known-unverified,.modifier-breakdown li.suppressed > strong,.form-row.on-desk dt {
   color:var(--text-soft);
 }
-.topology-detail>summary::after,.map-intel-detail>summary::after,.evidence-detail>summary::after,.known-facts>summary::after,.reference-fold>summary::after {
+:is(.topology-detail,.map-intel-detail,.evidence-detail,.known-facts,.reference-fold)>summary::after {
   content:"+";
   margin-inline-start:auto;
   color:var(--text-soft);
   font-family:var(--font-mono);
 }
-.topology-detail[open]>summary::after,.map-intel-detail[open]>summary::after,.evidence-detail[open]>summary::after,.known-facts[open]>summary::after,.reference-fold[open]>summary::after,.training-prompt .prompt-why[open] summary::after,.paper-dialog .debrief-fold[open]>summary::before {
+:is(.topology-detail,.map-intel-detail,.evidence-detail,.known-facts,.reference-fold)[open]>summary::after,.training-prompt .prompt-why[open] summary::after,.paper-dialog .debrief-fold[open]>summary::before {
   content:"−";
 }
 .topology-detail[open]>.topology-routes,.map-intel-detail[open]>.map-intel,.evidence-detail[open]>.evidence-timeline {
@@ -4752,7 +4802,7 @@ awareness. */
 .compare-findings:hover {
   background:#ede2c914;
 }
-.opening-reference>summary:focus-visible,.hypothesis-compare>summary:focus-visible,.hypothesis-compare-options button:focus-visible,.decision-primer>summary:focus-visible,.report-dialog .evidence-decision .options-below:focus-visible,.modifier-details>summary:focus-visible,.topology-detail>summary:focus-visible,.map-intel-detail>summary:focus-visible,.evidence-detail>summary:focus-visible,.known-facts>summary:focus-visible,.compare-findings:focus-visible,.training-prompt .prompt-why summary:focus-visible {
+:is(.opening-reference,.hypothesis-compare,.decision-primer,.modifier-details,.topology-detail,.map-intel-detail,.evidence-detail,.known-facts)>summary:focus-visible,.hypothesis-compare-options button:focus-visible,.report-dialog .evidence-decision .options-below:focus-visible,.compare-findings:focus-visible,.training-prompt .prompt-why summary:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:2px;
 }
@@ -5064,7 +5114,7 @@ in colour, and the carried plan is stated before the options. */
   border-color:#434850;
   background:#1c1f24;
 }
-.response-options button:focus-visible,.map-command-bar>button:focus-visible,.set-piece-options button:focus-visible,.command-options button:focus-visible {
+:is(.response-options,.set-piece-options,.command-options) button:focus-visible,.map-command-bar>button:focus-visible {
   outline:2px solid var(--lime);
   outline-offset:-2px;
 }
@@ -5099,7 +5149,7 @@ span.effect-list>span.effect.term>em {
 /* Inside a paper document a section is a running head and a hairline, never a
    fill and a border: a box holding a fold that was itself a box, inside the
    paper, was the strongest remaining template tell. */
-.paper-dialog .score-card,.paper-dialog .hypothesis-ledger,.paper-dialog .timeline,.paper-dialog .decision-summary,.paper-dialog .counterfactuals,.paper-dialog .evidence-review,.paper-dialog .capability-review,.paper-dialog .specialist-reaction,.paper-dialog .mastery-panel,.paper-dialog .campaign-change,.paper-dialog .campaign-finale,.paper-dialog .debrief-learning {
+.paper-dialog :is(.score-card,.hypothesis-ledger,.timeline,.decision-summary,.counterfactuals,.evidence-review,.capability-review,.specialist-reaction,.mastery-panel,.campaign-change,.campaign-finale,.debrief-learning) {
   border:0;
   border-top:1px solid #c9bfac;
   border-radius:0;
@@ -5337,7 +5387,7 @@ span.effect-list>span.effect.term>em {
 .topology-routes .route-status {
   font:500 var(--type-micro) var(--font-mono);
 }
-.topology-detail>summary:hover,.map-intel-detail>summary:hover,.evidence-detail>summary:hover,.known-facts>summary:hover {
+:is(.topology-detail,.map-intel-detail,.evidence-detail,.known-facts)>summary:hover {
   border-color:#383d45;
   background:#1c1f24;
 }
@@ -6213,11 +6263,11 @@ body {
 .mission-meta {
   font-family:var(--font-ui);
 }
-.impact-meter>[data-slot=progress],.continuity-meter>[data-slot=progress],.objective-meter>[data-slot=progress] {
+:is(.impact-meter,.continuity-meter,.objective-meter)>[data-slot=progress] {
   height:10px;
   background:linear-gradient(#2b2f35,#2b2f35) top/100% 6px no-repeat,repeating-linear-gradient(90deg,#646a72 0 1px,transparent 1px 10%) bottom/100% 4px no-repeat,linear-gradient(90deg,transparent calc(100% - 1px),#646a72 calc(100% - 1px)) bottom/100% 4px no-repeat;
 }
-.impact-meter>[data-slot=progress]>div,.continuity-meter>[data-slot=progress]>div,.objective-meter>[data-slot=progress]>div {
+:is(.impact-meter,.continuity-meter,.objective-meter)>[data-slot=progress]>div {
   height:6px;
   flex:none;
 }
@@ -6344,7 +6394,7 @@ body {
 .sit-more[open]>summary::before,.career-card .standing-effects[open]>summary::before {
   content:"\2212";
 }
-.briefing-more>summary span,.hypothesis-compare>summary span,.modifier-details>summary span,.topology-detail>summary span,.map-intel-detail>summary span,.evidence-detail>summary span,.known-facts>summary span,.reference-fold>summary span {
+:is(.briefing-more,.hypothesis-compare,.modifier-details,.topology-detail,.map-intel-detail,.evidence-detail,.known-facts,.reference-fold)>summary span {
   font-family:var(--font-ui);
   font-size:var(--type-caption);
   letter-spacing:0;
