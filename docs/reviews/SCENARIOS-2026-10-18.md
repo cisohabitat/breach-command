@@ -112,3 +112,9 @@ passed. Reviewed all fifteen changed images and accepted six campaign pages
 at 320, 390 and 820 pixels: the more precise variant modifiers add one or two
 lines without clipping controls or the footer. Retained nine old references
 whose changes were only build-label mask widths or raster noise.
+
+The first full PR CI run passed with one WebKit retry: the d20 test froze its
+clock during the procedure sheet's entry, so Run procedure could not settle
+for a click. The test now awaits finite native entry animations before
+freezing time. Its motion, settlement and cleanup assertions and timeouts are
+unchanged. A subsequent complete CI run verifies that synchronization fix.

@@ -18,6 +18,9 @@ Process safety checks support operational decisions without proving that
 attacker access is removed. The review records technical corrections and
 automated coverage; independent practitioner sign-off remains separate.
 
+Dice browser checks wait for the procedure sheet's native entry animation
+before freezing the test clock, then inspect the real throw and its cleanup.
+
 After the cargo-source correction, a fresh 9,000-operation simulation records
 95.9% / 89.0% / 73.7% wins at Training / Operational / Crisis. These measure the
 Bot Commander on seeded standard incidents, not human completion rates.

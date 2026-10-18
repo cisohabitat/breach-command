@@ -14,6 +14,15 @@ for (const width of [320, 375, 390, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1
   await page.goto("/play", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await page.locator(".procedure-card:not(:disabled)").first().click();
+  await expect(page.locator(".action-sheet")).toBeVisible();
+  // Finish the sheet's native entry before freezing rAF/timers for the die.
+  // WebKit can otherwise keep Run procedure moving while its stability check
+  // waits on the paused clock. The throw itself remains full-motion below.
+  await page.locator(".action-sheet").evaluate(async sheet => {
+    await Promise.all(sheet.getAnimations({ subtree: true })
+      .filter(animation => Number.isFinite(animation.effect?.getComputedTiming().endTime))
+      .map(animation => animation.finished));
+  });
   const time = new Date("2030-01-01T00:00:00Z");
   await page.clock.install({ time });
   await page.clock.pauseAt(new Date(time.getTime() + 1000));
