@@ -8,6 +8,7 @@ import { captainOpeningFor } from "../lib/captain-voice.ts";
 import { captainUpdateFor } from "../lib/captain-update.ts";
 import { captainDebriefFor } from "../lib/captain-debrief.ts";
 import { scheduleCaptain, speakCaptain, type CaptainSpeechState } from "../lib/captain-speech.ts";
+import { unlockCaptainAudio } from "../lib/captain-media.ts";
 
 test("bundled recordings match the authored captions and fit the playback deadline", () => {
   const directory = new URL("../public/audio/captain/", import.meta.url);
@@ -115,20 +116,25 @@ test("Captain updates follow public findings, not hidden answers", () => {
 
 function installAudio() {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
-  const probe = { states: [] as CaptainSpeechState[], clips: [] as Audio[], cancellations: 0, throws: false };
+  const probe = { states: [] as CaptainSpeechState[], clips: [] as Audio[], cancellations: 0, throws: false, requireGesture: false, gesture: false };
   class Audio {
     src: string;
     volume = 1;
     onplaying: (() => void) | null = null;
     onended: (() => void) | null = null;
     onerror: (() => void) | null = null;
+    unlocked = false;
+    paused = true;
     constructor(src: string) { this.src = src; probe.clips.push(this); }
     play() {
       if (probe.throws) throw new Error("playback refused");
+      if (probe.requireGesture && !probe.gesture && !this.unlocked) throw new Error("user gesture required for this media element");
+      if (probe.gesture) this.unlocked = true;
+      this.paused = false;
       this.onplaying?.();
       return Promise.resolve();
     }
-    pause() { probe.cancellations++; }
+    pause() { this.paused = true; probe.cancellations++; }
     removeAttribute() {}
     load() {}
   }
@@ -195,6 +201,57 @@ test("recorded clips replace rather than overlap and stop without stale callback
     assert.equal(probe.states.at(-1), "idle");
     t.mock.timers.tick(30_000);
     assert.equal(probe.states.at(-1), "idle");
+  } finally { stop(); restore(); }
+});
+
+test("delayed narration retains the media permission granted by an earlier gesture", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: Date.now() + 10_000 });
+  const { probe, restore } = installAudio();
+  let stop = () => {};
+  try {
+    probe.requireGesture = true;
+    probe.gesture = true;
+    unlockCaptainAudio();
+    await Promise.resolve();
+    probe.gesture = false;
+    stop = scheduleCaptain(["firstFinding"], state => probe.states.push(state), () => {}, new EventTarget());
+    t.mock.timers.tick(1500);
+    assert.equal(probe.states.at(-1), "speaking", "the automatic line reuses the unlocked player");
+    assert.equal(probe.clips.length, 1);
+  } finally { stop(); restore(); }
+});
+
+test("a late primer cannot pause or clear a line that has claimed the shared player", async () => {
+  const { probe, restore } = installAudio();
+  let stop = () => {};
+  try {
+    unlockCaptainAudio();
+    stop = speakCaptain("opening", state => probe.states.push(state));
+    await Promise.resolve();
+    assert.equal(probe.clips.length, 1);
+    assert.equal(probe.clips[0].src, "/audio/captain/opening.mp3");
+    assert.equal(probe.clips[0].paused, false);
+    assert.equal(probe.cancellations, 0);
+    unlockCaptainAudio();
+    assert.equal(probe.clips[0].src, "/audio/captain/opening.mp3", "an active line is never re-primed");
+  } finally { stop(); restore(); }
+});
+
+test("refused playback does not mark a cue heard and can retry after a gesture", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: Date.now() + 10_000 });
+  const { probe, restore } = installAudio();
+  let starts = 0;
+  let stop = () => {};
+  try {
+    probe.throws = true;
+    assert.doesNotThrow(unlockCaptainAudio);
+    stop = scheduleCaptain(["firstFinding"], state => probe.states.push(state), () => starts++, new EventTarget());
+    t.mock.timers.tick(1500);
+    assert.equal(probe.states.at(-1), "unavailable");
+    assert.equal(starts, 0);
+    probe.throws = false;
+    stop = speakCaptain("firstFinding", () => {}, () => starts++);
+    assert.equal(starts, 1);
   } finally { stop(); restore(); }
 });
 

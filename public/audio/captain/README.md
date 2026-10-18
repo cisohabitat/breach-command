@@ -1,6 +1,9 @@
 # Incident Captain recordings
 
 Sixty-five original fictional scripts, matching `lib/i18n/en/captain-voice.ts`.
+The separate `../captain-ready.wav` is original generated silence: 50 ms,
+8 kHz mono 16-bit PCM (400 zero samples), used only to prime the shared player
+during a gesture. It contains no voice and is not part of the spoken manifest.
 Rendered offline using [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M),
 an Apache-2.0 licensed model, via kokoro-onnx 0.6.1 (MIT).
 Voice: `bm_george`, British English, speed 0.94. This is a synthetic stock voice,

@@ -1,4 +1,5 @@
 import { setNarrationActive } from "./feedback-lazy.ts";
+import { captainAudio } from "./captain-media.ts";
 import type { CaptainVoiceCue } from "./captain-voice.ts";
 import type { RecordedCaptainCue } from "./captain-debrief.ts";
 
@@ -25,8 +26,7 @@ export function scheduleCaptain(
     if (stopped) return;
     if (!urgent && (activeStop || Date.now() - lastFinished < 1500)) { arm(); return; }
     detach();
-    onStart();
-    stopSpeech = speakCaptain(cues, onState);
+    stopSpeech = speakCaptain(cues, onState, onStart);
   };
   function arm() {
     if (timer !== null) clearTimeout(timer);
@@ -44,11 +44,12 @@ export function scheduleCaptain(
 
 // Bundled recordings give every device the same Captain. Playback failures
 // leave the transcript usable and always release the music and cue mix.
-export function speakCaptain(cue: Exclude<CaptainVoiceCue, "debrief"> | readonly RecordedCaptainCue[], onState: (state: CaptainSpeechState) => void): () => void {
+export function speakCaptain(cue: Exclude<CaptainVoiceCue, "debrief"> | readonly RecordedCaptainCue[], onState: (state: CaptainSpeechState) => void, onStart: () => void = () => {}): () => void {
   activeStop?.();
   const cues = typeof cue === "string" ? [cue] : cue;
   let index = 0;
   let stopped = false;
+  let started = false;
   let audio: HTMLAudioElement | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   const finish = (state: CaptainSpeechState) => {
@@ -76,10 +77,11 @@ export function speakCaptain(cue: Exclude<CaptainVoiceCue, "debrief"> | readonly
   activeStop = stop;
   try {
     if (!cues.length) { finish("idle"); return stop; }
-    audio = new window.Audio();
+    audio = captainAudio();
     audio.volume = 0.9;
     audio.onplaying = () => {
       if (stopped) return;
+      if (!started) { started = true; onStart(); }
       setNarrationActive(true);
       onState("speaking");
     };

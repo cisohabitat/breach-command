@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.61**: see the [release notes](CHANGELOG.md#0961-18-october-2026).
+Release **0.9.62**: see the [release notes](CHANGELOG.md#0962-18-october-2026).
 
 The [scenario correctness review](docs/reviews/SCENARIOS-2026-10-18.md) covers
 all ten cases, 96 techniques, seventy variants, thirty sector decisions and
@@ -68,7 +68,10 @@ investigation updates, guidance at each response phase and closing assessments.
 The 65 recorded clips cover confirmed findings, unsuccessful checks, uncertain
 signals, new developments and service pressure. Voice is on by default, using bundled recordings of a
 calm male Captain with a British English voice. An explicit saved Off setting is
-respected. Every spoken line is also readable, with Listen and Skip voice
+respected. Beginning or resuming an operation, or enabling Voice, primes one
+shared player during your tap so delayed narration can auto-play on browsers
+that require a gesture. Voice also works with music and sound effects off.
+Every spoken line is also readable, with Listen and Skip voice
 controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Bot Commander
 practice runs remain silent. Routine finding cues play automatically at most once per operation;
@@ -94,7 +97,9 @@ playback.
 `components/game/captain-voice.tsx` owns the transcript and controls,
 `lib/captain-update.ts` selects updates from public findings and meter crossings,
 and `lib/captain-speech.ts` handles recorded audio playback, cancellation and
-failure. The preference stays in the existing device-local settings record;
+failure. `lib/captain-media.ts` owns the shared, gesture-primed media element;
+its 50 ms local silent WAV contains no speech. A refused line is not marked heard.
+The preference stays in the existing device-local settings record;
 the game and saved-session schemas are unchanged. Audio provenance and the exact
 recorded scripts are in `public/audio/captain/README.md` and `manifest.json`.
 `scripts/render-captain-voice.py` regenerates changed scripts offline; it is a

@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.62, 18 October 2026
+
+- Keep one Captain audio player and prime it when beginning, resuming or enabling
+  voice so delayed commentary retains the browser's playback permission.
+- Support automatic voice with music and sound effects off, preserve saved mute,
+  and avoid marking blocked lines as heard.
+- Add gesture-restricted native playback coverage alongside cancellation regressions.
+
 ## 0.9.61, 18 October 2026
 
 - Review all ten scenarios and correct scope, evidence and ATT&CK references,

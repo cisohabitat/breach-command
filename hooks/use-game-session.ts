@@ -25,6 +25,7 @@ import type { SavedSession } from "@/lib/session";
 import { campaignAct, campaignChanges, campaignEnding, campaignStory, campaignReadable, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { operationCampaign, operationSetup } from "@/lib/operation-setup";
 import { playDiceRoll, playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
+import { unlockCaptainAudio } from "@/lib/captain-media";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
@@ -180,6 +181,7 @@ export function useGameSession() {
 
   async function start(index = scenarioChoice) {
     if (busyRef.current) return;
+    if (voiceEnabled && !botEnabled) unlockCaptainAudio();
     try { await loadGame(); } catch {
       setStorageNotice(msg("session.gameLoadFailed"));
       return;
@@ -236,6 +238,7 @@ export function useGameSession() {
   }
 
   function resume(session: SavedSession) {
+    if (voiceEnabled) unlockCaptainAudio();
     importedRef.current = null;
     recordedRef.current = false;
     voiceHistory.current = new Set();
@@ -649,6 +652,11 @@ export function useGameSession() {
     setAdaptiveScore(value, game ? Math.max(game.impact, game.objectiveProgress) / 100 : 0.1, game?.scenario ?? scenarioChoice);
   }
 
+  function setVoice(value: boolean) {
+    if (value && !botRun) unlockCaptainAudio();
+    setVoiceEnabled(value);
+  }
+
   function toggleBotPause() {
     setBotPaused(value => {
       const next = !value;
@@ -865,7 +873,7 @@ export function useGameSession() {
     telemetry,
     soundEnabled, setSoundEnabled,
     musicEnabled,
-    voiceEnabled, setVoiceEnabled,
+    voiceEnabled, setVoiceEnabled: setVoice,
     voiceHistory,
     voiceDecision,
     hapticsEnabled, setHapticsEnabled,
