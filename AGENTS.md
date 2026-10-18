@@ -321,6 +321,10 @@ These instructions apply to the entire repository. Preserve the game as a polish
 Review milestone effects use sibling native disclosures outside the paragraph;
 keep their summary available without expanding every meter row. The complete
 check log is a separate nested fold. Audit both expanded and compact states.
+Keep the index destination's summary below the sticky index, including its
+padding and wrapped phone rows. The clarity browser suite checks this at all
+eleven widths; pixel captures land instantly at the scroll destination rather
+than recording an intermediate smooth-scroll frame.
 
 Keep the keyboard playthrough's seeded single-Uint32 game draws separate from native random calls. Axe generates UUIDs with Uint8Array; seeding both made the timing and count of accessibility audits change the actual game dice, causing a supposed winning fixture to lose in CI. Other typed arrays must use native randomness. The isolated stream's desktop seed 1 wins and phone seed 20261011 loses; retain those explicit ending assertions and every keyboard/focus/axe check.
 

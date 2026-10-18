@@ -12,7 +12,8 @@ release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
   evidence comparisons, preserving tested relationship labels and patterns.
 - Bring the review's compact milestone timeline forward, pairing findings with
   their recorded responses and effects. Keep the full check log available and
-  avoid opening nested logs when using the section index.
+  avoid opening nested logs when using the section index. Keep destination
+  headings below the sticky index, including wrapped phone rows.
 
 ## 0.9.52, 17 October 2026
 
