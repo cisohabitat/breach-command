@@ -91,14 +91,25 @@ test.describe("visual baselines", () => {
       if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
       await page.locator(".topology-detail > summary").click();
       await page.locator(".map-intel-detail > summary").click();
-      // Isolate this panel from the unrelated navigation and its decorative
-      // meter copy. Making the nav static alone loses the copy's positioning
-      // anchor and can paint it across the map. Full workspace captures and
-      // interaction tests retain and verify the real pinned readout strip.
-      const staticTabs = await page.addStyleTag({ content: ".workspace-tabs { position: static !important; } .pinned-readouts { display: none !important; }" });
-      await expect(page.locator(".infrastructure-console")).toHaveScreenshot(`${width}-infrastructure-map.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
-      await staticTabs.evaluate(element => element.parentNode?.removeChild(element));
+      // Hide unrelated pinned navigation only while capturing this panel.
+      // Preserve its positioning and dimensions so screenshot isolation does
+      // not change the browser's scroll anchor before the workspace return.
+      const hiddenTabs = await page.addStyleTag({ content: ".workspace-tabs { visibility: hidden !important; }" });
+      try {
+        await expect(page.locator(".infrastructure-console")).toHaveScreenshot(`${width}-infrastructure-map.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+      } finally {
+        await hiddenTabs.evaluate(element => element.parentNode?.removeChild(element));
+      }
       await page.getByRole("button", { name: /^Briefing/ }).first().click();
+      await expect(page.getByRole("button", { name: /^Briefing/ }).first()).toHaveAttribute("aria-pressed", "true");
+      await expect(page.locator(".captain-column")).toBeVisible();
+      if (width > 650) await expect(page.locator(".pinned-readouts")).toBeVisible();
+      await expect.poll(() => page.locator(".captain-label").evaluate(element => {
+        const heading = element.getBoundingClientRect();
+        const tabs = document.querySelector(".workspace-tabs")!.getBoundingClientRect();
+        const readouts = document.querySelector(".pinned-readouts")!.getBoundingClientRect();
+        return heading.top >= Math.max(tabs.bottom, readouts.bottom) && heading.bottom <= innerHeight;
+      })).toBe(true);
       await snap(page, `${width}-briefing-workspace.png`);
     });
 
