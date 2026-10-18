@@ -191,6 +191,9 @@ test.describe("visual baselines", () => {
       await page.waitForTimeout(600);
       await snap(page, `${width}-review.png`);
       await page.locator(".debrief-index").getByRole("button", { name: "Timeline", exact: true }).click();
+      // Capture the destination, rather than an intermediate smooth-scroll
+      // frame that can still show the introductory review above the timeline.
+      await page.locator("#debrief-timeline").evaluate(element => element.scrollIntoView({ behavior: "instant", block: "start" }));
       await expect(page.locator(".debrief-dialog")).toHaveScreenshot(`${width}-review-milestones.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
     });
   }
