@@ -41,8 +41,8 @@ the full finding text retained. See [the illustration guide](public/art/findings
 
 The incident desk uses a compact two-line version of the supplied Breach Command wordmark in the desk's warm bone and charcoal palette. The tiny tagline is omitted for legibility; a missing image restores the original text, including when it fails before the page becomes interactive. The transparent local WebP is about 56 KB, and the home link retains its accessible name.
 
-Landscape screens up to 850 px tall use a smaller wordmark and tighter header
-and workspace spacing, retaining written labels, decision badges and 44 px
+Landscape screens wider than 650 px and up to 850 px tall use a smaller
+wordmark and tighter header and workspace spacing, retaining written labels, decision badges and 44 px
 controls. Expanded map notes separate the critical dependency, confirmed
 techniques and control guidance into labelled groups; their native disclosure
 and all action costs remain available.
