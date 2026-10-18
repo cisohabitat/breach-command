@@ -78,6 +78,7 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
     await expect(die).toBeVisible();
     await expect(die).not.toHaveClass(/rolling/);
     expect(await shell.evaluate(element => element.getAnimations().length)).toBe(0);
+    expect(await page.locator(".dice-shadow").evaluate(element => element.getAnimations().length)).toBe(0);
     const number = await die.locator("strong").textContent();
     await expect(page.locator(".report-dialog")).toHaveCount(0);
     await page.clock.runFor(899);
@@ -128,6 +129,7 @@ test("enabling reduced motion during a roll cancels its tumble and number cyclin
   expect(await page.evaluate(() => window.diceProbe.tumbles)).toBe(1);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect.poll(() => page.locator(".die-shell").evaluate(element => element.getAnimations().length)).toBe(0);
+  await expect.poll(() => page.locator(".dice-shadow").evaluate(element => element.getAnimations().length)).toBe(0);
   await page.clock.runFor(80);
   await expect(page.locator(".die strong")).toHaveText("—");
   await page.clock.runFor(2120);

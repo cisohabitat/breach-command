@@ -12,6 +12,10 @@ throws and bounces within a recessed charcoal tray, with fixed studio shading
 and a soft contact shadow. The front face agrees with the separate readable
 result at settlement. Motion is decorative choreography, never a physical
 randomizer; preserve the existing roll/reveal timings and reduced-motion path.
+The refined throw uses warm enamel facet gradients, narrow triangular bevels,
+a tumbling arc and diminishing bounces. Its soft shadow follows horizontal
+travel and tightens on contact. Keep the separate readout pending during the
+throw so the actual result has one clear reveal at settlement.
 
 Unavailable controls (18 October 2026, user approved): keep names, descriptions,
 costs and reasons at readable contrast. Mute decorative icons and use dashed

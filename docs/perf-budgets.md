@@ -1,5 +1,14 @@
 # Performance budgets
 
+Refined d20 materials and synchronized shadow (0.9.59) preserve every limit.
+The local production build measures 656,553 B initial script, 1,170,693 B
+warmed assignment script and 1,181,567 B at operation start. Linked/total CSS
+is 89,007/221,981 B, leaving 19 B under the style limit. Equal-specificity
+selector factoring preserves the declarations and makes room for the bevel.
+The isolated throttled phone run records assignment/operation LCP of
+1.276/1.256 s and CLS of 0.001/0.020. There is no new dependency or asset
+download. CI's build identifier adds 8 B to script; verify its final build too.
+
 Landscape toolbar and grouped map reference (0.9.58) keep all existing limits.
 The local production build measures 656,553 B initial script, 1,169,917 B
 warmed assignment script and 1,180,791 B at operation start. Linked/total CSS

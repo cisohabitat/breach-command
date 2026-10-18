@@ -1049,7 +1049,7 @@ html,body {
   grid-template-columns:minmax(0,1fr) auto;
   min-width:0;
 }
-.impact-meter .mono,.continuity-meter .mono,.objective-meter .mono {
+:is(.impact-meter,.continuity-meter,.objective-meter) .mono {
   white-space:normal;
   line-height:var(--leading-compact);
   overflow-wrap:anywhere;
@@ -1430,7 +1430,7 @@ html,body {
   color:var(--lime);
   font:500 var(--type-caption) var(--font-mono);
 }
-.campaign-act-card strong,.campaign-ending strong {
+:is(.campaign-act-card,.campaign-ending) strong {
   display:block;
   font-size:var(--type-body);
 }
@@ -1707,19 +1707,19 @@ html,body {
 .impact-meter,.continuity-meter,.objective-meter {
   width:155px;
 }
-.impact-meter>.mono,.continuity-meter>.mono,.objective-meter>.mono {
+:is(.impact-meter,.continuity-meter,.objective-meter)>.mono {
   display:block;
   color:var(--text-soft);
   font-size:var(--type-caption);
   line-height:var(--leading-compact);
   min-height:30px;
 }
-.impact-meter strong,.continuity-meter strong,.objective-meter strong {
+:is(.impact-meter,.continuity-meter,.objective-meter) strong {
   display:block;
   font-size:var(--type-lead);
   margin:3px 0;
 }
-.impact-meter small,.continuity-meter small,.objective-meter small {
+:is(.impact-meter,.continuity-meter,.objective-meter) small {
   display:block;
   color:var(--text-soft);
   font-size:var(--type-caption);
@@ -1833,7 +1833,7 @@ html,body {
   box-shadow:none;
 }
 /* Compact operational labels sit on the caption step; card and option titles on the body step. */
-.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards :is(span,small,em),.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small,.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
+.topology-nodes :is(small,em),.topology-routes>div,.topology-routes b,.evidence-cards :is(span,small,em),.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts :is(span,small),.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
   font-size:var(--type-caption);
 }
 @media(max-width:900px) {
@@ -1872,7 +1872,7 @@ html,body {
   .impact-meter,.continuity-meter,.objective-meter {
     width:auto;
   }
-  .impact-meter>.mono,.continuity-meter>.mono,.objective-meter>.mono {
+  :is(.impact-meter,.continuity-meter,.objective-meter)>.mono {
     min-height:auto;
   }
   .workspace-tabs {
@@ -2793,7 +2793,7 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
    mono capitals on every label (the case line, the window, the meters' names,
    the chain's states, the map's tiles, the footer) were a "terminal" garnish
    applied everywhere, which is what made them read as generated. */
-.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes small,.topology-nodes em,.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,.procedure-planner .plan-selected,.case-theory .plan-selected,.training-prompt .prompt-sources,.service-node small {
+.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes :is(small,em),.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,:is(.procedure-planner,.case-theory) .plan-selected,.training-prompt .prompt-sources,.service-node small {
   font-family:var(--font-ui);
   text-transform:none;
   letter-spacing:0;

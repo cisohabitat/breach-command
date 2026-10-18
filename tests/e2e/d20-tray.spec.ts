@@ -20,15 +20,24 @@ for (const width of [320, 375, 390, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1
   await page.getByRole("button", { name: "Run procedure", exact: true }).click();
   await page.clock.runFor(100);
   await expect(page.locator(".die-face")).toHaveCount(20);
+  await expect(page.locator(".die-readout strong")).toHaveText("—");
   // Inspect the real native throw, then advance to the session's settlement.
-  await page.locator(".die-shell").evaluate(el => { const animation = el.getAnimations()[0]; animation.pause(); animation.currentTime = 440; });
+  await page.locator(".dice-tray").evaluate(tray => {
+    for (const element of tray.querySelectorAll(".die-shell, .dice-shadow")) {
+      const animation = element.getAnimations()[0];
+      if (!animation) throw new Error("The die and its contact shadow must both move");
+      animation.pause(); animation.currentTime = 440;
+    }
+  });
   expect(await page.locator(".die-shell").evaluate(el => getComputedStyle(el).transform)).toContain("matrix3d");
+  expect(await page.locator(".dice-shadow").evaluate(el => getComputedStyle(el).transform)).not.toBe("none");
   await page.clock.runFor(1300);
   await expect(page.locator(".die")).not.toHaveClass(/rolling/);
   await expect(page.locator(".die-face").first()).toHaveText((await page.locator(".die strong").textContent())!);
   expect(await page.locator(".die-face").allTextContents()).toHaveLength(20);
   expect(new Set(await page.locator(".die-face").allTextContents()).size).toBe(20);
   expect(await page.locator(".die-shell").evaluate(el => el.getAnimations().length)).toBe(0);
+  expect(await page.locator(".dice-shadow").evaluate(el => el.getAnimations().length)).toBe(0);
   expect(await page.locator(".roll-dialog").evaluate(el => el.getBoundingClientRect().width)).toBeLessThanOrEqual(width);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
 });

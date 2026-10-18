@@ -312,14 +312,14 @@
   perspective:800px;
   overflow:hidden;
   border:1px solid #53544f;
-  border-radius:18px;
-  background:radial-gradient(ellipse at 50% 40%,#353b3b,#202626 75%);
+  border-radius:14px;
+  background:radial-gradient(ellipse at 50% 70%,#36383a,#171c20 78%);
   box-shadow:inset 0 0 0 7px #171c1e,inset 0 0 0 8px #444941,inset 0 12px 28px #0008,0 8px 18px #0003;
 }
 .die-shell {
   position:absolute;
   inset-inline-start:50%;
-  inset-block-start:44%;
+  inset-block-start:48%;
   transform-style:preserve-3d;
 }
 .die-face {
@@ -335,22 +335,30 @@
   place-items:center;
   padding-block-start:22px;
   color:#252a2b;
-  box-shadow:inset 0 -2px #716d60;
+}
+.die-face:before {
+  content:"";
+  position:absolute;
+  inset:2px;
+  clip-path:inherit;
+  background:linear-gradient(145deg,#fff4,#0002);
 }
 .die-face span {
+  position:relative;
   font-size:24px;
   font-weight:700;
   letter-spacing:-.06em;
 }
 .dice-shadow {
   position:absolute;
-  inset-inline-start:calc(50% - 66px);
-  inset-block-start:65%;
-  inline-size:132px;
-  block-size:24px;
+  inset-inline-start:calc(50% - 52px);
+  inset-block-start:80%;
+  inline-size:104px;
+  block-size:18px;
   border-radius:50%;
-  background:#0007;
-  filter:blur(8px);
+  background:radial-gradient(ellipse,#000c,#0000 72%);
+  filter:blur(4px);
+  opacity:.55;
 }
 .die-readout {
   display:flex;
@@ -1982,7 +1990,7 @@
   gap:13px;
   align-items:flex-start;
 }
-.campaign-act-card strong,.campaign-ending strong {
+:is(.campaign-act-card,.campaign-ending) strong {
   display:block;
   font-size:var(--type-body);
 }
@@ -2844,19 +2852,19 @@
 .impact-meter,.continuity-meter,.objective-meter {
   width:155px;
 }
-.impact-meter>.mono,.continuity-meter>.mono,.objective-meter>.mono {
+:is(.impact-meter,.continuity-meter,.objective-meter)>.mono {
   display:block;
   color:var(--text-soft);
   font-size:var(--type-caption);
   line-height:var(--leading-compact);
   min-height:30px;
 }
-.impact-meter strong,.continuity-meter strong,.objective-meter strong {
+:is(.impact-meter,.continuity-meter,.objective-meter) strong {
   display:block;
   font-size:var(--type-lead);
   margin:3px 0;
 }
-.impact-meter small,.continuity-meter small,.objective-meter small {
+:is(.impact-meter,.continuity-meter,.objective-meter) small {
   display:block;
   color:var(--continuity-color,var(--text-soft));
   font-size:var(--type-caption);
@@ -3174,7 +3182,7 @@
 }
 /* Node names sit in narrow cells beside each other; at the body step the
    longest word in "Management edge" was wider than its cell. */
-.topology-nodes small,.topology-nodes em,.topology-routes>div,.topology-routes b,.evidence-cards :is(span,small,em),.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts span,.briefing-readouts small,.topology-nodes button strong,.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
+.topology-nodes :is(small,em),.topology-routes>div,.topology-routes b,.evidence-cards :is(span,small,em),.case-theory small,.challenge-console>p,.backup-console small,.briefing-readouts :is(span,small),.topology-nodes button strong,.sit-entry.compact .sit-body p,.sit-entry.compact .sit-body>small {
   font-size:var(--type-caption);
 }
 @media(max-width:900px) {
@@ -3225,7 +3233,7 @@
   .impact-meter,.continuity-meter,.objective-meter {
     width:auto;
   }
-  .impact-meter>.mono,.continuity-meter>.mono,.objective-meter>.mono {
+  :is(.impact-meter,.continuity-meter,.objective-meter)>.mono {
     min-height:auto;
   }
   .workspace-tabs {
@@ -5897,7 +5905,7 @@ span.effect-list>span.effect.term>em {
   font-size:var(--type-caption);
   font-weight:400;
 }
-.first-read dd,.topology-nodes small,.topology-nodes em,.paper-dialog .rules-grid h3 {
+.first-read dd,.topology-nodes :is(small,em),.paper-dialog .rules-grid h3 {
   margin:0;
 }
 /* The campaign tally reads as the review's other tally: two columns, the figure
@@ -5918,7 +5926,7 @@ span.effect-list>span.effect.term>em {
 .career-progress {
   height:2px;
 }
-.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes small,.topology-nodes em,.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,.procedure-planner .plan-selected,.case-theory .plan-selected,.training-prompt .prompt-sources,.service-node small {
+.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes :is(small,em),.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,:is(.procedure-planner,.case-theory) .plan-selected,.training-prompt .prompt-sources,.service-node small {
   font-family:var(--font-ui);
   text-transform:none;
   letter-spacing:0;

@@ -24,7 +24,7 @@ export function RollDialog({ session }: { session: GameSession }) {
               {d20Faces.map(face => <div key={face.id} className="die-face" style={{ transform: face.transform, background: face.shade }}><span>{((face.id + (dieSettled ? die ?? 20 : 20) - 1) % 20) + 1}</span></div>)}
             </div>
           </div>
-          <div className="die-readout"><span>D20</span><strong>{die ?? "—"}</strong></div>
+          <div className="die-readout"><span>D20</span><strong>{dieSettled ? die ?? "—" : "—"}</strong></div>
         </div>
       </DialogContent>
     </Dialog>

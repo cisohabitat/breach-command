@@ -15,6 +15,7 @@ const forward = unit(centre(first));
 const down = unit(sub(centre(first), first[0]));
 const right = unit(cross(down, forward));
 const orient = (v: Vec): Vec => [dot(v, right), dot(v, down), dot(v, forward)];
+const colour = (r: number, g: number, b: number) => `rgb(${r} ${g} ${b})`;
 
 export const d20Faces = indices.map((ids, index) => {
   const points = ids.map(i => orient(vertices[i]));
@@ -24,6 +25,6 @@ export const d20Faces = indices.map((ids, index) => {
   const z = cross(x, y);
   const matrix = [...x, 0, ...y, 0, ...z, 0, ...c.map(v => v * 48), 1];
   // Fixed studio light, independent of roll value and hidden game state.
-  const light = Math.round(164 + 52 * Math.max(0, dot(unit(c), unit([-1, -2, 3]))));
-  return { id: index, transform: `matrix3d(${matrix.map(v => +v.toFixed(6)).join(",")})`, shade: `rgb(${light + 12} ${light + 7} ${light - 6})` };
+  const light = Math.round(135 + 72 * Math.max(0, dot(unit(c), unit([-1, -2, 3]))));
+  return { id: index, transform: `matrix3d(${matrix.map(v => +v.toFixed(6)).join(",")})`, shade: `linear-gradient(145deg,${colour(light + 28, light + 22, light + 8)},${colour(light, light - 4, light - 14)})` };
 });
