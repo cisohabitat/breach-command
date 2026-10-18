@@ -25,8 +25,8 @@ and heights up to 700 px, reduce empty spacing without concealing content.
 
 Dice and report polish (17 October 2026, user approved): use a faceted d20
 illustration in bone ink instead of a rounded dice box. Its decorative shell
-tumbles for the existing 850 ms; the upright number remains readable and the
-actual result stays still for 500 ms. Reduced motion uses a static pending die
+tumbles for the approved 1,400 ms; the upright number remains readable and the
+actual result stays still for 900 ms. Reduced motion uses a static pending die
 and a static result. Roll and report surfaces fade without zoom; prepare the
 report during the roll and let its focus trap own the handoff. The procedure
 just used receives a two-second neutral inset outline on returning from its

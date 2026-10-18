@@ -4,6 +4,15 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.57, 18 October 2026
+
+- Give the 3D die 1.4 seconds to throw, bounce and settle, then hold the real
+  result for 900 ms before opening the report (2.3 seconds total).
+- Stretch the decelerating impact sounds to match the throw. Preserve mute,
+  tab changes, late audio loading, reduced motion and Fast Resolution.
+- Share timing between the session, animation and sound; check the exact
+  settlement and report boundaries without changing gameplay or saved data.
+
 ## 0.9.56, 18 October 2026
 
 - Replace the flat die illustration with twenty shaded 3D faces and a short

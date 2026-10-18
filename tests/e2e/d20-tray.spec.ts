@@ -23,7 +23,7 @@ for (const width of [320, 375, 390, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1
   // Inspect the real native throw, then advance to the session's settlement.
   await page.locator(".die-shell").evaluate(el => { const animation = el.getAnimations()[0]; animation.pause(); animation.currentTime = 440; });
   expect(await page.locator(".die-shell").evaluate(el => getComputedStyle(el).transform)).toContain("matrix3d");
-  await page.clock.runFor(750);
+  await page.clock.runFor(1300);
   await expect(page.locator(".die")).not.toHaveClass(/rolling/);
   await expect(page.locator(".die-face").first()).toHaveText((await page.locator(".die strong").textContent())!);
   expect(await page.locator(".die-face").allTextContents()).toHaveLength(20);
