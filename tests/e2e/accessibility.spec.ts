@@ -49,6 +49,12 @@ async function expectNoViolations(page: Page, surface: string) {
   expect(violations, `${surface} should report no accessibility violations\n${report}`).toEqual([]);
 }
 
+async function expandMapNotes(page: Page) {
+  const reference = page.locator(".reference-fold");
+  if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
+  await page.locator(".map-intel-detail > summary").click();
+}
+
 test.describe("accessibility audit", () => {
   for (const width of widths) {
     test(`assignment screen at ${width}px`, async ({ page }) => {
@@ -132,6 +138,7 @@ test.describe("accessibility audit", () => {
       await expect(page.locator(".sector-alert")).toBeVisible();
       if (width < 651) await page.locator(".sector-rule-fold > summary").click();
       await expect(page.getByRole("button", { name: /Record a case theory/ })).toBeVisible();
+      await expandMapNotes(page);
       await expectNoViolations(page, `investigation prompts ${width}`);
       await page.getByRole("button", { name: /Record a case theory/ }).hover();
       await expectNoViolations(page, `investigation action hover ${width}`);
@@ -180,6 +187,7 @@ test.describe("accessibility audit", () => {
     await page.getByRole("button", { name: "Resume", exact: true }).click();
     await page.getByRole("button", { name: /Investigate/ }).first().click();
     await page.locator(".sector-rule-fold > summary").click();
+    await expandMapNotes(page);
     await page.getByRole("button", { name: /Record a case theory/ }).click();
     await expect(page.locator(".evidence-workspace")).toBeVisible();
     await expectNoViolations(page, "investigation in high contrast");

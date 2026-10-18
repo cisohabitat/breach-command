@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { infrastructureTopologies, newGame, type Game } from "../../lib/advanced-game";
+import { attacks, infrastructureTopologies, newGame, type Game } from "../../lib/advanced-game";
 import { openWithSave, twoStagesGame } from "./fixtures";
 
 async function openMap(page: Page, game: Game = twoStagesGame()) {
@@ -9,6 +9,7 @@ async function openMap(page: Page, game: Game = twoStagesGame()) {
   const reference = page.locator(".reference-fold");
   if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
   await page.locator(".topology-detail > summary").click();
+  await page.locator(".map-intel-detail > summary").click();
   return page.locator(".infrastructure-console");
 }
 
@@ -18,6 +19,7 @@ for (const width of [320, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       const map = await openMap(page, newGame(scenario, "operational", () => 0));
       await expect(map.locator(".topology-nodes strong")).toHaveText(infrastructureTopologies[scenario].nodes.map(node => node.label));
+      await expect(map.locator(".map-intel dd").first()).toHaveText(infrastructureTopologies[scenario].criticalRule);
       const clipped = await map.locator(".route-source, .route-target, .route-relation, .topology-nodes button").evaluateAll(nodes => nodes.filter(node => node.scrollWidth > node.clientWidth + 1).map(node => node.textContent));
       expect(clipped).toEqual([]);
     });
@@ -27,7 +29,10 @@ for (const width of [320, 1280]) {
 for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280]) {
   test(`map labels remain readable without inventing compromise at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    const map = await openMap(page);
+    const game = twoStagesGame();
+    const map = await openMap(page, game);
+    await expect(map.locator(".map-intel dt")).toHaveText(["Critical dependency", "Confirmed techniques", "Map controls"]);
+    await expect(map.locator(".map-intel dd").nth(1)).toHaveText(game.revealed.map(id => attacks.find(attack => attack.id === id)!.title).join(", "));
     // Two techniques found does not prove an ordinal system or path compromised.
     await expect(map.locator(".topology-nodes button em")).toContainText(infrastructureTopologies[0].nodes.map(() => "Unassessed"));
     await expect(map.locator(".topology-nodes")).not.toContainText(/affected|exposed|clear/i);
@@ -35,7 +40,7 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     await expect(map.locator(".node-findings").first()).toBeVisible();
     const overflow = await map.evaluate(element => {
       const bounds = element.getBoundingClientRect();
-      return [...element.querySelectorAll(".topology-nodes button, .topology-routes > div, .route-source, .route-target, .route-relation")].filter(node => {
+      return [...element.querySelectorAll(".topology-nodes button, .topology-routes > div, .route-source, .route-target, .route-relation, .map-intel dt, .map-intel dd")].filter(node => {
         const rect = node.getBoundingClientRect();
         return rect.left < bounds.left - 1 || rect.right > bounds.right + 1 || node.scrollWidth > node.clientWidth + 1;
       }).map(node => node.textContent);
@@ -71,6 +76,12 @@ for (const [width, height] of [[844, 390], [1024, 600], [1280, 700]]) {
     const heading = page.locator(".game-heading");
     const tallBottom = await heading.evaluate(element => element.getBoundingClientRect().bottom + scrollY);
     await page.setViewportSize({ width, height });
+    expect((await page.locator(".topbar").boundingBox())!.height).toBeLessThanOrEqual(64);
+    for (const button of await page.locator(".top-actions button").all()) {
+      const rect = await button.boundingBox();
+      expect(rect!.height).toBeGreaterThanOrEqual(44);
+      expect(await button.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    }
     await expect.poll(() => heading.evaluate(element => element.getBoundingClientRect().bottom + scrollY)).toBeLessThan(tallBottom - 20);
     await expect(heading.locator(".sector-alert")).toBeVisible();
     const [headerBox, alertBox] = await Promise.all([heading.boundingBox(), heading.locator(".sector-alert").boundingBox()]);
@@ -78,11 +89,32 @@ for (const [width, height] of [[844, 390], [1024, 600], [1280, 700]]) {
     for (const button of await tabs.getByRole("button").all()) {
       const rect = await button.boundingBox();
       expect(rect!.height).toBeGreaterThanOrEqual(44);
+      expect(rect!.height).toBeLessThanOrEqual(46);
     }
     for (const workspace of [/^Command/, /^Briefing/, /^Investigate/]) {
       await tabs.getByRole("button", { name: workspace }).first().click();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
     await expect(page.locator(".procedure-card").first()).toBeVisible();
+  });
+}
+
+for (const [width, height] of [[1024, 768], [1080, 810], [1194, 834]]) {
+  test(`iPad landscape toolbar keeps labels and readouts usable at ${width}×${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await openMap(page);
+    expect((await page.locator(".topbar").boundingBox())!.height).toBeLessThanOrEqual(64);
+    const tabs = page.locator(".workspace-tabs");
+    for (const button of await page.locator(".top-actions button, .workspace-tabs button").all()) {
+      const rect = await button.boundingBox();
+      expect(rect!.height).toBeGreaterThanOrEqual(44);
+      expect(await button.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    }
+    await page.locator(".map-intel").scrollIntoViewIfNeeded();
+    await expect(tabs.locator(".pinned-readouts")).toBeVisible();
+    expect(await tabs.locator(".pinned-readouts").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await tabs.getByRole("button", { name: /^Briefing/ }).click();
+    await expect(tabs.getByRole("button", { name: /^Briefing/ })).toHaveAttribute("aria-pressed", "true");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }

@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.57**: see the [release notes](CHANGELOG.md#0957-18-october-2026).
+Release **0.9.58**: see the [release notes](CHANGELOG.md#0958-18-october-2026).
 
 The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones use a dedicated composition with extra sky and terrace space to keep the embedded logo fully visible. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 
@@ -40,6 +40,12 @@ Confirmed findings use twelve compact, distinct source illustrations, with
 the full finding text retained. See [the illustration guide](public/art/findings/README.md).
 
 The incident desk uses a compact two-line version of the supplied Breach Command wordmark in the desk's warm bone and charcoal palette. The tiny tagline is omitted for legibility; a missing image restores the original text, including when it fails before the page becomes interactive. The transparent local WebP is about 56 KB, and the home link retains its accessible name.
+
+Landscape screens up to 850 px tall use a smaller wordmark and tighter header
+and workspace spacing, retaining written labels, decision badges and 44 px
+controls. Expanded map notes separate the critical dependency, confirmed
+techniques and control guidance into labelled groups; their native disclosure
+and all action costs remain available.
 
 **Captain voice:** hear case-specific mission openings across all ten incidents,
 investigation updates, guidance at each response phase and closing assessments.

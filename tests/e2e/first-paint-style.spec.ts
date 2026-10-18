@@ -55,13 +55,13 @@ const returning = {
   [LAST_OPERATION_KEY]: JSON.stringify({ scenario: 0, difficulty: "training", outcome: "won", ending: msg("record.endingStoodDown"), score: 82, endedAt: Date.UTC(2026, 9, 1), next: { scenario: 1, difficulty: "operational", title: msg("engine.reads.untested"), reason: msg("record.clearedOperational", { score: 82 }) } }),
 };
 
-for (const width of [390, 1280]) {
+for (const [width, height] of [[390, 900], [1280, 900], [1024, 768]]) {
   for (const [name, storage] of [["first visit", {}], ["returning", returning]] as const) {
     test(`the assignment screen at ${width}, ${name}, looks the same before and after the game's styles load`, async ({ browser, browserName }) => {
       test.skip(browserName !== "chromium", "compared in Chromium");
       const shots: Buffer[] = [];
       for (const blocked of [true, false]) {
-        const page = await browser.newPage({ viewport: { width, height: 900 } });
+        const page = await browser.newPage({ viewport: { width, height } });
         shots.push(await capture(page, "/play", blocked, storage));
         await page.close();
       }

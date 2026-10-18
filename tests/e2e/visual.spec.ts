@@ -90,6 +90,7 @@ test.describe("visual baselines", () => {
       const reference = page.locator(".reference-fold");
       if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
       await page.locator(".topology-detail > summary").click();
+      await page.locator(".map-intel-detail > summary").click();
       // Capture the whole reference panel without the unrelated sticky tabs
       // covering its title or first node during the locator's automatic scroll.
       const staticTabs = await page.addStyleTag({ content: ".workspace-tabs { position: static !important; }" });
@@ -219,7 +220,7 @@ test.describe("visual baselines", () => {
     });
   }
 
-  for (const [width, height] of [[844, 390], [1024, 600], [1280, 700]]) {
+  for (const [width, height] of [[844, 390], [1024, 600], [1280, 700], [1024, 768], [1080, 810], [1194, 834]]) {
     test(`compact workspaces at ${width}×${height}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });

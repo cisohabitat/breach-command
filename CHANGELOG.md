@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.58, 18 October 2026
+
+- Compact the header and workspace toolbar on short landscape screens while
+  keeping written labels, decision badges and 44 px controls.
+- Separate expanded map notes into critical dependency, confirmed techniques
+  and map controls, with semantic labels and quiet rules for easier scanning.
+- Preserve native disclosures, map costs, confirmed information and gameplay.
+
 ## 0.9.57, 18 October 2026
 
 - Give the 3D die 1.4 seconds to throw, bounce and settle, then hold the real

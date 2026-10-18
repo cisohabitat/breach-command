@@ -305,6 +305,18 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Change discipline
 
+- Landscape/reference polish (0.9.58): at widths above 650 px, landscape
+  heights up to 850 px use the compact header and tabs, including iPad
+  landscape. Preserve full labels, decision badges and 44 px controls. Keep
+  the matching tab rules in both sheets and preserve the pinned readout strip.
+  Map notes use a semantic definition list for critical dependency, confirmed
+  techniques and control guidance; read only published rules and revealed IDs.
+  Keep native disclosures, costs and map availability unchanged. Audit expanded
+  notes in ordinary/high contrast and retain all-sector/width map checks, iPad
+  toolbar checks and reviewed expanded-map/compact-workspace pixel baselines.
+  Equivalent selector factoring must preserve specificity and declarations;
+  never raise the CSS budget to accommodate this layout.
+
 - D20 tray (0.9.56, preview approved): `lib/d20-geometry.ts` supplies twenty regular icosahedron
   planes; the CSS 3D throw is decorative choreography, not a physics randomizer.
   Preserve the engine's draw, 1,400 ms roll, 900 ms settlement, audio cancellation,

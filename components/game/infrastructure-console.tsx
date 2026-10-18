@@ -79,7 +79,11 @@ export function InfrastructureConsole({ game, blocked, onFocus, onAction }: { ga
       {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>{t("evidenceWorkspace.backToThe")}<ArrowUp size={14} /></button>}
       <details className="map-intel-detail">
         <summary>{t("infrastructureConsole.dependencyAndControl")}<span>{game.revealed.length ? t("infrastructureConsole.techniquesConfirmed", { count: game.revealed.length }) : t("infrastructureConsole.noTechniquesConfirmed")}</span></summary>
-        <p className="map-intel">{t("infrastructureConsole.criticalDependencyConfirmed", { criticalRule: topology.criticalRule })}{game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(", ") : t("infrastructureConsole.none")}{t("infrastructureConsole.mapActionsAre")}</p>
+        <dl className="map-intel">
+          <div><dt>{t("infrastructureConsole.dependencyHeading")}</dt><dd>{topology.criticalRule}</dd></div>
+          <div><dt>{t("infrastructureConsole.confirmedHeading")}</dt><dd>{game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(", ") : t("infrastructureConsole.none")}</dd></div>
+          <div><dt>{t("infrastructureConsole.controlsHeading")}</dt><dd>{t("infrastructureConsole.mapActionsAre")}</dd></div>
+        </dl>
       </details>
     </section>
   );
