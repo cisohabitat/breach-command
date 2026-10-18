@@ -15,8 +15,6 @@ export const infrastructureConsoleMessages = catalogue({
     "selected": "Selected, ",
     "collectedHere": "{findings} collected here",
     "blocked2": "Blocked",
-    "confirmed": "Confirmed",
-    "suspected": "Suspected",
     "unassessed": "Unassessed",
     "criticalDependency2": "Critical dependency. ",
     "noActiveControl": "No active control",
@@ -41,9 +39,6 @@ export const infrastructureConsoleMessages = catalogue({
     "stateIsolated": "isolated",
     "stateMonitored": "monitored",
     "stateRestored": "restored",
-    "stateAffected": "affected",
-    "stateExposed": "exposed",
-    "stateClear": "clear",
   },
   evidenceWorkspace: {
     "backToThe": "Back to the procedures ",

@@ -4,6 +4,17 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.54, 18 October 2026
+
+- Give infrastructure controls distinct icons and written states, with collection
+  counts on a separate line. Collection focus and technique count no longer
+  imply that a system is compromised or a trust path confirmed.
+- Stack connection endpoints so system names remain readable across phone,
+  iPad and desktop widths; keep blocked paths at full text contrast.
+- Align workspace panel titles and disclosure markers, retaining keyboard
+  access and full action costs. Tighten spacing on short landscape screens
+  without hiding meters, warnings or decisions.
+
 ## 0.9.53, 18 October 2026
 
 - Distinguish confirmed, currently investigated and unknown attack-chain stages

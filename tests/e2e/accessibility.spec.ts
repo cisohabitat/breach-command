@@ -149,6 +149,8 @@ test.describe("accessibility audit", () => {
       await expectNoViolations(page, `map offer ${width}`);
       await page.locator(".prompt-aside").getByRole("button").click();
       await expect(page.locator(".infrastructure-console")).toBeVisible();
+      await page.locator(".topology-detail > summary").click();
+      await page.locator(".map-intel-detail > summary").click();
       await expectNoViolations(page, `map opened ${width}`);
     });
 

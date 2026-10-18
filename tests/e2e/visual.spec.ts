@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { sectorSetPieces } from "../../lib/phase8";
-import { commandEvents } from "../../lib/advanced-game";
+import { commandEvents, infrastructureTopologies, resolveMapAction } from "../../lib/advanced-game";
 import { defaultCampaign, CAMPAIGN_KEY } from "../../lib/campaign";
 import { openWithSave, pendingDecisionGame, responsePhaseGame, twoStagesGame } from "./fixtures";
 
@@ -77,6 +77,27 @@ test.describe("visual baselines", () => {
   test.skip(({ browserName }) => browserName !== "chromium", "baselines are recorded in Chromium");
 
   for (const [width, height] of widths) {
+    test(`map controls at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      let game = twoStagesGame();
+      const nodes = infrastructureTopologies[game.scenario].nodes;
+      game = resolveMapAction(game, nodes[0].id, "monitor");
+      game = resolveMapAction(game, nodes[1].id, "isolate");
+      await openWithSave(page, game, false, { voice: false, sound: false });
+      await resume(page);
+      await page.getByRole("button", { name: /^Investigate/ }).first().click();
+      const reference = page.locator(".reference-fold");
+      if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
+      await page.locator(".topology-detail > summary").click();
+      // Capture the whole reference panel without the unrelated sticky tabs
+      // covering its title or first node during the locator's automatic scroll.
+      const staticTabs = await page.addStyleTag({ content: ".workspace-tabs { position: static !important; }" });
+      await expect(page.locator(".infrastructure-console")).toHaveScreenshot(`${width}-infrastructure-map.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+      await staticTabs.evaluate(element => element.parentNode?.removeChild(element));
+      await page.getByRole("button", { name: /^Briefing/ }).first().click();
+      await snap(page, `${width}-briefing-workspace.png`);
+    });
+
     test(`settled die at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
@@ -194,6 +215,19 @@ test.describe("visual baselines", () => {
       await expect(page.locator("#debrief-timeline > details")).toHaveAttribute("open", "");
       await expect(page.locator("#debrief-timeline .milestone-effects").first()).toBeInViewport();
       await expect(page.locator(".debrief-dialog")).toHaveScreenshot(`${width}-review-milestones.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+    });
+  }
+
+  for (const [width, height] of [[844, 390], [1024, 600], [1280, 700]]) {
+    test(`compact workspaces at ${width}×${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
+      await resume(page);
+      await snap(page, `${width}x${height}-compact-investigate.png`);
+      await page.getByRole("button", { name: /^Command/ }).first().click();
+      await snap(page, `${width}x${height}-compact-command.png`);
+      await page.getByRole("button", { name: /^Briefing/ }).first().click();
+      await snap(page, `${width}x${height}-compact-briefing.png`);
     });
   }
 

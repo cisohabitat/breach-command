@@ -508,10 +508,6 @@ a {
   align-items:center;
   margin-bottom:24px;
 }
-.captain-label h2 {
-  font-size:var(--type-body);
-  font-weight:500;
-}
 .brief-label {
   font-size:var(--type-caption);
   margin-bottom:10px;
