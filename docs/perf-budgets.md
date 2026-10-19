@@ -1,5 +1,15 @@
 # Performance budgets
 
+Player-flow refinement (0.9.64) groups engine messages by dotted namespace,
+preserving all 364 existing keys/values, and removes four identical game-only
+paper/disclosure rules from the first-paint sheet while retaining the later
+game definitions. The local build, including Resume orientation and in-play
+pacing controls, measures 660,505 B initial script, 1,180,098 B warmed assignment
+and 1,190,992 B at operation start: 954 B less operation script than 0.9.63.
+Linked/total style is 88,608/221,571 B, down 399 B. Throttled phone
+assignment/operation LCP is 1.312/1.356 s and CLS 0.001/0.020. Every budget and
+offline warm-up remains unchanged. CI adds 8 B for its build identifier.
+
 Turn clarity (0.9.60) preserves every fixed limit. The local production build
 measures 656,553 B initial script and 1,183,946 B at operation start. Linked/total CSS is 89,007/221,936 B;
 removing obsolete overridden declarations makes room for the action footer

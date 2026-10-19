@@ -183,6 +183,14 @@ test.describe("visual baselines", () => {
       await expect(voice).toHaveScreenshot(`${width}-decision-reaction.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
     });
 
+    test(`resume recap at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await openWithSave(page, twoStagesGame(), false, { voice: false, music: false, sound: false });
+      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.locator(".resume-brief > summary").click();
+      await expect(page.locator(".resume-brief")).toHaveScreenshot(`${width}-resume-recap.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+    });
+
     test(`voice settings at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await openWithSave(page, null, false, { voice: true, music: false, sound: false });

@@ -1952,15 +1952,6 @@ html,body {
 .paper-dialog button:focus-visible,.paper-dialog a:focus-visible,.paper-dialog:focus-visible {
   outline-color:#1d1b18;
 }
-.paper-dialog .primary-button {
-  background:#1d1b18;
-  border-color:#1d1b18;
-  color:#f1ece1;
-}
-.paper-dialog .primary-button:hover {
-  background:#3a362f;
-  border-color:#3a362f;
-}
 .briefing-first-move {
   display:grid;
   grid-template-columns:auto 1fr;
@@ -2756,19 +2747,6 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
   font-weight:500;
   font-size:var(--type-lead);
   letter-spacing:0;
-}
-/* A fold's mark sits in the summary's margin, so a long title never leaves it on
-   a line of its own. */
-.paper-dialog .debrief-fold>summary,.paper-dialog .briefing-more>summary {
-  position:relative;
-  padding-inline-start:1.4em;
-}
-/* A fold's mark is centred on its title's first line. */
-.paper-dialog .debrief-fold>summary::before,.paper-dialog .briefing-more>summary::before {
-  position:absolute;
-  inset-inline-start:0;
-  top:10px;
-  line-height:inherit;
 }
 .briefing-screen {
   align-items:start;

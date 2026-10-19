@@ -65,6 +65,9 @@ const engine = () => loadedGame().engine;
 
 export function useGameSession() {
   const [game, setGame] = useState<Game | null>(null);
+  const [resumedGame, setResumedGame] = useState<Game | null>(null);
+  // End the one-time recap even if Undo later restores the original object.
+  if (resumedGame && game !== resumedGame) setResumedGame(null);
   const [guided, setGuided] = useState(true);
   const [fastResolve, setFastResolve] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("operational");
@@ -248,6 +251,7 @@ export function useGameSession() {
     setBotActive(false);
     setBotPaused(false);
     setGame(session.game);
+    setResumedGame(session.game);
     setGuided(session.guided);
     setFastResolve(session.fastResolve);
     setDifficulty(session.game.difficulty);
@@ -858,6 +862,7 @@ export function useGameSession() {
   return {
     // Campaign, session and operation state
     game,
+    resumed: !!game && game === resumedGame,
     campaign,
     savedSession,
     difficulty, setDifficulty,

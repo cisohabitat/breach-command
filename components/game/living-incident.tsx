@@ -1,4 +1,4 @@
-import { getAttributionRead, getOperationalLabel, infrastructureTopologies, readyToCorrelate, type Game } from "@/lib/advanced-game";
+import { getAttributionRead, getOperationalLabel, infrastructureTopologies, readyToCorrelate, scenarios, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { useMessages } from "@/hooks/use-messages";
 import { level, withForm } from "@/lib/i18n/message";
@@ -28,7 +28,7 @@ export function SectorSituation({ game }: { game: Game }) {
     <span className="sit-label">{t("fieldGuideDialog.sectorCondition")}</span>
     {/* The figure is the continuity readout's, already in the top row; here the
         condition is said in words. */}
-    <div className="sit-body"><p><strong>{t(title)}.</strong> {t(detail)}</p><small>{t("livingIncident.is", { getOperationalLabel: getOperationalLabel(game) })}{severity === "critical" ? t("livingIncident.atRisk") : severity === "degraded" ? t("livingIncident.degraded") : t("livingIncident.stable2")}.</small></div>
+    <div className="sit-body"><p><strong>{t(title)}.</strong> {game.revealed.length >= 2 ? scenarios[game.scenario].constraints : t(detail)}</p><small>{t("livingIncident.is", { getOperationalLabel: getOperationalLabel(game) })}{severity === "critical" ? t("livingIncident.atRisk") : severity === "degraded" ? t("livingIncident.degraded") : t("livingIncident.stable2")}.</small></div>
   </div>;
 }
 

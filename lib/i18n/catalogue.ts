@@ -2,8 +2,7 @@ type Value = string | Readonly<Partial<Record<Intl.LDMLPluralRule, string>>>;
 type Groups = Readonly<Record<string, Readonly<Record<string, Value>>>>;
 type Keys<G extends Groups> = { [N in keyof G]: `${N & string}.${keyof G[N] & string}` }[keyof G];
 type Catalogue<G extends Groups> = {
-  readonly [K in Keys<G>]: K extends `${infer N}.${infer S}`
-    ? N extends keyof G ? S extends keyof G[N] ? G[N][S] : never : never : never;
+  readonly [K in Keys<G>]: { [P in keyof G]: K extends `${P & string}.${infer T}` ? T extends keyof G[P] ? G[P][T] : never : never }[keyof G];
 };
 
 // Trusted, bundled catalogues group their keys by namespace so each prefix is

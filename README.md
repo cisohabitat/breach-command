@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.63**: see the [release notes](CHANGELOG.md#0963-19-october-2026).
+Release **0.9.64**: see the [release notes](CHANGELOG.md#0964-19-october-2026).
 
 The [scenario correctness review](docs/reviews/SCENARIOS-2026-10-18.md) covers
 all ten cases, 96 techniques, seventy variants, thirty sector decisions and
@@ -72,8 +72,9 @@ respected. Beginning or resuming an operation, or enabling Voice, primes one
 shared player during your tap so delayed narration can auto-play on browsers
 that require a gesture. Voice also works with music and sound effects off.
 Every spoken line is also readable, with Listen and Skip voice
-controls; unavailable speech never blocks play. Music and sound cues quiet
-while the Captain speaks. M mutes voice, music and cues together. Bot Commander
+controls; unavailable speech never blocks play. Music ducks to 20% while the
+Captain speaks and returns smoothly; sound cues stay suppressed. Muted music
+stays muted when speech ends. M mutes voice, music and cues together. Bot Commander
 practice runs remain silent.
 Status text distinguishes speaking, loading, waiting for quiet and waiting for
 a decision. Settings offers **Test voice**, using a recording whose transcript
@@ -128,6 +129,12 @@ The player takes command of one of ten fictional cyber incidents. Each operation
 The Investigate column keeps a standing summary of what the team already knows — the incident timeline, the observations the captain has released, the stages confirmed so far and the one signal still unverified — so an operation above Training, where the teaching prompts stop, does not open on four routes and nothing else.
 
 Every turn ends in the captain's report unless fast resolution is switched on, and a check that completed without exposing a stage says what it settled: which of the declared reading's sources have now come back empty, and whether that reading is holding, weakening or poorly supported. A failed roll settles nothing and says so.
+
+Resume shows the next pending task immediately, with a foldable recap of completed
+checks and the last saved result. It clears after your first game action. Fast
+resolution can be changed during play in Settings and travels with that saved
+operation. After two confirmed stages, the sector readout brings the case's
+constraints forward to keep its service pressures in view.
 
 Hypothesis accuracy credits the reasoning, not only the answer. A turn scores in full when the declared reading matched the stage under test, and half when the reading was wrong but properly tested — one of its own evidence sources spent and the check completed — which rules that reading out. The half is paid once per reading, so revising is rewarded and returning to a reading whose sources came back empty is not.
 

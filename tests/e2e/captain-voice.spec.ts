@@ -41,6 +41,43 @@ async function mockSpeech(page: Page, available = true) {
 }
 
 const voicePreferences = { voice: true, music: false, sound: false, haptics: false };
+
+test("native music ducks during voice and restores without reviving mute", async ({ page }) => {
+  await page.addInitScript(() => {
+    const gains: GainNode[] = [];
+    const targets: number[] = [];
+    Object.defineProperty(window, "musicMixGains", { value: gains });
+    Object.defineProperty(window, "musicMixTargets", { value: targets });
+    const create = AudioContext.prototype.createGain;
+    AudioContext.prototype.createGain = function () {
+      const gain = create.call(this), index = gains.length;
+      gains.push(gain);
+      const target = gain.gain.setTargetAtTime.bind(gain.gain);
+      gain.gain.setTargetAtTime = (value, at, time) => { targets[index] = value; return target(value, at, time); };
+      return gain;
+    };
+  });
+  await openWithSave(page, null, false, voicePreferences);
+  await page.getByRole("button", { name: "Game settings" }).click();
+  await page.locator("#music-setting").click();
+  const level = () => page.evaluate(() => (window as typeof window & { musicMixGains: GainNode[] }).musicMixGains[2]?.gain.value ?? 0);
+  await expect.poll(level).toBeGreaterThan(0.02);
+  const sample = page.getByRole("region", { name: "Test voice", exact: true });
+  await sample.getByRole("button", { name: "Test voice", exact: true }).click();
+  await expect(sample.getByRole("status")).toHaveText("Captain speaking");
+  await expect.poll(level).toBeLessThan(0.009);
+  await expect.poll(level).toBeGreaterThan(0.003);
+  await sample.getByRole("button", { name: "Stop voice test", exact: true }).click();
+  await expect.poll(level).toBeGreaterThan(0.02);
+  await sample.getByRole("button", { name: "Test voice", exact: true }).click();
+  await expect(sample.getByRole("status")).toHaveText("Captain speaking");
+  await page.locator("#music-setting").click();
+  await sample.getByRole("button", { name: "Stop voice test", exact: true }).click();
+  // Once muted pads stop, a native idle graph can stop advancing AudioParam
+  // values. Check the actual native bus's final scheduled target instead.
+  await expect(page.locator("#music-setting")).toHaveAttribute("aria-checked", "false");
+  await expect.poll(() => page.evaluate(() => (window as typeof window & { musicMixTargets: number[] }).musicMixTargets[2])).toBe(0.0001);
+});
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
 test("voice status explains decision silence and actual speaking", async ({ page }) => {

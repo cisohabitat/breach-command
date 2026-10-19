@@ -17,6 +17,7 @@ export function SettingsDialog({ session }: { session: GameSession }) {
     settings, setSettings, soundEnabled, setSoundEnabled, musicEnabled, setMusic, voiceEnabled, setVoiceEnabled,
     hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled, telemetry, clearLocalRecord,
     exportProgress, importProgress, backupInput, setBackupInput, backupMessage, restartTutorial,
+    fastResolve, setFastResolve,
   } = session;
   // Restoring replaces progress, so it asks once more and says what it replaces (WCAG 3.3.4).
   const [confirmRestore, setConfirmRestore] = useState(false);
@@ -49,6 +50,7 @@ export function SettingsDialog({ session }: { session: GameSession }) {
           <label htmlFor="haptic-setting"><span><b>{t("settingsDialog.hapticFeedback")}</b><small>{t("settingsDialog.shortVibrationCues")}</small></span><Switch id="haptic-setting" checked={hapticsEnabled} onCheckedChange={setHapticsEnabled} /></label>
           <label htmlFor="contrast-setting"><span><b>{t("settingsDialog.highContrast")}</b><small>{t("settingsDialog.strengthensBordersText")}</small></span><Switch id="contrast-setting" checked={highContrast} onCheckedChange={setHighContrast} /></label>
           <label htmlFor="shortcut-setting"><span><b>{t("settingsDialog.keyboardShortcuts")}</b><small>{t("settingsDialog.fOpensThe")}</small></span><Switch id="shortcut-setting" checked={shortcutsEnabled} onCheckedChange={setShortcutsEnabled} /></label>
+          <label htmlFor="resolution-setting"><span><b>{t("settingsDialog.fastResolution")}</b><small>{t("settingsDialog.routineInline")}</small></span><Switch id="resolution-setting" checked={fastResolve} onCheckedChange={setFastResolve} /></label>
         </div>
         <section className="local-telemetry"><div><span><b>{t("settingsDialog.localBalanceRecord")}</b><small>{t("settingsDialog.storedOnlyOn")}</small></span></div><p>{rich("settingsDialog.strongStrongStarts", { operationsStarted: telemetry.operationsStarted, operationsFinished: telemetry.operationsFinished, wins: telemetry.wins, losses: telemetry.losses, exercises: telemetry.exercises, turns: telemetry.turns, revisions: telemetry.revisions }, { strong: chunk => <strong>{chunk}</strong> })}</p><ul className="first-session" aria-label={t("settingsDialog.firstOperationOn")}>{describeFirstSession(telemetry).map((line, index) => <li key={index}>{say(line)}</li>)}</ul><button onClick={clearLocalRecord}>{t("settingsDialog.clearLocalRecord")}</button></section>
         <section className="backup-console"><div><span><b>{t("settingsDialog.portableLocalBackup")}</b><small>{t("settingsDialog.copyCampaignProgress")}</small></span><button className="text-action" onClick={exportProgress}>{t("settingsDialog.export")}</button></div><textarea aria-label={t("settingsDialog.progressBackup")} value={backupInput} onChange={event => { setBackupInput(event.target.value); setConfirmRestore(false); }} placeholder={t("settingsDialog.exportBackupOr")} />{confirmRestore

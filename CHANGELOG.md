@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.64, 19 October 2026
+
+- Add a nonblocking Resume recap of the saved checks and next pending task.
+- Make Fast resolution adjustable during play and surface sector constraints after two confirmed stages.
+- Duck music to 20% during Captain speech and restore it smoothly, while preserving mute.
+- Recover script/style headroom through lossless message grouping and removal of duplicated game-only styles.
+
 ## 0.9.63, 19 October 2026
 
 - Explain Captain playback states and add a captioned, cancellable voice test in Settings.

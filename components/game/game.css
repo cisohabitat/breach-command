@@ -5407,6 +5407,9 @@ span.effect-list>span.effect.term>em {
 .known-facts {
   margin-bottom:18px;
 }
+.resume-brief {
+  padding:0 12px 12px;
+}
 .paper-dialog .debrief-stats {
   border-top:0;
 }
