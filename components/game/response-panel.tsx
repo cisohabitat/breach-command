@@ -63,7 +63,7 @@ function OptionEffect({ game, impact, continuity }: { game: Game; impact: number
   return (
     <span className={`response-effect ${ends ? "ends" : atRisk ? "at-risk" : ""}`}>
       {/* The change the meter will actually show: "−22 better" at an impact of 0 promised nothing. */}
-      <EffectList items={[meterEffect(game, "impact", after.impact - game.impact), meterEffect(game, "continuity", after.continuity - game.continuity)]} />
+      <EffectList compare items={[meterEffect(game, "impact", after.impact - game.impact), meterEffect(game, "continuity", after.continuity - game.continuity)]} />
       <small>{t("responsePanel.endsAt2", { getOperationalLabel: getOperationalLabel(game), continuity: after.continuity })}{ends && <b>{t("responsePanel.whichEndsThe")}</b>}{atRisk && <b>{t("responsePanel.atRisk")}</b>}</small>
     </span>
   );

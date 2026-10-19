@@ -8,6 +8,7 @@ import { collectDiagnostics } from "@/lib/diagnostics";
 import { useMessages } from "@/hooks/use-messages";
 import { settingsDialogMessages } from "@/lib/i18n/en/settings-dialog";
 import { register } from "@/lib/i18n";
+import { CaptainVoiceTest } from "./captain-voice-lazy";
 
 register(settingsDialogMessages);
 
@@ -44,6 +45,7 @@ export function SettingsDialog({ session }: { session: GameSession }) {
           <label htmlFor="sound-setting"><span><b>{t("settingsDialog.soundCues")}</b><small>{t("settingsDialog.proceduralAudioFor")}</small></span><Switch id="sound-setting" checked={soundEnabled} onCheckedChange={setSoundEnabled} /></label>
           <label htmlFor="music-setting"><span><b>{t("settingsDialog.adaptiveScore")}</b><small>{t("settingsDialog.sectorSpecificCommand")}</small></span><Switch id="music-setting" checked={musicEnabled} onCheckedChange={setMusic} /></label>
           <label htmlFor="voice-setting"><span><b>{t("settingsDialog.captainVoice")}</b><small>{t("settingsDialog.voicePilot")}</small></span><Switch id="voice-setting" checked={voiceEnabled} onCheckedChange={setVoiceEnabled} /></label>
+          {settings && voiceEnabled && <CaptainVoiceTest />}
           <label htmlFor="haptic-setting"><span><b>{t("settingsDialog.hapticFeedback")}</b><small>{t("settingsDialog.shortVibrationCues")}</small></span><Switch id="haptic-setting" checked={hapticsEnabled} onCheckedChange={setHapticsEnabled} /></label>
           <label htmlFor="contrast-setting"><span><b>{t("settingsDialog.highContrast")}</b><small>{t("settingsDialog.strengthensBordersText")}</small></span><Switch id="contrast-setting" checked={highContrast} onCheckedChange={setHighContrast} /></label>
           <label htmlFor="shortcut-setting"><span><b>{t("settingsDialog.keyboardShortcuts")}</b><small>{t("settingsDialog.fOpensThe")}</small></span><Switch id="shortcut-setting" checked={shortcutsEnabled} onCheckedChange={setShortcutsEnabled} /></label>

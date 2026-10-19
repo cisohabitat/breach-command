@@ -6,6 +6,7 @@ import { useMessages } from "@/hooks/use-messages";
 // Voice is optional, so its player, catalogue and speech controller load only
 // when enabled. A disabled surface unmounts it and cancels its narration.
 const Player = dynamic(() => import("./captain-voice").then(module => module.CaptainVoice, () => UnavailableVoice), { ssr: false });
+const Test = dynamic(() => import("./captain-voice").then(module => module.CaptainVoiceTest, () => UnavailableVoice), { ssr: false });
 
 function UnavailableVoice() {
   const { t } = useMessages();
@@ -14,4 +15,8 @@ function UnavailableVoice() {
 
 export function CaptainVoice(props: ComponentProps<typeof Voice>) {
   return props.enabled ? <Player {...props} /> : null;
+}
+
+export function CaptainVoiceTest() {
+  return <Test />;
 }

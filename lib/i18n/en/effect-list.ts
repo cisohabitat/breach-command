@@ -3,6 +3,8 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/effect-list.tsx (app/page.tsx for page), loaded with it.
 export const effectListMessages = catalogue({
   effectList: {
+    "benefit": "benefit",
+    "cost": "cost",
     "unchanged": "unchanged",
     "better": "better",
     "worse": "worse",

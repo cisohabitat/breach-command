@@ -52,6 +52,8 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     const lastChoice = report.locator("button[data-response]").last();
     await expect(lastChoice).toBeFocused();
     await expect(lastChoice).toBeInViewport({ ratio: 0.95 });
+    await expect(lastChoice.getByText("Uncertainty:", { exact: true })).toBeVisible();
+    await expect(lastChoice.locator(".effect-list")).toContainText(/benefit|cost|unchanged/);
     await expect(report.locator("button[data-response]")).toHaveCount(5);
     const rationale = report.locator(".choice-rationale").last();
     await expect(rationale).toHaveJSProperty("open", false);

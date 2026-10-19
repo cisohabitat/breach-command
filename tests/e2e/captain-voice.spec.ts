@@ -43,6 +43,36 @@ async function mockSpeech(page: Page, available = true) {
 const voicePreferences = { voice: true, music: false, sound: false, haptics: false };
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
+test("voice status explains decision silence and actual speaking", async ({ page }) => {
+  await mockSpeech(page);
+  await openWithSave(page, pendingDecisionGame(), false, voicePreferences);
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  const voice = page.getByRole("region", { name: "Incident Captain" });
+  await expect(voice.getByRole("status")).toContainText("Waiting for your decision");
+  await voice.getByRole("button", { name: "Listen", exact: true }).click();
+  await expect(voice.getByRole("status")).toHaveText("Captain speaking");
+  await page.evaluate(() => window.captainSpeechProbe.finish());
+  await expect(voice.getByRole("status")).toContainText("Waiting for your decision");
+});
+
+test("Settings tests native voice without an operation and cancels on mute or dismissal", async ({ page }) => {
+  await observeGesturePlayback(page);
+  await openWithSave(page, null, false, voicePreferences);
+  await page.getByRole("button", { name: "Game settings" }).click();
+  const sample = page.getByRole("region", { name: "Test voice", exact: true });
+  await sample.getByRole("button", { name: "Test voice", exact: true }).click();
+  await expect(sample.getByRole("status")).toHaveText("Captain speaking");
+  expect(await page.evaluate(() => localStorage.getItem("breach-command.session"))).toBeNull();
+  await page.keyboard.press("Escape");
+  await expect.poll(() => page.evaluate(() => (window as typeof window & { captainNativePlayback: { audio: HTMLMediaElement } }).captainNativePlayback.audio.paused)).toBe(true);
+  await page.getByRole("button", { name: "Game settings" }).click();
+  await sample.getByRole("button", { name: "Test voice", exact: true }).click();
+  await expect(sample.getByRole("status")).toHaveText("Captain speaking");
+  await page.locator("#voice-setting").click();
+  await expect(sample).toHaveCount(0);
+  expect(await page.evaluate(() => (window as typeof window & { captainNativePlayback: { audio: HTMLMediaElement } }).captainNativePlayback.audio.paused)).toBe(true);
+});
+
 // Keep real decoding/events, but enforce Safari's per-element gesture gate even
 // on runners whose autoplay policy otherwise allows every delayed play().
 async function observeGesturePlayback(page: Page) {
@@ -86,7 +116,7 @@ for (const entry of ["begin", "resume", "enable"] as const) test(`Captain auto-p
     return probe.audio?.currentTime ?? 0;
   })).toBeGreaterThan(0);
   expect(await page.evaluate(() => (window as typeof window & { captainNativePlayback: { blocked: number } }).captainNativePlayback.blocked)).toBe(0);
-  await expect(page.locator(".captain-voice-status")).toHaveCount(0);
+  await expect(page.locator(".captain-voice-status").filter({ hasText: "Voice is unavailable" })).toHaveCount(0);
 });
 
 for (const cue of ["opening", "confidenceStrengthened", "decisionNotify"]) test(`the bundled Captain ${cue} recording decodes and plays in the browser`, async ({ page }) => {
@@ -308,10 +338,11 @@ test("Bot Commander practice does not speak", async ({ page }) => {
 test("an unavailable optional voice download never blocks the operation", async ({ page }) => {
   await openWithSave(page, null, false, { voice: false, music: false, sound: false, haptics: false });
   await page.getByRole("button", { name: "Game settings" }).click();
-  await page.locator("#voice-setting").click();
-  await page.keyboard.press("Escape");
-  // The game is now loaded; the optional voice player is the next script.
+  // Settings is loaded; block the optional player before enabling its test.
   await page.route("**/_next/static/**/*.js", route => route.abort());
+  await page.locator("#voice-setting").click();
+  await expect(page.getByRole("status").filter({ hasText: "Captain voice is unavailable" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: /Begin investigation/i }).first().click();
   await expect(page.getByRole("status").filter({ hasText: "Captain voice is unavailable" })).toBeVisible();
   await page.getByRole("button", { name: "Assume command", exact: true }).click();

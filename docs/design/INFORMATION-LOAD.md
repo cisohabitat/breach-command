@@ -56,6 +56,14 @@ by image. Keep README, AGENTS and release notes aligned with shipped behaviour.
 
 ## Follow-up measurement
 
+19 October 2026 refinement: explicit voice status and a Settings sample make
+silence understandable; benefit/cost labels and visible uncertainty make
+choices comparable. The review leads with one record-based lesson and up to
+three calls to revisit. Optional opening plan controls use a native disclosure
+without changing costs or choices; keyboard focus stays inside it when a player
+returns to defaults. These are presentation changes, with no new human-results
+claim. Preserve the existing review details and manual access to every plan.
+
 An automated fresh-profile review on 16 October 2026 checked the opening on a
 375 px phone and 1280 px desktop. The academy's first navigation action was
 visible without scrolling on both. One wording defect was confirmed before

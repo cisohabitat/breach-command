@@ -20,7 +20,7 @@ export function CommandEvent({ game, onChoose }: { game: Game; onChoose: (choice
       <div className="command-options">
         {/* Numbered ruled rows with the exact effect in a column, as the response
             and the sector decision are set; two cards with corner arrows were not. */}
-        {(["a", "b"] as const).map((choice, index) => <button key={choice} onClick={() => onChoose(choice)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{event[choice].title}</strong><span>{event[choice].description}</span><span className="option-signals">{signalParts(game, event[choice]).map(part => <span key={part}>{part}</span>)}</span></span><span className="option-effects"><EffectList className="command-effect" items={effectLine(t, game, event[choice])} /></span></button>)}
+        {(["a", "b"] as const).map((choice, index) => <button key={choice} onClick={() => onChoose(choice)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{event[choice].title}</strong><span>{event[choice].description}</span><span className="option-signals">{signalParts(game, event[choice]).map(part => <span key={part}>{part}</span>)}</span></span><span className="option-effects"><EffectList compare className="command-effect" items={effectLine(t, game, event[choice])} /></span></button>)}
       </div>
     </section>
   );

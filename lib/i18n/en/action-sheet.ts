@@ -3,6 +3,8 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/action-sheet.tsx (app/page.tsx for page), loaded with it.
 export const actionSheetMessages = catalogue({
   actionSheet: {
+    "optionalPlan": "Change collection plan (optional)",
+    "openingPlan": "Begin with Focused scope and Balanced analysis, or explore the alternatives here. Plan options stay expanded after your first two checks or when comparison becomes useful.",
     "turnCost": "Costs 1 turn. Plan effects add to the turn’s pressure costs.",
     "commitPlan": "{scope} scope · {intensity} analysis",
     "checkDetails": "How checks affect evidence and pressure",

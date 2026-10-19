@@ -202,9 +202,9 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                       <button id={`report-response-${option.id}`} data-response={option.id} onClick={() => decide(option.id)}>
                         <b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b>
                         <strong>{option.title}</strong>
-                        <span>{t(primerTrade[option.id])}<EffectList className="decision-effect" items={previewDecision(game, option.id) ?? []} /></span>
+                        <span>{t(primerTrade[option.id])}<EffectList compare className="decision-effect" items={previewDecision(game, option.id) ?? []} /><small><b>{t("captainReportDialog.uncertainty")}</b> {say(option.risk)}</small></span>
                       </button>
-                      <details className="choice-rationale decision-primer"><summary>{t("captainReportDialog.whyChoose", { title: option.title })}</summary><p>{option.description}</p><p className="option-signals"><span>{say(option.evidence)}</span><span>{say(option.risk)}</span><span>{say(option.service)}</span></p></details>
+                      <details className="choice-rationale decision-primer"><summary>{t("captainReportDialog.whyChoose", { title: option.title })}</summary><p>{option.description}</p><p className="option-signals"><span>{say(option.evidence)}</span><span>{say(option.service)}</span></p></details>
                       </Fragment>
                     ))}
                   </div>

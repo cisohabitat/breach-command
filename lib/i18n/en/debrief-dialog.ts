@@ -3,6 +3,11 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/debrief-dialog.tsx (app/page.tsx for page), loaded with it.
 export const debriefDialogMessages = catalogue({
   debriefDialog: {
+    "keyChoices": "Key choices to revisit",
+    "choiceOrder": "Up to three recorded calls: weakest assessments first, then largest recorded pressure changes. Response choices fill any remaining places.",
+    "noChoices": "No response choices were recorded. Use the lesson above to plan your next investigation.",
+    "whyThisCall": "Why this call mattered",
+    "whyLesson": "Why this lesson?",
     "grade": "Grade",
     "finalScore": "Final score",
     "stages": "Stages",

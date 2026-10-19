@@ -155,13 +155,15 @@ test("routine speech waits for input to settle and urgent speech preempts it", t
   const stops: (() => void)[] = [];
   let starts = 0;
   try {
-    stops.push(scheduleCaptain(["firstFinding"], () => {}, () => starts++, activity));
+    stops.push(scheduleCaptain(["firstFinding"], state => probe.states.push(state), () => starts++, activity));
+    assert.equal(probe.states.at(-1), "queued", "quiet-time waiting is distinct from media loading");
     t.mock.timers.tick(1000);
     activity.dispatchEvent(new Event("keydown"));
     t.mock.timers.tick(1000);
     assert.equal(starts, 0);
     t.mock.timers.tick(500);
     assert.equal(starts, 1);
+    assert.equal(probe.states.at(-1), "speaking");
     stops.push(scheduleCaptain(["weakSignal"], () => {}, () => starts++, activity));
     t.mock.timers.tick(1500);
     assert.equal(starts, 1, "routine speech cannot interrupt a playing line");

@@ -24,7 +24,7 @@ export const responsePanelMessages = catalogue({
     "containment": "Containment",
     "assurance": "Assurance",
     "leavingBusinessImpact2": " {previousTitle}, leaving business impact at {impact} and {getOperationalLabel} at {continuity}.",
-    "disruptionConfidenceResidual": "{disruption} disruption, {confidence} confidence, {residual} residual risk.",
+    "disruptionConfidenceResidual": "Disruption: {disruption} · confidence: {confidence} · residual risk: {residual}.",
     "endsAt2": "{getOperationalLabel} ends at {continuity}",
   },
 });

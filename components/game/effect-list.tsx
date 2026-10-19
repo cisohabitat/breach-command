@@ -11,12 +11,12 @@ register(effectListMessages);
 // words it from the catalogue, so a translation needs no pattern of English.
 // A plain string is a note, shown as it is. Spans rather than a list, because
 // it sits inside option buttons, which hold phrasing content only.
-export function EffectList({ items, className = "" }: { items: (Effect | string | null | undefined | false)[]; className?: string }) {
+export function EffectList({ items, className = "", compare = false }: { items: (Effect | string | null | undefined | false)[]; className?: string; compare?: boolean }) {
   const { t } = useMessages();
   const lines = items.filter((item): item is Effect | string => !!item);
   const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
   if (!lines.length) return null;
-  const word = (good: boolean) => t(good ? "effectList.better" : "effectList.worse");
+  const word = (good: boolean) => t(compare ? good ? "effectList.benefit" : "effectList.cost" : good ? "effectList.better" : "effectList.worse");
   return (
     <span className={`effect-list ${className}`}>
       {lines.map((line, index) => {
@@ -25,7 +25,7 @@ export function EffectList({ items, className = "" }: { items: (Effect | string 
           case "change": return <span key={index} className={`effect ${line.good ? "better" : "worse"}`}><span>{line.label}</span> <b>{signed(line.amount)}</b> <em>{word(line.good)}</em></span>;
           case "same": return <span key={index} className="effect same"><span>{capital(line.label)}</span> <b>0</b> <em>{t("effectList.unchanged")}</em></span>;
           // The adversary's pace moves a step, not by a number: the step is the value.
-          case "pace": return <span key={index} className={`effect pace ${line.faster ? "worse" : "better"}`}><span>{t("effectList.adversaryPace")}</span> <em>{t(line.faster ? "effectList.faster" : "effectList.slower")}</em></span>;
+          case "pace": return <span key={index} className={`effect pace ${line.faster ? "worse" : "better"}`}><span>{t("effectList.adversaryPace")}</span> <em>{t(line.faster ? "effectList.faster" : "effectList.slower")}{compare && ` · ${word(!line.faster)}`}</em></span>;
           case "note": return <span key={index} className="effect note"><span>{capital(line.text)}</span></span>;
           case "roll": {
             const which = t(line.which === "next" ? "effectList.nextRoll" : "effectList.thisRoll");

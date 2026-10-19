@@ -3,7 +3,7 @@ import { captainAudio } from "./captain-media.ts";
 import type { CaptainVoiceCue } from "./captain-voice.ts";
 import type { RecordedCaptainCue } from "./captain-debrief.ts";
 
-export type CaptainSpeechState = "idle" | "waiting" | "speaking" | "unavailable";
+export type CaptainSpeechState = "idle" | "queued" | "waiting" | "speaking" | "unavailable";
 let activeStop: (() => void) | null = null;
 let lastFinished = -Infinity;
 
@@ -33,12 +33,14 @@ export function scheduleCaptain(
     timer = setTimeout(attempt, urgent ? 300 : 1500);
   }
   if (!urgent) for (const event of events) activity.addEventListener(event, arm);
+  onState("queued");
   arm();
   return () => {
     stopped = true;
     if (timer !== null) clearTimeout(timer);
     detach();
     stopSpeech();
+    if (timer !== null) onState("idle");
   };
 }
 
