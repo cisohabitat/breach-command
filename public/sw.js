@@ -38,6 +38,23 @@ self.addEventListener("activate", event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith(PREFIX) && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
+// Practice is optional. Warm its canonical public document and hashed assets
+// only after someone visits it, including a direct lesson/locale query visit.
+self.addEventListener("message", event => {
+  if (event.data !== "cache-practice" || !event.source || new URL(event.source.url).origin !== self.location.origin) return;
+  event.waitUntil(caches.open(CACHE).then(async cache => {
+    const response = await fetch("/practice", { cache: "reload" });
+    if (!publicResponse(response)) return;
+    const html = await response.clone().text();
+    await cache.put("/practice", response);
+    const assets = [...new Set(html.match(/\/_next\/static\/[^"'\s)\\]+/g) || [])].filter(url => /^\/_next\/static\/[a-zA-Z0-9/_.-]+$/.test(url));
+    await Promise.all(assets.map(async url => {
+      const asset = await fetch(url);
+      if (publicResponse(asset)) await cache.put(url, asset);
+    }));
+  }).catch(() => {}));
+});
+
 // Only published game documents and assets belong in this cache. In particular,
 // never persist arbitrary same-origin endpoints, RSC/prefetch responses, or
 // query variants that could later represent authenticated or personalised data.
@@ -46,7 +63,7 @@ function cacheableRequest(request) {
   return request.method === "GET" && url.origin === self.location.origin
     && (!url.search || request.mode === "navigate") && !request.headers.has("range")
     && !request.headers.has("authorization") && !request.headers.has("rsc")
-    && ((request.mode === "navigate" && (url.pathname === "/" || url.pathname === "/play" || url.pathname === "/educators"))
+    && ((request.mode === "navigate" && ["/", "/play", "/educators", "/practice"].includes(url.pathname))
       || url.pathname.startsWith("/_next/static/")
       || /^\/art\/[a-z0-9/_-]+\.webp$/.test(url.pathname)
       || /^\/art\/title\/(portrait|landscape)\.jpg$/.test(url.pathname)
@@ -88,6 +105,6 @@ self.addEventListener("fetch", event => {
     if (cached) return cached;
     // Only a navigation can fall back to the shell; handing the cached document
     // to a script or style request would break the page rather than degrade it.
-    return request.mode === "navigate" ? (await cache.match(new URL(request.url).pathname === "/play" ? "/play" : "/")) || Response.error() : Response.error();
+    return request.mode === "navigate" ? (await cache.match(new URL(request.url).pathname)) || Response.error() : Response.error();
   })));
 });

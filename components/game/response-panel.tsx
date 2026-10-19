@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import dynamic from "next/dynamic";
 import { useRecoverFocus } from "@/hooks/use-recover-focus";
 import { CONTINUITY_AT_RISK } from "@/hooks/use-meter-pulse";
 import { getOperationalLabel, responseOptionsFor, type Game, meterEffect } from "@/lib/advanced-game";
@@ -9,9 +10,12 @@ import { responsePanelMessages } from "@/lib/i18n/en/response-panel";
 import { register } from "@/lib/i18n";
 
 register(responsePanelMessages);
+const ConfidenceReflection = dynamic(() => import("./learning").then(module => module.ConfidenceReflection, () => () => null), { ssr: false });
 
-export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choice: string) => void }) {
+export function ResponsePanel({ game, onChoose, reflectionEnabled = false, operation = "" }: { game: Game; onChoose: (choice: string) => void; reflectionEnabled?: boolean; operation?: string }) {
   const { t, say } = useMessages();
+  const remember = useRef<((choice: string) => void) | null>(null);
+  const choose = (choice: string) => { if (reflectionEnabled) remember.current?.(choice); onChoose(choice); };
   const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
   const containment = phase === "containment";
   const assurance = phase === "assurance";
@@ -39,11 +43,12 @@ export function ResponsePanel({ game, onChoose }: { game: Game; onChoose: (choic
             // constraint already read: a playtest saw no result between choices.
             : previous && <p className="response-recorded"><strong>{assurance ? t("responsePanel.containment") : t("responsePanel.assurance")}{t("responsePanel.recorded2")}</strong> {t("responsePanel.leavingBusinessImpact2", { previousTitle: previous.title, impact: game.impact, getOperationalLabel: getOperationalLabel(game).toLowerCase(), continuity: game.continuity })}</p>}</div>
         </div>
+        {reflectionEnabled && <ConfidenceReflection key={`${operation}-${phase}`} game={game} operation={operation} rememberRef={remember} />}
         <div className="response-options">
           {/* Numbered ruled rows: the option and what it does on the left, its
               terms and its exact effect in a column on the right. Three equal
               cards with an arrow in the corner read as a feature grid. */}
-          {options.map((option, index) => <button key={option.id} onClick={() => onChoose(option.id)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{option.title}</strong><span>{option.description}</span><span className="option-terms-line">{t("responsePanel.disruptionConfidenceResidual", { disruption: say(level(option.disruption)), confidence: say(withForm(level(option.confidence), "lower")), residual: say(withForm(level(option.residual), "lower")) })}</span></span><span className="option-effects"><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /></span></button>)}
+          {options.map((option, index) => <button key={option.id} onClick={() => choose(option.id)}><b className="option-no">{index + 1}</b><span className="option-main"><strong>{option.title}</strong><span>{option.description}</span><span className="option-terms-line">{t("responsePanel.disruptionConfidenceResidual", { disruption: say(level(option.disruption)), confidence: say(withForm(level(option.confidence), "lower")), residual: say(withForm(level(option.residual), "lower")) })}</span></span><span className="option-effects"><OptionEffect game={game} impact={option.impact} continuity={option.continuity} /></span></button>)}
         </div>
       </div>
     </section>

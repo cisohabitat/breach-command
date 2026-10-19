@@ -1,0 +1,68 @@
+.practice-desk {
+  max-width:800px;
+  margin:24px auto;
+  padding:24px max(16px,4vw);
+  color:var(--text-body);
+  line-height:var(--leading-prose);
+}
+.practice-desk :is(h1,h2,legend,dt) {
+  color:var(--text-heading);
+  font-family:var(--font-display);
+  font-weight:600;
+}
+.practice-desk h1 {
+  font-size:var(--type-title);
+  line-height:1.25;
+}
+.practice-desk :is(section,dl>div) {
+  border-top:1px solid var(--line);
+  margin-block-start:20px;
+  padding-block-start:16px;
+}
+.practice-desk :is(button,label,a) {
+  min-height:44px;
+}
+.practice-desk :is(button,label) {
+  padding:12px;
+  text-align:start;
+}
+.practice-desk button {
+  border:1px solid var(--line);
+  margin-block:6px;
+}
+.practice-desk :is(.practice-lessons,fieldset) {
+  display:grid;
+  gap:8px;
+  margin-block:20px;
+}
+.practice-desk fieldset {
+  min-width:0;
+  border:0;
+  padding:0;
+}
+.practice-desk label {
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  border-block-end:1px solid var(--line);
+}
+.practice-desk input {
+  flex-shrink:0;
+}
+.practice-desk fieldset:disabled label {
+  opacity:1;
+}
+.practice-desk :is(.practice-lessons span,.practice-lessons strong,.text-action) {
+  display:block;
+}
+.practice-desk :is(.practice-context,.practice-feedback) {
+  border-inline-start:3px solid var(--text-soft);
+  padding-inline-start:16px;
+}
+.practice-desk dd {
+  margin:4px 0 0;
+}
+.practice-desk :is(button,a,input):focus-visible {
+  outline:2px solid var(--text-heading);
+  outline-offset:4px;
+}

@@ -7283,6 +7283,18 @@ span.effect-list>span.effect.pace.worse>em {
 .paper-dialog .specialist-name::after {
   filter:brightness(.25);
 }
+.decision-carry :is(p,strong),.response-panel .confidence-reflection :is(p,label) {
+  color:var(--text-body);
+}
+.decision-carry strong {
+  font-family:var(--font-display);
+}
+.confidence-choice {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:44px;
+}
 @media print {
   .procedure-code,.action-sheet [data-slot=sheet-title]::before,.evidence-cards button::before,.specialist-transmission strong::before {
     display:none;

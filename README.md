@@ -8,7 +8,40 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.65**: see the [release notes](CHANGELOG.md#0965-19-october-2026).
+Release **0.10.0**: see the [release notes](CHANGELOG.md#0100-19-october-2026).
+
+The **Practice desk**, at `/practice`, offers three short exercises with three
+decisions each: bounded signals, confidence in causal explanations and containment
+that protects essential service. The after-action review recommends a relevant
+exercise from the completed record; Settings opens the desk in a separate tab so
+an active Ironman operation is retained in its original window. Each question
+explains the evidence boundary after the first choice. Repeating an exercise makes
+a new attempt without rewriting earlier answers, and practice never changes a
+saved operation or campaign score.
+
+Command and Briefing carry earlier decisions forward in a fold containing the
+latest evidence, command and sector calls and their recorded effects. Those effects
+are historical, not a claim that current conditions have one cause. No new rule,
+pressure rate or hidden-information hint is introduced.
+
+Enable **Confidence reflection** in Settings to record optional low, medium or high
+confidence before response decisions. It is off by default, can be skipped and
+changes no score, odds or available action. The review compares that commitment
+with the public evidence and service conditions available then. Notes remain
+associated with the same operation across Resume; later evidence cannot rewrite
+the original snapshot.
+
+The practice desk's learning record keeps the latest 100 exercise attempts, 100
+completed operations and 300 response reflections on this browser. It shows first
+choices and recorded evidence habits, not a claim of professional competence.
+History stays folded while practising. The latest five exercises can be expanded to review each original choice and
+its feedback; repeating never erases an earlier attempt.
+Clearing it asks for confirmation and leaves campaign progress and saved operations
+intact. This separate notebook is not included in the existing campaign backup.
+Practice is cached for offline use after visiting it online; it adds no first-visit
+exercise download to the incident desk. Blocked storage leaves practice usable in
+memory and reports failed saving. Unreadable or newer notebooks are preserved
+until explicitly cleared.
 
 The [scenario correctness review](docs/reviews/SCENARIOS-2026-10-18.md) covers
 all ten cases, 96 techniques, seventy variants, thirty sector decisions and

@@ -3,6 +3,9 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/settings-dialog.tsx (app/page.tsx for page), loaded with it.
 export const settingsDialogMessages = catalogue({
   settingsDialog: {
+    "confidenceReflection": "Confidence reflection",
+    "reflectionOptional": "Optional confidence notes before response decisions. No change to scores or odds; off by default.",
+    "practiceDesk": "Practice desk and learning record (new tab)",
     "fastResolution": "Fast resolution",
     "routineInline": "After the first check, keep routine results inline. Findings, escalations and decisions still open. Saved with this operation.",
     "adjustFeedbackAccessibility": "Adjust feedback, accessibility and display behaviour. Preferences stay on this device.",

@@ -5,6 +5,7 @@ import { Glossed } from "@/components/game/glossed";
 import { useMessages } from "@/hooks/use-messages";
 import { briefingWorkspaceMessages } from "@/lib/i18n/en/briefing-workspace";
 import { register } from "@/lib/i18n";
+import { DecisionCarry } from "./decision-carry";
 
 register(briefingWorkspaceMessages);
 
@@ -39,6 +40,7 @@ export function BriefingWorkspace({ session }: { session: GameSession }) {
         <div className="guided-inline"><label htmlFor="guided-game">{game.mode === "expert" ? t("briefingWorkspace.guidanceDisabledIn") : t("briefingWorkspace.guidedReflection")}</label><Switch id="guided-game" checked={guided} disabled={game.mode === "expert"} onCheckedChange={setGuided} /></div>
         <div className="guided-inline"><label htmlFor="fast-game">{t("briefingScreen.fastResolution")}</label><Switch id="fast-game" checked={fastResolve} onCheckedChange={setFastResolve} /></div>
         <div className="adversary-read"><span className="eyebrow">{t("briefingWorkspace.actorModel")}</span><p>{say(getAdversaryRead(game))}</p></div>
+        <DecisionCarry game={game} />
       </section>
 
       <section className="journal-panel">

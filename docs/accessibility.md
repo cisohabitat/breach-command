@@ -1,5 +1,13 @@
 # Accessibility: WCAG 2.2 AA
 
+The 0.10.0 practice/learning flow adds native radio groups and disclosures,
+keyboard focus recovery through each question/feedback transition and confirmed
+history clear, 44 px confidence labels, and expanded-state contrast checks for
+dark-desk carry-forward and reflection text. `learning-tranches.spec.ts` audits
+practice at all eleven supported widths, expanded history and reflections,
+longer pseudo-locale text, high contrast and keyboard-only completion in all three
+engines. This extends automated evidence; it does not replace the human audit.
+
 Every Level A and AA success criterion of WCAG 2.2, with its status and how
 it is met. Four statuses, and none is claimed past its evidence:
 

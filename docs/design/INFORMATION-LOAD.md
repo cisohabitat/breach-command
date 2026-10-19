@@ -1,5 +1,14 @@
 # Information density and learning load
 
+0.10.0 keeps practice on its own route, entered from a relevant debrief suggestion
+or Settings. Each exercise shows one situation and one call, then its bounded
+feedback; the learning record follows in a closed fold rather than competing with the question.
+Carry-forward decisions remain folded behind one summary. Optional confidence
+reflection is off by default and folded within response decisions, with an explicit
+Skip option and no grade penalty. Review uses the public snapshot at commitment,
+not hindsight. Practice and its notebook introduce no campaign scoring or mandatory
+lesson gate. No measured human learning benefit is claimed.
+
 0.9.64 adds a nonblocking Resume fold: its summary states the next pending
 investigation task, with saved check counts and the last result inside. Pending
 decisions open directly with their existing context and no extra recap. It disappears

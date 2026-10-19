@@ -2,11 +2,12 @@
 import { attacks, difficulties, scenarios, stages, hypotheses, scenarioDynamics } from "../game.ts";
 import { gameModes, sectorSystems } from "../command-systems.ts";
 import { encodeChallenge } from "../phase8.ts";
-import { level, lit, msg, ref, withForm, type Message } from "../i18n/message.ts";
+import { level, lit, msg, ref, scopedMsg, withForm, type Message } from "../i18n/message.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
 import { countRevisions } from "./revisions.ts";
 import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
+const reviewMsg = scopedMsg("engine.review");
 
 // The full review is written for someone who already knows the trade. A first
 // operation needs four sentences before any of it: one thing that went well, one
@@ -20,7 +21,7 @@ export { countRevisions };
 // One or two reasons, said together; nothing when there are none.
 function both(parts: (Message | null)[]): Message {
   const given = parts.filter((part): part is Message => !!part);
-  return given.length === 2 ? msg("engine.review.bothReasons", { first: given[0], second: given[1] }) : given[0] ?? lit("");
+  return given.length === 2 ? reviewMsg("bothReasons", { first: given[0], second: given[1] }) : given[0] ?? lit("");
 }
 
 export function getBeginnerReview(game: Game): BeginnerReview {
@@ -31,19 +32,19 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const revisions = countRevisions(game);
 
   const strength = game.status === "exercise"
-    ? msg("engine.review.youConfirmedOf", { revealed: game.revealed.length, turns: game.turns.length })
+    ? reviewMsg("youConfirmedOf", { revealed: game.revealed.length, turns: game.turns.length })
     : game.revealed.length === 4
-    ? msg("engine.review.youConfirmedThe", { turns: game.turns.length })
+    ? reviewMsg("youConfirmedThe", { turns: game.turns.length })
     : game.impact <= 40
-      ? msg("engine.review.youKeptBusiness", { impact: game.impact })
+      ? reviewMsg("youKeptBusiness", { impact: game.impact })
       : game.revealed.length
-        ? msg("engine.review.youConfirmedOf2", { revealed: game.revealed.length })
+        ? reviewMsg("youConfirmedOf2", { revealed: game.revealed.length })
         // With nothing confirmed, praise for the stages found would be false.
         // What a player did earn is the checks that completed and ruled
         // something out, or, if none did, a record that says the dice were part of it.
         : emptySuccesses
-          ? emptySuccesses === 1 ? msg("engine.review.noStageOneCheck") : msg("engine.review.noStageChecks", { count: emptySuccesses })
-          : msg("engine.review.noCheckCompleted");
+          ? emptySuccesses === 1 ? reviewMsg("noStageOneCheck") : reviewMsg("noStageChecks", { count: emptySuccesses })
+          : reviewMsg("noCheckCompleted");
 
   // Reading the route is the skill the game is built on, so a reading that was
   // wrong more often than right is named before an untested correlation. In the
@@ -72,44 +73,44 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     // choice of source; telling that player to "run an Own source" told them
     // to do what they had done on every turn.
     const failedOwn = misses.filter(turn => !turn.success && hypothesisSources(game, turn.hypothesis!).includes(turn.procedure)).length;
-    const gap = msg("engine.review.yourWorkingHypothesis", { aligned, tested: tested.length, revisions });
+    const gap = reviewMsg("yourWorkingHypothesis", { aligned, tested: tested.length, revisions });
     if (carried * 2 >= misses.length) return {
       strength,
-      gap: msg("engine.review.onOfThe", { gap, carried }),
-      concept: msg("engine.review.eachStageOf"),
-      next: msg("engine.review.nextOperationAs"),
+      gap: reviewMsg("onOfThe", { gap, carried }),
+      concept: reviewMsg("eachStageOf"),
+      next: reviewMsg("nextOperationAs"),
     };
     if (untested * 2 >= misses.length && failedOwn === untested) return {
       strength,
-      gap: msg("engine.review.onOfThe2", { gap, failedOwn }),
-      concept: msg("engine.review.aFailedRoll"),
-      next: msg("engine.review.nextOperationGive"),
+      gap: reviewMsg("onOfThe2", { gap, failedOwn }),
+      concept: reviewMsg("aFailedRoll"),
+      next: reviewMsg("nextOperationGive"),
     };
     if (untested * 2 >= misses.length) return {
       strength,
-      gap: msg("engine.review.missesSettledNothing", { gap, untested, reasons: both([untested - blindMisses ? msg("engine.review.failedOnThe", { untested: untested - blindMisses }) : null, blindMisses ? msg("engine.review.usedASource", { blindMisses }) : null]) }),
-      concept: msg("engine.review.aWrongReading"),
+      gap: reviewMsg("missesSettledNothing", { gap, untested, reasons: both([untested - blindMisses ? reviewMsg("failedOnThe", { untested: untested - blindMisses }) : null, blindMisses ? reviewMsg("usedASource", { blindMisses }) : null]) }),
+      concept: reviewMsg("aWrongReading"),
       next: game.mode === "expert"
-        ? msg("engine.review.nextOperationBefore")
-        : msg("engine.review.nextOperationRun"),
+        ? reviewMsg("nextOperationBefore")
+        : reviewMsg("nextOperationRun"),
     };
     return {
       strength,
-      gap: msg("engine.review.youTestedEach", { gap }),
-      concept: msg("engine.review.aWrongReading2"),
+      gap: reviewMsg("youTestedEach", { gap }),
+      concept: reviewMsg("aWrongReading2"),
       next: game.mode === "expert"
-        ? msg("engine.review.nextOperationKeep")
-        : msg("engine.review.nextOperationWhen"),
+        ? reviewMsg("nextOperationKeep")
+        : reviewMsg("nextOperationWhen"),
     };
   }
   if (tested.length && aligned * 2 < tested.length) return {
     strength,
     gap: msg(revisions === 0 ? "engine.review.matchedNeverRevised" : "engine.review.matched", { aligned, tested: tested.length }),
-    concept: msg("engine.review.aHypothesisIs"),
+    concept: reviewMsg("aHypothesisIs"),
     // Expert withholds the standing, so the advice is the same habit without it.
     next: game.mode === "expert"
-      ? msg("engine.review.nextOperationKeep2")
-      : msg("engine.review.nextOperationWatch"),
+      ? reviewMsg("nextOperationKeep2")
+      : reviewMsg("nextOperationWatch"),
   };
   // A loss to a meter, not the window, is the thing to look at: a playtest that
   // read the route well and lost to the sector margin was told about empty
@@ -118,20 +119,20 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     const reason = getLossReason(game);
     return {
       strength,
-      gap: msg("engine.review.theOperationWas", { title: withForm(reason.title, "lowerFirst") }),
-      concept: msg("engine.review.businessImpactService"),
+      gap: reviewMsg("theOperationWas", { title: withForm(reason.title, "lowerFirst") }),
+      concept: reviewMsg("businessImpactService"),
       next: reason.cause === "sector"
-        ? msg("engine.review.nextOperationWatch2", { rule: sectorSystems[game.scenario].rule })
-        : msg("engine.review.nextOperationWatch3"),
+        ? reviewMsg("nextOperationWatch2", { rule: sectorSystems[game.scenario].rule })
+        : reviewMsg("nextOperationWatch3"),
     };
   }
   // Two confirmed stages on the turn the operation ended left no turn to compare
   // them in, and a playtest was told it "never tested" what it never could.
   if (readyToCorrelate(game) && readyToCorrelate(recordBefore(game, game.turns.length - 1))) return {
     strength,
-    gap: msg("engine.review.youConfirmedStages", { evidence: game.evidence.filter(item => item.supports).length }),
-    concept: msg("engine.review.twoThingsHappening"),
-    next: msg("engine.review.nextOperationOnce"),
+    gap: reviewMsg("youConfirmedStages", { evidence: game.evidence.filter(item => item.supports).length }),
+    concept: reviewMsg("twoThingsHappening"),
+    next: reviewMsg("nextOperationOnce"),
   };
   // Empty checks of the reading's own sources are the reading being ruled out,
   // and telling that player to "prefer a source the reading predicts" told them
@@ -143,16 +144,16 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const keptAgainst = game.turns.filter((turn, index) => turn.hypothesis && ["weakening", "unsupported"].includes(getHypothesisStanding({ ...recordBefore(game, index), hypothesis: turn.hypothesis }).level)).length;
   if (emptySuccesses >= 3 && (emptyOffReading * 2 >= emptySuccesses || (revisions < 2 && keptAgainst > 0))) return emptyOffReading * 2 >= emptySuccesses ? {
     strength,
-    gap: msg("engine.review.ofYourSuccessful", { emptySuccesses, emptyOffReading }),
-    concept: msg("engine.review.aCheckThat"),
-    next: msg("engine.review.nextOperationPrefer"),
+    gap: reviewMsg("ofYourSuccessful", { emptySuccesses, emptyOffReading }),
+    concept: reviewMsg("aCheckThat"),
+    next: reviewMsg("nextOperationPrefer"),
   } : {
     strength,
-    gap: msg("engine.review.ofYourSuccessful2", { emptySuccesses }),
-    concept: msg("engine.review.anEmptyCheck"),
+    gap: reviewMsg("ofYourSuccessful2", { emptySuccesses }),
+    concept: reviewMsg("anEmptyCheck"),
     next: game.mode === "expert"
-      ? msg("engine.review.nextOperationChange")
-      : msg("engine.review.nextOperationWhen2"),
+      ? reviewMsg("nextOperationChange")
+      : reviewMsg("nextOperationWhen2"),
   };
   // Only a completed response has a cost to judge. A run that never reached it
   // would otherwise be told its response was too expensive.
@@ -160,9 +161,9 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     strength,
     // It told a player to "pick the cheapest" beside a decision record naming the
     // costlier option as the stronger one in every phase.
-    gap: msg("engine.review.theResponseScored", { response: breakdown.response }),
-    concept: msg("engine.review.containmentAssuranceAnd"),
-    next: msg("engine.review.nextOperationRead"),
+    gap: reviewMsg("theResponseScored", { response: breakdown.response }),
+    concept: reviewMsg("containmentAssuranceAnd"),
+    next: reviewMsg("nextOperationRead"),
   };
   // Picking sources that find things and reading the route correctly are two
   // different skills, and a run can do the first well while getting the second
@@ -172,9 +173,9 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     strength,
     gap: (() => {
       const wrong = turnCredits(game).filter(item => item.reason === "tested").length;
-      return wrong === 0 ? msg("engine.review.selectionWorked", { aligned, tested: tested.length }) : wrong === 1 ? msg("engine.review.selectionWorkedOneWrong", { aligned, tested: tested.length }) : msg("engine.review.selectionWorkedWrong", { aligned, tested: tested.length, count: wrong });
+      return wrong === 0 ? reviewMsg("selectionWorked", { aligned, tested: tested.length }) : wrong === 1 ? reviewMsg("selectionWorkedOneWrong", { aligned, tested: tested.length }) : reviewMsg("selectionWorkedWrong", { aligned, tested: tested.length, count: wrong });
     })(),
-    concept: msg("engine.review.findingAStage"),
+    concept: reviewMsg("findingAStage"),
     next: msg(game.difficulty === "training" ? revisions === 0 ? "engine.review.afreshTeamKept" : "engine.review.afreshTeam" : revisions === 0 ? "engine.review.afreshKnownKept" : "engine.review.afreshKnown"),
   };
   // The decisions are fifteen points of the score and a playtest was told
@@ -183,15 +184,15 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const weakest = [...game.decisions].sort((a, b) => a.quality - b.quality)[0];
   if (weakest && weakest.quality <= 2) return {
     strength,
-    gap: msg("engine.review.weakestCall", { title: weakest.title, stage: attacks.find(item => item.id === weakest.stage) ? lit(attacks.find(item => item.id === weakest.stage)!.title, "lower") : msg("engine.review.aConfirmedStage"), rationale: withForm(weakest.rationale, "lowerFirst") }),
-    concept: msg("engine.review.noResponseIs"),
-    next: msg("engine.review.nextOperationBefore2"),
+    gap: reviewMsg("weakestCall", { title: weakest.title, stage: attacks.find(item => item.id === weakest.stage) ? lit(attacks.find(item => item.id === weakest.stage)!.title, "lower") : reviewMsg("aConfirmedStage"), rationale: withForm(weakest.rationale, "lowerFirst") }),
+    concept: reviewMsg("noResponseIs"),
+    next: reviewMsg("nextOperationBefore2"),
   };
   if (game.status === "lost") return {
     strength,
-    gap: msg("engine.review.theOperationWas2"),
-    concept: msg("engine.review.theWindowIs"),
-    next: msg("engine.review.nextOperationRevise"),
+    gap: reviewMsg("theOperationWas2"),
+    concept: reviewMsg("theWindowIs"),
+    next: reviewMsg("nextOperationRevise"),
   };
   // A slow but sound operation was told nothing stood out beside an
   // investigation score of 13 of 25. The advice names what the turns went on:
@@ -202,25 +203,25 @@ export function getBeginnerReview(game: Game): BeginnerReview {
     const failed = game.turns.filter(turn => !turn.success).length;
     const blind = turnCredits(game).filter(item => item.reason === "absent" || item.reason === "excluded").length;
     const empty = game.turns.filter(turn => turn.success && !turn.revealed && !turn.injectReveal).length;
-    const counted = both([failed ? msg("engine.review.failedRolls", { count: failed }) : null, empty ? msg("engine.review.emptyChecks", { count: empty }) : null]);
+    const counted = both([failed ? reviewMsg("failedRolls", { count: failed }) : null, empty ? reviewMsg("emptyChecks", { count: empty }) : null]);
     return {
       strength,
       gap: msg(failed || empty ? "engine.review.reasoningHeldSpent" : "engine.review.reasoningHeld", { turns: game.turns.length, free: freeTurns(game), difficulty: difficulties[game.difficulty].title, counted }),
-      concept: msg("engine.review.emptyChecksAre"),
+      concept: reviewMsg("emptyChecksAre"),
       next: blind
         ? game.mode === "expert"
-          ? msg("engine.review.nextOperationKeep3")
-          : msg("engine.review.nextOperationBefore3")
+          ? reviewMsg("nextOperationKeep3")
+          : reviewMsg("nextOperationBefore3")
         : game.mode === "expert"
-          ? msg("engine.review.nextOperationBefore4")
-          : msg("engine.review.nextOperationBefore5"),
+          ? reviewMsg("nextOperationBefore4")
+          : reviewMsg("nextOperationBefore5"),
     };
   }
   return {
     strength,
-    gap: msg("engine.review.nothingStandsOut"),
-    concept: msg("engine.review.theHabitTo"),
-    next: msg("engine.review.nextOperationTry"),
+    gap: reviewMsg("nothingStandsOut"),
+    concept: reviewMsg("theHabitTo"),
+    next: reviewMsg("nextOperationTry"),
   };
 }
 
@@ -274,10 +275,10 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
 
 export function getOutcome(game: Game) {
   const breakdown = getScoreBreakdown(game);
-  if (breakdown.total >= 82) return { grade: "A", title: msg("engine.review.controlledRecovery"), detail: msg("engine.review.youBalancedEvidence"), breakdown };
-  if (breakdown.total >= 68) return { grade: "B", title: msg("engine.review.stableWithResidual"), detail: msg("engine.review.theIncidentIs"), breakdown };
-  if (breakdown.total >= 52) return { grade: "C", title: msg("engine.review.costlyStabilisation"), detail: msg("engine.review.servicesAreRecovering"), breakdown };
-  return { grade: "D", title: msg("engine.review.fragileRecovery"), detail: msg("engine.review.theImmediateCrisis"), breakdown };
+  if (breakdown.total >= 82) return { grade: "A", title: reviewMsg("controlledRecovery"), detail: reviewMsg("youBalancedEvidence"), breakdown };
+  if (breakdown.total >= 68) return { grade: "B", title: reviewMsg("stableWithResidual"), detail: reviewMsg("theIncidentIs"), breakdown };
+  if (breakdown.total >= 52) return { grade: "C", title: reviewMsg("costlyStabilisation"), detail: reviewMsg("servicesAreRecovering"), breakdown };
+  return { grade: "D", title: reviewMsg("fragileRecovery"), detail: reviewMsg("theImmediateCrisis"), breakdown };
 }
 
 // Each part of the score, with the rule that produced it in the player's own
@@ -304,12 +305,12 @@ export function getScoreRows(game: Game) {
   const decided = game.decisions.length + game.commandHistory.length + game.setPieceHistory.length;
   // Each row has an id, so a caller can tell them apart without its words.
   return [
-    { id: "investigation", label: msg("engine.review.investigation"), value: breakdown.investigation, maximum: 25, rule: msg("engine.review.fullMarksFor", { freeTurns: freeTurns(game), difficultiesTitle: difficulties[game.difficulty].title, count: turns }) },
-    { id: "impact", label: msg("engine.review.impactControl"), value: breakdown.impact, maximum: 15, rule: msg("engine.review.risesAsFinal", { impact: game.impact }) },
-    { id: "continuity", label: msg("engine.review.continuity"), value: breakdown.continuity, maximum: 15, rule: msg("engine.review.andTheSector", { scenarioDynamicsLabel: scenarioDynamics[game.scenario].label, continuity: game.continuity, sectorHealth: game.sectorHealth }) },
-    { id: "decisions", label: msg("engine.review.operationalDecisions"), value: breakdown.decisions, maximum: 15, rule: decided ? msg("engine.review.averageQuality", { count: decided }) : msg("engine.review.noDecisionsWere") },
-    { id: "response", label: msg("engine.review.containmentRecovery"), value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? responseRule(game) : game.status === "exercise" ? msg("engine.review.notScoredThe") : msg("engine.review.theResponsePhase") },
-    { id: "hypothesis", label: msg("engine.review.hypothesisAccuracy"), value: breakdown.hypothesis, maximum: 10, rule: msg("engine.review.fullCreditFor") },
+    { id: "investigation", label: reviewMsg("investigation"), value: breakdown.investigation, maximum: 25, rule: reviewMsg("fullMarksFor", { freeTurns: freeTurns(game), difficultiesTitle: difficulties[game.difficulty].title, count: turns }) },
+    { id: "impact", label: reviewMsg("impactControl"), value: breakdown.impact, maximum: 15, rule: reviewMsg("risesAsFinal", { impact: game.impact }) },
+    { id: "continuity", label: reviewMsg("continuity"), value: breakdown.continuity, maximum: 15, rule: reviewMsg("andTheSector", { scenarioDynamicsLabel: scenarioDynamics[game.scenario].label, continuity: game.continuity, sectorHealth: game.sectorHealth }) },
+    { id: "decisions", label: reviewMsg("operationalDecisions"), value: breakdown.decisions, maximum: 15, rule: decided ? reviewMsg("averageQuality", { count: decided }) : reviewMsg("noDecisionsWere") },
+    { id: "response", label: reviewMsg("containmentRecovery"), value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? responseRule(game) : game.status === "exercise" ? reviewMsg("notScoredThe") : reviewMsg("theResponsePhase") },
+    { id: "hypothesis", label: reviewMsg("hypothesisAccuracy"), value: breakdown.hypothesis, maximum: 10, rule: reviewMsg("fullCreditFor") },
   ];
 }
 
@@ -317,16 +318,16 @@ export function getScoreRows(game: Game) {
 // so it spoils nothing for someone about to play the same code.
 export function getResultSummary(game: Game): Message[] {
   const scenario = scenarios[game.scenario];
-  const heading = msg("engine.review.breachCommand", { scenarioTitle: scenario.title, difficultiesTitle: difficulties[game.difficulty].title, gameModesTitle: gameModes[game.mode].title });
-  const record = msg("engine.review.of4Stages", { revealed: game.revealed.length, count: game.turns.length });
+  const heading = reviewMsg("breachCommand", { scenarioTitle: scenario.title, difficultiesTitle: difficulties[game.difficulty].title, gameModesTitle: gameModes[game.mode].title });
+  const record = reviewMsg("of4Stages", { revealed: game.revealed.length, count: game.turns.length });
   const outcome = getOutcome(game);
   const result = game.status === "won"
-    ? msg("engine.review.stoodDownGrade", { grade: outcome.grade, total: outcome.breakdown.total })
+    ? reviewMsg("stoodDownGrade", { grade: outcome.grade, total: outcome.breakdown.total })
     : game.status === "exercise"
-      ? msg("engine.review.authorisedExerciseConcluded", { total: outcome.breakdown.total })
-      : msg("engine.review.operationLost100", { getLossReasonTitle: withForm(getLossReason(game).title, "lower"), total: outcome.breakdown.total });
+      ? reviewMsg("authorisedExerciseConcluded", { total: outcome.breakdown.total })
+      : reviewMsg("operationLost100", { getLossReasonTitle: withForm(getLossReason(game).title, "lower"), total: outcome.breakdown.total });
   const code = game.seed === null ? null : encodeChallenge({ scenario: game.scenario, difficulty: game.difficulty, mode: game.mode, specialist: game.specialist, seed: game.seed });
-  return [heading, msg("engine.review.resultAndRecord", { result, record }), ...(code ? [msg("engine.review.playTheSame", { code })] : [])];
+  return [heading, reviewMsg("resultAndRecord", { result, record }), ...(code ? [reviewMsg("playTheSame", { code })] : [])];
 }
 
 // The share image's text, under the same rule as the copied result: the case,
@@ -338,13 +339,13 @@ export function getShareCard(game: Game): ShareCard {
   const outcome = getOutcome(game);
   const code = game.seed === null ? null : encodeChallenge({ scenario: game.scenario, difficulty: game.difficulty, mode: game.mode, specialist: game.specialist, seed: game.seed });
   return {
-    form: msg("engine.review.formBc310"),
+    form: reviewMsg("formBc310"),
     title: scenario.title,
     scenarioId: scenario.id,
-    meta: msg("engine.review.case", { scenario: game.scenario + 1, sector: scenario.sector, difficultiesTitle: difficulties[game.difficulty].title, gameModesTitle: gameModes[game.mode].title }),
-    result: game.status === "won" ? msg("engine.review.stoodDownGrade2", { grade: outcome.grade }) : game.status === "exercise" ? msg("engine.review.authorisedExerciseConcluded2") : msg("engine.review.lost", { getLossReasonTitle: getLossReason(game).title }),
-    score: msg("engine.review.scoreOf100", { total: outcome.breakdown.total }),
-    stages: msg("engine.review.of4Stages", { revealed: game.revealed.length, count: game.turns.length }),
+    meta: reviewMsg("case", { scenario: game.scenario + 1, sector: scenario.sector, difficultiesTitle: difficulties[game.difficulty].title, gameModesTitle: gameModes[game.mode].title }),
+    result: game.status === "won" ? reviewMsg("stoodDownGrade2", { grade: outcome.grade }) : game.status === "exercise" ? reviewMsg("authorisedExerciseConcluded2") : reviewMsg("lost", { getLossReasonTitle: getLossReason(game).title }),
+    score: reviewMsg("scoreOf100", { total: outcome.breakdown.total }),
+    stages: reviewMsg("of4Stages", { revealed: game.revealed.length, count: game.turns.length }),
     code,
     expert: game.mode === "expert" && game.status === "won",
   };
@@ -384,28 +385,28 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
   return game.turns.map((turn, index) => {
     const target = turn.hypothesisTarget;
     const targetAttack = target ? attacks.find(item => item.id === target)! : null;
-    const stage: Message = targetAttack ? lit(stages[targetAttack.stage].name) : msg("engine.review.everyStageWas");
+    const stage: Message = targetAttack ? lit(stages[targetAttack.stage].name) : reviewMsg("everyStageWas");
     const actualRoute = targetAttack ? hypotheses.find(item => item.id === targetAttack.vector)!.title : null;
     const predicted = turn.hypothesis ? hypotheses.find(item => item.id === turn.hypothesis)!.title : null;
     const found = turn.revealed ? attacks.find(item => item.id === turn.revealed)!.title : null;
-    const windfallNote = turn.windfall ? msg("engine.review.youDidExpose", { found: found ?? "" }) : lit("");
+    const windfallNote = turn.windfall ? reviewMsg("youDidExpose", { found: found ?? "" }) : lit("");
     const missNote: Record<TurnCredit["reason"], Message> = {
       none: lit(""),
       matched: lit(""),
-      tested: msg("engine.review.youTestedIt"),
-      failed: msg("engine.review.theRollFailed"),
-      "other-source": msg("engine.review.theProcedureWas"),
-      repeated: msg("engine.review.theHalfCredit"),
-      excluded: msg("engine.review.yourEarlierChecks"),
-      absent: msg("engine.review.noneOfThe"),
+      tested: reviewMsg("youTestedIt"),
+      failed: reviewMsg("theRollFailed"),
+      "other-source": reviewMsg("theProcedureWas"),
+      repeated: reviewMsg("theHalfCredit"),
+      excluded: reviewMsg("yourEarlierChecks"),
+      absent: reviewMsg("noneOfThe"),
     };
-    const verdict = !target ? msg("engine.review.noStageLeft")
-      : !turn.hypothesis ? msg("engine.review.noWorkingHypothesis")
+    const verdict = !target ? reviewMsg("noStageLeft")
+      : !turn.hypothesis ? reviewMsg("noWorkingHypothesis")
       : turn.hypothesisMatched
         ? (turn.planningBonus > 0
-          ? msg("engine.review.correctWasOn", { stage: withForm(stage, "inSentence"), actualRoute: lit(actualRoute!, "lower"), windfallNote })
-          : msg("engine.review.correctAboutThe", { stage: withForm(stage, "inSentence"), actualRoute: lit(actualRoute!, "lower"), windfallNote }))
-        : msg("engine.review.wrongRoute", { stage, actualRoute: lit(actualRoute!, "lower"), predicted: lit(predicted!, "lower"), note: credits[index].reason === "tested" && !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure) ? msg("engine.review.youTestedIt2") : missNote[credits[index].reason], windfallNote });
+          ? reviewMsg("correctWasOn", { stage: withForm(stage, "inSentence"), actualRoute: lit(actualRoute!, "lower"), windfallNote })
+          : reviewMsg("correctAboutThe", { stage: withForm(stage, "inSentence"), actualRoute: lit(actualRoute!, "lower"), windfallNote }))
+        : reviewMsg("wrongRoute", { stage, actualRoute: lit(actualRoute!, "lower"), predicted: lit(predicted!, "lower"), note: credits[index].reason === "tested" && !hypothesisSources(game, turn.hypothesis!).includes(turn.procedure) ? reviewMsg("youTestedIt2") : missNote[credits[index].reason], windfallNote });
     return {
       turn: turn.number,
       procedure: procedureById(game, turn.procedure)!.title,
@@ -424,18 +425,18 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
 }
 
 export function getCounterfactuals(game: Game): Message[] {
-  const items = game.decisions.slice(-3).map(decision => msg("engine.review.decisionCounterfactual", { title: decision.title, counterfactual: decision.counterfactual, rationale: decision.rationale }));
+  const items = game.decisions.slice(-3).map(decision => reviewMsg("decisionCounterfactual", { title: decision.title, counterfactual: decision.counterfactual, rationale: decision.rationale }));
   const dynamics = scenarioDynamics[game.scenario];
   const responseProfile = responseOptionsFor(game);
   if (game.responseChoices.length) {
     const containment = responseProfile.containment.find(option => option.id === game.responseChoices[0]);
-    items.push(msg("engine.review.containmentChoice", { title: lit(containment!.title), disruption: withForm(level(containment!.disruption), "lower"), residual: withForm(level(containment!.residual), "lower"), countermeasure: lit(dynamics.countermeasure) }));
+    items.push(reviewMsg("containmentChoice", { title: lit(containment!.title), disruption: withForm(level(containment!.disruption), "lower"), residual: withForm(level(containment!.residual), "lower"), countermeasure: lit(dynamics.countermeasure) }));
   }
   if (game.responseChoices.length > 1) {
     const assurance = responseProfile.assurance.find(option => option.id === game.responseChoices[1]);
-    items.push(msg("engine.review.assuranceChoice", { title: lit(assurance!.title), confidence: withForm(level(assurance!.confidence), "lower") }));
+    items.push(reviewMsg("assuranceChoice", { title: lit(assurance!.title), confidence: withForm(level(assurance!.confidence), "lower") }));
   }
-  if (game.mapHistory.some(record => record.action === "isolate")) items.push(msg("engine.review.isolationReduced"));
+  if (game.mapHistory.some(record => record.action === "isolate")) items.push(reviewMsg("isolationReduced"));
   // Revising when a completed check has turned against the reading is the
   // habit the review teaches; only a change with no completed result since the
   // last one is worth a counterfactual. Counting every change told a player who
@@ -444,13 +445,13 @@ export function getCounterfactuals(game: Game): Message[] {
     if (index === 0 || history[index - 1].id === entry.id) return false;
     return !game.turns.some(turn => turn.number >= history[index - 1].turn && turn.number < entry.turn && turn.success);
   }).length;
-  if (unprompted >= 2) items.push(msg("engine.review.unpromptedChanges", { count: unprompted }));
-  else if (!game.hypothesisHistory.length) items.push(msg("engine.review.noHypothesisRecorded"));
+  if (unprompted >= 2) items.push(reviewMsg("unpromptedChanges", { count: unprompted }));
+  else if (!game.hypothesisHistory.length) items.push(reviewMsg("noHypothesisRecorded"));
   // A pair correctly called coincidental was a right call, not a missed link.
   const weakCorrelations = game.correlations.filter(record => !record.valid && !record.correct).length;
-  if (weakCorrelations) items.push(msg("engine.review.weakCorrelations", { count: weakCorrelations }));
-  if (readyToCorrelate(game)) items.push(msg("engine.review.neverCorrelated"));
-  if (game.setPieceHistory.some(record => record.quality <= 2)) items.push(msg("engine.review.crisisConvenience"));
+  if (weakCorrelations) items.push(reviewMsg("weakCorrelations", { count: weakCorrelations }));
+  if (readyToCorrelate(game)) items.push(reviewMsg("neverCorrelated"));
+  if (game.setPieceHistory.some(record => record.quality <= 2)) items.push(reviewMsg("crisisConvenience"));
   return items;
 }
 

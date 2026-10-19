@@ -111,7 +111,7 @@ export function useGameSession() {
   const [backupMessage, setBackupMessage] = useState<Message | null>(null);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceView>("command");
   const [storageNotice, setStorageNotice] = useState<Message | null>(null);
-  const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, voiceEnabled, setVoiceEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled } = usePreferences(setStorageNotice);
+  const { soundEnabled, setSoundEnabled, musicEnabled, setMusicEnabled, voiceEnabled, setVoiceEnabled, hapticsEnabled, setHapticsEnabled, highContrast, setHighContrast, shortcutsEnabled, setShortcutsEnabled, reflectionEnabled, setReflectionEnabled } = usePreferences(setStorageNotice);
   const feedbackPrefs = useRef({ sound: soundEnabled, haptics: hapticsEnabled });
   const { todaySeed, seedFor, applyCode, spendChallenge, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed, codeFor } = useChallengeCode(setup => {
     setScenarioChoice(setup.scenario);
@@ -136,6 +136,7 @@ export function useGameSession() {
   // operation, not to its shape: two losses on the same turn of the same
   // scenario are two results.
   const recordedRef = useRef(false);
+  const learningId = useRef("");
   const voiceHistory = useRef(new Set<string>());
   const voiceDecision = useRef(0);
   // A saved operation restored from a backup while another is in play. The one
@@ -192,6 +193,7 @@ export function useGameSession() {
     clearStoredSession();
     importedRef.current = null;
     recordedRef.current = false;
+    learningId.current = crypto.randomUUID();
     voiceHistory.current = new Set();
     voiceDecision.current = 0;
     // Daily Operation and any challenge configuration promise that the same
@@ -244,6 +246,7 @@ export function useGameSession() {
     if (voiceEnabled) unlockCaptainAudio();
     importedRef.current = null;
     recordedRef.current = false;
+    learningId.current = session.learningId ?? crypto.randomUUID();
     voiceHistory.current = new Set();
     voiceDecision.current = 0;
     botRunRef.current = false;
@@ -487,7 +490,7 @@ export function useGameSession() {
   }
 
   function exportProgress() {
-    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), ledger: readLedger(scenarios.length), session: loadedGame().session.serialiseBackupSession(game, savedSession, guided, fastResolve, botRun) });
+    const payload = JSON.stringify({ format: "breach-command-backup", version: 1, campaign, telemetry: readTelemetry(), ledger: readLedger(scenarios.length), session: loadedGame().session.serialiseBackupSession(game, savedSession, guided, fastResolve, botRun, learningId.current) });
     setBackupInput(payload);
     navigator.clipboard?.writeText(payload).then(() => setBackupMessage(msg("session.backupCopied")), () => setBackupMessage(msg("session.backupPrepared")));
   }
@@ -524,7 +527,7 @@ export function useGameSession() {
       }
       let storedSession = true;
       if (restoredSession) {
-        storedSession = parkNewerSave() && writeStored(SESSION_KEY, loadedGame().session.serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve));
+        storedSession = parkNewerSave() && writeStored(SESSION_KEY, loadedGame().session.serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve, restoredSession.learningId));
         if (!storedSession) setStorageNotice(msg("session.storageMemory"));
         setSavedSession(restoredSession);
         // While an operation is in play its own saves would overwrite the restored
@@ -556,6 +559,8 @@ export function useGameSession() {
   function recordProgress(result: Game) {
     if (botRunRef.current || recordedRef.current) return;
     recordedRef.current = true;
+    const id = learningId.current;
+    void import("@/lib/learning").then(module => module.recordLearningOperation(result, id)).catch(() => {});
     recordTelemetry(result.status === "won" ? "win" : result.status === "exercise" ? "exercise" : "loss", { scenario: result.scenario });
     setTelemetry(readTelemetry());
     const score = engine().getOutcome(result).breakdown.total;
@@ -607,7 +612,7 @@ export function useGameSession() {
     const imported = importedRef.current;
     importedRef.current = null;
     if (imported) {
-      if (parkNewerSave()) writeStored(SESSION_KEY, loadedGame().session.serialiseSession(imported.game, imported.guided, imported.fastResolve));
+      if (parkNewerSave()) writeStored(SESSION_KEY, loadedGame().session.serialiseSession(imported.game, imported.guided, imported.fastResolve, imported.learningId));
       else setStorageNotice(msg("session.storageMemory"));
       setSavedSession(imported);
     } else clearStoredSession();
@@ -790,7 +795,7 @@ export function useGameSession() {
       removeStored(SESSION_KEY);
       return;
     }
-    if (writeStored(SESSION_KEY, loadedGame().session.serialiseSession(game, guided, fastResolve))) return;
+    if (writeStored(SESSION_KEY, loadedGame().session.serialiseSession(game, guided, fastResolve, learningId.current))) return;
     const notice = setTimeout(() => setStorageNotice(msg("session.storageMemory")), 0);
     return () => clearTimeout(notice);
   }, [game, guided, fastResolve]);
@@ -862,6 +867,7 @@ export function useGameSession() {
   return {
     // Campaign, session and operation state
     game,
+    learningId: learningId.current,
     resumed: !!game && game === resumedGame,
     campaign,
     savedSession,
@@ -884,6 +890,7 @@ export function useGameSession() {
     hapticsEnabled, setHapticsEnabled,
     highContrast, setHighContrast,
     shortcutsEnabled, setShortcutsEnabled,
+    reflectionEnabled, setReflectionEnabled,
     botEnabled, setBotEnabled,
     botRun,
     botActive,

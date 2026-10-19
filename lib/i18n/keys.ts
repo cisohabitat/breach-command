@@ -1,5 +1,9 @@
 // Every message key, as types only: importing this pulls no catalogue into a bundle.
 import type { titleScreenMessages } from "./en/title-screen.ts";
+import type { practiceDeskMessages } from "./en/practice-desk.ts";
+import type { learningMessages } from "./en/learning.ts";
+import type { decisionCarryMessages } from "./en/decision-carry.ts";
+import type { decisionCarryDetailsMessages } from "./en/decision-carry-details.ts";
 import type { en } from "./en.ts";
 import type { evidenceAssessmentMessages } from "./en/evidence-assessment.ts";
 import type { evidenceLinksMessages } from "./en/evidence-links.ts";
@@ -38,6 +42,10 @@ import type { sectorSetPieceMessages } from "./en/sector-set-piece.ts";
 import type { settingsDialogMessages } from "./en/settings-dialog.ts";
 import type { tutorialCoachMessages } from "./en/tutorial-coach.ts";
 export type MessageKey = keyof typeof en
+  | keyof typeof practiceDeskMessages
+  | keyof typeof learningMessages
+  | keyof typeof decisionCarryMessages
+  | keyof typeof decisionCarryDetailsMessages
   | keyof typeof evidenceLinksMessages
   | keyof typeof evidenceAssessmentMessages
   | keyof typeof actionSheetMessages
@@ -75,4 +83,4 @@ export type MessageKey = keyof typeof en
   | keyof typeof settingsDialogMessages
   | keyof typeof tutorialCoachMessages
   | keyof typeof titleScreenMessages;
-export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "effect-list", "engine", "end-state", "evidence-assessment", "evidence-links", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach", "title-screen"];
+export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "decision-carry", "decision-carry-details", "effect-list", "engine", "end-state", "evidence-assessment", "evidence-links", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "learning", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "practice-desk", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach", "title-screen"];

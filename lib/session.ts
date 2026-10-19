@@ -39,25 +39,27 @@ export type SavedSession = {
   game: Game;
   guided: boolean;
   fastResolve: boolean;
+  learningId?: string;
 };
 
-export function serialiseSession(game: Game, guided: boolean, fastResolve: boolean) {
+export function serialiseSession(game: Game, guided: boolean, fastResolve: boolean, learningId?: string) {
   const session: SavedSession = {
     version: SESSION_VERSION,
     savedAt: new Date().toISOString(),
     game,
     guided,
     fastResolve,
+    learningId,
   };
   return JSON.stringify(session);
 }
 
 // The assignment screen has not resumed its save into `game`, but that
 // operation still belongs in the backup, with its own saved preferences.
-export function serialiseBackupSession(game: Game | null, savedSession: SavedSession | null, guided: boolean, fastResolve: boolean, botRun: boolean): string | null {
-  const current = game ? { game, guided, fastResolve } : savedSession;
+export function serialiseBackupSession(game: Game | null, savedSession: SavedSession | null, guided: boolean, fastResolve: boolean, botRun: boolean, learningId?: string): string | null {
+  const current = game ? { game, guided, fastResolve, learningId } : savedSession;
   if (!current || botRun || current.game.mode === "ironman" || !["playing", "response"].includes(current.game.status)) return null;
-  return serialiseSession(current.game, current.guided, current.fastResolve);
+  return serialiseSession(current.game, current.guided, current.fastResolve, current.learningId);
 }
 
 // A save is only ever written by this device, but it is plain text in local
@@ -279,6 +281,7 @@ export function parseSession(raw: string): SavedSession | null {
       game: migrated,
       guided: parsed.guided !== false,
       fastResolve: parsed.fastResolve === true,
+      ...(typeof parsed.learningId === "string" && /^[a-zA-Z0-9-]{1,80}$/.test(parsed.learningId) ? { learningId: parsed.learningId } : {}),
     };
   } catch {
     return null;

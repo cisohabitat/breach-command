@@ -13,6 +13,7 @@ import { useMessages } from "@/hooks/use-messages";
 import { commandWorkspaceMessages } from "@/lib/i18n/en/command-workspace";
 import { register } from "@/lib/i18n";
 import { CaptainVoice } from "./captain-voice-lazy";
+import { DecisionCarry } from "./decision-carry";
 
 register(commandWorkspaceMessages);
 
@@ -41,7 +42,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       {activeWorkspace === "command" && (ended ? (
         <EndState session={session} />
       ) : game.status === "response" ? (
-        <ResponsePanel game={game} onChoose={respond} />
+        <ResponsePanel game={game} onChoose={respond} reflectionEnabled={session.reflectionEnabled && !session.botRun} operation={session.learningId} />
       ) : (<>
         {/* What needs the player is an entry in the log like the rest, the order
             marked by its rule and its link in the text. A boxed "Next action" with
@@ -83,6 +84,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
         </div>
         <SectorBoard game={game} />
         {activeWorkspace === "command" && <SectorSituation game={game} />}
+        {activeWorkspace === "command" && <DecisionCarry game={game} />}
         {activeWorkspace === "command" && <SectorOperationalScene game={game} />}
       </section>
     </>

@@ -16,6 +16,19 @@ import { openWithSave, pendingDecisionGame, responsePhaseGame, twoStagesGame } f
 // for a moved column or a missing rule.
 const widths = [[320, 720], [390, 844], [820, 1180], [1280, 800]] as const;
 
+for (const [width, height] of widths) test(`practice desk at ${width}`, async ({ page }) => {
+  await page.setViewportSize({ width, height });
+  await page.goto("/practice?lesson=signal", { waitUntil: "networkidle" });
+  await expect(page.getByText("Decision 1 of 3", { exact: true })).toBeVisible();
+  await snap(page, `${width}-practice-desk.png`);
+  await openWithSave(page, responsePhaseGame(), false, { sound: false, voice: false, music: false, reflection: true });
+  await resume(page);
+  const reflection = page.locator(".confidence-reflection");
+  await reflection.locator("summary").click();
+  await reflection.getByRole("radio", { name: "High", exact: true }).check();
+  await expect(reflection).toHaveScreenshot(`${width}-confidence-reflection.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+});
+
 // The incident variant previewed on the assignment is drawn fresh on each
 // load, so its line is masked rather than allowed to fail every run.
 // The build line changes with every commit.
