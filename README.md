@@ -130,8 +130,9 @@ The Investigate column keeps a standing summary of what the team already knows â
 
 Every turn ends in the captain's report unless fast resolution is switched on, and a check that completed without exposing a stage says what it settled: which of the declared reading's sources have now come back empty, and whether that reading is holding, weakening or poorly supported. A failed roll settles nothing and says so.
 
-Resume shows the next pending task immediately, with a foldable recap of completed
-checks and the last saved result. It clears after your first game action. Fast
+Resume goes directly to any pending decision. Otherwise it shows the next
+investigation task with a foldable recap of completed checks and the last saved
+result, clearing after your first game action. Fast
 resolution can be changed during play in Settings and travels with that saved
 operation. After two confirmed stages, the sector readout brings the case's
 constraints forward to keep its service pressures in view.

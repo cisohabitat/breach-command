@@ -6,7 +6,7 @@ release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
 ## 0.9.64, 19 October 2026
 
-- Add a nonblocking Resume recap of the saved checks and next pending task.
+- Add a nonblocking investigation Resume recap; pending decisions retain their direct entry.
 - Make Fast resolution adjustable during play and surface sector constraints after two confirmed stages.
 - Duck music to 20% during Captain speech and restore it smoothly, while preserving mute.
 - Recover script/style headroom through lossless message grouping and removal of duplicated game-only styles.

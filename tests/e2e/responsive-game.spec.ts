@@ -230,6 +230,7 @@ test.describe("responsive interaction audit", () => {
 
       for (const stage of ["Containment decision", "Assurance gate", "Recovery decision"] as const) {
         await expect(page.getByText(stage, { exact: true })).toBeVisible();
+        await expect(page.locator(".resume-brief"), "the pending response takes priority over reorientation").toHaveCount(0);
         await expectNoHorizontalOverflow(page, viewport.label + " " + stage.toLowerCase());
         const choice = page.locator(".response-options > button").first();
         await expect(choice).toContainText("residual risk:");

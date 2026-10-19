@@ -137,6 +137,7 @@ export function GameScreen({ session }: { session: GameSession }) {
       <BotControl session={session} />
       {session.resumed && (() => {
         const brief = getResumeBrief(game);
+        if (!brief) return null;
         return <details className="known-facts resume-brief">
           <summary>{t("gameScreen.resumed")}: {t(brief.next)}</summary>
           <p>{t("gameScreen.resumeProgress", { checks: brief.checks, confirmed: brief.confirmed })}</p>
