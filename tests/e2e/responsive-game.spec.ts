@@ -194,6 +194,15 @@ test.describe("responsive interaction audit", () => {
       await expectReachableTarget(page, review, "Open review");
       await review.click();
       await expect(page.getByText("After-action review", { exact: true })).toBeVisible();
+      await expect(page.getByText("One thing to try", { exact: true })).toBeVisible();
+      const highlights = page.getByRole("region", { name: "Key choices to revisit", exact: true });
+      await expect(highlights).toBeVisible();
+      expect(await highlights.locator("dl > div").count()).toBeLessThanOrEqual(3);
+      expect(await highlights.locator("dl > div").count()).toBeGreaterThan(0);
+      const lesson = page.locator(".first-read").first().locator("details");
+      await expect(lesson).toHaveJSProperty("open", false);
+      await lesson.locator("summary").click();
+      await expect(page.getByText("What went well", { exact: true })).toBeVisible();
       await expectNoHorizontalOverflow(page, viewport.label + " debrief");
 
       const audit = await page.evaluate(() => window.__breachResponsiveAudit);
@@ -223,6 +232,8 @@ test.describe("responsive interaction audit", () => {
         await expect(page.getByText(stage, { exact: true })).toBeVisible();
         await expectNoHorizontalOverflow(page, viewport.label + " " + stage.toLowerCase());
         const choice = page.locator(".response-options > button").first();
+        await expect(choice).toContainText("residual risk:");
+        await expect(choice.locator(".effect-list")).toContainText(/benefit|cost|unchanged/);
         await expectReachableTarget(page, choice, stage + " first option");
         await choice.click();
       }

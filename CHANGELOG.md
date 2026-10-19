@@ -4,6 +4,15 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.63, 19 October 2026
+
+- Explain Captain playback states and add a captioned, cancellable voice test in Settings.
+- Label decision benefits and costs, and surface evidence uncertainty before choosing.
+- Lead the review with a specific next-run lesson and up to three recorded calls to revisit.
+- Fold optional collection planning during the first two guided Training checks,
+  while retaining exact costs, keyboard access and manual plan controls.
+- Keep the mission context control visible above the pinned Assume command button during keyboard navigation.
+
 ## 0.9.62, 18 October 2026
 
 - Keep one Captain audio player and prime it when beginning, resuming or enabling

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { sectorSetPieces } from "../../lib/phase8";
-import { commandEvents, infrastructureTopologies, resolveMapAction } from "../../lib/advanced-game";
+import { commandEvents, infrastructureTopologies, newGame, resolveMapAction } from "../../lib/advanced-game";
 import { defaultCampaign, CAMPAIGN_KEY } from "../../lib/campaign";
 import { openWithSave, pendingDecisionGame, responsePhaseGame, twoStagesGame } from "./fixtures";
 
@@ -181,6 +181,24 @@ test.describe("visual baselines", () => {
       await voice.getByRole("button", { name: "Skip voice", exact: true }).click();
       await expect(voice.getByRole("button", { name: "Listen", exact: true })).toHaveAttribute("aria-disabled", "false");
       await expect(voice).toHaveScreenshot(`${width}-decision-reaction.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+    });
+
+    test(`voice settings at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await openWithSave(page, null, false, { voice: true, music: false, sound: false });
+      await page.getByRole("button", { name: "Game settings" }).click();
+      await expect(page.getByRole("region", { name: "Test voice", exact: true })).toBeVisible();
+      await expect(page.locator(".settings-dialog")).toHaveScreenshot(`${width}-voice-settings.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
+    });
+
+    test(`opening plan at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await openWithSave(page, newGame(0, "training", () => 0), true, { voice: false, music: false, sound: false });
+      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.locator(".hypothesis-options > button").first().click();
+      await page.locator('[data-procedure="identity"]').click();
+      await expect(page.locator(".plan-options")).toHaveJSProperty("open", false);
+      await expect(page.locator(".action-sheet")).toHaveScreenshot(`${width}-opening-plan.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
     });
 
     test(`title at ${width}`, async ({ page }) => {

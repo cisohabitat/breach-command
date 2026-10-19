@@ -244,6 +244,12 @@ consolidation.
 
 ## Phase 2: first session
 
+19 October 2026 refinement: visible Captain playback status and a Settings voice
+test, explicit decision benefit/cost and uncertainty labels, review highlights
+with one concrete next-run lesson, and optional opening collection planning.
+Automated flow and layout checks verify these surfaces; they do not establish
+new human-playtest completion or understanding results.
+
 Goal: a newcomer finishes their first operation and understands the loop —
 declare, test, revise, compare — without being told what to click.
 

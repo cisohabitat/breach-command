@@ -1353,6 +1353,9 @@ html,body {
   margin-bottom:5px;
 }
 /* The brief's secondary readouts, one tap down. The summary names what it holds. */
+.briefing-more {
+  margin-bottom:32px;
+}
 .briefing-more>summary {
   cursor:pointer;
   list-style:none;

@@ -154,6 +154,17 @@ crossing is still outlined, a change still stated in words.
 
 ## Sound palette
 
+19 October 2026 clarity refinement: Captain status says when speech is queued,
+loading, speaking or waiting for a decision. Priority warnings do not claim to
+wait for quiet. Settings has a captioned, manually started voice sample, using
+the same player and mix; it stops on dismissal or mute.
+
+Decision effect rows label benefits and costs in words, with evidence
+uncertainty visible before commitment. The review leads with one specific
+lesson and up to three recorded calls; its remaining plain-language explanation
+opens on request. Guided Training keeps optional planning in a native disclosure
+for its opening checks, retaining the selected plan, costs and manual access.
+
 Procedural, in `lib/feedback.ts`, through one context and one limiter. One
 voice per event class:
 

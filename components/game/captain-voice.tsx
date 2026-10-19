@@ -79,6 +79,26 @@ const lineKeys = {
   recoveryHigh: "captainVoice.recoveryHigh",
 } as const;
 
+export function CaptainVoiceTest() {
+  const { t } = useMessages();
+  const [state, setState] = useState<CaptainSpeechState>("idle");
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const cancel = useRef<() => void>(() => {});
+  useEffect(() => () => cancel.current(), []);
+  const busy = state === "waiting" || state === "speaking";
+  return <section className="captain-voice" aria-label={t("captainVoice.test")}>
+    <button className="text-action" onClick={() => {
+      cancel.current();
+      if (!busy) {
+        setTranscriptOpen(true);
+        cancel.current = speakCaptain("noFinding", setState);
+      }
+    }}>{t(busy ? "captainVoice.stopTest" : "captainVoice.test")}</button>
+    <p className="captain-voice-status" role="status">{t(state === "unavailable" ? "captainVoice.unavailable" : state === "speaking" ? "captainVoice.speaking" : state === "waiting" ? "captainVoice.loading" : "captainVoice.testHelp")}</p>
+    <details className="modifier-details" open={transcriptOpen} onToggle={event => setTranscriptOpen(event.currentTarget.open)}><summary>{t("captainVoice.sampleTranscript")}</summary><p className="captain-voice-transcript">{t("captainVoice.noFinding")}</p></details>
+  </section>;
+}
+
 // Mounted at a visible narrative beat, never under a closed dialog.
 type VoiceProps = { cue: CaptainVoiceCue | { game: Game; turn: Turn; reaction?: boolean } | CaptainReaction; lines?: readonly RecordedCaptainCue[]; enabled: boolean; decisionPending?: boolean; history: RefObject<Set<string>> };
 
@@ -137,6 +157,7 @@ function CaptainLine({ cue, playbackKey = cue, lines, enabled, decisionPending =
 
   if (!enabled || !cues.length) return null;
   const busy = state === "speaking" || state === "waiting";
+  const status = state === "unavailable" ? "captainVoice.unavailable" : state === "speaking" ? "captainVoice.speaking" : state === "waiting" ? "captainVoice.loading" : decisionPending && cue !== "pressure" && cue !== "lost" ? "captainVoice.decisionWait" : state === "queued" ? cue === "pressure" || cue === "lost" ? "captainVoice.priorityWait" : "captainVoice.quietWait" : "captainVoice.replayReady";
   return (
     <section className="captain-voice" aria-label={t("captainVoice.captain")}>
       <p className="captain-voice-transcript"><strong>{t("captainVoice.captain")}: </strong>{text}</p>
@@ -144,7 +165,7 @@ function CaptainLine({ cue, playbackKey = cue, lines, enabled, decisionPending =
         <button className="text-action" onClick={() => { if (!busy) play(); }} aria-disabled={busy}>{t("captainVoice.listen")}</button>
         <button className="text-action" onClick={skip}>{t("captainVoice.skip")}</button>
       </div>
-      {state === "unavailable" && <p className="captain-voice-status" role="status">{t("captainVoice.unavailable")}</p>}
+      <p className="captain-voice-status" role="status">{t(status)}</p>
     </section>
   );
 }

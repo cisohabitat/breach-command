@@ -22,10 +22,25 @@ export function MissionBriefingDialog({ session }: { session: GameSession }) {
   // title; it opened on a fold half-way down. Closed, focus goes to the next
   // order rather than to the start button that opened it, which is gone.
   const content = useRef<HTMLDivElement>(null);
+  const revealFocus = () => requestAnimationFrame(() => {
+    const brief = content.current, target = document.activeElement;
+    const footer = brief?.querySelector<HTMLElement>(".primary-button");
+    if (!brief || !footer || !(target instanceof HTMLElement) || target === brief || !brief.contains(target) || footer.contains(target) || !target.matches(":focus-visible")) return;
+    const covered = target.getBoundingClientRect().bottom - footer.getBoundingClientRect().top + 8;
+    if (covered > 0) brief.scrollTop += covered;
+  });
 
   return (
     <Dialog open={missionBriefing} onOpenChange={setMissionBriefing}>
-      <DialogContent ref={content} className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false} onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }} onCloseAutoFocus={returnFocusToAwaiting}>
+      <DialogContent ref={node => {
+        content.current = node;
+        if (!node) return;
+        // The optional voice module can insert its caption after Tab has
+        // already revealed the context. Recheck without moving player focus.
+        const observer = new MutationObserver(revealFocus);
+        observer.observe(node, { childList: true, subtree: true, characterData: true });
+        return () => observer.disconnect();
+      }} className="game-dialog paper-dialog cinematic-briefing" showCloseButton={false} onOpenAutoFocus={event => { event.preventDefault(); content.current?.focus(); }} onCloseAutoFocus={returnFocusToAwaiting} onFocusCapture={revealFocus}>
         <DialogHeader><div className="eyebrow">{rich("missionBriefingDialog.formBc1002", { scenario: (game?.scenario ?? 0) + 1 }, { span: chunk => <span className="separator">{chunk}</span> })}</div><DialogTitle>{activeScenario.title}</DialogTitle><DialogDescription>{activeScenario.brief}</DialogDescription></DialogHeader>
         {game && <>
           {!session.botRun && <CaptainVoice cue={captainOpeningFor(game.scenario)} enabled={session.voiceEnabled && missionBriefing && !session.settings && !session.rules && !session.newConfirm} history={session.voiceHistory} />}

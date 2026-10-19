@@ -3,6 +3,8 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/action-sheet.tsx (app/page.tsx for page), loaded with it.
 export const actionSheetMessages = catalogue({
   actionSheet: {
+    "optionalPlan": "Change collection plan (optional)",
+    "openingPlan": "Begin with Focused scope and Balanced analysis, or explore the alternatives here. Plan options stay expanded after your first two checks or when comparison becomes useful.",
     "turnCost": "Costs 1 turn. Plan effects add to the turn’s pressure costs.",
     "commitPlan": "{scope} scope · {intensity} analysis",
     "checkDetails": "How checks affect evidence and pressure",
@@ -22,8 +24,8 @@ export const actionSheetMessages = catalogue({
     "runProcedure": "Run procedure",
     "carriedFromYour": "Carried from your last action: ",
     "startingPlan": "Starting plan: ",
-    "theseStaySelected": "These stay selected until you change them in the plan options in this sheet.",
-    "changeThemIn": "Change them in the plan options in this sheet; whatever you choose stays selected for later turns until you change it.",
+    "theseStaySelected": "These stay selected until you change the collection plan.",
+    "changeThemIn": "Collection planning is optional; selections carry to later turns.",
     "thisProcedureTests": "This procedure tests your working reading and earns the own-source bonus shown below.",
     "thisProcedureDoes": "This procedure does not directly test your working reading. It may still collect useful evidence, but earns no own-source bonus.",
     "oneBonusIs": "One bonus is unavailable — see why",

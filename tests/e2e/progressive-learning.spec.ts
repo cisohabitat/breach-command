@@ -65,17 +65,30 @@ for (const width of [375, 1280]) {
     await expect(next).toBeInViewport({ ratio: 1 });
     await next.click();
     await source.click();
+    const plan = page.locator(".action-sheet .plan-options");
+    await expect(plan).toHaveJSProperty("open", false);
+    await expect(page.locator(".procedure-planner")).not.toBeVisible();
+    await plan.locator("summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(plan).toHaveJSProperty("open", true);
+    await expect(plan.locator(".procedure-planner button")).toHaveCount(5);
+    await plan.locator("summary").click();
     await expect(page.locator(".action-sheet")).toContainText("Starting plan:");
     const commit = page.locator(".procedure-commit");
     await expect(commit).toContainText("Identity audit");
     await expect(commit).toContainText("Focused scope · Balanced analysis");
     await expect(commit).toContainText("Costs 1 turn");
     await expect(commit.getByRole("button", { name: "Run procedure", exact: true })).toBeInViewport({ ratio: 1 });
+    await plan.locator("summary").click();
     await page.getByRole("group", { name: "Scope", exact: true }).getByRole("button", { name: /^Enterprise/ }).click();
     await page.getByRole("group", { name: "Intensity", exact: true }).getByRole("button", { name: /^Rapid/ }).click();
     await expect(commit).toContainText("Enterprise scope · Rapid analysis");
     await page.getByRole("group", { name: "Scope", exact: true }).getByRole("button", { name: /^Focused/ }).click();
-    await page.getByRole("group", { name: "Intensity", exact: true }).getByRole("button", { name: /^Balanced/ }).click();
+    const balanced = page.getByRole("group", { name: "Intensity", exact: true }).getByRole("button", { name: /^Balanced/ });
+    await balanced.focus();
+    await balanced.press("Enter");
+    await expect(balanced).toBeFocused();
+    await expect(plan).toHaveJSProperty("open", true);
     await expect(commit).toContainText("Focused scope · Balanced analysis");
     const checkHelp = page.locator(".action-sheet details").filter({ has: page.getByText("How checks affect evidence and pressure", { exact: true }) });
     await expect(checkHelp).toHaveJSProperty("open", false);
@@ -143,6 +156,9 @@ test("early reference controls remain usable and expand after two checks without
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await page.getByRole("button", { name: /^Investigate/ }).first().click();
   await expect(reference).toHaveJSProperty("open", true);
+  await page.locator(".procedure-card:not(:disabled)").first().click();
+  await expect(page.locator(".plan-options")).toHaveCount(0);
+  await expect(page.locator(".procedure-planner button")).toHaveCount(5);
 });
 
 test("guidance-off and Expert retain the expanded desktop reference", async ({ page }) => {
@@ -154,6 +170,10 @@ test("guidance-off and Expert retain the expanded desktop reference", async ({ p
     await page.getByRole("button", { name: /^Investigate/ }).first().click();
     await expect(page.locator(".reference-fold")).toHaveJSProperty("open", true);
     await expect(page.locator(".training-prompt")).toHaveCount(0);
+    await page.locator(".hypothesis-options > button").first().click();
+    await page.locator(".procedure-card:not(:disabled)").first().click();
+    await expect(page.locator(".plan-options")).toHaveCount(0);
+    await expect(page.locator(".procedure-planner button")).toHaveCount(5);
   }
 });
 

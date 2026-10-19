@@ -3,6 +3,7 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/captain-report-dialog.tsx (app/page.tsx for page), loaded with it.
 export const captainReportDialogMessages = catalogue({
   captainReportDialog: {
+    "uncertainty": "Uncertainty:",
     "next": "Next:",
     "nextResponse": "Enter the response phase to contain and recover.",
     "nextDebrief": "Open the debrief to review the operation.",

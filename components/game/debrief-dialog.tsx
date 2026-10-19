@@ -17,6 +17,7 @@ import { debriefDialogMessages } from "@/lib/i18n/en/debrief-dialog";
 import { register } from "@/lib/i18n";
 import { sameMessage, withForm } from "@/lib/i18n/message";
 import dynamic from "next/dynamic";
+import { reviewChoices } from "@/lib/review-choices";
 
 const CaptainDebrief = dynamic(() => import("./captain-debrief-player").then(module => module.CaptainDebrief, () => UnavailableVoice), { ssr: false });
 function UnavailableVoice() {
@@ -80,9 +81,10 @@ export function DebriefDialog({ session }: { session: GameSession }) {
   // The same suggestion the landing page will show a returning player.
   const recommendation = game ? recommendNext(game, nextCase(campaign, scenarios.length)) : null;
   const revisions = game ? countRevisions(game) : 0;
+  const choices = game ? reviewChoices(game) : [];
   // The detail lists fold behind summaries that state what they hold: open, the
-  // review was thirteen thousand pixels on a phone, and the four plain sentences
-  // and the score are what most players need. The index opens a section before
+  // review was thirteen thousand pixels on a phone; a lesson, key calls and
+  // the score now lead. The index opens a section before
   // jumping to it.
   const openSection = (id: string) => {
     const target = document.getElementById(id);
@@ -141,14 +143,21 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             {(() => {
               const review = getBeginnerReview(game);
               return (
-                <dl>
+                <>
+                <dl><div><dt>{t("debriefDialog.oneThingTo")}</dt><dd>{say(review.next)}</dd></div></dl>
+                <details className="debrief-fold"><summary>{t("debriefDialog.whyLesson")}</summary><dl>
                   <div><dt>{t("debriefDialog.whatWentWell")}</dt><dd>{say(review.strength)}</dd></div>
                   <div><dt>{t("debriefDialog.whatToLook")}</dt><dd>{say(review.gap)}</dd></div>
                   <div><dt>{t("debriefDialog.theIdeaBehind")}</dt><dd>{say(review.concept)}</dd></div>
-                  <div><dt>{t("debriefDialog.oneThingTo")}</dt><dd>{say(review.next)}</dd></div>
-                </dl>
+                </dl></details>
+                </>
               );
             })()}
+          </section>
+          <section className="first-read review-choices" aria-label={t("debriefDialog.keyChoices")}>
+            <h3>{t("debriefDialog.keyChoices")}</h3>
+            <p>{t(choices.length ? "debriefDialog.choiceOrder" : "debriefDialog.noChoices")}</p>
+            <dl>{choices.map(choice => <div key={choice.id}><dt>{say(choice.title)}</dt><dd>{say(choice.effect)}{choice.reason && <details className="decision-primer"><summary>{t("debriefDialog.whyThisCall")}</summary><p>{say(choice.reason)}</p></details>}</dd></div>)}</dl>
           </section>
           <nav className="debrief-index" aria-label={t("debriefDialog.reviewSections")}>
             {[

@@ -3,6 +3,16 @@ import { catalogue } from "../catalogue.ts";
 // Recorded Captain scripts. Captions and audio must use these exact words.
 export const captainVoiceMessages = catalogue({
   captainVoice: {
+    "test": "Test voice",
+    "stopTest": "Stop voice test",
+    "sampleTranscript": "Sample transcript",
+    "testHelp": "Play a sample without starting an operation. Music and sound cues can stay off.",
+    "speaking": "Captain speaking",
+    "loading": "Loading voice…",
+    "decisionWait": "Waiting for your decision. Listen is available.",
+    "quietWait": "Waiting for a quiet moment…",
+    "priorityWait": "Priority voice queued…",
+    "replayReady": "Ready to replay",
     "confidenceStrengthened": "The second source supports the connection. Confidence in the explanation is stronger. That does not confirm the whole incident.",
     "captain": "Incident Captain",
     "listen": "Listen",
