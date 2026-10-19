@@ -4,6 +4,11 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.9.65, 19 October 2026
+
+- Fix WebKit's native narration-mix test losing its audio observation hook during garbage collection; retain the native parameter and exercise collection explicitly.
+- Preserve the Resume, pacing, sector context and music improvements introduced in 0.9.64.
+
 ## 0.9.64, 19 October 2026
 
 - Add a nonblocking investigation Resume recap; pending decisions retain their direct entry.
