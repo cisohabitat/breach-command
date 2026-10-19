@@ -82,16 +82,20 @@ const lineKeys = {
 export function CaptainVoiceTest() {
   const { t } = useMessages();
   const [state, setState] = useState<CaptainSpeechState>("idle");
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
   const cancel = useRef<() => void>(() => {});
   useEffect(() => () => cancel.current(), []);
   const busy = state === "waiting" || state === "speaking";
   return <section className="captain-voice" aria-label={t("captainVoice.test")}>
-    <p className="captain-voice-transcript">{t("captainVoice.noFinding")}</p>
     <button className="text-action" onClick={() => {
       cancel.current();
-      if (!busy) cancel.current = speakCaptain("noFinding", setState);
+      if (!busy) {
+        setTranscriptOpen(true);
+        cancel.current = speakCaptain("noFinding", setState);
+      }
     }}>{t(busy ? "captainVoice.stopTest" : "captainVoice.test")}</button>
     <p className="captain-voice-status" role="status">{t(state === "unavailable" ? "captainVoice.unavailable" : state === "speaking" ? "captainVoice.speaking" : state === "waiting" ? "captainVoice.loading" : "captainVoice.testHelp")}</p>
+    <details className="modifier-details" open={transcriptOpen} onToggle={event => setTranscriptOpen(event.currentTarget.open)}><summary>{t("captainVoice.sampleTranscript")}</summary><p className="captain-voice-transcript">{t("captainVoice.noFinding")}</p></details>
   </section>;
 }
 

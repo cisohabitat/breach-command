@@ -76,7 +76,8 @@ controls; unavailable speech never blocks play. Music and sound cues quiet
 while the Captain speaks. M mutes voice, music and cues together. Bot Commander
 practice runs remain silent.
 Status text distinguishes speaking, loading, waiting for quiet and waiting for
-a decision. Settings offers **Test voice**, using a captioned recording without
+a decision. Settings offers **Test voice**, using a recording whose transcript
+opens when played and remains manually available, without
 starting an operation; stopping, closing Settings or switching Voice off cancels it.
 Routine finding cues play automatically at most once per operation;
 each newly recorded evidence choice can receive one tradeoff acknowledgement,

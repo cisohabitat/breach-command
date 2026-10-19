@@ -5,6 +5,7 @@ export const captainVoiceMessages = catalogue({
   captainVoice: {
     "test": "Test voice",
     "stopTest": "Stop voice test",
+    "sampleTranscript": "Sample transcript",
     "testHelp": "Play a sample without starting an operation. Music and sound cues can stay off.",
     "speaking": "Captain speaking",
     "loading": "Loading voice…",

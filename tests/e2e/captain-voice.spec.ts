@@ -56,12 +56,18 @@ test("voice status explains decision silence and actual speaking", async ({ page
 });
 
 test("Settings tests native voice without an operation and cancels on mute or dismissal", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
   await observeGesturePlayback(page);
   await openWithSave(page, null, false, voicePreferences);
   await page.getByRole("button", { name: "Game settings" }).click();
   const sample = page.getByRole("region", { name: "Test voice", exact: true });
+  await expect(sample.locator("details")).toHaveJSProperty("open", false);
+  await expect(sample.getByRole("button", { name: "Test voice", exact: true })).toBeInViewport({ ratio: 1 });
   await sample.getByRole("button", { name: "Test voice", exact: true }).click();
   await expect(sample.getByRole("status")).toHaveText("Captain speaking");
+  await expect(sample.locator("details")).toHaveJSProperty("open", true);
+  await page.addScriptTag({ content: axeSource });
+  expect(await page.evaluate(async () => (await window.axe.run(document, { resultTypes: ["violations"] })).violations)).toEqual([]);
   expect(await page.evaluate(() => localStorage.getItem("breach-command.session"))).toBeNull();
   await page.keyboard.press("Escape");
   await expect.poll(() => page.evaluate(() => (window as typeof window & { captainNativePlayback: { audio: HTMLMediaElement } }).captainNativePlayback.audio.paused)).toBe(true);

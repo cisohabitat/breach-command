@@ -196,7 +196,7 @@ test.describe("visual baselines", () => {
       await openWithSave(page, newGame(0, "training", () => 0), true, { voice: false, music: false, sound: false });
       await page.getByRole("button", { name: "Resume", exact: true }).click();
       await page.locator(".hypothesis-options > button").first().click();
-      await page.locator(".procedure-card:not(:disabled)").first().click();
+      await page.locator('[data-procedure="identity"]').click();
       await expect(page.locator(".plan-options")).toHaveJSProperty("open", false);
       await expect(page.locator(".action-sheet")).toHaveScreenshot(`${width}-opening-plan.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
     });
