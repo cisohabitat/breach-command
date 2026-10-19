@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.9.64**: see the [release notes](CHANGELOG.md#0964-19-october-2026).
+Release **0.9.65**: see the [release notes](CHANGELOG.md#0965-19-october-2026).
 
 The [scenario correctness review](docs/reviews/SCENARIOS-2026-10-18.md) covers
 all ten cases, 96 techniques, seventy variants, thirty sector decisions and
@@ -44,6 +44,8 @@ The shared Web Audio context is unlocked in the user gesture before lazy sound
 code loads. Linux browser tests need a working audio output; on speakerless
 hosts use a PulseAudio null sink. CI starts one for Firefox and WebKit so the
 audio tests check native processing and completion rather than mocked playback.
+The narration mix check retains its native audio parameters across garbage
+collection and verifies ducking, recovery and mute in all three browser engines.
 
 The roll renders twenty numbered, beveled bone faces in a charcoal tray, with
 a tumbling arc, diminishing bounces and a contact shadow that follows the die.
