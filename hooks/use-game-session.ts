@@ -560,7 +560,8 @@ export function useGameSession() {
     if (botRunRef.current || recordedRef.current) return;
     recordedRef.current = true;
     const id = learningId.current;
-    void import("@/lib/learning").then(module => module.recordLearningOperation(result, id)).catch(() => {});
+    const nextLesson = engine().getBeginnerReview(result).next;
+    void import("@/lib/learning").then(module => module.recordLearningOperation(result, id, nextLesson)).catch(() => {});
     recordTelemetry(result.status === "won" ? "win" : result.status === "exercise" ? "exercise" : "loss", { scenario: result.scenario });
     setTelemetry(readTelemetry());
     const score = engine().getOutcome(result).breakdown.total;

@@ -4,6 +4,7 @@ import { newGame } from "../lib/advanced-game.ts";
 import { emptyLearning, parseLearning, recommendPractice, recordLearningOperation, recordReflection, updateLearning, readLearning, clearLearning, LEARNING_KEY } from "../lib/learning.ts";
 import { practiceCases, practiceScore } from "../lib/practice.ts";
 import { parseSession, serialiseSession, serialiseBackupSession } from "../lib/session.ts";
+import { msg } from "../lib/i18n/message.ts";
 
 test("practice covers three bounded, deterministic exercises and keeps first choices", () => {
   for (const [id, questions] of Object.entries(practiceCases)) {
@@ -19,6 +20,12 @@ test("learning input rejects unsafe counts, identifiers, incomplete attempts and
   const snapshot = { operation: "operation-1", phase: 0, confidence: "high", choice: "targeted", confirmed: 4, findings: 2, strong: 1, impact: 20, continuity: 80 };
   assert.ok(parseLearning({ ...emptyLearning(), reflections: [snapshot] }));
   for (const bad of [{ strong: 3 }, { phase: 3 }, { impact: NaN }, { operation: "<script>" }, { confidence: "certain" }]) assert.equal(parseLearning({ ...emptyLearning(), reflections: [{ ...snapshot, ...bad }] }), null);
+});
+test("practice follows the debrief's next lesson ahead of a secondary service cost", () => {
+  const game = { ...newGame(0, "training", () => 0), status: "lost" as const, continuity: 10 };
+  assert.equal(recommendPractice(game, msg("engine.review.nextOperationOnce")), "confidence");
+  assert.equal(recommendPractice(game, msg("engine.review.nextOperationRead")), "containment");
+  assert.equal(recommendPractice(game, msg("engine.review.nextOperationPrefer")), "signal");
 });
 test("local learning deduplicates operations and reflections, protects future data, and survives quota in memory", () => {
   const original = Object.getOwnPropertyDescriptor(globalThis, "localStorage");

@@ -5,9 +5,9 @@ Practice and opt-in reflection load separately; carry-forward details remain in
 the shared game bundle for offline play. Typed scoped writers factor 243 repeated
 message prefixes in the live reads and review, expanding to identical saved keys
 and parameters. The full composed-prose comparison remains unchanged (420,163
-lines). Local final measurements: 661,194 B initial script, 1,178,568 B warmed
-assignment, 1,189,462 B operation script; linked/total style 88,608/221,807 B.
-Throttled phone assignment/operation LCP is 1.204/1.200 s and CLS 0.001/0.020.
+lines). Local final measurements: 661,228 B initial script, 1,178,648 B warmed
+assignment, 1,189,542 B operation script; linked/total style 88,608/221,807 B.
+Throttled phone assignment/operation LCP is 1.108/1.120 s and CLS 0.001/0.020.
 The practice page's own sheet is route-specific. No budget is raised and no
 first-visit practice download is hidden in service-worker warm-up.
 

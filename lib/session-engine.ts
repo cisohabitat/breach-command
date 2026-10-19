@@ -4,7 +4,7 @@
 // own named helpers directly and can still be tree-shaken normally.
 export {
   attacks, availableIn, correlateEvidence, getAdversaryRead, getAdversaryState,
-  getDecisionOptions, getLead, getLossReason, getObjectiveRead,
+  getDecisionOptions, getLead, getLossReason, getObjectiveRead, getBeginnerReview,
   getOperationalLabel, getOutcome, getTrainingPrompt, getTurnLimit,
   guidanceLevel, hypotheses, hypothesisSources, newGame, playTurn,
   procedureById, proceduresFor, recommendNext, resolveCommand,

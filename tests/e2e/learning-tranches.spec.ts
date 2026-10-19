@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { attackVector, attacks, newGame, playTurn, procedures, resolveDecision, resolveResponse, responseOptionsFor, setHypothesis } from "../../lib/advanced-game";
+import { attackVector, attacks, getBeginnerReview, newGame, playTurn, procedures, resolveDecision, resolveResponse, responseOptionsFor, setHypothesis } from "../../lib/advanced-game";
 import { serialiseSession } from "../../lib/session";
 import { practiceCases } from "../../lib/practice";
-import { lessonIds } from "../../lib/learning";
+import { lessonIds, recommendPractice } from "../../lib/learning";
 import { openWithSave, responsePhaseGame } from "./fixtures";
 const axe = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
@@ -105,6 +105,9 @@ test("response confidence is optional, snapshots public evidence and survives Re
   await page.getByText("Your confidence at the decision", { exact: true }).click();
   await expect(page.getByText("Response decision 1: High", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Practise this lesson", exact: true })).toBeVisible();
+  let finished = expected;
+  for (const phase of ["assurance", "recovery"] as const) if (finished.status === "response") finished = resolveResponse(finished, responseOptionsFor(finished)[phase][0].id);
+  await expect(page.getByRole("link", { name: "Practise this lesson", exact: true })).toHaveAttribute("href", new RegExp(`lesson=${recommendPractice(finished, getBeginnerReview(finished).next)}&`));
 });
 
 for (const scenario of [1, 8]) test(`recorded decisions carry into later Command and Briefing in sector ${scenario}`, async ({ page }) => {

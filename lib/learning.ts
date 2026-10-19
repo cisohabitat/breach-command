@@ -1,4 +1,5 @@
 import type { Game } from "./engine/types.ts";
+import type { Message } from "./i18n/message.ts";
 import { parseSaveJson } from "./safe-json.ts";
 import { readStored, writeStored } from "./storage.ts";
 
@@ -75,15 +76,22 @@ export function clearLearning() {
 export function recordReflection(reflection: Reflection) {
   return updateLearning(record => ({ ...record, reflections: [...record.reflections.filter(r => r.operation !== reflection.operation || r.phase !== reflection.phase), reflection].slice(-300) }));
 }
-export function recommendPractice(game: Game): LessonId {
+export function recommendPractice(game: Game, next?: Message): LessonId {
   if (game.status === "playing" || game.status === "response") return "signal";
+  // Follow the review's actual priority before considering secondary costs.
+  // Match identifiers, never translated prose or hidden answers.
+  if (next && "key" in next) {
+    if (next.key === "engine.review.nextOperationOnce") return "confidence";
+    if (["engine.review.nextOperationRead", "engine.review.nextOperationBefore2", "engine.review.nextOperationWatch2", "engine.review.nextOperationWatch3"].some(key => key === next.key)) return "containment";
+    return "signal";
+  }
   if (game.decisions.some(d => d.continuityChange < -5) || game.continuity < 50) return "containment";
   if (game.correlations.some(c => !c.valid) || !game.correlations.length) return "confidence";
   return "signal";
 }
-export function recordLearningOperation(game: Game, id: string) {
+export function recordLearningOperation(game: Game, id: string, next?: Message) {
   if (game.status === "playing" || game.status === "response") return false;
-  const row: LearningOperation = { id, at: Date.now(), scenario: game.scenario, lesson: recommendPractice(game),
+  const row: LearningOperation = { id, at: Date.now(), scenario: game.scenario, lesson: recommendPractice(game, next),
     checks: game.turns.length, bounded: game.turns.filter(t => t.success && !t.revealed && !t.injectReveal).length,
     comparisons: game.correlations.length, supported: game.correlations.filter(c => c.valid).length,
     serviceCost: game.decisions.reduce((sum, d) => sum + Math.max(0, -d.continuityChange), 0) };

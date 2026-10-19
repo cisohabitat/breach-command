@@ -12,8 +12,8 @@ Release **0.10.0**: see the [release notes](CHANGELOG.md#0100-19-october-2026).
 
 The **Practice desk**, at `/practice`, offers three short exercises with three
 decisions each: bounded signals, confidence in causal explanations and containment
-that protects essential service. The after-action review recommends a relevant
-exercise from the completed record; Settings opens the desk in a separate tab so
+that protects essential service. The after-action review links its specific next
+lesson to a relevant exercise, ahead of secondary costs in the record; Settings opens the desk in a separate tab so
 an active Ironman operation is retained in its original window. Each question
 explains the evidence boundary after the first choice. Repeating an exercise makes
 a new attempt without rewriting earlier answers, and practice never changes a

@@ -1,4 +1,5 @@
 import type { Game } from "@/lib/engine/types";
+import type { Message } from "@/lib/i18n/message";
 import { useEffect, useState, type RefObject } from "react";
 import { getEvidenceAssessment } from "@/lib/evidence-assessment";
 import type { Confidence } from "@/lib/learning";
@@ -25,11 +26,11 @@ export function ConfidenceReflection({ game, operation, rememberRef }: { game: G
   }, [game, operation, rememberRef, value]);
   return <details className="decision-primer confidence-reflection"><summary>{t("learning.confidence")}</summary><p>{t("learning.intro")}</p><fieldset><legend className="sr-only">{t("learning.confidence")}</legend>{([null, "low", "medium", "high"] as const).map(level => <label className="confidence-choice" key={level ?? "skip"}><input type="radio" name="response-confidence" checked={value === level} onChange={() => onChange(level)} />{t(level ? labels[level] : "learning.skip")}</label>)}</fieldset></details>;
 }
-export function LearningReview({ game, operation }: { game: Game; operation: string }) {
+export function LearningReview({ game, operation, next }: { game: Game; operation: string; next: Message }) {
   const { t, locale } = useMessages();
   const record = useLearning();
   if (game.status === "playing" || game.status === "response") return null;
-  const lesson = recommendPractice(game);
+  const lesson = recommendPractice(game, next);
   const rows = record.reflections.filter(row => row.operation === operation && game.responseChoices[row.phase] === row.choice);
   return <section className="first-read" aria-label={t("learning.practice")}>
     <h3>{t("learning.practice")}: {t(lesson === "signal" ? "learning.signal" : lesson === "confidence" ? "learning.comparison" : "learning.containment")}</h3>

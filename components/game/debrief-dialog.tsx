@@ -155,7 +155,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               );
             })()}
           </section>
-          {debrief && !session.botRun && <LearningReview game={game} operation={session.learningId} />}
+          {debrief && !session.botRun && <LearningReview game={game} operation={session.learningId} next={getBeginnerReview(game).next} />}
           <section className="first-read review-choices" aria-label={t("debriefDialog.keyChoices")}>
             <h3>{t("debriefDialog.keyChoices")}</h3>
             <p>{t(choices.length ? "debriefDialog.choiceOrder" : "debriefDialog.noChoices")}</p>
