@@ -11,6 +11,31 @@ const focusedRole = (page: Page) => page.evaluate(() => document.activeElement?.
 const focusedText = (page: Page) => page.evaluate(() => document.activeElement?.textContent ?? "");
 
 test.describe("keyboard play", () => {
+  for (const width of [390, 820, 1280]) {
+    test(`mission context stays above the pinned command button at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await openWithSave(page, null);
+      await page.locator(".start-button").click();
+      const brief = page.locator(".cinematic-briefing");
+      await expect(brief).toBeFocused();
+      const context = brief.locator(".briefing-more > summary");
+      // Reach the context through the actual tab order, with no focus/scroll
+      // shortcut that could hide the pinned footer's obstruction.
+      for (let stop = 0; stop < 12 && !(await context.evaluate(node => node === document.activeElement)); stop++) {
+        await page.keyboard.press("Tab");
+      }
+      await expect(context).toBeFocused();
+      await expect(brief.getByRole("region", { name: "Incident Captain" })).toBeVisible();
+      await expect.poll(async () => {
+        const summary = await context.boundingBox();
+        const button = await brief.locator(".primary-button").boundingBox();
+        return !!summary && !!button && summary.y >= 0 && summary.y + summary.height <= button.y;
+      }, { message: "Tab scrolls the whole context control above Assume command" }).toBe(true);
+      await page.keyboard.press("Enter");
+      await expect(brief.locator(".briefing-more")).toHaveJSProperty("open", true);
+    });
+  }
+
   test("the captain's report opens on the report, not on a decision", async ({ page }) => {
     await openWithSave(page, pendingDecisionGame());
     await page.getByRole("button", { name: "Resume", exact: true }).click();

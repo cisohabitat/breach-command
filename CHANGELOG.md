@@ -11,6 +11,7 @@ release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 - Lead the review with a specific next-run lesson and up to three recorded calls to revisit.
 - Fold optional collection planning during the first two guided Training checks,
   while retaining exact costs, keyboard access and manual plan controls.
+- Keep the mission context control visible above the pinned Assume command button during keyboard navigation.
 
 ## 0.9.62, 18 October 2026
 

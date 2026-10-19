@@ -328,7 +328,7 @@ The terminal's schedule erosion was reduced after comparing collection, evidence
 | `tests/e2e/responsive-game.spec.ts` | Cross-width browser interaction and overflow audit |
 | `tests/e2e/accessibility.spec.ts` | Cross-width axe accessibility audit |
 | `tests/e2e/persistence.spec.ts` | Stored settings survive a load and a reload |
-| `tests/e2e/keyboard.spec.ts` | Initial focus in overlays, focus recovery and switchable shortcuts |
+| `tests/e2e/keyboard.spec.ts` | Initial focus in overlays, focus recovery, mission context above the pinned command button and switchable shortcuts |
 | `tests/e2e/keyboard-playthrough.spec.ts` | A whole operation, won and lost, played with the keyboard alone, with axe on each surface; game-only seeded draws stay separate from audit UUIDs |
 | `playwright.config.ts` | Deterministic Chromium test runner and local preview lifecycle |
 
