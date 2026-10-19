@@ -321,6 +321,8 @@ After a deliberate visual change, use the
 It records on the same GitHub runner used for comparison and writes to
 `ci/visual-baselines`. Review every changed image before bringing the baselines
 into the change; local font rendering can differ from the runner.
+Isolated map captures move the pointer outside the panel while retaining keyboard
+focus, so a preceding disclosure click cannot change the reference's hover state.
 
 `pnpm balance:check` is the smoke version CI runs: 600 seeded operations per difficulty and 300 campaigns, failing by name if a figure moves more than three points from `scripts/balance-expected.json`. `pnpm validate:content` runs the content tests alone for authors, and `pnpm new-scenario <slug>` scaffolds a new sector's tables (`docs/CONTENT.md`). Releases follow `docs/RELEASING.md`: the version in `package.json`, an entry in `CHANGELOG.md`, and a tag once Verify passes on `main`.
 

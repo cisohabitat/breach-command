@@ -122,6 +122,10 @@ test.describe("visual baselines", () => {
       // not change the browser's scroll anchor before the workspace return.
       const hiddenTabs = await page.addStyleTag({ content: ".workspace-tabs { visibility: hidden !important; }" });
       try {
+        // The preceding disclosure click can leave a different row hovered
+        // after capture scrolls. Record the map's neutral pointer state.
+        await page.mouse.move(0, 0);
+        await expect(page.locator(".infrastructure-console:hover")).toHaveCount(0);
         await expect(page.locator(".infrastructure-console")).toHaveScreenshot(`${width}-infrastructure-map.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
       } finally {
         await hiddenTabs.evaluate(element => element.parentNode?.removeChild(element));

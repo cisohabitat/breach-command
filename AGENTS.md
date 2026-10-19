@@ -335,7 +335,11 @@ These instructions apply to the entire repository. Preserve the game as a polish
   Isolated map screenshots hide unrelated sticky navigation and its decorative
   readout copy with capture-only visibility styling. Preserve their layout and
   positioning: making the nav static loses the copy's anchor and can affect
-  the following workspace's scroll position. Full workspace screenshots and
+  the following workspace's scroll position. Park the pointer outside the map
+  before its isolated pixel capture and assert it is not hovered, while preserving
+  keyboard focus; the preceding disclosure click otherwise selected different
+  hover shading after the capture scroll.
+  Full workspace screenshots and
   interaction checks keep the real strip visible. Verify the expanded-map
   return, selected tab, pinned readouts and unobscured Captain heading before
   capturing Briefing; never add a competing scroll just for its screenshot.
