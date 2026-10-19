@@ -1,5 +1,11 @@
 # Breach Command: roadmap to AAA
 
+Player-flow refinement (0.9.64): recover script/style headroom without changing
+offline warm-up or budgets; provide a nonblocking public-record Resume recap;
+make routine inline resolution adjustable during play; bring published sector
+constraints forward after two confirmed stages; duck music under narration
+with a smooth recovery that preserves mute. Rules and balance remain unchanged.
+
 This is the improvement plan for taking Breach Command from a polished solo
 project to what a player, a reviewer and a practitioner would each call
 top-tier. It is grounded in the state of the repository on 9 October 2026

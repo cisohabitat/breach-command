@@ -90,7 +90,7 @@ export function setNarrationActive(active: boolean) {
     if (!graph) return;
     const now = graph.context.currentTime;
     graph.sfxBus.gain.setTargetAtTime(active ? SILENCE : SFX_BUS_LEVEL, now, 0.04);
-    graph.musicBus.gain.setTargetAtTime(active ? SILENCE : musicLevel, now, 0.08);
+    graph.musicBus.gain.setTargetAtTime(active ? Math.max(SILENCE, musicLevel * 0.2) : musicLevel, now, active ? 0.08 : 0.4);
   } catch {}
 }
 
@@ -825,6 +825,6 @@ function applyAdaptiveScore(enabled: boolean, tension: number, sector: number) {
   const state = ensurePad(bus);
   const clamped = clamp(tension, 0, 1);
   musicLevel = 0.02 + clamped * 0.06;
-  bus.musicBus.gain.setTargetAtTime(narrationActive ? SILENCE : musicLevel, bus.context.currentTime, 0.35);
+  bus.musicBus.gain.setTargetAtTime(narrationActive ? musicLevel * 0.2 : musicLevel, bus.context.currentTime, 0.35);
   applyBand(bus, state, bandForTension(clamped), clamped, sector);
 }

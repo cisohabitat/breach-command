@@ -1,5 +1,13 @@
 # Information density and learning load
 
+0.9.64 adds a nonblocking Resume fold: its summary states the next pending
+investigation task, with saved check counts and the last result inside. Pending
+decisions open directly with their existing context and no extra recap. It disappears
+after the first game-state change. Fast resolution is adjustable during play
+without skipping important reports or changing turn costs. The sector readout
+switches to the published case constraints after two confirmed stages. These
+changes add no inference from hidden answers and claim no measured learning gain.
+
 The goal is to help a player explain their next choice and its cost without
 reading the full reference material. These are design hypotheses, not measured
 human-playtest outcomes. Preserve the engine, exact costs, public-information

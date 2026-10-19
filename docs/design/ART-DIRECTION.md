@@ -1,5 +1,13 @@
 # Art direction
 
+Player-flow refinement (19 October 2026): reuse the existing known-facts fold
+for the temporary Resume recap and the existing Settings rows for Fast
+resolution. Keep captions, controls and live state labels; add no decorative
+surface. The generation readout is labelled as an operating window rather than
+claiming its margin is stable regardless of the meter. Enabled music remains
+quietly audible under Captain narration and returns gradually; disabled music
+stays silent.
+
 Landscape toolbar and expanded map reference (18 October 2026, user approved):
 compact the wordmark, header spacing and workspace tabs above 650 px wide and
 up to 850 px high in landscape, with 44 px controls and all written labels.

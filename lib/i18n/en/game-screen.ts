@@ -3,6 +3,11 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/game-screen.tsx (app/page.tsx for page), loaded with it.
 export const gameScreenMessages = catalogue({
   gameScreen: {
+    "resumed": "Operation resumed",
+    "resumeProgress": "{checks} checks completed; {confirmed} of 4 stages confirmed.",
+    "resumeLast": "Last check: ",
+    "resumeReading": "declare a working reading",
+    "resumeInvestigate": "continue testing your working reading",
     "sector": "Sector ",
     "margin": "margin",
     "businessImpact": "Business impact",

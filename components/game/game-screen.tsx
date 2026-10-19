@@ -14,6 +14,7 @@ import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type GameSessi
 import { gameScreenMessages } from "@/lib/i18n/en/game-screen";
 import { register, type MessageKey } from "@/lib/i18n";
 import { withForm } from "@/lib/i18n/message";
+import { getResumeBrief } from "@/lib/resume-brief";
 
 register(gameScreenMessages);
 
@@ -134,6 +135,15 @@ export function GameScreen({ session }: { session: GameSession }) {
       </section>
 
       <BotControl session={session} />
+      {session.resumed && (() => {
+        const brief = getResumeBrief(game);
+        if (!brief) return null;
+        return <details className="known-facts resume-brief">
+          <summary>{t("gameScreen.resumed")}: {t(brief.next)}</summary>
+          <p>{t("gameScreen.resumeProgress", { checks: brief.checks, confirmed: brief.confirmed })}</p>
+          {brief.last && <p>{t("gameScreen.resumeLast")}{say(brief.last)}</p>}
+        </details>;
+      })()}
 
       <nav className="workspace-tabs" aria-label={t("gameScreen.commandWorkspace")} ref={tabs}>
         <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><span><strong>{t("tabs.command")}</strong></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>{t("tabs.decisionWaiting")}</b>}</button>

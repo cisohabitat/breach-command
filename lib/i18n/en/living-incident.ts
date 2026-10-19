@@ -36,7 +36,7 @@ export const livingIncidentMessages = catalogue({
     "privilegedAdministrationIs": "Privileged administration is being watched against a fixed processing deadline.",
     "clinicalDemandRising": "Clinical demand rising",
     "careTeamsAre": "Care teams are balancing safe access with the need to constrain the support path.",
-    "generationMarginStable": "Generation margin stable",
+    "generationMarginStable": "Generation operating window",
     "engineeringChangesRemain": "Engineering changes remain inside the operating envelope, but remote trust is uncertain.",
     "vesselPlanApproaching": "Vessel plan approaching",
     "theTerminalMust": "The terminal must protect planning integrity before the next operational cut-off.",

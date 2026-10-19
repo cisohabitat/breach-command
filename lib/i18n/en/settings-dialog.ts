@@ -3,6 +3,8 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/settings-dialog.tsx (app/page.tsx for page), loaded with it.
 export const settingsDialogMessages = catalogue({
   settingsDialog: {
+    "fastResolution": "Fast resolution",
+    "routineInline": "After the first check, keep routine results inline. Findings, escalations and decisions still open. Saved with this operation.",
     "adjustFeedbackAccessibility": "Adjust feedback, accessibility and display behaviour. Preferences stay on this device.",
     "soundCues": "Sound cues",
     "proceduralAudioFor": "Procedural audio for discoveries, warnings and outcomes.",

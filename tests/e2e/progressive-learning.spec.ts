@@ -1,6 +1,63 @@
 import { expect, test } from "@playwright/test";
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
 import { availableIn, newGame, playTurn, proceduresFor, resolveDecision, resolveSetPiece, setHypothesis } from "../../lib/advanced-game";
 import { openWithSave, pendingDecisionGame, twoStagesGame } from "./fixtures";
+
+const resumeAxe = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
+
+for (const width of [375, 820, 1280]) {
+  test(`Resume explains the saved record and next task at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const saved = twoStagesGame();
+    await openWithSave(page, saved, false, { voice: false, sound: false });
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    const brief = page.locator(".resume-brief");
+    await expect(brief.locator("summary")).toContainText("continue testing your working reading");
+    await brief.locator("summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(brief).toContainText(`${saved.turns.length} checks completed; 2 of 4 stages confirmed`);
+    await expect(brief).toContainText("Last check:");
+    await page.addScriptTag({ content: resumeAxe });
+    expect(await page.evaluate(async () => (await window.axe.run(document, { resultTypes: ["violations"] })).violations)).toEqual([]);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.locator(".hypothesis-compare > summary").click();
+    await page.locator(".hypothesis-compare-options button:not(.active)").first().click();
+    await expect(brief).toHaveCount(0);
+  });
+}
+
+test("Fast resolution can change during play and travels with the saved operation", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("breach-command.tutorial-complete", "true");
+    localStorage.setItem("breach-command.preferences", JSON.stringify({ voice: false, sound: false, music: false, haptics: false }));
+  });
+  await page.goto("/play", { waitUntil: "networkidle" });
+  await page.locator(".start-button").click();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Game settings" }).click();
+  await page.locator("#resolution-setting").click();
+  await expect(page.locator("#resolution-setting")).toHaveAttribute("aria-checked", "true");
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("breach-command.session")!).fastResolve)).toBe(true);
+  await page.reload({ waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: "Game settings" }).click();
+  await expect(page.locator("#resolution-setting")).toHaveAttribute("aria-checked", "true");
+});
+
+test("Undo does not resurrect the one-time Resume recap", async ({ page }) => {
+  await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(page.locator(".resume-brief")).toBeVisible();
+  const reference = page.locator(".reference-fold");
+  if (!(await reference.evaluate(node => (node as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
+  await page.locator(".topology-detail > summary").click();
+  await page.locator(".map-intel-detail > summary").click();
+  await page.locator(".infrastructure-console").getByRole("button", { name: /^Monitor/ }).click();
+  await expect(page.locator(".resume-brief")).toHaveCount(0);
+  await page.locator(".undo-strip button").click();
+  await expect(page.locator(".resume-brief")).toHaveCount(0);
+});
 
 for (const width of [375, 820, 1280]) {
   test(`Tab keeps procedure plan controls above the commit footer at ${width}px`, async ({ page }) => {
