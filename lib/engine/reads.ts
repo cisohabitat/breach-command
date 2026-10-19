@@ -5,7 +5,10 @@ import { decisionChoices, decisionLanguageFor, decisionText, decisionTitles, inS
 import { type DecisionChoice, type DecisionOption, type DiscriminatingRead, type Game, type GuidanceLevel, type HypothesisStanding, type KnownFacts, type LossCause, type ReadingOdds, type SectorRead, type TrainingPrompt } from "./types.ts";
 import { availableIn, carryModifier, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, hypothesisSources, procedureById, proceduresFor, stageOf } from "./rules.ts";
 import { infrastructureTopologies } from "../phase8.ts";
-import { lit, msg, ref, type Message } from "../i18n/message.ts";
+import { lit, msg, ref, scopedMsg, type Message } from "../i18n/message.ts";
+import { getEvidenceAssessment } from "../evidence-assessment.ts";
+export { getEvidenceAssessment };
+const readsMsg = scopedMsg("engine.reads");
 // Review attribution follows collection expertise, never a hidden technique.
 export function getEvidenceSpecialist(game: Game, item: Game["evidence"][number]): SpecialistId {
   const source = item.id.replace(/^E\d+-/, "");
@@ -13,19 +16,6 @@ export function getEvidenceSpecialist(game: Game, item: Game["evidence"][number]
   return (Object.keys(specialists) as SpecialistId[]).find(id => specialists[id].procedures.some(procedure => procedure === source)) ?? game.specialist;
 }
 
-// Confidence concerns causal interpretation, not whether a revealed stage
-// happened. Only visible collection and comparison records may affect it.
-export function getEvidenceAssessment(game: Game, item: Game["evidence"][number]) {
-  const sourceId = (id: string) => id.replace(/^E\d+-/, "");
-  const corroborated = game.correlations.some(record => record.correct && record.valid && record.evidence.includes(item.id) && record.evidence.some(id => id !== item.id && sourceId(id) !== sourceId(item.id)));
-  const turn = game.turns.find(turn => turn.number === item.turn && sourceId(item.id) === turn.procedure);
-  const basis = corroborated ? "corroborated" : turn?.plan.intensity === "exhaustive" ? "exhaustive" : turn ? "single" : "recorded";
-  return {
-    signal: item.supports ? "strong" : "weak",
-    confidence: corroborated || basis === "exhaustive" || (!turn && item.confidence === "HIGH") ? "strong" : "weak",
-    basis,
-  } as const;
-}
 
 // Each read is a message: the engine's words, or the content's, kept as text.
 export function getEvidenceLinks(game: Game, selected: string[]) {
@@ -45,15 +35,15 @@ export function getConfidenceChanges(game: Game, comparison: number) {
 export function getAttributionRead(game: Game): { title: Message; confidence: string; detail: Message } {
   const profile = getAdversaryProfile(game);
   const evidence = game.revealed.length;
-  if (evidence === 0) return { title: msg("engine.reads.unknownOperator"), confidence: "LOW", detail: msg("engine.reads.noReliableAttribution") };
-  if (evidence === 1) return { title: msg("engine.reads.behaviouralPatternEmerging"), confidence: "DEVELOPING", detail: msg("engine.reads.treatThisAs", { signature: profile.signature }) };
-  if (evidence === 2) return { title: msg("engine.reads.suspected", { profileTitle: profile.title }), confidence: "MODERATE", detail: lit(profile.description) };
-  if (evidence === 3) return { title: msg("engine.reads.probable", { profileTitle: profile.title }), confidence: "HIGH", detail: msg("engine.reads.oneStageRemains", { description: profile.description }) };
+  if (evidence === 0) return { title: readsMsg("unknownOperator"), confidence: "LOW", detail: readsMsg("noReliableAttribution") };
+  if (evidence === 1) return { title: readsMsg("behaviouralPatternEmerging"), confidence: "DEVELOPING", detail: readsMsg("treatThisAs", { signature: profile.signature }) };
+  if (evidence === 2) return { title: readsMsg("suspected", { profileTitle: profile.title }), confidence: "MODERATE", detail: lit(profile.description) };
+  if (evidence === 3) return { title: readsMsg("probable", { profileTitle: profile.title }), confidence: "HIGH", detail: readsMsg("oneStageRemains", { description: profile.description }) };
   return { title: lit(profile.title), confidence: "ATTRIBUTED", detail: lit(profile.description) };
 }
 
 export function getObjectiveRead(game: Game): { title: Message; detail: Message; confidence: string } {
-  if (game.revealed.length < 2) return { title: msg("engine.reads.objectiveUnconfirmed"), detail: msg("engine.reads.collectEvidenceAcross"), confidence: "LOW" };
+  if (game.revealed.length < 2) return { title: readsMsg("objectiveUnconfirmed"), detail: readsMsg("collectEvidenceAcross"), confidence: "LOW" };
   const objective = adversaryObjectives[game.objective];
   return { title: lit(objective.title), detail: lit(objective.tell), confidence: game.revealed.length >= 3 ? "HIGH" : "MODERATE" };
 }
@@ -63,9 +53,9 @@ export function getLead(game: Game) {
   // A new observation with each confirmed stage as well as with time: a phone
   // playtest chose its stage-2 reading beside the stage-1 lead.
   const index = Math.min(scenario.leads.length - 1, Math.max(Math.floor(game.turns.length / 3), game.revealed.length));
-  const reaction = game.adversaryEvent ? msg("engine.reads.latestDevelopment", { event: game.adversaryEvent }) : "";
-  const decoy = game.turns.length >= 2 ? msg("engine.reads.unverifiedSignal", { unverifiedSignal: lit(getAdversaryProfile(game).unverifiedSignal) }) : "";
-  return msg("engine.reads.lead", { lead: lit(scenario.leads[index]), reaction, decoy });
+  const reaction = game.adversaryEvent ? readsMsg("latestDevelopment", { event: game.adversaryEvent }) : "";
+  const decoy = game.turns.length >= 2 ? readsMsg("unverifiedSignal", { unverifiedSignal: lit(getAdversaryProfile(game).unverifiedSignal) }) : "";
+  return readsMsg("lead", { lead: lit(scenario.leads[index]), reaction, decoy });
 }
 
 // Operational and above withdraw the training aid, which left the opening with
@@ -101,21 +91,21 @@ export function getSectorRead(game: Game): SectorRead {
   // Within fifteen points the two read as one picture; at 69 against 46 a
   // playtest was told they were "holding at a similar level".
   if (Math.abs(gap) < 15) return {
-    headline: msg("engine.reads.andAreMoving", { service, margin: lit(margin, "lower") }),
+    headline: readsMsg("andAreMoving", { service, margin: lit(margin, "lower") }),
     diverged: false,
-    detail: msg("engine.reads.isWhatThe", { service, margin, continuity: game.continuity, sectorHealth: game.sectorHealth }),
+    detail: readsMsg("isWhatThe", { service, margin, continuity: game.continuity, sectorHealth: game.sectorHealth }),
   };
   return gap > 0 ? {
-    headline: msg("engine.reads.hasFallenFurther", { margin, service: lit(service, "lower") }),
+    headline: readsMsg("hasFallenFurther", { margin, service: lit(service, "lower") }),
     diverged: true,
     // "Thin" at 84 read as alarm over a margin with plenty of room left.
     detail: game.sectorHealth <= 50
-      ? msg("engine.reads.theOrganisationIs", { margin: lit(margin, "lower"), sectorHealth: game.sectorHealth, service: lit(service, "lower"), continuity: game.continuity })
-      : msg("engine.reads.theMarginIs", { margin: lit(margin, "lower"), sectorHealth: game.sectorHealth, service: lit(service, "lower"), continuity: game.continuity }),
+      ? readsMsg("theOrganisationIs", { margin: lit(margin, "lower"), sectorHealth: game.sectorHealth, service: lit(service, "lower"), continuity: game.continuity })
+      : readsMsg("theMarginIs", { margin: lit(margin, "lower"), sectorHealth: game.sectorHealth, service: lit(service, "lower"), continuity: game.continuity }),
   } : {
-    headline: msg("engine.reads.hasFallenFurther2", { service, margin: lit(margin, "lower") }),
+    headline: readsMsg("hasFallenFurther2", { service, margin: lit(margin, "lower") }),
     diverged: true,
-    detail: msg("engine.reads.deliveryIsDegraded", { service: lit(service, "lower"), continuity: game.continuity, margin: lit(margin, "lower"), sectorHealth: game.sectorHealth }),
+    detail: readsMsg("deliveryIsDegraded", { service: lit(service, "lower"), continuity: game.continuity, margin: lit(margin, "lower"), sectorHealth: game.sectorHealth }),
   };
 }
 
@@ -137,7 +127,7 @@ export const SECTOR_ALERT_AT = 35;
 export function getSectorAlert(game: Game) {
   if ((game.status !== "playing" && game.status !== "response") || game.sectorHealth > SECTOR_ALERT_AT) return null;
   const sector = sectorSystems[game.scenario];
-  return { title: msg("engine.reads.isAt", { sectorTitle: sector.title, sectorHealth: game.sectorHealth }), detail: msg("engine.reads.theOperationEnds"), rule: sector.rule };
+  return { title: readsMsg("isAt", { sectorTitle: sector.title, sectorHealth: game.sectorHealth }), detail: readsMsg("theOperationEnds"), rule: sector.rule };
 }
 
 // Two confirmed stages make the objective assessable, and a case theory that
@@ -159,7 +149,7 @@ export function getMapHint(game: Game) {
   // The bonus as the button will state it: with the cap already reached, "+2"
   // here sat above a Monitor button that read "next roll +0".
   const room = carryModifier(game.nextModifier, monitor.modifier) - game.nextModifier;
-  return msg("engine.reads.mapHint", { count, monitor: room > 0 ? msg("engine.reads.monitoringASystem", { room }) : msg("engine.reads.monitoringASystem2") });
+  return readsMsg("mapHint", { count, monitor: room > 0 ? readsMsg("monitoringASystem", { room }) : readsMsg("monitoringASystem2") });
 }
 
 // Two findings that each confirmed a stage, and no relationship tested yet.
@@ -169,30 +159,30 @@ export function readyToCorrelate(game: Game) {
 }
 
 export function getCoachPrompt(game: Game, guided = false) {
-  if (guidanceLevel(game, guided) === "off") return msg("engine.reads.compareEvidenceValue");
-  if (!game.hypothesis) return msg("engine.reads.recordAWorking");
-  if (game.pendingDecision) return msg("engine.reads.compareEvidenceValue2");
+  if (guidanceLevel(game, guided) === "off") return readsMsg("compareEvidenceValue");
+  if (!game.hypothesis) return readsMsg("recordAWorking");
+  if (game.pendingDecision) return readsMsg("compareEvidenceValue2");
   // Correlation lives in the reference column, below the map. Playtests never
   // found it without being told, at any difficulty, so the prompt says so once
   // there is something worth comparing.
-  if (readyForTheory(game)) return msg("engine.reads.twoStagesAre");
-  if (readyToCorrelate(game)) return msg("engine.reads.twoFindingsHave");
+  if (readyForTheory(game)) return readsMsg("twoStagesAre");
+  if (readyToCorrelate(game)) return readsMsg("twoFindingsHave");
   // The advice to revise follows the reading's standing. Keyed to any empty
   // check ever made, it told a player to revise for the rest of the operation,
   // including while the board said the reading was holding.
   const standing = getHypothesisStanding(game);
   // A route with no technique at this stage was told "the record no longer
   // favours" it before any check had run; nothing in the record had changed.
-  if (standing.level === "unsupported" && !standing.sources) return msg("engine.reads.thisReadingCannot");
-  if (standing.level === "unsupported" || standing.level === "weakening") return msg("engine.reads.theRecordNo");
+  if (standing.level === "unsupported" && !standing.sources) return readsMsg("thisReadingCannot");
+  if (standing.level === "unsupported" || standing.level === "weakening") return readsMsg("theRecordNo");
   // With every source the reading predicts cooling or blind to this stage, the
   // generic line left a player at a dead end.
-  if (hypothesisSources(game, game.hypothesis!).every(id => availableIn(game, id) > 0 || sourceSeesReading(game, id) === false)) return msg("engine.reads.noSourceYour");
+  if (hypothesisSources(game, game.hypothesis!).every(id => availableIn(game, id) > 0 || sourceSeesReading(game, id) === false)) return readsMsg("noSourceYour");
   // Pressure comes after the dead ends above: at 70 impact it told a player to
   // run a source their reading predicts while every such card read cooling or
   // blind, at the moment the advice mattered most.
-  if (game.impact >= 70) return msg("engine.reads.businessImpactIs", { impact: game.impact });
-  return game.revealed.length ? msg("engine.reads.useTheStages") : game.difficulty === "training" ? msg("engine.reads.readWhatThe") : msg("engine.reads.readTheLatest");
+  if (game.impact >= 70) return readsMsg("businessImpactIs", { impact: game.impact });
+  return game.revealed.length ? readsMsg("useTheStages") : game.difficulty === "training" ? readsMsg("readWhatThe") : readsMsg("readTheLatest");
 }
 
 /**
@@ -235,15 +225,15 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
   const clue = hidden ? attacks.find(item => item.id === hidden)!.clue : null;
   if (!hypothesis) return {
     step: "declare",
-    title: msg("engine.reads.startWithAn"),
-    detail: msg("engine.reads.recordTheIntrusion"),
+    title: readsMsg("startWithAn"),
+    detail: readsMsg("recordTheIntrusion"),
     sources: [],
     clue,
   };
   if (game.pendingDecision) return {
     step: "decide",
-    title: msg("engine.reads.weighTheDecision"),
-    detail: msg("engine.reads.compareWhatEach"),
+    title: readsMsg("weighTheDecision"),
+    detail: readsMsg("compareWhatEach"),
     sources: [],
     clue: null,
   };
@@ -254,8 +244,8 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
   const standing = getHypothesisStanding(game);
   if (standing.level === "weakening" || standing.level === "unsupported") return {
     step: "revise",
-    title: standing.level === "unsupported" && !standing.sources ? msg("engine.reads.thisReadingCannot2") : msg("engine.reads.yourReadingIs"),
-    detail: msg("engine.reads.readTheCurrent", { standingDetail: standing.detail }),
+    title: standing.level === "unsupported" && !standing.sources ? readsMsg("thisReadingCannot2") : readsMsg("yourReadingIs"),
+    detail: readsMsg("readTheCurrent", { standingDetail: standing.detail }),
     sources: [],
     clue,
   };
@@ -269,22 +259,22 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
   const declaredAt = game.hypothesisHistory[game.hypothesisHistory.length - 1]?.turn ?? 0;
   if (lastConfirmation && declaredAt <= lastConfirmation && !game.turns.some(turn => turn.number > lastConfirmation && turn.hypothesis === hypothesis.id)) return {
     step: "test",
-    title: msg("engine.reads.newStageDoes", { hypothesisTitle: lit(hypothesis.title, "lower") }),
-    detail: msg("engine.reads.aStageWas"),
+    title: readsMsg("newStageDoes", { hypothesisTitle: lit(hypothesis.title, "lower") }),
+    detail: readsMsg("aStageWas"),
     sources: open,
     clue,
   };
   if (readyForTheory(game)) return {
     step: "theory",
-    title: msg("engine.reads.nameWhatThe"),
-    detail: msg("engine.reads.twoConfirmedStages"),
+    title: readsMsg("nameWhatThe"),
+    detail: readsMsg("twoConfirmedStages"),
     sources: [],
     clue,
   };
   if (readyToCorrelate(game)) return {
     step: "correlate",
-    title: msg("engine.reads.twoFindingsCan"),
-    detail: msg("engine.reads.selectTwoFindings"),
+    title: readsMsg("twoFindingsCan"),
+    detail: readsMsg("selectTwoFindings"),
     sources: [],
     clue,
   };
@@ -292,10 +282,10 @@ export function getTrainingPrompt(game: Game, guided = false): TrainingPrompt | 
     step: "test",
     // With every own source cooling or blind to the stage, "Test …" asked for
     // something no card on screen could do.
-    title: open.length ? msg("engine.reads.test", { hypothesisTitle: lit(hypothesis.title, "lower") }) : msg("engine.reads.noOwnSource"),
+    title: open.length ? readsMsg("test", { hypothesisTitle: lit(hypothesis.title, "lower") }) : readsMsg("noOwnSource"),
     detail: open.length
-      ? msg("engine.reads.theseAreThe")
-      : msg("engine.reads.everySourceThis"),
+      ? readsMsg("theseAreThe")
+      : readsMsg("everySourceThis"),
     sources: open,
     // The observation stays on screen for the whole stage: a playtest lost it on
     // the turn a reading first held, and on the turn the map or a comparison was
@@ -310,25 +300,25 @@ export function getDecisionOptions(game: Game) {
   const language = decisionLanguageFor(game.scenario, attack.stage);
   const terms = sectorDecisionTerms[game.scenario] ?? sectorDecisionTerms[0];
   const service: Record<DecisionChoice, Message> = {
-    observe: msg("engine.reads.noImmediateDisruption"),
+    observe: readsMsg("noImmediateDisruption"),
     act: msg(language.continuityCost <= -7 ? "engine.reads.interruptsMuchOf" : "engine.reads.interruptsPartOf", { service: terms.service }),
-    attribute: msg("engine.reads.analystTimeOnly"),
-    contain: msg("engine.reads.boundedImpactOn", { service: terms.service }),
-    notify: msg("engine.reads.ownersPrepared", { owners: lit(terms.owners, "capital") }),
+    attribute: readsMsg("analystTimeOnly"),
+    contain: readsMsg("boundedImpactOn", { service: terms.service }),
+    notify: readsMsg("ownersPrepared", { owners: lit(terms.owners, "capital") }),
   };
   const evidence: Record<DecisionChoice, Message> = {
-    observe: msg("engine.reads.evidenceConfidenceImproves"),
-    act: msg("engine.reads.someTelemetryWill"),
-    attribute: msg("engine.reads.attributionDepthImproves"),
-    contain: msg("engine.reads.containedSystemsGo"),
-    notify: msg("engine.reads.noNewEvidence"),
+    observe: readsMsg("evidenceConfidenceImproves"),
+    act: readsMsg("someTelemetryWill"),
+    attribute: readsMsg("attributionDepthImproves"),
+    contain: readsMsg("containedSystemsGo"),
+    notify: readsMsg("noNewEvidence"),
   };
   const risk: Record<DecisionChoice, Message> = {
-    observe: msg("engine.reads.attackerOpportunityIncreases"),
-    act: msg("engine.reads.immediateExposureFalls"),
-    attribute: msg("engine.reads.businessImpactStill"),
-    contain: msg("engine.reads.parallelAccessPaths"),
-    notify: msg("engine.reads.yourReadIs"),
+    observe: readsMsg("attackerOpportunityIncreases"),
+    act: readsMsg("immediateExposureFalls"),
+    attribute: readsMsg("businessImpactStill"),
+    contain: readsMsg("parallelAccessPaths"),
+    notify: readsMsg("yourReadIs"),
   };
   const options: DecisionOption[] = decisionChoices.map(id => ({
     id,
@@ -416,7 +406,7 @@ export function getReadingOdds(game: Game): ReadingOdds {
 // that is weakening; it never names the one that is right.
 export function getHypothesisStanding(game: Game): HypothesisStanding {
   const hypothesis = hypotheses.find(item => item.id === game.hypothesis);
-  if (!hypothesis) return { level: "none", label: msg("engine.reads.noWorkingHypothesis"), detail: msg("engine.reads.recordTheExplanation"), spent: 0, sources: 0, inconclusive: 0, turnsSinceConfirmation: 0 };
+  if (!hypothesis) return { level: "none", label: readsMsg("noWorkingHypothesis"), detail: readsMsg("recordTheExplanation"), spent: 0, sources: 0, inconclusive: 0, turnsSinceConfirmation: 0 };
   const lastConfirmation = game.turns.reduce((last, turn) => turn.revealed || turn.injectReveal ? turn.number : last, 0);
   const since = game.turns.filter(turn => turn.number > lastConfirmation);
   const inconclusive = new Set(since.filter(turn => !turn.success).map(turn => turn.procedure)).size;
@@ -424,19 +414,19 @@ export function getHypothesisStanding(game: Game): HypothesisStanding {
   const own = odds.candidates[hypothesis.id];
   const spent = own.total - own.open;
   const common = { spent, sources: own.total, inconclusive, turnsSinceConfirmation: since.length };
-  const unresolved = inconclusive ? msg("engine.reads.attemptsSince", { count: inconclusive, since: lastConfirmation ? msg("engine.reads.theLastConfirmation") : msg("engine.reads.theOperationBegan") }) : "";
-  if (odds.stage === null) return { level: "untested", label: msg("engine.reads.untested"), detail: msg("engine.reads.everyStageIs", { hypothesisTitle: lit(hypothesis.title, "lower"), unresolved }), ...common };
+  const unresolved = inconclusive ? readsMsg("attemptsSince", { count: inconclusive, since: lastConfirmation ? readsMsg("theLastConfirmation") : readsMsg("theOperationBegan") }) : "";
+  if (odds.stage === null) return { level: "untested", label: readsMsg("untested"), detail: readsMsg("everyStageIs", { hypothesisTitle: lit(hypothesis.title, "lower"), unresolved }), ...common };
   const stageName = lit(stages[odds.stage].name, "inSentence");
-  const tally = own.total > 1 && spent === 1 ? msg("engine.reads.oneOfTheTechniques", { total: own.total, stageName }) : msg("engine.reads.ofTheTechnique", { spent, count: own.total, stageName });
+  const tally = own.total > 1 && spent === 1 ? readsMsg("oneOfTheTechniques", { total: own.total, stageName }) : readsMsg("ofTheTechnique", { spent, count: own.total, stageName });
   // A route this incident's published techniques do not use at the stage under
   // test cannot be the explanation for it. It read as "untested" here, and a
   // player kept it for a whole Crisis operation waiting for a test that could
   // never come.
-  if (!own.total) return { level: "unsupported", label: msg("engine.reads.cannotExplainThis"), detail: msg("engine.reads.noneOfThe", { stageName, hypothesisTitle: lit(hypothesis.title, "lower"), unresolved }), ...common };
-  if (!odds.ruledOutBy.length) return { level: "untested", label: msg("engine.reads.untested"), detail: msg("engine.reads.noCompletedCheck", { stageName, hypothesisTitle: lit(hypothesis.title, "lower"), unresolved }), ...common };
-  if (!own.open) return { level: "unsupported", label: msg("engine.reads.poorlySupported"), detail: msg("engine.reads.everyTechniqueThis", { stageName, unresolved }), ...common };
-  if (odds.share[hypothesis.id] < odds.prior[hypothesis.id] * STANDING_WEAKENS_BELOW) return { level: "weakening", label: msg("engine.reads.weakening"), detail: msg("engine.reads.theEmptyResults", { tally, unresolved }), ...common };
-  return { level: "holding", label: msg("engine.reads.holding"), detail: msg("engine.reads.theRecordStill", { tally, unresolved }), ...common };
+  if (!own.total) return { level: "unsupported", label: readsMsg("cannotExplainThis"), detail: readsMsg("noneOfThe", { stageName, hypothesisTitle: lit(hypothesis.title, "lower"), unresolved }), ...common };
+  if (!odds.ruledOutBy.length) return { level: "untested", label: readsMsg("untested"), detail: readsMsg("noCompletedCheck", { stageName, hypothesisTitle: lit(hypothesis.title, "lower"), unresolved }), ...common };
+  if (!own.open) return { level: "unsupported", label: readsMsg("poorlySupported"), detail: readsMsg("everyTechniqueThis", { stageName, unresolved }), ...common };
+  if (odds.share[hypothesis.id] < odds.prior[hypothesis.id] * STANDING_WEAKENS_BELOW) return { level: "weakening", label: readsMsg("weakening"), detail: readsMsg("theEmptyResults", { tally, unresolved }), ...common };
+  return { level: "holding", label: readsMsg("holding"), detail: readsMsg("theRecordStill", { tally, unresolved }), ...common };
 }
 
 // A reading weakens once the share of the open techniques it holds falls below
@@ -483,40 +473,40 @@ export function getDiscriminatingRead(game: Game, procedure: string): Discrimina
   const attempts = game.turns.filter(turn => turn.procedure === procedure && turn.number > lastConfirmation);
   const spent = attempts.filter(turn => turn.success && !turn.revealed).length;
   const inconclusive = attempts.filter(turn => !turn.success).length;
-  const spentNote = msg("engine.reads.spentNote", {
-    checked: spent ? msg("engine.reads.checkedTimeHere", { count: spent }) : "",
-    failed: inconclusive ? msg("engine.reads.earlierAttemptFailed", { count: inconclusive }) : "",
+  const spentNote = readsMsg("spentNote", {
+    checked: spent ? readsMsg("checkedTimeHere", { count: spent }) : "",
+    failed: inconclusive ? readsMsg("earlierAttemptFailed", { count: inconclusive }) : "",
   });
-  if (!hypothesis) return { level: "broad", label: msg("engine.reads.broadCollection"), detail: msg("engine.reads.noWorkingHypothesis2", { spentNote }), spent, inconclusive };
-  if (hypothesisSources(game, hypothesis.id).includes(procedure) && sourceSeesReading(game, procedure) === false) return { level: "moderate", label: msg("engine.reads.ownSourceBut"), detail: msg("engine.reads.predictsThisSource", { hypothesisTitle: hypothesis.title, spentNote }), spent, inconclusive };
-  if (hypothesisSources(game, hypothesis.id).includes(procedure)) return { level: "high", label: msg("engine.reads.oneOfThis"), detail: msg("engine.reads.predictsThisSource2", { hypothesisTitle: hypothesis.title, spentNote }), spent, inconclusive };
+  if (!hypothesis) return { level: "broad", label: readsMsg("broadCollection"), detail: readsMsg("noWorkingHypothesis2", { spentNote }), spent, inconclusive };
+  if (hypothesisSources(game, hypothesis.id).includes(procedure) && sourceSeesReading(game, procedure) === false) return { level: "moderate", label: readsMsg("ownSourceBut"), detail: readsMsg("predictsThisSource", { hypothesisTitle: hypothesis.title, spentNote }), spent, inconclusive };
+  if (hypothesisSources(game, hypothesis.id).includes(procedure)) return { level: "high", label: readsMsg("oneOfThis"), detail: readsMsg("predictsThisSource2", { hypothesisTitle: hypothesis.title, spentNote }), spent, inconclusive };
   // A source outside the reading's list can still see one of its techniques at
   // this stage; "will not settle the current question" was said of a source that
   // then revealed the stage, on the declared route.
-  if (sourceSeesReading(game, procedure)) return { level: "moderate", label: msg("engine.reads.notAnOwn"), detail: msg("engine.reads.doesNotList", { hypothesisTitle: hypothesis.title, spentNote }), spent, inconclusive };
-  return { level: "moderate", label: msg("engine.reads.collectsDoesNot"), detail: msg("engine.reads.doesNotPredict", { hypothesisTitle: hypothesis.title, spentNote }), spent, inconclusive };
+  if (sourceSeesReading(game, procedure)) return { level: "moderate", label: readsMsg("notAnOwn"), detail: readsMsg("doesNotList", { hypothesisTitle: hypothesis.title, spentNote }), spent, inconclusive };
+  return { level: "moderate", label: readsMsg("collectsDoesNot"), detail: readsMsg("doesNotPredict", { hypothesisTitle: hypothesis.title, spentNote }), spent, inconclusive };
 }
 
 // `cause` lets a caller tell the endings apart without comparing titles; the
 // window ending's detail already counts the stages, so callers add that count
 // only for the other four.
 export function getLossReason(game: Game): { cause: LossCause; title: Message; detail: Message } {
-  if (game.objectiveProgress >= 100) return { cause: "objective", title: msg("engine.reads.theAdversaryCompleted"), detail: msg("engine.reads.adversaryProgressToward", { adversaryObjectivesTitle: lit(adversaryObjectives[game.objective].title, "lower") }) };
-  if (game.impact >= 100) return { cause: "impact", title: msg("engine.reads.businessImpactReached"), detail: msg("engine.reads.exposureGrewFaster") };
-  if (game.continuity <= 0) return { cause: "continuity", title: msg("engine.reads.theEssentialService"), detail: msg("engine.reads.fellToZero", { scenarioDynamicsLabel: scenarioDynamics[game.scenario].label }) };
-  if (game.sectorHealth <= 0) return { cause: "sector", title: msg("engine.reads.reachedZero", { sector: ref(`sectorSystems.${game.scenario}.title`) }), detail: msg("engine.reads.theSectorS") };
-  return { cause: "window", title: msg("engine.reads.theInvestigationWindow"), detail: msg("engine.reads.of4Stages", { revealed: game.revealed.length, count: game.turns.length }) };
+  if (game.objectiveProgress >= 100) return { cause: "objective", title: readsMsg("theAdversaryCompleted"), detail: readsMsg("adversaryProgressToward", { adversaryObjectivesTitle: lit(adversaryObjectives[game.objective].title, "lower") }) };
+  if (game.impact >= 100) return { cause: "impact", title: readsMsg("businessImpactReached"), detail: readsMsg("exposureGrewFaster") };
+  if (game.continuity <= 0) return { cause: "continuity", title: readsMsg("theEssentialService"), detail: readsMsg("fellToZero", { scenarioDynamicsLabel: scenarioDynamics[game.scenario].label }) };
+  if (game.sectorHealth <= 0) return { cause: "sector", title: readsMsg("reachedZero", { sector: ref(`sectorSystems.${game.scenario}.title`) }), detail: readsMsg("theSectorS") };
+  return { cause: "window", title: readsMsg("theInvestigationWindow"), detail: readsMsg("of4Stages", { revealed: game.revealed.length, count: game.turns.length }) };
 }
 
 export function getAdversaryRead(game: Game) {
   const memory = game.adversaryMemory;
   const favourite = Object.entries(memory.procedureCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
   const source = favourite ? procedureById(game, favourite)?.title : null;
-  const posture = memory.actChoices > memory.observeChoices ? msg("engine.reads.expectsRapidIntervention") : memory.observeChoices > memory.actChoices ? msg("engine.reads.expectsEvidencePreservation") : msg("engine.reads.isStillLearning");
-  const hypothesis = memory.hypothesisChanges >= 3 ? msg("engine.reads.theActorHas") : memory.hypothesisChanges ? msg("engine.reads.theActorHas2") : msg("engine.reads.yourInvestigativeTheory");
-  const campaignRead = game.campaignDoctrine === "balanced" ? msg("engine.reads.noDominantCampaign") : msg(game.campaignDoctrine === "act" ? "engine.reads.acrossOperationsAct" : "engine.reads.acrossOperationsObserve");
+  const posture = memory.actChoices > memory.observeChoices ? readsMsg("expectsRapidIntervention") : memory.observeChoices > memory.actChoices ? readsMsg("expectsEvidencePreservation") : readsMsg("isStillLearning");
+  const hypothesis = memory.hypothesisChanges >= 3 ? readsMsg("theActorHas") : memory.hypothesisChanges ? readsMsg("theActorHas2") : readsMsg("yourInvestigativeTheory");
+  const campaignRead = game.campaignDoctrine === "balanced" ? readsMsg("noDominantCampaign") : msg(game.campaignDoctrine === "act" ? "engine.reads.acrossOperationsAct" : "engine.reads.acrossOperationsObserve");
   const attribution = getAttributionRead(game);
   return source
-    ? msg("engine.reads.adversaryReadSeen", { attribution: attribution.title, posture, source: lit(source), hypothesis, campaignRead })
-    : msg("engine.reads.adversaryRead", { attribution: attribution.title, posture, hypothesis, campaignRead });
+    ? readsMsg("adversaryReadSeen", { attribution: attribution.title, posture, source: lit(source), hypothesis, campaignRead })
+    : readsMsg("adversaryRead", { attribution: attribution.title, posture, hypothesis, campaignRead });
 }

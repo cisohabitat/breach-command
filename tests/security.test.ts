@@ -128,3 +128,24 @@ test("service worker isolates game caches and only stores public assets", async 
   await lifetime;
   assert.deepEqual(puts, ["https://game.test/_next/static/loaded.js"], "the lifetime promise includes successful cache writes");
 });
+
+test("practice warm-up accepts only its fixed public shell and clean hashed assets", async () => {
+  const handlers: Record<string, (event: unknown) => void> = {};
+  const fetched: string[] = [], kept: string[] = [];
+  const response = { ok: true, status: 200, type: "basic", redirected: false, headers: new Headers(), clone: () => ({ text: async () => '<script src="/_next/static/practice.js"></script><script src="/_next/static/secret.js?token=x"></script>' }) };
+  runInNewContext(readFileSync(new URL("../public/sw.js", import.meta.url), "utf8"), {
+    URL, Response,
+    self: { location: new URL("https://game.test/sw.js?v=test"), addEventListener: (name: string, handler: (event: unknown) => void) => { handlers[name] = handler; } },
+    caches: { open: async () => ({ put: async (key: string) => { kept.push(key); } }) },
+    fetch: async (path: string) => { fetched.push(path); return response; },
+  });
+  let lifetime = Promise.resolve();
+  const waitUntil = (p: Promise<void>) => { lifetime = p; };
+  handlers.message({ data: { path: "/private" }, source: { url: "https://game.test/practice" }, waitUntil });
+  handlers.message({ data: "cache-practice", source: { url: "https://other.test/practice" }, waitUntil });
+  assert.deepEqual(fetched, []);
+  handlers.message({ data: "cache-practice", source: { url: "https://game.test/practice?lesson=signal" }, waitUntil });
+  await lifetime;
+  assert.deepEqual(fetched, ["/practice", "/_next/static/practice.js"]);
+  assert.deepEqual(kept, ["/practice", "/_next/static/practice.js"]);
+});

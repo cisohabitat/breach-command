@@ -1,5 +1,23 @@
 # Breach Command: roadmap to AAA
 
+## Learning and replay tranche (0.10.0)
+
+1. Debrief → targeted practice → feedback: three authored exercises cover bounded
+   signals, causal confidence and service-aware containment. Each has three calls,
+   retains first choices and allows separate repeat attempts.
+2. Decision consequences: Command and Briefing carry the latest recorded evidence,
+   command and sector effects forward across all ten cases. Keep historical effects
+   separate from today's conditions and preserve the original balance.
+3. Optional response confidence and local learning record: snapshot public evidence
+   at the choice, show it in review, retain bounded practice/operation/reflection
+   history and provide confirmed clear. Confidence is never a score penalty.
+
+Release gates cover the entire practice loop, saved-operation isolation, Resume
+identity, optional/skip behavior, exact engine-outcome agreement, blocked storage,
+cache isolation, offline practice, responsive accessibility, reviewed pixels and
+unchanged performance budgets. These features do not establish measured learning
+gains; evaluate explanation quality and transfer in a subsequent human study.
+
 Player-flow refinement (0.9.64): recover script/style headroom without changing
 offline warm-up or budgets; provide a nonblocking public-record Resume recap;
 make routine inline resolution adjustable during play; bring published sector

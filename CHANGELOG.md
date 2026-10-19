@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.0, 19 October 2026
+
+- Add a practice desk with three short, feedback-led exercises and debrief recommendations.
+- Carry recorded decision effects into later Command and Briefing context.
+- Add optional response-confidence commitments and review their original public evidence snapshots without score penalties.
+- Keep a bounded, private learning notebook with first-choice practice history, operation habits and confidence reflections; support confirmed clear and in-memory fallback.
+- Cache practice only after visiting it and preserve existing game rules, balance and performance limits.
+
 ## 0.9.65, 19 October 2026
 
 - Fix WebKit's native narration-mix test losing its audio observation hook during garbage collection; retain the native parameter and exercise collection explicitly.

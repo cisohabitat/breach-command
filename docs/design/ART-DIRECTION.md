@@ -1,5 +1,13 @@
 # Art direction
 
+Learning tranche (0.10.0): the practice desk is a separate, quiet form on the
+dark desk, with one case fact pattern and one native radio group at a time.
+Feedback follows the committed choice; history stays folded beneath the task.
+Reuse the existing ruled disclosures for carry-forward calls and optional
+confidence, with readable desk inks on their expanded text and 44 px radio
+labels. Add no decorative cards, success confetti, skill grades or hue based
+on hidden facts. Keep optional practice/reflection scripts separate from play.
+
 Player-flow refinement (19 October 2026): reuse the existing known-facts fold
 for the temporary Resume recap and the existing Settings rows for Fast
 resolution. Keep captions, controls and live state labels; add no decorative

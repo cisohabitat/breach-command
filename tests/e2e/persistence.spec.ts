@@ -28,7 +28,7 @@ test.describe("local persistence", () => {
 
     const stored = await page.evaluate(key => localStorage.getItem(key), PREFERENCES);
     expect(JSON.parse(stored ?? "{}"), "the page must not overwrite settings it has not read yet").toEqual({
-      sound: false, music: false, voice: true, haptics: false, highContrast: true, shortcuts: true,
+      sound: false, music: false, voice: true, haptics: false, highContrast: true, shortcuts: true, reflection: false,
     });
     // High contrast is applied, not merely remembered — on the document root as
     // well, where the dialogs and sheets rendered outside the shell inherit it.

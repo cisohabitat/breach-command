@@ -8,6 +8,7 @@ import { en } from "../lib/i18n/en.ts";
 import { formatNumber, interpolate, pseudo, register, translate } from "../lib/i18n/index.ts";
 import { catalogueFiles } from "../lib/i18n/keys.ts";
 import { richText } from "../lib/i18n/rich.ts";
+import { msg, scopedMsg, say } from "../lib/i18n/message.ts";
 
 // The shared base and each component's catalogue, by file stem.
 const catalogues: Record<string, Record<string, unknown>> = {};
@@ -240,5 +241,22 @@ test("the engine's messages are loaded once, before the parts that show them, an
   assert.deepEqual(copied, [], "no component imports the shared text itself");
   const engine = catalogues.engine;
   const library = [...readdirSync(new URL("../lib/", import.meta.url)).filter(name => name.endsWith(".ts")).map(name => `../lib/${name}`), ...readdirSync(new URL("../lib/engine/", import.meta.url)).map(name => `../lib/engine/${name}`)].map(path => readFileSync(new URL(path, import.meta.url), "utf8")).join("\n");
-  assert.deepEqual(Object.keys(engine).filter(key => !library.includes(`"${key}"`) && !library.includes(`engine.${key.split(".")[1]}.\${`)), [], "an engine key nothing writes");
+  const scoped = new Set<string>();
+  for (const [, name, prefix] of library.matchAll(/const (\w+) = scopedMsg\("([a-z.]+)"\)/g)) {
+    for (const [, suffix] of library.matchAll(new RegExp(`${name}\\("([^"\\n]+)"`, "g"))) {
+      const key = `${prefix}.${suffix}`;
+      assert.ok(key in engine || key in en, `scoped writer names a known key: ${key}`);
+      scoped.add(key);
+    }
+  }
+  assert.deepEqual(Object.keys(engine).filter(key => !scoped.has(key) && !library.includes(`"${key}"`) && !library.includes(`engine.${key.split(".")[1]}.\${`)), [], "an engine key nothing writes");
+});
+
+test("scoped messages preserve saved identifiers, parameters and both locale outputs", () => {
+  const scoped = scopedMsg("engine.review");
+  const expected = msg("engine.review.youConfirmedOf", { revealed: 2, turns: 5 });
+  const actual = scoped("youConfirmedOf", { revealed: 2, turns: 5 });
+  assert.deepEqual(actual, expected);
+  assert.equal(say(actual, "en"), say(expected, "en"));
+  assert.equal(say(actual, "en-XA"), say(expected, "en-XA"));
 });

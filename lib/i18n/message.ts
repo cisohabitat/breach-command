@@ -19,6 +19,12 @@ export type Form = "inSentence" | "lower" | "lowerFirst" | "capital";
 export type Message = ({ key: MessageKey; params?: Record<string, Param> } | { ref: string; params?: Record<string, Param> } | { text: string }) & { form?: Form };
 
 export const msg = (key: MessageKey, params?: Record<string, Param>): Message => params ? { key, params } : { key };
+type Suffix<P extends string, K = MessageKey> = K extends `${P}.${infer S}` ? S : never;
+// Keep repeated trusted namespaces out of the shipped call sites. Literal
+// suffixes stay type checked and expand to the same saved message identifiers.
+export function scopedMsg<const P extends string>(prefix: P) {
+  return (key: Suffix<P>, params?: Record<string, Param>): Message => msg(`${prefix}.${key}` as MessageKey, params);
+}
 export const MAX_MESSAGE_OUTPUT = 16_000;
 export const ref = (path: string, params?: Record<string, Param>, form?: Form): Message => ({ ref: path, ...(params ? { params } : {}), ...(form ? { form } : {}) });
 export const lit = (text: string, form?: Form): Message => form ? { text, form } : { text };
