@@ -502,8 +502,7 @@ export function useGameSession() {
       if (payload.format !== "breach-command-backup") throw new Error("format");
       // A backup without a readable campaign would otherwise restore the empty
       // default over the player's progress and call that a restore.
-      const { isCampaignBackup } = await import("@/lib/campaign-backup");
-      if (!isCampaignBackup(payload.campaign, scenarios.length)) throw new Error("campaign");
+      if (!loadedGame().session.isCampaignBackup(payload.campaign, scenarios.length)) throw new Error("campaign");
       const nextCampaign = parseCampaign(JSON.stringify(payload.campaign));
       // The operation travels as text too, so it is validated by the same
       // migration the local save goes through before it is allowed to replace
