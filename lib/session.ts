@@ -6,6 +6,7 @@ import { parseSaveJson } from "./safe-json.ts";
 import { campaignRoutes } from "./phase9.ts";
 
 export { PARKED_SESSION_KEY, SESSION_KEY } from "./session-keys.ts";
+export { isCampaignBackup } from "./campaign-backup.ts";
 // 18: the Weekly operation mode, which an older build would read as damaged.
 // 19: what the engine wrote for the player is stored as messages and content
 // references (lib/i18n/message.ts), not English, so a save reads in any

@@ -42,7 +42,7 @@ export function CommandWorkspace({ session }: { session: GameSession }) {
       {activeWorkspace === "command" && (ended ? (
         <EndState session={session} />
       ) : game.status === "response" ? (
-        <ResponsePanel game={game} onChoose={respond} reflectionEnabled={session.reflectionEnabled && !session.botRun} operation={session.learningId} />
+        <ResponsePanel game={game} onChoose={respond} reflectionEnabled={session.reflectionEnabled && !session.botRun} operation={session.learningId} onLearningSaveFailure={session.reportLearningFailure} />
       ) : (<>
         {/* What needs the player is an entry in the log like the rest, the order
             marked by its rule and its link in the text. A boxed "Next action" with

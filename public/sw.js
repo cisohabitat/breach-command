@@ -66,7 +66,7 @@ function cacheableRequest(request) {
     && ((request.mode === "navigate" && ["/", "/play", "/educators", "/practice"].includes(url.pathname))
       || url.pathname.startsWith("/_next/static/")
       || /^\/art\/[a-z0-9/_-]+\.webp$/.test(url.pathname)
-      || /^\/art\/title\/(portrait|landscape)\.jpg$/.test(url.pathname)
+      || /^\/art\/title\/(phone|portrait|landscape)\.jpg$/.test(url.pathname)
       || /^\/audio\/[a-zA-Z0-9/_-]+\.(mp3|ogg|wav)$/.test(url.pathname)
       || url.pathname === "/manifest.webmanifest" || url.pathname === "/favicon.svg");
 }

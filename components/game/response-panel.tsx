@@ -12,10 +12,13 @@ import { register } from "@/lib/i18n";
 register(responsePanelMessages);
 const ConfidenceReflection = dynamic(() => import("./learning").then(module => module.ConfidenceReflection, () => () => null), { ssr: false });
 
-export function ResponsePanel({ game, onChoose, reflectionEnabled = false, operation = "" }: { game: Game; onChoose: (choice: string) => void; reflectionEnabled?: boolean; operation?: string }) {
+export function ResponsePanel({ game, onChoose, reflectionEnabled = false, operation = "", onLearningSaveFailure }: { game: Game; onChoose: (choice: string) => void; reflectionEnabled?: boolean; operation?: string; onLearningSaveFailure?: () => void }) {
   const { t, say } = useMessages();
-  const remember = useRef<((choice: string) => void) | null>(null);
-  const choose = (choice: string) => { if (reflectionEnabled) remember.current?.(choice); onChoose(choice); };
+  const remember = useRef<((choice: string) => boolean) | null>(null);
+  const choose = (choice: string) => {
+    if (reflectionEnabled && remember.current?.(choice) === false) onLearningSaveFailure?.();
+    onChoose(choice);
+  };
   const phase = game.responseChoices.length === 0 ? "containment" : game.responseChoices.length === 1 ? "assurance" : "recovery";
   const containment = phase === "containment";
   const assurance = phase === "assurance";

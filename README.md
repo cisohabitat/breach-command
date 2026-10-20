@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.10.0**: see the [release notes](CHANGELOG.md#0100-19-october-2026).
+Release **0.10.1**: see the [release notes](CHANGELOG.md#0101-20-october-2026).
 
 The **Practice desk**, at `/practice`, offers three short exercises with three
 decisions each: bounded signals, confidence in causal explanations and containment
@@ -41,7 +41,8 @@ intact. This separate notebook is not included in the existing campaign backup.
 Practice is cached for offline use after visiting it online; it adds no first-visit
 exercise download to the incident desk. Blocked storage leaves practice usable in
 memory and reports failed saving. Unreadable or newer notebooks are preserved
-until explicitly cleared.
+until explicitly cleared; new attempts, operations and reflections remain in memory
+for the current visit. Reflection and operation save failures show the game's saved-data notice.
 
 The [scenario correctness review](docs/reviews/SCENARIOS-2026-10-18.md) covers
 all ten cases, 96 techniques, seventy variants, thirty sector decisions and
@@ -261,6 +262,10 @@ After each operation the review suggests what to play next, from the record: a l
 Every storage access goes through `lib/storage.ts`, which answers rather than throws. In a private window, with site data blocked, or against a full quota the game reports that nothing is being kept and continues from memory. If a newer build's save cannot be parked, its original slot is preserved, the new operation stays in memory, and later writes retry parking before replacing or clearing that slot.
 
 The settings panel can export a portable backup containing campaign progress and the current non-Ironman operation, including an operation awaiting resume on the assignment screen with its saved preferences. Finished operations and Bot Commander practice runs are left out. Restoring the text validates both halves before replacing anything: the campaign through `parseCampaign` and the operation through the same migration a local save goes through. An unreadable operation is reported and left out rather than stored, and a backup without a readable campaign is refused rather than restoring an empty one. A restored operation is offered for resume straight away; restored while another operation is in play, it replaces that one when the player returns to assignments. If storing the restored operation fails, the panel reports that progress is available for this visit only, even when the campaign was saved. Nested campaign counters are checked individually, and unknown pending command IDs are refused before resume.
+
+Backup imports require valid completed-case, experience and operation-count fields and validate every supplied campaign counter and collection before changing any local record. Later fields may be absent in older backups. Validation loads with the existing game bundle so restoring remains available offline; local campaign migration retains its existing recovery behaviour.
+
+All three title posters, including the tall-phone composition, are cached after viewing them online; artwork is never added to the initial offline download.
 
 A failed game-bundle download can be retried by beginning the operation again; successful and in-flight downloads remain shared. The lazy boundary exposes only the engine helpers used by the session and browser tool. Message catalogues group repeated namespaces and restore their existing translation keys at registration, reducing shipped script without removing wording or delaying offline support.
 
