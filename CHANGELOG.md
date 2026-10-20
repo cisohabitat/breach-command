@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.1, 20 October 2026
+
+- Refuse malformed campaign backups before replacing any local progress; keep migration support for older valid backups.
+- Keep new practice attempts, operation summaries and confidence reflections in memory when an unreadable or newer notebook must be preserved.
+- Report failed reflection and operation-history saving through the game's saved-data notice.
+- Cache the tall-phone title poster after viewing it, alongside the portrait and landscape artwork.
+
 ## 0.10.0, 19 October 2026
 
 - Add a practice desk with three short, feedback-led exercises and debrief recommendations.

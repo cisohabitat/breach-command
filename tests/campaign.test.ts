@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {SPECIALIST_EXHAUSTED_AT,newGame,playTurn,type Game} from "../lib/advanced-game.ts";
 import {campaignAct,campaignChanges,campaignEnding,campaignReadable,defaultCampaign,nextCase,parseCampaign,recordCampaignResult} from "../lib/campaign.ts";
+import { isCampaignBackup } from "../lib/campaign-backup.ts";
 import {campaignRoutes,incidentVariant,routeForCampaign,routeReason} from "../lib/phase9.ts";
 import { en } from "./english.ts";
 
@@ -89,6 +90,19 @@ test("malformed nested campaign fields cannot poison later progression", () => {
   assert.ok(Number.isFinite(after.commandPosture.act));
   assert.ok(Number.isFinite(after.specialistBonds.hunter));
   assert.deepEqual(parseCampaign(JSON.stringify(after)), after, "the repaired campaign survives the next save");
+});
+
+test("backup campaigns reject damage before replacing progress while local migration stays tolerant", () => {
+  const legacy = { completed: [0, 1], xp: 75, operations: 3 };
+  assert.equal(isCampaignBackup(defaultCampaign), true);
+  assert.equal(isCampaignBackup(legacy), true, "old backups can omit later fields");
+  for (const damaged of [null, [], {}, { ...legacy, completed: "broken" }, { ...legacy, completed: [10] }, { ...legacy, completed: [0, 0] },
+    { ...legacy, xp: "75" }, { ...legacy, operations: -1 }, { ...legacy, operations: 1.5 }, { ...legacy, readiness: null },
+    { ...legacy, bestScores: { "0": 101 } }, { ...legacy, commandPosture: { act: "2" } }, { ...legacy, specialistFatigue: [] },
+    { ...legacy, routeHistory: [null] }, { ...legacy, ladder: { "0": ["unknown"] } }]) {
+    assert.equal(isCampaignBackup(damaged), false, JSON.stringify(damaged));
+  }
+  assert.deepEqual(parseCampaign("{}"), defaultCampaign, "local recovery remains compatible");
 });
 
 test("rests the team between operations", () => {

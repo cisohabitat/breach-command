@@ -57,11 +57,12 @@ export function updateLearning(change: (record: LearningRecord) => LearningRecor
   const raw = readStored(LEARNING_KEY);
   // Never overwrite a malformed or newer notebook implicitly. Explicit clear
   // is the only destructive action and has its own confirmation in the UI.
-  if (raw) { try { if (!parseLearning(parseSaveJson(raw))) return false; } catch { return false; } }
+  let protectedNotebook = false;
+  if (raw) { try { protectedNotebook = !parseLearning(parseSaveJson(raw)); } catch { protectedNotebook = true; } }
   const next = parseLearning(change(readLearning()));
   if (!next) return false;
   memory = next;
-  const kept = writeStored(LEARNING_KEY, JSON.stringify(next));
+  const kept = !protectedNotebook && writeStored(LEARNING_KEY, JSON.stringify(next));
   memoryOnly = !kept;
   listeners.forEach(listener => listener());
   return kept;

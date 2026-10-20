@@ -68,5 +68,6 @@ export const sessionMessages = catalogue({
     "replayLoaded": "Replay loaded. It applies to the next operation you begin.",
     "challengeGenerated": "New challenge generated. It applies to the next operation you begin.",
     "settingsUnreadable": "Stored settings could not be read, so defaults are in use.",
+    "learningNotKept": "Learning history could not be saved. Keep this page open to retain any notes recorded in memory. An unreadable or newer notebook is preserved until you explicitly clear it.",
   },
 });

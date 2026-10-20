@@ -179,6 +179,27 @@ test.describe("local persistence", () => {
     expect(operation.guided).toBe(false);
     expect(operation.fastResolve).toBe(true);
   });
+  test("malformed campaign backups leave every existing progress record intact", async ({ page }) => {
+    const saved = serialiseSession(newGame(0, "training", () => 0), true, false);
+    const campaign = JSON.stringify({ ...defaultCampaign, completed: [0, 1], xp: 300, operations: 5 });
+    await page.addInitScript(({ saved, campaign }) => {
+      localStorage.setItem("breach-command.session", saved);
+      localStorage.setItem("breach-command.campaign", campaign);
+      localStorage.setItem("breach-command.telemetry", "{}");
+      localStorage.setItem("breach-command.ledger", "[]");
+    }, { saved, campaign });
+    await page.goto("/play", { waitUntil: "networkidle" });
+    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Game settings" }).click();
+    for (const damaged of [{}, { completed: "damaged", xp: "broken", operations: "broken" }, { ...defaultCampaign, commandPosture: { observe: "many" } }]) {
+      await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign: damaged, telemetry: { wins: 99 }, ledger: [], session: serialiseSession(newGame(4, "training", () => 0), true, false) }));
+      await page.getByRole("button", { name: "Restore backup" }).click();
+      await page.getByRole("button", { name: "Replace this device’s progress" }).click();
+      await expect(page.locator(".backup-console").first()).toContainText("not recognised");
+      expect(await page.evaluate(() => ["breach-command.session", "breach-command.campaign", "breach-command.telemetry", "breach-command.ledger"].map(key => localStorage.getItem(key)))).toEqual([saved, campaign, "{}", "[]"]);
+    }
+  });
+
   test("a failed restored-session write is reported even when the campaign was saved", async ({ page }) => {
     const previous = serialiseSession(newGame(0, "training", () => 0), true, false);
     const restored = serialiseSession(newGame(4, "crisis", () => 0), false, true);

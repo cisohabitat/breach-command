@@ -38,3 +38,21 @@ test("a single visit is enough to play offline", async ({ page, context, browser
   await page.getByRole("button", { name: /Begin investigation/i }).click();
   await expect(page.getByRole("button", { name: /Assume command/i })).toBeVisible();
 });
+
+test("the tall-phone poster remains available offline after it is viewed", async ({ page, context, browserName }) => {
+  test.skip(browserName === "webkit", "Playwright's WebKit cannot reload offline through a service worker");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/play", { waitUntil: "networkidle" });
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  await page.goto("/", { waitUntil: "networkidle" });
+  const poster = page.locator(".title-art img");
+  await expect.poll(() => page.evaluate(async () => {
+    const key = (await caches.keys()).find(key => key.startsWith("breach-command-"));
+    return key ? !!(await (await caches.open(key)).match("/art/title/phone.jpg")) : false;
+  })).toBe(true);
+  await context.setOffline(true);
+  await page.reload({ waitUntil: "load" });
+  await expect.poll(() => poster.evaluate(image => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0)).toBe(true);
+  await expect(page.locator(".title-start")).toBeVisible();
+});

@@ -502,7 +502,8 @@ export function useGameSession() {
       if (payload.format !== "breach-command-backup") throw new Error("format");
       // A backup without a readable campaign would otherwise restore the empty
       // default over the player's progress and call that a restore.
-      if (!payload.campaign || typeof payload.campaign !== "object" || Array.isArray(payload.campaign)) throw new Error("campaign");
+      const { isCampaignBackup } = await import("@/lib/campaign-backup");
+      if (!isCampaignBackup(payload.campaign, scenarios.length)) throw new Error("campaign");
       const nextCampaign = parseCampaign(JSON.stringify(payload.campaign));
       // The operation travels as text too, so it is validated by the same
       // migration the local save goes through before it is allowed to replace
@@ -556,12 +557,18 @@ export function useGameSession() {
     setMode(next);
   }
 
+  function reportLearningFailure() {
+    setStorageNotice(msg("session.learningNotKept"));
+  }
+
   function recordProgress(result: Game) {
     if (botRunRef.current || recordedRef.current) return;
     recordedRef.current = true;
     const id = learningId.current;
     const nextLesson = engine().getBeginnerReview(result).next;
-    void import("@/lib/learning").then(module => module.recordLearningOperation(result, id, nextLesson)).catch(() => {});
+    void import("@/lib/learning").then(module => {
+      if (!module.recordLearningOperation(result, id, nextLesson)) reportLearningFailure();
+    }).catch(reportLearningFailure);
     recordTelemetry(result.status === "won" ? "win" : result.status === "exercise" ? "exercise" : "loss", { scenario: result.scenario });
     setTelemetry(readTelemetry());
     const score = engine().getOutcome(result).breakdown.total;
@@ -951,6 +958,7 @@ export function useGameSession() {
     decide,
     chooseHypothesis,
     respond,
+    reportLearningFailure,
     command,
     sectorDecision,
     focusInfrastructure,

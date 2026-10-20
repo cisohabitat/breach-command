@@ -111,8 +111,8 @@ test("service worker isolates game caches and only stores public assets", async 
   assert.deepEqual(deleted, ["breach-command-old"]);
   const request = (path: string, mode = "cors", headers = {}) => ({ url: new URL(path, "https://game.test").href, method: "GET", mode, headers: new Headers(headers) });
   const response = { ok: true, status: 200, type: "basic", redirected: false, headers: new Headers() };
-  for (const path of ["/_next/static/a.js", "/art/sectors/quiet-office.webp", "/audio/captain/reviewReading.mp3"]) assert.ok(api.worthCaching(request(path), response));
-  for (const path of ["/api/session", "/private", "/_next/static/a.js?secret=1", "https://other.test/a.js"]) assert.equal(api.cacheableRequest(request(path)), false);
+  for (const path of ["/_next/static/a.js", "/art/sectors/quiet-office.webp", "/audio/captain/reviewReading.mp3", "/art/title/phone.jpg", "/art/title/portrait.jpg", "/art/title/landscape.jpg"]) assert.ok(api.worthCaching(request(path), response));
+  for (const path of ["/api/session", "/private", "/_next/static/a.js?secret=1", "/art/title/phone.jpg?token=x", "/art/title/private.jpg", "https://other.test/a.js"]) assert.equal(api.cacheableRequest(request(path)), false);
   for (const headers of [{ authorization: "Bearer private" }, { range: "bytes=0-10" }, { rsc: "1" }]) assert.equal(api.cacheableRequest(request("/", "navigate", headers)), false);
   for (const change of [{ status: 206 }, { redirected: true }, { headers: new Headers({ "cache-control": "private, max-age=60" }) }, { headers: new Headers({ "cache-control": "no-store" }) }]) assert.equal(api.worthCaching(request("/", "navigate"), { ...response, ...change }), false);
   assert.equal(api.worthCaching(request("/?locale=en-XA", "navigate"), response), false);

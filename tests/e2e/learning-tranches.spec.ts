@@ -170,6 +170,48 @@ test("confidence is off by default and the explicit opt-in survives a reload", a
   await expect(page.getByText("Optional confidence reflection", { exact: true }).first()).toBeVisible();
 });
 
+for (const raw of ["{broken", JSON.stringify({ version: 99 })]) test(`protected learning notebook keeps completed practice in memory: ${raw}`, async ({ page }) => {
+  await page.addInitScript(raw => localStorage.setItem("breach-command.learning", raw), raw);
+  await page.goto("/practice?lesson=signal", { waitUntil: "networkidle" });
+  for (let index = 0; index < 3; index++) {
+    await page.getByRole("radio").first().check();
+    await page.getByRole("button", { name: "Check judgment", exact: true }).click();
+    await page.getByRole("button", { name: index === 2 ? "Finish exercise" : "Next decision", exact: true }).click();
+  }
+  await expect(page.getByText(/The learning record could not be saved/)).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("breach-command.learning"))).toBe(raw);
+  await page.getByText("Practice history and confidence reflections", { exact: true }).click();
+  await expect(page.getByText("Exercises completed: 1; supported first choices: 1 of 3.")).toBeVisible();
+});
+
+test("reflection quota failure warns outside the form and leaves the response and visit notes intact", async ({ page }) => {
+  const initial = responsePhaseGame();
+  await page.addInitScript(save => {
+    localStorage.setItem("breach-command.session", save);
+    localStorage.setItem("breach-command.preferences", JSON.stringify({ sound: false, voice: false, music: false, reflection: true }));
+    localStorage.setItem("breach-command.tutorial-complete", "true");
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "breach-command.learning") throw new DOMException("Full quota", "QuotaExceededError");
+      return setItem.call(this, key, value);
+    };
+  }, serialiseSession(initial, false, false));
+  await page.goto("/play", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  const panel = page.locator(".response-panel");
+  await panel.locator("summary").filter({ hasText: "Optional confidence reflection" }).click();
+  await panel.getByRole("radio", { name: "High", exact: true }).check();
+  await panel.locator(".response-options > button").first().click();
+  await expect(page.locator(".storage-notice")).toContainText("Learning history could not be saved");
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("breach-command.session")!));
+  expect(saved.game).toEqual(resolveResponse(initial, responseOptionsFor(initial).containment[0].id));
+  expect(await page.evaluate(() => localStorage.getItem("breach-command.learning"))).toBeNull();
+  while (await panel.isVisible()) await panel.locator(".response-options > button").first().click();
+  await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
+  await page.getByText("Your confidence at the decision", { exact: true }).click();
+  await expect(page.getByText("Response decision 1: High", { exact: true })).toBeVisible();
+});
+
 test("practice supports longer locale text and stored high contrast", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.addInitScript(() => localStorage.setItem("breach-command.preferences", JSON.stringify({ highContrast: true })));

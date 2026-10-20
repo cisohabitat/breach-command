@@ -63,3 +63,25 @@ test("the optional notebook identity survives save, Resume and backup without ch
   assert.equal(parseSession(serialiseSession(game, true, false, "<script>"))!.learningId, undefined);
   assert.equal(JSON.stringify(game), before);
 });
+
+test("protected notebooks keep new attempts, reflections and operations in visit memory without touching stored bytes", () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  const values = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) } });
+  try {
+    for (const raw of ["{broken", JSON.stringify({ version: 99 }), JSON.stringify({ ...emptyLearning(), attempts: [null] })]) {
+      clearLearning();
+      values.set(LEARNING_KEY, raw);
+      for (let at = 1; at <= 2; at++) assert.equal(updateLearning(r => ({ ...r, attempts: [...r.attempts, { at, lesson: "signal", answers: [1, 0, 2] }] })), false);
+      assert.equal(recordReflection({ operation: "operation-1", phase: 0, confidence: "low", choice: "targeted", confirmed: 4, findings: 2, strong: 1, impact: 20, continuity: 80 }), false);
+      assert.equal(recordLearningOperation({ ...newGame(0, "training", () => 0), status: "lost" }, "operation-1"), false);
+      const visit = readLearning();
+      assert.equal(visit.attempts.length, 2);
+      assert.equal(visit.reflections.length, 1);
+      assert.equal(visit.operations.length, 1);
+      assert.equal(values.get(LEARNING_KEY), raw, "preserve the protected notebook byte-for-byte");
+    }
+    assert.equal(clearLearning(), true);
+    assert.deepEqual(readLearning(), emptyLearning());
+  } finally { if (original) Object.defineProperty(globalThis, "localStorage", original); else Reflect.deleteProperty(globalThis, "localStorage"); }
+});

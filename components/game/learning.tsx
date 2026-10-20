@@ -15,12 +15,12 @@ export function LearningHistory() {
   const record = useLearning();
   return record.reflections.length > 0 && <details><summary>{t("learning.recentReflections")}</summary><dl>{record.reflections.slice(-10).reverse().map(row => <div key={`${row.operation}-${row.phase}`}><dt>{t("learning.response", { phase: row.phase + 1, confidence: t(labels[row.confidence]) })}</dt><dd>{t("learning.snapshot", { confirmed: row.confirmed, strong: row.strong, findings: row.findings, impact: row.impact, continuity: row.continuity })}</dd></div>)}</dl><p>{t("learning.measured")}</p></details>;
 }
-export function ConfidenceReflection({ game, operation, rememberRef }: { game: Game; operation: string; rememberRef: RefObject<((choice: string) => void) | null> }) {
+export function ConfidenceReflection({ game, operation, rememberRef }: { game: Game; operation: string; rememberRef: RefObject<((choice: string) => boolean) | null> }) {
   const { t } = useMessages();
   const [value, onChange] = useState<Confidence | null>(null);
   useEffect(() => {
     rememberRef.current = choice => {
-      if (value && operation) recordReflection({ operation, phase: game.responseChoices.length, confidence: value, choice, confirmed: game.revealed.length, findings: game.evidence.length, strong: game.evidence.filter(item => getEvidenceAssessment(game, item).confidence === "strong").length, impact: game.impact, continuity: game.continuity });
+      return !value || !operation || recordReflection({ operation, phase: game.responseChoices.length, confidence: value, choice, confirmed: game.revealed.length, findings: game.evidence.length, strong: game.evidence.filter(item => getEvidenceAssessment(game, item).confidence === "strong").length, impact: game.impact, continuity: game.continuity });
     };
     return () => { rememberRef.current = null; };
   }, [game, operation, rememberRef, value]);
