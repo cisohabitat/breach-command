@@ -178,7 +178,7 @@ export function campaignChanges(before: CampaignState, after: CampaignState, gam
   const readiness = { change: signed(after.readiness - before.readiness), now: after.readiness };
   lines.push(game.status === "won" ? msg("engine.campaign.readinessWon", readiness) : game.status === "exercise" ? msg("engine.campaign.readinessDrill", readiness) : msg("engine.campaign.readinessLost", readiness));
   const threads = after.unresolvedThreads - before.unresolvedThreads;
-  if (threads) lines.push(msg("engine.campaign.unresolvedAccess", { change: signed(threads), now: after.unresolvedThreads }));
+  if (threads) lines.push(msg(game.status === "lost" ? "engine.campaign.unresolvedAccess" : threads < 0 ? "engine.campaign.accessReduced" : "engine.campaign.accessRemaining", { change: signed(threads), now: after.unresolvedThreads }));
   const xp = after.xp - before.xp;
   if (xp) lines.push(msg("engine.campaign.experience", { xp, now: after.xp, score }));
   for (const capability of unlockedCapabilities(after.xp)) if (capability.unlocked && !unlockedCapabilities(before.xp).find(item => item.at === capability.at)!.unlocked) lines.push(msg("engine.campaign.unlocked", { title: lit(capability.title), detail: lit(capability.detail) }));
@@ -293,7 +293,10 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
   // specialist started every operation after the first at five of six, where the
   // specialist's bonus no longer applies, for the rest of the campaign.
   const specialistFatigue = Object.fromEntries(Object.entries(current.specialistFatigue).map(([id, fatigue]) => [id, Math.max(0, fatigue - 2)]));
-  specialistFatigue[game.specialist] = Math.max(0, Math.min(6, game.specialistFatigue - 1));
+  // Seeded operations start rested for fair comparisons. Their earned fatigue
+  // adds to the real team's record rather than replacing it with that baseline.
+  const fatigue = game.specialistFatigue + (game.seed === null ? 0 : current.specialistFatigue[game.specialist] ?? 0);
+  specialistFatigue[game.specialist] = Math.max(0, Math.min(6, fatigue) - 1);
   const mastery = score >= 88 ? 3 : score >= 74 ? 2 : won ? 1 : 0;
   const commandPosture = {
     observe: current.commandPosture.observe + game.decisions.filter(item => item.choice === "observe").length,

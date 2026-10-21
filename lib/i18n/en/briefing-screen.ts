@@ -32,7 +32,7 @@ export const briefingScreenMessages = catalogue({
     "operationMode": "Operation mode",
     "scenarioCode": "Scenario code",
     "newSeed": " New seed",
-    "aCodeReproduces": "A code reproduces the incident, its variant and its dice. Daily operation plays today’s code and Weekly operation this week’s; an ordinary campaign operation draws a fresh incident unless you load a code or generate a seed, which applies to the next operation you begin. Campaign standing is not part of a code, so two commands at different seniority will see different modifiers from the same code.",
+    "aCodeReproduces": "A code reproduces the incident, its variant and its dice. Daily operation plays today’s code and Weekly operation this week’s; an ordinary campaign operation draws a fresh incident unless you load a code or generate a seed, which applies to the next operation you begin. Coded operations start from the same neutral command, so campaign standing cannot change their modifiers.",
     "challengeCode": "Challenge code",
     "enterBcChallenge": "Enter a BC challenge code",
     "load": "Load",

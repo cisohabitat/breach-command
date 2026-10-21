@@ -56,6 +56,7 @@ export const debriefDialogMessages = catalogue({
     "orWatchThe": "Or watch the Bot Commander play this same operation from the evidence it can see, to compare where its readings went with yours.",
     "replayWithThe": "Replay with the Bot Commander",
     "thisCampaignOperation": "This campaign operation drew its chain fresh, so it cannot be replayed. Daily, Weekly and challenge-code operations can be replayed by the Bot Commander from their review.",
+    "earlierChallengeOperation": "This operation uses an earlier challenge version. Its saved incident and dice are preserved, but this build cannot share or replay its original setup.",
     "forTrainer": "For a trainer",
     "theFacilitatorSheet": "The facilitator sheet prints the whole hidden chain with its ATT&CK techniques, the turn-by-turn ledger, the decisions and questions for the room, on one or two pages. It gives the answer away: print it after the room has played this case.",
     "printFacilitatorSheet": "Print facilitator sheet",

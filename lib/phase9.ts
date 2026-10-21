@@ -7,7 +7,7 @@ export type CampaignRouteId = "watchtower" | "breakwater" | "common-ground" | "c
 export const campaignRoutes: Record<CampaignRouteId, { title: string; order: string; consequence: string; scenarios: number[] }> = {
   watchtower: { title: "Watchtower", order: "Preserve access long enough to expose the campaign architecture.", consequence: "Better intelligence, but the actor begins later missions with more objective progress.", scenarios: [1, 4, 7] },
   breakwater: { title: "Breakwater", order: "Disrupt trusted access before the campaign reaches essential services.", consequence: "Lower starting impact, but intervention costs reduce service readiness.", scenarios: [2, 3, 8] },
-  "common-ground": { title: "Common Ground", order: "Coordinate partners and protect shared operational confidence.", consequence: "Specialists recover faster and leadership trust matters more.", scenarios: [5, 6, 9] },
+  "common-ground": { title: "Common Ground", order: "Coordinate partners and protect shared operational confidence.", consequence: "Service integrity starts up to 3 points higher, capped at full service.", scenarios: [5, 6, 9] },
   convergence: { title: "Convergence", order: "Bring every confirmed thread into a single final operating picture.", consequence: "The ending now reflects route, team cohesion and unresolved access.", scenarios: [7, 8, 9] },
 };
 

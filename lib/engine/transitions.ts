@@ -4,6 +4,7 @@ import { runsOperationalTechnology } from "../scenarios.ts";
 import { objectiveForScenario, procedureIntensities, procedureScopes, sectorSystems, specialists, type AdversaryObjectiveId, type ProcedurePlan } from "../command-systems.ts";
 import { type SetPieceId, infrastructureTopologies, seededRoll, setPieceById, setPieceFor } from "../phase8.ts";
 import { objectiveTheory } from "../phase9.ts";
+import { CHALLENGE_VERSION } from "../challenge.ts";
 import { commandEvents, decisionChoices, decisionLanguageFor, decisionTitles, injects, scenarioProfiles } from "./content.ts";
 import { type CarriedSource, type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice, type TurnInject } from "./types.ts";
 import { msg, type Message } from "../i18n/message.ts";
@@ -63,6 +64,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   const startingContinuity = 100 + (campaignTier >= 3 ? 5 : 0) + (campaignReadiness >= 60 ? 3 : campaignReadiness < 30 ? -5 : 0) + variant.continuity + routeContinuity;
   return {
     scenario,
+    ...(setup.seed == null ? {} : { challengeVersion: CHALLENGE_VERSION }),
     difficulty,
     chain: scenarios[scenario].choices.map(options => options[random(options.length)]),
     revealed: [],

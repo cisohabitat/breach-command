@@ -376,6 +376,8 @@ export const engineMessages = catalogue({
     "readinessDrill": "Readiness {change} to {now}: +2 for exercising the process.",
     "readinessLost": "Readiness {change} to {now}: −3 for a loss.",
     "unresolvedAccess": "Unresolved access {change} to {now}: a lost operation leaves the adversary's access open. Four or more at the campaign's end decide its ending, and each one makes later operations start harder.",
+    "accessReduced": "Unresolved access {change} to {now}: recovery with actor progress below 65 closes one outstanding access thread.",
+    "accessRemaining": "Unresolved access {change} to {now}: the operation was won, but actor progress of 65 or more leaves an access thread unresolved.",
     "experience": "Experience +{xp} to {now}: the score ({score}), raised for a harder difficulty or mode and reduced for an operation not won.",
     "unlocked": "Unlocked: {title}. {detail}",
     "ladder": "Ladder: {rung} on this case, {climbed} of {rungs} rungs.",

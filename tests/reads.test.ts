@@ -7,6 +7,7 @@ import {parseSession,serialiseSession} from "../lib/session.ts";
 import { legacy, msg, say } from "../lib/i18n/message.ts";
 import "../lib/i18n/engine-messages.ts";
 import { en } from "./english.ts";
+import { CHALLENGE_VERSION } from "../lib/challenge.ts";
 
 const baseline=()=>{const g=newGame(0,"operational",()=>0);g.chain=["phish","spray","task","https"];g.established=["endpoint","identity","server","network"];g.injectDeck=[4,7,0,1,2,3,5,6,8];return g;};
 let g:Game=baseline();
@@ -411,7 +412,7 @@ test("sums up a result without spoiling the operation", () => {
     assert.ok(!lines.join(" ").includes(title),`it never names ${title}`);
   }
   assert.equal(lines.length,2,"an ordinary operation has no code to share");
-  const seeded=en(getResultSummary({...lost,seed:4242}));
+  const seeded=en(getResultSummary({...lost,seed:4242,challengeVersion:CHALLENGE_VERSION}));
   assert.ok(/BC\d+-\d+-\d+-\d+-\d+-4242-\d{2}/.test(seeded[2]),"a reproducible one carries its challenge code");
 });
 

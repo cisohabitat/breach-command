@@ -11,7 +11,6 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { carriedLabel, correlateEvidence, describePart, injectCard, newGame, playTurn, resolveCommand, resolveDecision, resolveMapAction, resolveResponse, resolveSetPiece, setCaseTheory, setHypothesis, setInfrastructureFocus, type Game } from "../lib/advanced-game.ts";
 import type { BotAction } from "../lib/game-bot.ts";
-import { seededChallengeRandom } from "../lib/phase8.ts";
 import { incidentVariant } from "../lib/phase9.ts";
 import { parseSession } from "../lib/session.ts";
 import { isMessage, resolveRef, say, type Message } from "../lib/i18n/message.ts";
@@ -28,6 +27,10 @@ const recordedActions: BotAction[] = JSON.parse(readFileSync(new URL("./fixtures
 
 function replay(): Game {
   const { seed, scenario } = fixture.setup;
+  // Freeze the historical setup draw here: BC10 deliberately changes it. This
+  // test replays the v18 record, whose chain, deck and sentences stay intact.
+  let setupState = seed >>> 0;
+  const historicalRandom = (max: number) => { setupState = (setupState * 1664525 + 1013904223) >>> 0; return setupState % max; };
   let state = seed;
   Math.random = () => { state = (state * 16807) % 2147483647; return (state - 1) / 2147483646; };
   Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true });
@@ -47,7 +50,7 @@ function replay(): Game {
     }
   };
   const { difficulty, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute } = fixture.setup;
-  let game = newGame(scenario, difficulty, seededChallengeRandom(seed), { seed, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute, variant: incidentVariant(scenario, campaignRoute, seed) });
+  let game = newGame(scenario, difficulty, historicalRandom, { seed, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute, variant: incidentVariant(scenario, campaignRoute, seed) });
   // Since 0.9.19 an operation's search for an event starts elsewhere
   // (commandEventStart), and since 0.9.23 a variant can draw a sector's third
   // crisis, so the same seed can meet a different event or crisis; the replay

@@ -117,6 +117,30 @@ test("rests the team between operations", () => {
   assert.equal(after.specialistFatigue.forensics,2,"a benched specialist recovers two");
 });
 
+test("neutral seeded operations add fatigue to the persistent team instead of resetting it", () => {
+  const seeded = { ...newGame(0, "operational", () => 0, { mode: "daily", seed: 10 }), status: "won" as const, specialistFatigue: 2 };
+  for (const mode of ["campaign", "daily", "weekly", "expert", "ironman", "escalation"] as const) {
+    const before = { ...defaultCampaign, specialistFatigue: { hunter: 6, forensics: 4 } };
+    const after = recordCampaignResult(before, { ...seeded, mode }, 80);
+    assert.equal(after.specialistFatigue.hunter, 5, `${mode}: a fresh comparison baseline does not erase campaign fatigue`);
+    assert.equal(after.specialistFatigue.forensics, 2);
+  }
+  assert.equal(recordCampaignResult({ ...defaultCampaign, specialistFatigue: { hunter: 2 } }, seeded, 80).specialistFatigue.hunter, 3);
+});
+
+test("campaign access explanations distinguish loss, incomplete containment and closed threads", () => {
+  const before = { ...defaultCampaign, unresolvedThreads: 2 };
+  const base = newGame(0, "operational", () => 0);
+  for (const [status, progress, threads, phrase] of [["lost", 70, 3, "lost operation"], ["won", 70, 3, "actor progress of 65 or more"], ["won", 30, 1, "closes one outstanding access thread"]] as const) {
+    const game = { ...base, status, objectiveProgress: progress };
+    const after = recordCampaignResult(before, game, 80);
+    assert.equal(after.unresolvedThreads, threads);
+    const line = en(campaignChanges(before, after, game, 80)).find(line => line.startsWith("Unresolved access"))!;
+    assert.ok(line.includes(phrase), line);
+    if (status === "won") assert.ok(!line.includes("lost operation"));
+  }
+});
+
 test("lets wins earn back trust that losses take away", () => {
   // At the old rate a typical win returned three points against a loss's eight,
   // and a quarter of completed campaigns ended on fractured trust.

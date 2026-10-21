@@ -2,6 +2,7 @@
 // reads and writes a code without the rest of ./phase8.ts.
 import type { Difficulty } from "./scenarios.ts";
 import type { GameMode, SpecialistId } from "./command-systems.ts";
+import type { Game } from "./engine/types.ts";
 
 export type ChallengeSetup = { scenario: number; difficulty: Difficulty; mode: GameMode; specialist: SpecialistId; seed: number };
 const difficultyIds: Difficulty[] = ["training", "operational", "crisis"];
@@ -14,12 +15,18 @@ const specialistIds: SpecialistId[] = ["hunter", "forensics", "identity", "ot", 
 // techniques themselves or the seeded draws change: an older code would
 // otherwise decode cleanly and quietly play a different incident. Version 1
 // codes were written as "BC-…" before the version was part of the code.
-export const CHALLENGE_VERSION = 9;
+export const CHALLENGE_VERSION = 10;
 const checksumOf = (text: string) => [...text].reduce((sum, char) => (sum + char.charCodeAt(0)) % 97, 0);
 
 export function encodeChallenge(setup: ChallengeSetup) {
   const body = [setup.scenario, difficultyIds.indexOf(setup.difficulty), modeIds.indexOf(setup.mode), specialistIds.indexOf(setup.specialist), setup.seed].join("-");
   return `BC${CHALLENGE_VERSION}-${body}-${checksumOf(`${CHALLENGE_VERSION}:${body}`).toString().padStart(2, "0")}`;
+}
+
+// Older saves retain their incident and dice, but a new-version code must not
+// promise to recreate a chain drawn by an earlier generator.
+export function operationChallenge(game: Pick<Game, "scenario" | "difficulty" | "mode" | "specialist" | "seed" | "challengeVersion">) {
+  return game.seed === null || game.challengeVersion !== CHALLENGE_VERSION ? null : encodeChallenge({ ...game, seed: game.seed });
 }
 
 export function decodeChallenge(code: string): ChallengeSetup | null {
@@ -54,5 +61,10 @@ export function seededRoll(seed: number, index: number, faces = 20) {
 
 export function seededChallengeRandom(seed: number) {
   let state = seed >>> 0;
-  return (max: number) => { state = (state * 1664525 + 1013904223) >>> 0; return state % max; };
+  return (max: number) => {
+    state = (state + 0x9e3779b9) >>> 0;
+    let mixed = Math.imul(state ^ (state >>> 16), 0x21f0aaad);
+    mixed = Math.imul(mixed ^ (mixed >>> 15), 0x735a2d97);
+    return ((mixed ^ (mixed >>> 15)) >>> 0) % max;
+  };
 }

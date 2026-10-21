@@ -1,7 +1,7 @@
 // The after-action review: score, outcome, hypothesis ledger and counterfactuals.
 import { attacks, difficulties, scenarios, stages, hypotheses, scenarioDynamics } from "../game.ts";
 import { gameModes, sectorSystems } from "../command-systems.ts";
-import { encodeChallenge } from "../phase8.ts";
+import { operationChallenge } from "../challenge.ts";
 import { level, lit, msg, ref, scopedMsg, withForm, type Message } from "../i18n/message.ts";
 import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBreakdown } from "./types.ts";
 import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
@@ -332,7 +332,7 @@ export function getResultSummary(game: Game): Message[] {
     : game.status === "exercise"
       ? reviewMsg("authorisedExerciseConcluded", { total: outcome.breakdown.total })
       : reviewMsg("operationLost100", { getLossReasonTitle: withForm(getLossReason(game).title, "lower"), total: outcome.breakdown.total });
-  const code = game.seed === null ? null : encodeChallenge({ scenario: game.scenario, difficulty: game.difficulty, mode: game.mode, specialist: game.specialist, seed: game.seed });
+  const code = operationChallenge(game);
   return [heading, reviewMsg("resultAndRecord", { result, record }), ...(code ? [reviewMsg("playTheSame", { code })] : [])];
 }
 
@@ -343,7 +343,7 @@ export type ShareCard = { form: Message; title: string; meta: Message; result: M
 export function getShareCard(game: Game): ShareCard {
   const scenario = scenarios[game.scenario];
   const outcome = getOutcome(game);
-  const code = game.seed === null ? null : encodeChallenge({ scenario: game.scenario, difficulty: game.difficulty, mode: game.mode, specialist: game.specialist, seed: game.seed });
+  const code = operationChallenge(game);
   return {
     form: reviewMsg("formBc310"),
     title: scenario.title,

@@ -30,7 +30,7 @@ import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTe
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
 import { parseLedger, readLedger, writeLedger, type LedgerEntry } from "@/lib/ledger";
-import { encodeChallenge, seededChallengeRandom } from "@/lib/challenge";
+import { operationChallenge, seededChallengeRandom } from "@/lib/challenge";
 import { lit, msg, type Message } from "@/lib/i18n/message";
 import { register } from "@/lib/i18n";
 import { sessionMessages } from "@/lib/i18n/en/session";
@@ -193,6 +193,7 @@ export function useGameSession() {
     clearStoredSession();
     importedRef.current = null;
     recordedRef.current = false;
+    setCampaignChange([]);
     learningId.current = crypto.randomUUID();
     voiceHistory.current = new Set();
     voiceDecision.current = 0;
@@ -243,6 +244,7 @@ export function useGameSession() {
   }
 
   function resume(session: SavedSession) {
+    setCampaignChange([]);
     if (voiceEnabled) unlockCaptainAudio();
     importedRef.current = null;
     recordedRef.current = false;
@@ -583,7 +585,7 @@ export function useGameSession() {
     const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? engine().getLossReason(result).title : result.status === "exercise" ? msg("record.endingExercise") : msg("record.endingStoodDown"), score, endedAt: Date.now(), next };
     writeLastOperation(record);
     setLastOperation(record);
-    const entry: LedgerEntry = { at: Date.now(), scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, outcome: result.status as LedgerEntry["outcome"], score, hypothesis: engine().getOutcome(result).breakdown.hypothesis, stages: result.revealed.length, turns: result.turns.length, code: result.seed === null ? null : encodeChallenge({ scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, specialist: result.specialist, seed: result.seed }) };
+    const entry: LedgerEntry = { at: Date.now(), scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, outcome: result.status as LedgerEntry["outcome"], score, hypothesis: engine().getOutcome(result).breakdown.hypothesis, stages: result.revealed.length, turns: result.turns.length, code: operationChallenge(result) };
     const nextLedger = [...readLedger(scenarios.length), entry];
     writeLedger(nextLedger);
     setLedger(nextLedger);
@@ -593,8 +595,8 @@ export function useGameSession() {
   // a reading tested soundly would have gone. Only a reproducible operation can
   // be replayed: an ordinary campaign one drew its chain fresh.
   function replayWithBot(finished: Game) {
-    if (finished.seed === null) return;
-    const code = encodeChallenge({ scenario: finished.scenario, difficulty: finished.difficulty, mode: finished.mode, specialist: finished.specialist, seed: finished.seed });
+    const code = operationChallenge(finished);
+    if (!code) return;
     resetToBriefing();
     if (!applyCode(code)) return;
     replayRef.current = { scenario: finished.scenario, variant: finished.variant, campaignRoute: finished.campaignRoute };
@@ -616,6 +618,7 @@ export function useGameSession() {
   }
 
   function resetToBriefing() {
+    setCampaignChange([]);
     const imported = importedRef.current;
     importedRef.current = null;
     if (imported) {
