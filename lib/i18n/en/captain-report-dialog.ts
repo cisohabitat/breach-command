@@ -44,7 +44,7 @@ export const captainReportDialogMessages = catalogue({
     "operationalUpdate": "Operational update",
     "operationalDecisionRequired": "Operational decision required",
     "commandResponses": " command responses.",
-    "resolveTheOperational": "Record a response above to close this report and continue.",
+    "resolveTheOperational": "This report stays open until the choice is recorded.",
     "theOperationStood": "The operation stood down.",
     "theOperationIs": "The operation is lost.",
     "aLaterStage": "A later stage was found.",
