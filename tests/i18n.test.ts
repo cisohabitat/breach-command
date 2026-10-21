@@ -233,6 +233,46 @@ test("markup in a message renders through the component's tags", () => {
 // (lib/game-loader.ts), which carries them, so no component imports them, which
 // would copy them into that part's script. What the first load says is in the
 // base. And every engine key is one the engine writes.
+function scopedMessageKeys(source: string, known: string[]) {
+  const tree = ts.createSourceFile("messages.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const writers = new Map<string, string>();
+  const keys = new Set<string>();
+  const collect = (node: ts.Node) => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isCallExpression(node.initializer)
+      && node.initializer.expression.getText(tree) === "scopedMsg" && ts.isStringLiteral(node.initializer.arguments[0])) writers.set(node.name.text, node.initializer.arguments[0].text);
+    ts.forEachChild(node, collect);
+  };
+  collect(tree);
+  const read = (prefix: string, node: ts.Expression) => {
+    if (ts.isConditionalExpression(node)) { read(prefix, node.whenTrue); read(prefix, node.whenFalse); }
+    else if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+      const key = `${prefix}.${node.text}`;
+      assert.ok(known.includes(key), `scoped writer names a known key: ${key}`);
+      keys.add(key);
+    } else if (ts.isTemplateExpression(node)) {
+      const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(`^${escape(`${prefix}.${node.head.text}`)}${node.templateSpans.map(span => `[^.]+${escape(span.literal.text)}`).join("")}$`);
+      const matches = known.filter(key => pattern.test(key));
+      assert.ok(matches.length, `scoped template names known keys: ${node.getText(tree)}`);
+      matches.forEach(key => keys.add(key));
+    }
+  };
+  const visit = (node: ts.Node) => {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && writers.has(node.expression.text) && node.arguments[0]) read(writers.get(node.expression.text)!, node.arguments[0]);
+    ts.forEachChild(node, visit);
+  };
+  visit(tree);
+  return [...keys];
+}
+
+test("the scoped-key audit expands literal, conditional and template writers and rejects unknown keys", () => {
+  const source = 'const write = scopedMsg("engine"); write("one"); write(ok ? "two" : other ? "three" : "four"); write(`choice.${choice}`);';
+  const known = ["engine.one", "engine.two", "engine.three", "engine.four", "engine.choice.a", "engine.choice.b"];
+  assert.deepEqual(scopedMessageKeys(source, known).sort(), [...known].sort());
+  assert.throws(() => scopedMessageKeys(source.replace('"one"', '"missing"'), known), /known key: engine.missing/);
+  assert.throws(() => scopedMessageKeys(source.replace('choice.${choice}', 'absent.${choice}'), known), /template names known keys/);
+});
+
 test("the engine's messages are loaded once, before the parts that show them, and all used", () => {
   const page = readFileSync(new URL("../components/game/incident-app.tsx", import.meta.url), "utf8");
   const parts = [...page.matchAll(/dynamic\(\(\) => (.*?)\.then/g)].map(match => match[1]);
@@ -240,15 +280,9 @@ test("the engine's messages are loaded once, before the parts that show them, an
   const copied = componentFiles.filter(file => /@\/lib\/(i18n\/engine-messages|glossary)"/.test(readFileSync(new URL(file, import.meta.url), "utf8")));
   assert.deepEqual(copied, [], "no component imports the shared text itself");
   const engine = catalogues.engine;
-  const library = [...readdirSync(new URL("../lib/", import.meta.url)).filter(name => name.endsWith(".ts")).map(name => `../lib/${name}`), ...readdirSync(new URL("../lib/engine/", import.meta.url)).map(name => `../lib/engine/${name}`)].map(path => readFileSync(new URL(path, import.meta.url), "utf8")).join("\n");
-  const scoped = new Set<string>();
-  for (const [, name, prefix] of library.matchAll(/const (\w+) = scopedMsg\("([a-z.]+)"\)/g)) {
-    for (const [, suffix] of library.matchAll(new RegExp(`${name}\\("([^"\\n]+)"`, "g"))) {
-      const key = `${prefix}.${suffix}`;
-      assert.ok(key in engine || key in en, `scoped writer names a known key: ${key}`);
-      scoped.add(key);
-    }
-  }
+  const sources = [...readdirSync(new URL("../lib/", import.meta.url)).filter(name => name.endsWith(".ts")).map(name => `../lib/${name}`), ...readdirSync(new URL("../lib/engine/", import.meta.url)).map(name => `../lib/engine/${name}`)].map(path => readFileSync(new URL(path, import.meta.url), "utf8"));
+  const library = sources.join("\n");
+  const scoped = new Set(sources.flatMap(source => scopedMessageKeys(source, [...Object.keys(engine), ...Object.keys(en)])));
   assert.deepEqual(Object.keys(engine).filter(key => !scoped.has(key) && !library.includes(`"${key}"`) && !library.includes(`engine.${key.split(".")[1]}.\${`)), [], "an engine key nothing writes");
 });
 

@@ -1,5 +1,7 @@
 import { SECTOR_ALERT_AT, attacks, availableIn, commandEvents, getHypothesisStanding, getMapActionEffect, getSectorAlert, sectorSystems, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, setPieceById, sourceSeesReading, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
-import { lit, msg, withForm, type Message } from "./i18n/message.ts";
+import { lit, scopedMsg, withForm, type Message } from "./i18n/message.ts";
+
+const botMsg = scopedMsg("engine.bot");
 
 export type BotAction =
   | { type: "decision"; choice: DecisionChoice; reason: Message }
@@ -24,7 +26,7 @@ function chooseDecision(game: Game): BotAction {
   return {
     type: "decision",
     choice,
-    reason: msg("engine.bot.decision", { impact: game.impact, continuity: game.continuity, count: game.revealed.length }),
+    reason: botMsg("decision", { impact: game.impact, continuity: game.continuity, count: game.revealed.length }),
   };
 }
 
@@ -35,7 +37,7 @@ function chooseCommand(game: Game): BotAction {
     return option.quality * 4 - Math.max(0, option.impact) - Math.max(0, -option.continuity) * 2 - option.tempo * 3;
   };
   const choice = utility("a") >= utility("b") ? "a" : "b";
-  return { type: "command", choice, reason: msg("engine.bot.command", { choice: lit(event[choice].title, "lower") }) };
+  return { type: "command", choice, reason: botMsg("command", { choice: lit(event[choice].title, "lower") }) };
 }
 
 function chooseSetPiece(game: Game): BotAction {
@@ -51,7 +53,7 @@ function chooseSetPiece(game: Game): BotAction {
   // The graduated measure is often the best available trade, so it is weighed on
   // the same terms as the two extremes rather than treated as a tie-breaker.
   const choice = (["a", "c", "b"] as const).reduce((best, item) => utility(item) > utility(best) ? item : best);
-  return { type: "set-piece", choice, reason: msg("engine.bot.setPiece", { choice: lit(event[choice].title, "lower") }) };
+  return { type: "set-piece", choice, reason: botMsg("setPiece", { choice: lit(event[choice].title, "lower") }) };
 }
 
 function chooseResponse(game: Game): BotAction {
@@ -66,7 +68,7 @@ function chooseResponse(game: Game): BotAction {
     score: option.score + riskValue[option.residual as keyof typeof riskValue] + confidenceValue[option.confidence as keyof typeof confidenceValue]
       - disruptionCost[option.disruption as keyof typeof disruptionCost] * continuityWeight,
   })).sort((a, b) => b.score - a.score || a.option.id.localeCompare(b.option.id));
-  return { type: "response", choice: ranked[0].option.id, reason: msg(phase === "containment" ? "engine.bot.containment" : phase === "assurance" ? "engine.bot.assurance" : "engine.bot.recovery", { option: lit(ranked[0].option.title, "lower") }) };
+  return { type: "response", choice: ranked[0].option.id, reason: botMsg(phase === "containment" ? "containment" : phase === "assurance" ? "assurance" : "recovery", { option: lit(ranked[0].option.title, "lower") }) };
 }
 
 // The operator starts from an assumption — the chain continues on the route its
@@ -108,7 +110,7 @@ function nextCorrelation(game: Game): BotAction | null {
         type: "correlate",
         evidence: [first.id, second.id],
         assessment: causal ? "causal" : "coincidental",
-        reason: msg("engine.bot.correlate", { first: withForm(first.title, "lower"), second: withForm(second.title, "lower") }),
+        reason: botMsg("correlate", { first: withForm(first.title, "lower"), second: withForm(second.title, "lower") }),
       };
     }
   }
@@ -157,7 +159,7 @@ function choosePlan(game: Game): ProcedurePlan {
 }
 
 export function chooseBotAction(game: Game): BotAction {
-  if (["won", "lost", "exercise"].includes(game.status)) return { type: "complete", reason: msg("engine.bot.complete") };
+  if (["won", "lost", "exercise"].includes(game.status)) return { type: "complete", reason: botMsg("complete") };
   if (game.pendingDecision) return chooseDecision(game);
   if (game.pendingCommand) return chooseCommand(game);
   if (game.pendingSetPiece) return chooseSetPiece(game);
@@ -165,12 +167,12 @@ export function chooseBotAction(game: Game): BotAction {
 
   const hypothesis = visibleHypothesis(game);
   if (game.hypothesis !== hypothesis) {
-    return { type: "hypothesis", hypothesis, reason: msg("engine.bot.hypothesis", { hypothesis: lit(hypotheses.find(item => item.id === hypothesis)!.title, "lower") }) };
+    return { type: "hypothesis", hypothesis, reason: botMsg("hypothesis", { hypothesis: lit(hypotheses.find(item => item.id === hypothesis)!.title, "lower") }) };
   }
 
   const objectiveRead = getObjectiveRead(game);
   if (!game.caseTheory && objectiveRead.confidence !== "LOW") {
-    return { type: "case-theory", objective: game.objective, reason: msg("engine.bot.caseTheory", { objective: withForm(objectiveRead.title, "lower") }) };
+    return { type: "case-theory", objective: game.objective, reason: botMsg("caseTheory", { objective: withForm(objectiveRead.title, "lower") }) };
   }
 
   const correlation = nextCorrelation(game);
@@ -181,23 +183,23 @@ export function chooseBotAction(game: Game): BotAction {
   if (getSectorAlert(game) && game.mapActionsRemaining > 0) {
     const topology = infrastructureTopologies[game.scenario];
     const node = topology.nodes.find(item => game.nodePosture[item.id] === "normal" && getMapActionEffect(game, item.id, "monitor").sector > 0);
-    if (node) return { type: "map", nodeId: node.id, action: "monitor", reason: msg("engine.bot.monitorSector", { node: lit(node.label, "lower") }) };
+    if (node) return { type: "map", nodeId: node.id, action: "monitor", reason: botMsg("monitorSector", { node: lit(node.label, "lower") }) };
   }
 
   const monitorBudget = Math.min(2, Math.floor(game.turns.length / 2));
   if (game.mapHistory.length < monitorBudget && game.mapActionsRemaining > 0) {
     const topology = infrastructureTopologies[game.scenario];
     const node = topology.nodes.find(item => game.nodePosture[item.id] === "normal");
-    if (node) return { type: "map", nodeId: node.id, action: "monitor", reason: msg("engine.bot.monitor", { node: lit(node.label, "lower") }) };
+    if (node) return { type: "map", nodeId: node.id, action: "monitor", reason: botMsg("monitor", { node: lit(node.label, "lower") }) };
   }
 
   const procedure = rankProcedure(game);
-  if (!procedure) return { type: "complete", reason: msg("engine.bot.noProcedure") };
+  if (!procedure) return { type: "complete", reason: botMsg("noProcedure") };
   const topology = infrastructureTopologies[game.scenario];
   const focus = topology.nodes.find(node => node.id === game.focusedNode);
   if (!focus?.procedures.includes(procedure.id)) {
     const node = topology.nodes.find(item => item.procedures.includes(procedure.id) && game.nodePosture[item.id] !== "isolated");
-    if (node) return { type: "focus", nodeId: node.id, reason: msg("engine.bot.focus", { node: lit(node.label, "lower"), procedure: lit(procedure.title, "lower") }) };
+    if (node) return { type: "focus", nodeId: node.id, reason: botMsg("focus", { node: lit(node.label, "lower"), procedure: lit(procedure.title, "lower") }) };
   }
-  return { type: "procedure", procedure: procedure.id, plan: choosePlan(game), reason: msg("engine.bot.procedure", { procedure: lit(procedure.title, "lower") }) };
+  return { type: "procedure", procedure: procedure.id, plan: choosePlan(game), reason: botMsg("procedure", { procedure: lit(procedure.title, "lower") }) };
 }

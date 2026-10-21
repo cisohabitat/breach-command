@@ -1,7 +1,7 @@
 import { SPECIALIST_EXHAUSTED_AT } from "./command-systems.ts";
 import type { Game } from "./engine/types.ts";
 import { registerContent } from "./i18n/content/registry.ts";
-import { lit, msg, type Message } from "./i18n/message.ts";
+import { lit, msg, scopedMsg, type Message } from "./i18n/message.ts";
 import { parseSaveJson } from "./safe-json.ts";
 
 export const CAMPAIGN_KEY = "breach-command.campaign";
@@ -169,24 +169,26 @@ export function nextCase(state: CampaignState, cases = 10) {
 
 // What one operation did to the campaign, in words, for the review. Trust and
 // readiness were shown as totals with no change and no reason.
+const changeMsg = scopedMsg("engine.campaign");
+
 export function campaignChanges(before: CampaignState, after: CampaignState, game: Game, score: number): Message[] {
   // The sign is a figure's, not a word: "+5", "−3", "±0".
   const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : "±"}${Math.abs(value)}`;
   const lines: Message[] = [];
   const trust = { change: signed(after.leadershipTrust - before.leadershipTrust), now: after.leadershipTrust, score };
-  lines.push(game.status === "won" ? msg("engine.campaign.trustWon", trust) : game.status === "exercise" ? msg("engine.campaign.trustDrill", trust) : msg("engine.campaign.trustLost", trust));
+  lines.push(game.status === "won" ? changeMsg("trustWon", trust) : game.status === "exercise" ? changeMsg("trustDrill", trust) : changeMsg("trustLost", trust));
   const readiness = { change: signed(after.readiness - before.readiness), now: after.readiness };
-  lines.push(game.status === "won" ? msg("engine.campaign.readinessWon", readiness) : game.status === "exercise" ? msg("engine.campaign.readinessDrill", readiness) : msg("engine.campaign.readinessLost", readiness));
+  lines.push(game.status === "won" ? changeMsg("readinessWon", readiness) : game.status === "exercise" ? changeMsg("readinessDrill", readiness) : changeMsg("readinessLost", readiness));
   const threads = after.unresolvedThreads - before.unresolvedThreads;
-  if (threads) lines.push(msg(game.status === "lost" ? "engine.campaign.unresolvedAccess" : threads < 0 ? "engine.campaign.accessReduced" : "engine.campaign.accessRemaining", { change: signed(threads), now: after.unresolvedThreads }));
+  if (threads) lines.push(changeMsg(game.status === "lost" ? "unresolvedAccess" : threads < 0 ? "accessReduced" : "accessRemaining", { change: signed(threads), now: after.unresolvedThreads }));
   const xp = after.xp - before.xp;
-  if (xp) lines.push(msg("engine.campaign.experience", { xp, now: after.xp, score }));
-  for (const capability of unlockedCapabilities(after.xp)) if (capability.unlocked && !unlockedCapabilities(before.xp).find(item => item.at === capability.at)!.unlocked) lines.push(msg("engine.campaign.unlocked", { title: lit(capability.title), detail: lit(capability.detail) }));
+  if (xp) lines.push(changeMsg("experience", { xp, now: after.xp, score }));
+  for (const capability of unlockedCapabilities(after.xp)) if (capability.unlocked && !unlockedCapabilities(before.xp).find(item => item.at === capability.at)!.unlocked) lines.push(changeMsg("unlocked", { title: lit(capability.title), detail: lit(capability.detail) }));
   const active = ladderRungs.filter(rung => (after.ladder?.[String(game.scenario)] ?? []).includes(rung.id));
   const climbed = active.filter(rung => !(before.ladder?.[String(game.scenario)] ?? []).includes(rung.id));
-  for (const rung of climbed) lines.push(msg("engine.campaign.ladder", { rung: lit(rung.title, "lowerFirst"), climbed: active.length, rungs: ladderRungs.length }));
-  if (after.completed.length > before.completed.length) lines.push(msg("engine.campaign.caseCleared", { cleared: after.completed.length }));
-  else if (game.status === "lost") lines.push(msg("engine.campaign.caseStaysOpen"));
+  for (const rung of climbed) lines.push(changeMsg("ladder", { rung: lit(rung.title, "lowerFirst"), climbed: active.length, rungs: ladderRungs.length }));
+  if (after.completed.length > before.completed.length) lines.push(changeMsg("caseCleared", { cleared: after.completed.length }));
+  else if (game.status === "lost") lines.push(changeMsg("caseStaysOpen"));
   return lines;
 }
 

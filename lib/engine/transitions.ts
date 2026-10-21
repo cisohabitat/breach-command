@@ -7,9 +7,13 @@ import { objectiveTheory } from "../phase9.ts";
 import { CHALLENGE_VERSION } from "../challenge.ts";
 import { commandEvents, decisionChoices, decisionLanguageFor, decisionTitles, injects, scenarioProfiles } from "./content.ts";
 import { type CarriedSource, type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice, type TurnInject } from "./types.ts";
-import { msg, type Message } from "../i18n/message.ts";
+import { scopedMsg, type Message } from "../i18n/message.ts";
 import { words } from "./words.ts";
 import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, responseFit, decisionRollShift, ownSourceBonus, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
+
+const transitionMsg = scopedMsg("engine");
+const rationaleMsg = scopedMsg("engine.rationale");
+const correlationMsg = scopedMsg("engine.correlation");
 
 // Where the bonus or penalty waiting for the next roll came from, so the roll
 // can name it: "Since your last roll +2" covered a monitored node, an inject and
@@ -55,7 +59,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   // an act does not meet the same beat twice. A reproducible operation ignores
   // it: the same code has to play the same incident on any device.
   const remembered = setup.seed == null ? { commands: setup.recentCommands ?? [], injects: setup.recentInjects ?? [], crises: setup.recentCrises ?? [] } : { commands: [], injects: [], crises: [] };
-  const variant = setup.variant ?? { id: `${scenario}-0`, title: msg("engine.variant.standardTitle"), briefing: msg("engine.variant.standardBriefing"), modifier: msg("engine.variant.standardModifier"), impact: 0, continuity: 0, objective: 0 };
+  const variant = setup.variant ?? { id: `${scenario}-0`, title: transitionMsg("variant.standardTitle"), briefing: transitionMsg("variant.standardBriefing"), modifier: transitionMsg("variant.standardModifier"), impact: 0, continuity: 0, objective: 0 };
   const campaignRoute = setup.campaignRoute ?? "common-ground";
   const routeImpact = mode === "campaign" && campaignRoute === "breakwater" ? -4 : 0;
   const routeContinuity = mode !== "campaign" ? 0 : campaignRoute === "breakwater" ? -4 : campaignRoute === "common-ground" ? 3 : 0;
@@ -148,8 +152,8 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
   if (action === "monitor" && game.nodePosture[nodeId] === "monitored") throw new Error("This node is already monitored.");
   const change = getMapActionEffect(game, nodeId, action);
   const effect = action === "monitor"
-    ? msg("engine.map.monitor", { node: words.node(game.scenario, nodeId) })
-    : msg("engine.map.isolate", { node: words.node(game.scenario, nodeId), rule: words.criticalRule(game.scenario) });
+    ? transitionMsg("map.monitor", { node: words.node(game.scenario, nodeId) })
+    : transitionMsg("map.isolate", { node: words.node(game.scenario, nodeId), rule: words.criticalRule(game.scenario) });
   const g: Game = {
     ...game,
     focusedNode: nodeId,
@@ -157,7 +161,7 @@ export function resolveMapAction(game: Game, nodeId: string, action: MapAction):
     mapActionsRemaining: game.mapActionsRemaining - 1,
     mapHistory: [...game.mapHistory, { node: nodeId, action, turn: game.turns.length, effect }],
     nextModifier: carryModifier(game.nextModifier, change.modifier),
-    nextModifierSources: carriedSource(game.nextModifier, game.nextModifierSources, carryModifier(game.nextModifier, change.modifier), msg("engine.source.monitored", { node: words.node(game.scenario, nodeId) }), change.modifier),
+    nextModifierSources: carriedSource(game.nextModifier, game.nextModifierSources, carryModifier(game.nextModifier, change.modifier), transitionMsg("source.monitored", { node: words.node(game.scenario, nodeId) }), change.modifier),
     impact: clamp(game.impact + change.impact),
     continuity: clamp(game.continuity + change.continuity),
     sectorHealth: clamp(game.sectorHealth + change.sector),
@@ -244,10 +248,10 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // saying "Identity audit at the payment gateway" for a mailbox relay reads as
     // the game asserting a location it has not established. Lead with the finding,
     // then attribute the source and the focus for what they are.
-    narrative = msg("engine.turn.found", { evidence: words.attack(match, "evidence"), procedure: words.procedure(procedure, "inSentence"), node: words.node(g.scenario, focusNode.id) });
+    narrative = transitionMsg("turn.found", { evidence: words.attack(match, "evidence"), procedure: words.procedure(procedure, "inSentence"), node: words.node(g.scenario, focusNode.id) });
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (success) {
-    narrative = msg("engine.turn.noStage");
+    narrative = transitionMsg("turn.noStage");
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   } else if (planningBonus > 0) {
     // A sound action that the dice refused. The route under test was the one
@@ -266,13 +270,13 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
     // Rapid coordination absorbs the first unlucky action of the operation. The
     // team reorients on its own time rather than the adversary's.
     g.graceRemaining -= 1;
-    narrative = msg("engine.turn.graceAbsorbed");
+    narrative = transitionMsg("turn.graceAbsorbed");
   } else {
     narrative = FAILED_CHECK;
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
   }
   if (success) {
-    const evidenceTitle = revealed ? msg("engine.evidence.stageTitle", { attack: words.attack(revealed, "title") }) : msg("engine.evidence.emptyTitle", { source: words.procedure(procedure) });
+    const evidenceTitle = revealed ? transitionMsg("evidence.stageTitle", { attack: words.attack(revealed, "title") }) : transitionMsg("evidence.emptyTitle", { source: words.procedure(procedure) });
     g.evidence.push({
       id: `E${number}-${procedure}`,
       turn: number,
@@ -281,7 +285,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       system: words.node(g.scenario, focusNode.id),
       confidence: revealed || plan.intensity === "exhaustive" ? "HIGH" : "MODERATE",
       supports: revealed,
-      detail: revealed ? words.attack(revealed, "evidence") : msg("engine.evidence.noStageDetail", { node: words.node(g.scenario, focusNode.id) }),
+      detail: revealed ? words.attack(revealed, "evidence") : transitionMsg("evidence.noStageDetail", { node: words.node(g.scenario, focusNode.id) }),
     });
   }
 
@@ -291,7 +295,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   let inject: TurnInject | null = null;
   let injectReveal: string | null = null;
   let exerciseEnd = false;
-  const reason = raw === 1 ? msg("engine.inject.natural1") : raw === 20 ? msg("engine.inject.natural20") : g.failures >= 3 ? msg("engine.inject.threeFailed") : null;
+  const reason = raw === 1 ? transitionMsg("inject.natural1") : raw === 20 ? transitionMsg("inject.natural20") : g.failures >= 3 ? transitionMsg("inject.threeFailed") : null;
   // A natural 20 may also land the authorised stand-down, which is neutral: it
   // is a conclusion the investigation has earned, not a punishment. Excluding it
   // here is what dropped the exercise ending from six per cent of operations to
@@ -319,14 +323,14 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       const before = g.nextModifier;
       const shift = card.effect === "bonus" ? 2 : -2;
       g.nextModifier = carryModifier(before, shift);
-      g.nextModifierSources = carriedSource(before, g.nextModifierSources, g.nextModifier, msg("engine.source.inject", { inject: words.inject(card.id) }), shift);
+      g.nextModifierSources = carriedSource(before, g.nextModifierSources, g.nextModifier, transitionMsg("source.inject", { inject: words.inject(card.id) }), shift);
       if (card.effect === "penalty") impactChange += 6;
     }
     if (card.effect === "adjust") {
       if (card.shift) {
         const before = g.nextModifier;
         g.nextModifier = carryModifier(before, card.shift);
-        g.nextModifierSources = carriedSource(before, g.nextModifierSources, g.nextModifier, msg("engine.source.inject", { inject: words.inject(card.id) }), card.shift);
+        g.nextModifierSources = carriedSource(before, g.nextModifierSources, g.nextModifier, transitionMsg("source.inject", { inject: words.inject(card.id) }), card.shift);
       }
       impactChange += card.impact ?? 0;
       continuityChange += card.continuity ?? 0;
@@ -338,16 +342,16 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       const cooling = Object.keys(g.lastUsed).filter(id => g.lastUsed[id] + cooldownWindow(g) > number + 1).sort((a, b) => g.lastUsed[a] - g.lastUsed[b]);
       if (cooling.length) {
         delete g.lastUsed[cooling[0]];
-        inject.effectLabel = msg("engine.inject.availableAgain", { procedure: words.procedure(cooling[0]) });
-      } else inject.effectLabel = msg("engine.inject.noneCooling");
+        inject.effectLabel = transitionMsg("inject.availableAgain", { procedure: words.procedure(cooling[0]) });
+      } else inject.effectLabel = transitionMsg("inject.noneCooling");
     }
     if (card.effect === "reveal") {
       injectReveal = g.chain.find(id => !g.revealed.includes(id)) ?? null;
       if (injectReveal) {
         g.revealed.push(injectReveal);
         g.pendingDecision = g.pendingDecision ?? injectReveal;
-        inject.effectLabel = msg("engine.inject.additionalDiscovery", { attack: words.attack(injectReveal, "title") });
-      } else inject.effectLabel = msg("engine.inject.allRevealed");
+        inject.effectLabel = transitionMsg("inject.additionalDiscovery", { attack: words.attack(injectReveal, "title") });
+      } else inject.effectLabel = transitionMsg("inject.allRevealed");
     }
     if (injectReveal) {
       // A stage revealed by the partner used to leave nothing in the evidence
@@ -357,8 +361,8 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       g.evidence.push({
         id: `E${number}-partner`,
         turn: number,
-        title: msg("engine.evidence.stageTitle", { attack: words.attack(injectReveal, "title") }),
-        source: msg("engine.evidence.partner"),
+        title: transitionMsg("evidence.stageTitle", { attack: words.attack(injectReveal, "title") }),
+        source: transitionMsg("evidence.partner"),
         system: words.node(g.scenario, focusNode.id),
         confidence: "HIGH",
         supports: injectReveal,
@@ -374,11 +378,11 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
         // The chain was completed on this same turn, so there is nothing left to
         // stand down: the response goes ahead and the card only eases pressure.
         impactChange -= 8;
-        inject.effectLabel = msg("engine.inject.authorisedChainDone");
+        inject.effectLabel = transitionMsg("inject.authorisedChainDone");
       } else if (g.revealed.length >= 2) exerciseEnd = true;
       else {
         impactChange -= 8;
-        inject.effectLabel = msg("engine.inject.authorisedContinues");
+        inject.effectLabel = transitionMsg("inject.authorisedContinues");
       }
     }
   }
@@ -403,7 +407,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       const adaptation = target !== null ? selectAdaptation(g, target, g.chain[target]) : null;
       if (adaptation && target !== null) {
         g.chain[target] = adaptation.id;
-        adversaryEvent = msg("engine.adversary.withReaction", { event: adversaryEvent, reaction: words.reaction(g.scenario) });
+        adversaryEvent = transitionMsg("adversary.withReaction", { event: adversaryEvent, reaction: words.reaction(g.scenario) });
         g.adversaryEvent = adversaryEvent;
       }
     }
@@ -480,17 +484,17 @@ export function selectAdaptation(game: Game, stage: number, current: string) {
   const chosen = ranked[0].id;
   return {
     id: chosen,
-    reason: msg("engine.adaptation.reason", { profile: words.profile(game.adversaryProfile), attack: words.attack(chosen, "title") }),
+    reason: transitionMsg("adaptation.reason", { profile: words.profile(game.adversaryProfile), attack: words.attack(chosen, "title") }),
   };
 }
 
 export function decisionRationale(choice: DecisionChoice, highPressure: boolean, bindingSector: boolean, bindingContinuity: boolean): Message {
   switch (choice) {
-    case "observe": return msg(highPressure ? "engine.rationale.observeHigh" : "engine.rationale.observeLow");
-    case "act": return msg(highPressure ? "engine.rationale.actHigh" : "engine.rationale.actLow");
-    case "attribute": return msg(highPressure ? "engine.rationale.attributeHigh" : "engine.rationale.attributeLow");
-    case "contain": return msg(bindingSector ? "engine.rationale.containSector" : highPressure ? "engine.rationale.containHigh" : "engine.rationale.containLow");
-    case "notify": return msg(bindingContinuity ? "engine.rationale.notifyContinuity" : highPressure ? "engine.rationale.notifyHigh" : "engine.rationale.notifyLow");
+    case "observe": return rationaleMsg(highPressure ? "observeHigh" : "observeLow");
+    case "act": return rationaleMsg(highPressure ? "actHigh" : "actLow");
+    case "attribute": return rationaleMsg(highPressure ? "attributeHigh" : "attributeLow");
+    case "contain": return rationaleMsg(bindingSector ? "containSector" : highPressure ? "containHigh" : "containLow");
+    case "notify": return rationaleMsg(bindingContinuity ? "notifyContinuity" : highPressure ? "notifyHigh" : "notifyLow");
   }
 }
 
@@ -568,7 +572,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
       g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
       break;
   }
-  g.nextModifierSources = carriedSource(game.nextModifier, game.nextModifierSources, g.nextModifier, msg("engine.source.decision", { title: words.decision(g.scenario, attack.stage, decisionTitles[choice]) }), decisionRollShift[choice]);
+  g.nextModifierSources = carriedSource(game.nextModifier, game.nextModifierSources, g.nextModifier, transitionMsg("source.decision", { title: words.decision(g.scenario, attack.stage, decisionTitles[choice]) }), decisionRollShift[choice]);
 
   if (choice === "act") {
     const nextStage = Math.min(3, attack.stage + 1);
@@ -616,7 +620,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
 // The road not taken, named in the sector's own wording of it.
 export function decisionCounterfactual(choice: DecisionChoice, scenario: number, stage: number): Message {
   const alternative = { observe: "actTitle", act: "observeTitle", attribute: "observeTitle", contain: "actTitle", notify: "attributeTitle" } as const;
-  return msg(`engine.counterfactual.${choice}`, { title: words.decision(scenario, stage, alternative[choice]) });
+  return transitionMsg(`counterfactual.${choice}`, { title: words.decision(scenario, stage, alternative[choice]) });
 }
 
 export function resolveCommand(game: Game, choice: "a" | "b"): Game {
@@ -626,7 +630,7 @@ export function resolveCommand(game: Game, choice: "a" | "b"): Game {
   const option = event[choice];
   const g: Game = { ...game, commandHistory: [...game.commandHistory] };
   g.nextModifier = carryModifier(g.nextModifier, option.modifier);
-  g.nextModifierSources = carriedSource(game.nextModifier, game.nextModifierSources, g.nextModifier, msg("engine.source.command", { title: words.command(eventId, choice, "title") }), option.modifier);
+  g.nextModifierSources = carriedSource(game.nextModifier, game.nextModifierSources, g.nextModifier, transitionMsg("source.command", { title: words.command(eventId, choice, "title") }), option.modifier);
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
   g.adversaryTempo = clamp(g.adversaryTempo + option.tempo, 0, 3);
@@ -666,26 +670,26 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const theoryAligned = correct && valid && game.caseTheory === game.objective;
   // Only a valid pair has a basis, and only a valid pair reads one out.
   const basis: Message = firstAttack && secondAttack && Math.abs(firstAttack.stage - secondAttack.stage) <= 1
-    ? msg("engine.correlation.basisConsecutive", { first: words.stage(Math.min(firstAttack.stage, secondAttack.stage), "inSentence"), second: words.stage(Math.max(firstAttack.stage, secondAttack.stage), "inSentence") })
-    : msg("engine.correlation.basisRoute", { route: words.route(firstAttack ? attackVector(firstAttack.id) : "identity", "lower") });
+    ? correlationMsg("basisConsecutive", { first: words.stage(Math.min(firstAttack.stage, secondAttack.stage), "inSentence"), second: words.stage(Math.max(firstAttack.stage, secondAttack.stage), "inSentence") })
+    : correlationMsg("basisRoute", { route: words.route(firstAttack ? attackVector(firstAttack.id) : "identity", "lower") });
   const sameSystem = JSON.stringify(first.system) === JSON.stringify(second.system);
   const finding: Message = correct
     ? valid
-      ? msg("engine.correlation.credible", { first: first.title, second: second.title, basis })
+      ? correlationMsg("credible", { first: first.title, second: second.title, basis })
       : sameSystem
-        ? msg("engine.correlation.overlapSameSystem", { first: first.title, second: second.title, system: first.system })
-        : msg("engine.correlation.overlapSystems", { first: first.title, second: second.title, firstSystem: first.system, secondSystem: second.system })
+        ? correlationMsg("overlapSameSystem", { first: first.title, second: second.title, system: first.system })
+        : correlationMsg("overlapSystems", { first: first.title, second: second.title, firstSystem: first.system, secondSystem: second.system })
     : valid
-      ? msg("engine.correlation.wronglyCoincidental", { basis })
+      ? correlationMsg("wronglyCoincidental", { basis })
       : firstAttack && secondAttack
         // A player judges on the story ("the stolen account led to the data
         // theft"), and was told they had judged on timing. Say what rules it out.
-        ? msg("engine.correlation.wronglyCausal", { first: words.stage(firstAttack.stage, "inSentence"), second: words.stage(secondAttack.stage, "inSentence") })
-        : msg("engine.correlation.causalNoStage");
+        ? correlationMsg("wronglyCausal", { first: words.stage(firstAttack.stage, "inSentence"), second: words.stage(secondAttack.stage, "inSentence") })
+        : correlationMsg("causalNoStage");
   const g: Game = {
     ...game,
     nextModifier: correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
-    nextModifierSources: carriedSource(game.nextModifier, game.nextModifierSources, correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, msg("engine.source.comparison"), correct ? (theoryAligned ? 3 : 2) : 0),
+    nextModifierSources: carriedSource(game.nextModifier, game.nextModifierSources, correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, transitionMsg("source.comparison"), correct ? (theoryAligned ? 3 : 2) : 0),
     impact: clamp(game.impact + (correct ? (theoryAligned ? -5 : -3) : 4)),
     objectiveProgress: clamp(game.objectiveProgress + (correct ? (theoryAligned ? -10 : -6) : 3)),
     correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding }],
