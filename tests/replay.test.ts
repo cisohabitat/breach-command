@@ -90,9 +90,11 @@ test("the mastery ladder records only what a won operation earned, and survives 
   assert.ok(rungsEarned({ ...base, specialistFatigue: 5 }).includes("tired"));
   assert.equal(rungsEarned({ ...base, turns: base.turns.slice(0, 5) }).includes("swift"), true, "five turns of an eleven-turn window is under half");
   assert.equal(rungsEarned({ ...base, turns: [...base.turns, ...base.turns, ...base.turns].slice(0, 6) }).includes("swift"), false);
-  const steady = { ...base, hypothesisHistory: [{ turn: 1, id: "identity" as const }] };
-  assert.ok(rungsEarned(steady).includes("steady"));
-  assert.ok(!rungsEarned({ ...steady, hypothesisHistory: [{ turn: 1, id: "identity" as const }, { turn: 2, id: "cloud" as const }] }).includes("steady"));
+  const accurate = { ...base, turns: base.turns.map(turn => ({ ...turn, hypothesis: "identity" as const, hypothesisMatched: true })), hypothesisHistory: [{ turn: 1, id: "identity" as const }, { turn: 2, id: "cloud" as const }] };
+  assert.ok(accurate.turns.length > 0);
+  assert.ok(rungsEarned(accurate).includes("accurate"), "revisions do not disqualify accurate readings");
+  assert.ok(!rungsEarned({ ...accurate, turns: accurate.turns.map((turn, index) => index ? turn : { ...turn, hypothesisMatched: false }) }).includes("accurate"), "holding a wrong reading earns no accuracy award");
+  assert.ok(!rungsEarned({ ...accurate, turns: [] }).includes("accurate"));
 
   let campaign = recordCampaignResult(defaultCampaign, { ...base, difficulty: "crisis" }, 80);
   campaign = recordCampaignResult(campaign, { ...base, mode: "expert", scenario: 0 }, 80);
@@ -102,6 +104,11 @@ test("the mastery ladder records only what a won operation earned, and survives 
   assert.deepEqual(parseCampaign(JSON.stringify({ ...campaign, ladder: { "0": ["crisis", "flying"], x: ["expert"] } })).ladder, { "0": ["crisis"] }, "an unknown rung or case is dropped");
   assert.deepEqual(parseCampaign(JSON.stringify({ completed: [] })).ladder, {}, "an older campaign has an empty ladder");
   assert.equal(ladderRungs.length, 5);
+  const legacy = parseCampaign(JSON.stringify({ ...defaultCampaign, ladder: { "0": ["steady", "crisis"] } }));
+  const updated = recordCampaignResult(legacy, accurate, 80);
+  assert.ok(updated.ladder["0"].includes("steady"), "retired awards remain stored under their original meaning");
+  assert.ok(updated.ladder["0"].includes("accurate"), "the new award is earned separately");
+  assert.ok(!ladderRungs.some(rung => rung.id === "steady"), "the retired challenge is no longer offered");
 });
 
 test("the personal record keeps valid entries, shows the trend and exports as CSV", () => {

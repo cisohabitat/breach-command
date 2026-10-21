@@ -4,6 +4,7 @@ import { catalogue } from "../catalogue.ts";
 export const briefingScreenMessages = catalogue({
   briefingScreen: {
     "soloTabletop": "A solo incident-response tabletop",
+    "firstGoal": "First goal: establish the four-stage chain and complete the response.",
     "youHaveThe": "You have the incident.",
     "tagline": "Ten organisations. One pattern behind them. Your call.",
     "anIntruderHas": "An intruder has worked through four stages somewhere in the organisation. Each turn you state what you think happened, test it against one evidence source and decide what to do with what you find. Once the whole chain is known, you lead the response.",

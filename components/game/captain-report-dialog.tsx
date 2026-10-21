@@ -106,7 +106,6 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               target?.scrollIntoView({ block: "nearest", behavior: "auto" });
             }}>{t("captainReportDialog.responseIndexEntry", { letter: "ABCDEFG"[index], title: option.title })}</a></li>)}</ol>
           </nav>}
-          {!report.success && <p className="report-inconclusive" role="status">{t("captainReportDialog.failedSettlesNothing")}</p>}
           {canReviewSources && <section className="report-available-sources" aria-label={t("captainReportDialog.availableSources")}>
             <h3>{t("captainReportDialog.availableSources")}</h3>
             {availableSources.length ? <><p>{t("captainReportDialog.sourcesCanTest")}</p><ul>{availableSources.map(procedure => <li key={procedure.id}>{procedure.title}</li>)}</ul></> : <p>{t("captainReportDialog.sourcesUnavailable")}</p>}
@@ -138,19 +137,21 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
               ))}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
             <section className="report-summary" aria-label={t("captainReportDialog.procedureResult")}>
-              <p className="report-narrative"><Glossed text={say(report.narrative)} /></p>
+              {report.success ? <p className="report-narrative"><Glossed text={say(report.narrative)} /></p> : <p className="report-narrative report-inconclusive" role="status">{t("captainReportDialog.failedSettlesNothing")}</p>}
               {!decision && report.success && game.evidence.filter(item => item.turn === report.number && !item.supports).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}
               {!decision && report.success && !report.revealed && !report.injectReveal && game.difficulty === "training" && game.mode !== "expert" && game.evidence[0]?.turn === report.number && <SignalGuide />}
+              <div className="turn-movement"><b>{t("captainReportDialog.thisTurn")}</b><EffectList items={[meterEffect(game, "impact", report.impactChange), meterEffect(game, "continuity", report.continuityChange), meterEffect(game, "sector", report.sectorChange), meterEffect(game, "objective", report.objectiveChange)]} /></div>
               {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
-              <div className="turn-movement"><b>{t("captainReportDialog.thisTurn")}</b><EffectList items={[meterEffect(game, "impact", report.impactChange), meterEffect(game, "continuity", report.continuityChange), meterEffect(game, "sector", report.sectorChange), meterEffect(game, "objective", report.objectiveChange)]} /><p>{report.revealed
+              <details key={report.number} className="report-collection-details">
+                <summary>{t("captainReportDialog.collectionDetails")}</summary>
+                {!report.success && <p className="report-context"><Glossed text={say(report.narrative)} /></p>}
+                <p>{report.revealed
                 ? t("captainReportDialog.findingTheStage")
                 : report.success
                   ? t("captainReportDialog.theCheckCompleted")
                   : report.planningBonus > 0
                     ? t("captainReportDialog.theCheckFailed2", { change: `${report.objectiveChange >= 0 ? "+" : "−"}${Math.abs(report.objectiveChange)}` })
-                    : t("captainReportDialog.theCheckFailed")}{injectImpact(report) ? t("captainReportDialog.theInjectBelow", { change: `${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))}` }) : ""}{report.adversaryEvent ? t("captainReportDialog.theSituationAlso") : ""}</p></div>
-              <details key={report.number} className="report-collection-details">
-                <summary>{t("captainReportDialog.collectionDetails")}</summary>
+                    : t("captainReportDialog.theCheckFailed")}{injectImpact(report) ? t("captainReportDialog.theInjectBelow", { change: `${injectImpact(report) > 0 ? "+" : "−"}${Math.abs(injectImpact(report))}` }) : ""}{report.adversaryEvent ? t("captainReportDialog.theSituationAlso") : ""}</p>
               <div className={`result-roll ${report.success ? "success" : "failure"}`}>
                 <span className="result-die">{report.raw}</span>
                 <div><span>{t("captainReportDialog.rolledOnThe", { raw: report.raw })}{report.modifier >= 0 ? "+" : "−"} {t("captainReportDialog.modifier2", { modifier: Math.abs(report.modifier), rollParts: rollParts(t, report, locale) })}</span><strong>{report.total} <span>{t("captainReportDialog.needed2", { threshold: config.threshold })}{report.success ? t("captainReportDialog.aSuccess") : t("captainReportDialog.aFailure")}</span></strong></div>

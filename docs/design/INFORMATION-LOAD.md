@@ -1,5 +1,13 @@
 # Information density and learning load
 
+0.10.2 keeps the failed-check evidence limit and actual meter changes visible,
+with the original failure narrative and pressure explanation under roll details.
+Successful finding narratives, voice captions and Listen remain visible. Uncleared
+cases lead with completing the chain and response; mastery follows afterward.
+The accuracy challenge permits revisions, and retired no-revision awards retain
+their original stored ID. Completed-response verdicts name the final service
+condition and recovery risk separately from the unchanged score and grade.
+
 0.10.0 keeps practice on its own route, entered from a relevant debrief suggestion
 or Settings. Each exercise shows one situation and one call, then its bounded
 feedback; the learning record follows in a closed fold rather than competing with the question.

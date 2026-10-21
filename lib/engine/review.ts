@@ -7,6 +7,7 @@ import { type BeginnerReview, type Game, type HypothesisLedgerRow, type ScoreBre
 import { clamp, hypothesisSources, procedureById, responseFit, responseOptionsFor } from "./rules.ts";
 import { countRevisions } from "./revisions.ts";
 import { getHypothesisStanding, getLossReason, getReadingOdds, readyToCorrelate, sourceSeesReading } from "./reads.ts";
+import { CONTINUITY_AT_RISK } from "../meter-thresholds.ts";
 const reviewMsg = scopedMsg("engine.review");
 
 // The full review is written for someone who already knows the trade. A first
@@ -275,10 +276,15 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
 
 export function getOutcome(game: Game) {
   const breakdown = getScoreBreakdown(game);
-  if (breakdown.total >= 82) return { grade: "A", title: reviewMsg("controlledRecovery"), detail: reviewMsg("youBalancedEvidence"), breakdown };
-  if (breakdown.total >= 68) return { grade: "B", title: reviewMsg("stableWithResidual"), detail: reviewMsg("theIncidentIs"), breakdown };
-  if (breakdown.total >= 52) return { grade: "C", title: reviewMsg("costlyStabilisation"), detail: reviewMsg("servicesAreRecovering"), breakdown };
-  return { grade: "D", title: reviewMsg("fragileRecovery"), detail: reviewMsg("theImmediateCrisis"), breakdown };
+  const grade = breakdown.total >= 82 ? "A" : breakdown.total >= 68 ? "B" : breakdown.total >= 52 ? "C" : "D";
+  const recovery = responseOptionsFor(game).recovery.find(option => option.id === game.responseChoices[2]);
+  if (game.status === "won" && recovery) {
+    const title = game.continuity <= CONTINUITY_AT_RISK ? reviewMsg("recoveryServiceAtRisk") : recovery.residual === "High" ? reviewMsg("recoveryResidualRisk") : reviewMsg("responseComplete");
+    return { grade, title, detail: reviewMsg("recoveryCondition", { continuity: game.continuity, sector: game.sectorHealth, residual: withForm(level(recovery.residual), "lower") }), breakdown };
+  }
+  const title = grade === "A" ? reviewMsg("controlledRecovery") : grade === "B" ? reviewMsg("stableWithResidual") : grade === "C" ? reviewMsg("costlyStabilisation") : reviewMsg("fragileRecovery");
+  const detail = grade === "A" ? reviewMsg("youBalancedEvidence") : grade === "B" ? reviewMsg("theIncidentIs") : grade === "C" ? reviewMsg("servicesAreRecovering") : reviewMsg("theImmediateCrisis");
+  return { grade, title, detail, breakdown };
 }
 
 // Each part of the score, with the rule that produced it in the player's own

@@ -96,6 +96,7 @@ test("backup campaigns reject damage before replacing progress while local migra
   const legacy = { completed: [0, 1], xp: 75, operations: 3 };
   assert.equal(isCampaignBackup(defaultCampaign), true);
   assert.equal(isCampaignBackup(legacy), true, "old backups can omit later fields");
+  assert.equal(isCampaignBackup({ ...legacy, ladder: { "0": ["steady", "accurate"] } }), true, "old and new awards survive backup validation");
   for (const damaged of [null, [], {}, { ...legacy, completed: "broken" }, { ...legacy, completed: [10] }, { ...legacy, completed: [0, 0] },
     { ...legacy, xp: "75" }, { ...legacy, operations: -1 }, { ...legacy, operations: 1.5 }, { ...legacy, readiness: null },
     { ...legacy, bestScores: { "0": 101 } }, { ...legacy, commandPosture: { act: "2" } }, { ...legacy, specialistFatigue: [] },
