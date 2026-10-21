@@ -4,8 +4,30 @@ import { PARKED_SESSION_KEY, SESSION_KEY, SESSION_VERSION, serialiseSession } fr
 import { CAMPAIGN_KEY, defaultCampaign } from "../../lib/campaign";
 import { encodeChallenge } from "../../lib/challenge";
 import { say } from "../../lib/i18n/message";
+import { openWithSave, responsePhaseGame } from "./fixtures";
 
 const PREFERENCES = "breach-command.preferences";
+
+test("Bot Commander replay neither changes campaign progress nor repeats the human rewards", async ({ page }) => {
+  test.setTimeout(90_000);
+  await openWithSave(page, responsePhaseGame(true), false, { sound: false, voice: false, music: false });
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
+  await page.getByRole("button", { name: "Open after-action review", exact: true }).click();
+  await expect(page.locator(".campaign-change")).toContainText("Experience +");
+  const before = await page.evaluate(key => localStorage.getItem(key), CAMPAIGN_KEY);
+  await page.getByRole("button", { name: "Replay with the Bot Commander", exact: true }).click();
+  await page.getByRole("button", { name: "Begin investigation", exact: true }).click();
+  await page.getByRole("button", { name: "Assume command", exact: true }).click();
+  // Let the visible-evidence operator finish a real replay, including the first
+  // roll ceremony. The suite's default is 30 seconds, so give this test its run.
+  await expect(page.locator(".resolution")).toBeVisible({ timeout: 75_000 });
+  const openReview = page.getByRole("button", { name: "Open after-action review", exact: true });
+  if (await openReview.isVisible()) await openReview.click();
+  await expect(page.locator(".debrief-dialog")).toBeVisible();
+  await expect(page.locator(".campaign-change")).toHaveCount(0);
+  expect(await page.evaluate(key => localStorage.getItem(key), CAMPAIGN_KEY)).toBe(before);
+});
 
 // Two effects run on mount: one reads the stored settings, one writes them. For
 // a long time the write went first and put the defaults straight over whatever

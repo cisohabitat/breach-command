@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.3, 21 October 2026
+
+- Mix seeded setup draws so all 256 attack-chain combinations are available in every scenario; advance challenge codes to BC10 and preserve older saved incidents without emitting misleading replay codes.
+- Add fatigue earned in neutral seeded operations to the campaign team before rest, rather than resetting existing fatigue.
+- Describe Common Ground’s actual starting service-integrity bonus.
+- Clear prior campaign rewards before Bot practice and distinguish losses, incomplete containment and closed access threads in campaign feedback.
+- Remeasure balance across 9,000 operations and record the new deterministic smoke sample without changing gameplay odds, scoring or balance tolerances.
+
 ## 0.10.2, 21 October 2026
 
 - Replace the no-revision mastery challenge with accurate recorded readings; retain earlier awards in saved campaigns and backups.

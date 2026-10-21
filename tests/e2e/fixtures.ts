@@ -24,9 +24,14 @@ export function pendingDecisionGame(): Game {
 
 // Seeded, like the rest: unseeded, each run drew a different incident, and the
 // review's score moved between 89 and 91 from one screenshot to the next.
-export function responsePhaseGame(): Game {
+export function responsePhaseGame(reproducible = false): Game {
   for (let attempt = 0; attempt < 50; attempt++) {
-    let game = newGame(0, "training", seededChallengeRandom(attempt + 1));
+    const seed = attempt + 1;
+    // Keep the captured, unseeded visual setup stable across challenge versions.
+    // Replay tests opt into today's generator and real challenge metadata.
+    let state = seed;
+    const capturedRandom = (max: number) => { state = (state * 1664525 + 1013904223) >>> 0; return state % max; };
+    let game = newGame(0, "training", reproducible ? seededChallengeRandom(seed) : capturedRandom, reproducible ? { mode: "daily", seed } : {});
     for (let guard = 0; guard < 60 && game.status === "playing"; guard++) {
       if (game.pendingDecision) { game = resolveDecision(game, "act"); continue; }
       if (game.pendingCommand) { game = resolveCommand(game, "a"); continue; }

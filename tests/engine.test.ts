@@ -170,7 +170,7 @@ test("holds the turn limit, modes, specialists and map actions", () => {
   assert.equal(decodeChallenge("BC-4-2-4-2-74219-17"),null,"a version 1 code does not decode");
   assert.ok(isOutdatedChallenge("BC-4-2-4-2-74219-17"),"and is recognised as outdated rather than mistyped");
   assert.ok(isOutdatedChallenge("bc1-4-2-4-2-74219-17"));
-  assert.ok(!isOutdatedChallenge(challenge)&&!isOutdatedChallenge("hello"),"a current code or a typo is not called outdated");assert.deepEqual([seededChallengeRandom(7)(10),seededChallengeRandom(7)(10)],[8,8]);
+  assert.ok(!isOutdatedChallenge(challenge)&&!isOutdatedChallenge("hello"),"a current code or a typo is not called outdated");assert.deepEqual([seededChallengeRandom(7)(10),seededChallengeRandom(7)(10)],[9,9]);
 });
 
 test("records case theory, variants and hypothesis history", () => {

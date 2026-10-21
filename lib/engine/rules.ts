@@ -4,7 +4,9 @@ import { SPECIALIST_EXHAUSTED_AT, procedureIntensities, procedureScopes, sectorS
 import { infrastructureTopologies } from "../phase8.ts";
 import { adversaryProfiles, meterDirection, meterNames, responseProfiles } from "./content.ts";
 import { type CarriedSource, type DecisionChoice, type Game, type GameStatus, type MapAction, type ModifierPart, type ResponseProfile } from "./types.ts";
-import { lit, msg, ref, type Message } from "../i18n/message.ts";
+import { lit, msg, ref, scopedMsg, type Message } from "../i18n/message.ts";
+
+const ruleMsg = scopedMsg("engine");
 
 export { SPECIALIST_EXHAUSTED_AT };
 
@@ -25,7 +27,7 @@ export const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(m
 
 // The actor's pace, not its progress: "Executing objective" beside an
 // adversary progress of 19 read as a contradiction.
-export const state = (tempo: number) => tempo <= 0 ? msg("engine.rules.covert") : tempo === 1 ? msg("engine.rules.maneuvering") : tempo === 2 ? msg("engine.rules.accelerating") : msg("engine.rules.pressingHard");
+export const state = (tempo: number) => tempo <= 0 ? ruleMsg("rules.covert") : tempo === 1 ? ruleMsg("rules.maneuvering") : tempo === 2 ? ruleMsg("rules.accelerating") : ruleMsg("rules.pressingHard");
 
 export function getAdversaryState(game: Game) {
   return state(game.adversaryTempo);
@@ -203,15 +205,15 @@ export function responseFit(game: Game, phaseIndex: number, choice: string) {
 // set as "Since your last roll +0 (from …)".
 export function describePart(part: { label: Message; value: number; sources?: CarriedSource[] }): Message {
   const plus = (n: number) => `${n < 0 ? "−" : "+"}${Math.abs(n)}`;
-  if (!part.sources || part.sources.length < 2) return msg("engine.part.value", { label: part.label, value: plus(part.value) });
+  if (!part.sources || part.sources.length < 2) return ruleMsg("part.value", { label: part.label, value: plus(part.value) });
   const sum = part.sources.reduce((total, item) => total + item.change, 0);
-  return msg(sum === part.value ? "engine.part.carried" : "engine.part.carriedCapped", { value: plus(part.value), list: listOf(part.sources, "engine.list.comma") });
+  return ruleMsg(sum === part.value ? "part.carried" : "part.carriedCapped", { value: plus(part.value), list: listOf(part.sources, "engine.list.comma") });
 }
 
 // Two or more carried sources, each with its share: "Monitored Access boundary
 // +2; Inject: Hard going −2", as one message for a translator to order.
 function listOf(sources: CarriedSource[], join: "engine.list.semicolon" | "engine.list.comma"): Message {
-  const entries = sources.map(item => msg("engine.source.entry", { source: item.source, change: signed(item.change) }));
+  const entries = sources.map(item => ruleMsg("source.entry", { source: item.source, change: signed(item.change) }));
   return entries.reduceRight((rest, first) => msg(join, { first, rest }));
 }
 
@@ -219,11 +221,11 @@ function listOf(sources: CarriedSource[], join: "engine.list.semicolon" | "engin
 // with two or more sources how they combine — together, or what they came to
 // before the cap.
 export function carriedLabel(sources: CarriedSource[], value: number): Message {
-  if (!sources.length) return msg("engine.part.sinceLastRoll");
+  if (!sources.length) return ruleMsg("part.sinceLastRoll");
   if (sources.length === 1) return sources[0].source;
   const sum = sources.reduce((total, item) => total + item.change, 0);
   const list = listOf(sources, "engine.list.semicolon");
-  return sum === value ? msg("engine.source.together", { list }) : msg("engine.source.capped", { list, sum: signed(sum) });
+  return sum === value ? ruleMsg("source.together", { list }) : ruleMsg("source.capped", { list, sum: signed(sum) });
 }
 
 export function getModifierBreakdown(game: Game, procedure: string, plan: ProcedurePlan = { scope: "focused", intensity: "balanced" }) {
@@ -235,17 +237,17 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
   let consecutiveFailures = 0;
   for (let index = game.turns.length - 1; index >= 0 && !game.turns[index].success; index--) consecutiveFailures++;
   const parts: ModifierPart[] = [
-    { label: msg("engine.part.established"), value: game.established.includes(procedure) ? 2 : 0, detail: msg("engine.rules.thisEvidenceSource") },
-    { label: msg("engine.part.ownSource"), value: ownSourceBonus(game, procedure), detail: msg("engine.rules.oneOfThe") },
-    { label: carriedLabel(game.nextModifierSources, game.nextModifier), value: game.nextModifier, shown: game.nextModifierSources.length > 0, sources: game.nextModifierSources, detail: msg("engine.rules.setUpBy") },
-    { label: msg("engine.part.afterFailures"), value: consecutiveFailures >= 2 ? 2 : 0, detail: msg("engine.rules.theLastProcedures", { consecutiveFailures }) },
+    { label: ruleMsg("part.established"), value: game.established.includes(procedure) ? 2 : 0, detail: ruleMsg("rules.thisEvidenceSource") },
+    { label: ruleMsg("part.ownSource"), value: ownSourceBonus(game, procedure), detail: ruleMsg("rules.oneOfThe") },
+    { label: carriedLabel(game.nextModifierSources, game.nextModifier), value: game.nextModifier, shown: game.nextModifierSources.length > 0, sources: game.nextModifierSources, detail: ruleMsg("rules.setUpBy") },
+    { label: ruleMsg("part.afterFailures"), value: consecutiveFailures >= 2 ? 2 : 0, detail: ruleMsg("rules.theLastProcedures", { consecutiveFailures }) },
     specialist.procedures.includes(procedure as never) && game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT
-      ? { label: msg("engine.part.specialist"), value: 0, suppressed: true, detail: msg("engine.rules.worksThisSource", { specialistTitle: specialist.title, specialistFatigue: game.specialistFatigue }) }
-      : { label: msg("engine.part.specialist"), value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: msg("engine.rules.worksThisSource2", { specialistTitle: specialist.title }) },
-    { label: msg("engine.part.mapFocus"), value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: focusNode ? msg("engine.rules.mapFocusOn", { node: focusNode.label }) : msg("engine.rules.mapFocus") },
+      ? { label: ruleMsg("part.specialist"), value: 0, suppressed: true, detail: ruleMsg("rules.worksThisSource", { specialistTitle: specialist.title, specialistFatigue: game.specialistFatigue }) }
+      : { label: ruleMsg("part.specialist"), value: specialist.procedures.includes(procedure as never) ? 1 : 0, detail: ruleMsg("rules.worksThisSource2", { specialistTitle: specialist.title }) },
+    { label: ruleMsg("part.mapFocus"), value: focusNode?.procedures.includes(procedure) ? 1 : 0, detail: focusNode ? ruleMsg("rules.mapFocusOn", { node: focusNode.label }) : ruleMsg("rules.mapFocus") },
     { label: ref(`procedureScopes.${plan.scope}.title`), value: procedureScopes[plan.scope].modifier, detail: lit(procedureScopes[plan.scope].description) },
     { label: ref(`procedureIntensities.${plan.intensity}.title`), value: procedureIntensities[plan.intensity].modifier, detail: lit(procedureIntensities[plan.intensity].description) },
-    { label: msg("engine.part.expert"), value: game.mode === "expert" ? -1 : 0, detail: msg("engine.rules.expertOperationsResolve") },
+    { label: ruleMsg("part.expert"), value: game.mode === "expert" ? -1 : 0, detail: ruleMsg("rules.expertOperationsResolve") },
   ];
   return { parts, total: parts.reduce((sum, part) => sum + part.value, 0) };
 }
@@ -273,7 +275,7 @@ export function breached(g: Game) {
 
 // One narrative for every failed roll the grace did not absorb. A failed check
 // settles nothing about the reading, and the words must not say otherwise.
-export const FAILED_CHECK: Message = msg("engine.turn.failed");
+export const FAILED_CHECK: Message = ruleMsg("turn.failed");
 
 export function settle(g: Game, status: GameStatus): Game {
   g.status = status;

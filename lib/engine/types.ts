@@ -173,6 +173,8 @@ export type Game = {
   // challenge code). Null leaves procedure rolls on the unseeded generator, so
   // ordinary campaign play stays unpredictable.
   seed: number | null;
+  // Optional replay metadata: absent on saves predating the current generator.
+  challengeVersion?: number;
 };
 
 export type GameSetup = {

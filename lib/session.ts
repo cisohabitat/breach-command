@@ -11,7 +11,9 @@ export { isCampaignBackup } from "./campaign-backup.ts";
 // 19: what the engine wrote for the player is stored as messages and content
 // references (lib/i18n/message.ts), not English, so a save reads in any
 // language; an older save's sentences are kept as they were, verbatim.
-export const SESSION_VERSION = 19;
+// 20: retain the seeded setup's challenge version so a later generator cannot
+// issue a misleading replay code. Older builds park these saves intact.
+export const SESSION_VERSION = 20;
 
 // A stored sentence: a message from version 19, or an older save's English,
 // kept as the player read it.
@@ -102,6 +104,7 @@ export function parseSession(raw: string): SavedSession | null {
     if (parsed.version !== undefined && (!Number.isInteger(parsed.version) || Number(parsed.version) < 1)) return null;
     if (Number(parsed.version) > SESSION_VERSION) return null;
     const game = parsed.game as Game;
+    if (game.challengeVersion !== undefined && (!Number.isSafeInteger(game.challengeVersion) || game.challengeVersion < 1)) return null;
     if (!Number.isInteger(game.scenario) || !scenarios[game.scenario]) return null;
     if (!isKnown(difficulties, game.difficulty)) return null;
     if (!Array.isArray(game.chain) || game.chain.length !== 4 || !Array.isArray(game.turns)) return null;
@@ -202,6 +205,7 @@ export function parseSession(raw: string): SavedSession | null {
       recentCrises: Array.isArray(game.recentCrises) ? game.recentCrises.filter((id: unknown) => typeof id === "string" && /^sector-\d+(-[bc])?$/.test(id)) : [],
       responseChoices,
       seed: typeof game.seed === "number" && Number.isFinite(game.seed) ? game.seed : null,
+      ...(game.challengeVersion !== undefined ? { challengeVersion: game.challengeVersion } : {}),
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],
       adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
       pendingDecision: finished ? null : game.pendingDecision ?? null,

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from "react";
+import { operationChallenge } from "@/lib/challenge";
 import { StoryArt } from "./story-art";
 import { EvidenceAssessment } from "./evidence-assessment";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -277,9 +278,9 @@ export function DebriefDialog({ session }: { session: GameSession }) {
             <p>{say(recommendation!.reason)}</p>
             {/* The same operation played by the Bot Commander from what it can see,
                 to show where a reading tested soundly would have gone. */}
-            {game.seed !== null
+            {operationChallenge(game)
               ? <><p>{t("debriefDialog.orWatchThe")}</p><button className="text-action" onClick={() => replayWithBot(game)}>{t("debriefDialog.replayWithThe")}</button></>
-              : <p>{t("debriefDialog.thisCampaignOperation")}</p>}
+              : <p>{t(game.seed !== null ? "debriefDialog.earlierChallengeOperation" : "debriefDialog.thisCampaignOperation")}</p>}
           </section>}
           {/* A trainer's print: the whole chain and the questions for the room.
               It gives the answer away, which this says before the button does. */}
