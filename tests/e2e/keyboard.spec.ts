@@ -48,6 +48,9 @@ test.describe("keyboard play", () => {
     await page.keyboard.press("Enter");
     await expect(report.getByText("Operational decision required")).toBeVisible();
     await expect(report.getByText(/This report stays open until the choice is recorded/)).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(report).toBeVisible();
+    await expect(report.locator("button[data-response]")).toHaveCount(5);
   });
 
   test("settings open on the dialog, not on the sound switch", async ({ page }) => {

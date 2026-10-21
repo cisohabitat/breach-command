@@ -110,6 +110,7 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         <SectorIllustration scenarioId={activeScenario.id} />
         <p>{activeScenario.summary}</p>
         {(() => {
+          if (!campaign.completed.includes(scenarioChoice)) return <p className="slip-ladder">{t("briefingScreen.firstGoal")}</p>;
           // The case's mastery ladder: the rungs climbed and the next one to try.
           const climbed = ladderRungs.filter(rung => (campaign.ladder?.[String(scenarioChoice)] ?? []).includes(rung.id));
           const nextRung = ladderRungs.find(rung => !climbed.includes(rung));

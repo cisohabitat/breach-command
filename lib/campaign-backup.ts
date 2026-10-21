@@ -21,6 +21,6 @@ export function isCampaignBackup(value: unknown, cases = 10): boolean {
   }
   const ladder = record.ladder;
   if (ladder !== undefined && (!object(ladder) || !Object.entries(ladder).every(([key, rungs]) => /^\d+$/.test(key)
-    && Array.isArray(rungs) && rungs.every(id => ["crisis", "steady", "swift", "tired", "expert"].includes(id))))) return false;
+    && Array.isArray(rungs) && rungs.every(id => ["crisis", "steady", "accurate", "swift", "tired", "expert"].includes(id))))) return false;
   return true;
 }

@@ -3,8 +3,8 @@ import type { Game } from "@/lib/advanced-game";
 import { captainDebriefFor } from "@/lib/captain-debrief";
 import { CaptainVoice } from "./captain-voice";
 
-export function CaptainDebrief({ game, grade, history }: { game: Game; grade: string; history: RefObject<Set<string>> }) {
-  const lines = captainDebriefFor(game, grade);
+export function CaptainDebrief({ game, grade, recoveryRisk, history }: { game: Game; grade: string; recoveryRisk?: string; history: RefObject<Set<string>> }) {
+  const lines = captainDebriefFor(game, grade, recoveryRisk);
   useLayoutEffect(() => {
     // The deferred transcript can arrive after the player has tabbed onward.
     // Keep their chosen control visible without moving focus to another one.

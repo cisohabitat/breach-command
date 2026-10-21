@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.2, 21 October 2026
+
+- Replace the no-revision mastery challenge with accurate recorded readings; retain earlier awards in saved campaigns and backups.
+- Guide uncleared cases toward completing the investigation and response before presenting mastery challenges.
+- Describe final service condition and recovery risk explicitly, and avoid spoken service-protection praise when service remains at risk or recovery risk is high.
+- Keep report results, evidence limits and meter changes visible while folding repeated failure narrative and pressure explanations into roll details.
+
 ## 0.10.1, 20 October 2026
 
 - Refuse malformed campaign backups before replacing any local progress; keep migration support for older valid backups.

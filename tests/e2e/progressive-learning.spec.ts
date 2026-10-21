@@ -6,6 +6,27 @@ import { openWithSave, pendingDecisionGame, twoStagesGame } from "./fixtures";
 
 const resumeAxe = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
+for (const width of [375, 1280]) {
+  test(`uncleared cases offer a first goal before mastery at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await openWithSave(page, null);
+    await expect(page.locator(".slip-ladder")).toContainText("First goal: establish the four-stage chain and complete the response.");
+    await expect(page.locator(".slip-ladder")).not.toContainText("Crisis");
+    await expect(page.getByRole("button", { name: /^Training/ })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test(`cleared cases offer active mastery without relabelling retired awards at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.addInitScript(() => localStorage.setItem("breach-command.campaign", JSON.stringify({ completed: [0], xp: 25, operations: 1, ladder: { "0": ["steady", "crisis"] } })));
+    await page.goto("/play", { waitUntil: "networkidle" });
+    await page.locator(".mission-selector button").first().click();
+    await expect(page.locator(".slip-ladder")).toContainText("Mastery ladder, 1 of 5: won at Crisis.");
+    await expect(page.locator(".slip-ladder")).toContainText("matching working reading");
+    await expect(page.locator(".slip-ladder")).not.toContainText("without revising");
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem("breach-command.campaign")!)).ladder["0"]).toEqual(["steady", "crisis"]);
+  });
+}
+
 for (const width of [375, 820, 1280]) {
   test(`Resume explains the saved record and next task at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

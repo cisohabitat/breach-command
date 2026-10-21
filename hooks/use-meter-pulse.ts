@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Game } from "@/lib/advanced-game";
+import { IMPACT_CRITICAL, CONTINUITY_AT_RISK, OBJECTIVE_IMMINENT } from "../lib/meter-thresholds";
+export { IMPACT_CRITICAL, CONTINUITY_AT_RISK, OBJECTIVE_IMMINENT } from "../lib/meter-thresholds";
 
 // Moment-to-moment feedback for the case meters. The deltas describe what the
 // last resolved step did to business impact and operational continuity, plus
@@ -15,12 +17,6 @@ export type MeterPulse = {
   continuityAtRisk: boolean;
   objectiveImminent: boolean;
 };
-export const IMPACT_CRITICAL = 70;
-export const CONTINUITY_AT_RISK = 45;
-// Adversary progress is the clock that actually closes most operations, so it
-// gets the same threshold treatment as the other two pressure readouts.
-export const OBJECTIVE_IMMINENT = 70;
-
 export function useMeterPulse() {
   const [meterPulse, setMeterPulse] = useState<MeterPulse | null>(null);
   const pulseKey = useRef(0);

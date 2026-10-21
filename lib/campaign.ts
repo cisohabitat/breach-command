@@ -1,5 +1,4 @@
 import { SPECIALIST_EXHAUSTED_AT } from "./command-systems.ts";
-import { countRevisions } from "./engine/revisions.ts";
 import type { Game } from "./engine/types.ts";
 import { registerContent } from "./i18n/content/registry.ts";
 import { lit, msg, type Message } from "./i18n/message.ts";
@@ -56,10 +55,11 @@ const remember = (list: string[], met: string[], keep: number) => [...list.filte
 // A case's mastery ladder: authored challenges past clearing it, each a won
 // operation under a constraint. An authorised exercise clears the case but
 // climbs no rung, because every rung is about carrying the response through.
-export type LadderRungId = "crisis" | "steady" | "swift" | "tired" | "expert";
+// Keep the retired steady ID readable without relabelling an earlier award.
+export type LadderRungId = "crisis" | "steady" | "accurate" | "swift" | "tired" | "expert";
 export const ladderRungs: { id: LadderRungId; title: string; detail: string }[] = [
   { id: "crisis", title: "Won at Crisis", detail: "Win the case at Crisis difficulty." },
-  { id: "steady", title: "Won without revising", detail: "Win holding one reading from the first check to the last." },
+  { id: "accurate", title: "Won with accurate readings", detail: "Win with a matching working reading on every check. Revisions are allowed." },
   { id: "swift", title: "Won in half the window", detail: "Win having used no more than half the investigation window." },
   { id: "tired", title: "Won with a tired specialist", detail: `Win with the deployed specialist's fatigue at ${SPECIALIST_EXHAUSTED_AT} or more, where their bonus no longer applies.` },
   { id: "expert", title: "Won in Expert", detail: "Win the case in Expert mode, with every aid withheld." },
@@ -69,7 +69,7 @@ export function rungsEarned(game: Game): LadderRungId[] {
   if (game.status !== "won") return [];
   const earned: LadderRungId[] = [];
   if (game.difficulty === "crisis") earned.push("crisis");
-  if (countRevisions(game) === 0) earned.push("steady");
+  if (game.turns.length > 0 && game.turns.every(turn => turn.hypothesis && turn.hypothesisMatched)) earned.push("accurate");
   if (game.turns.length * 2 <= game.turnLimit) earned.push("swift");
   if (game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT) earned.push("tired");
   if (game.mode === "expert") earned.push("expert");
@@ -78,7 +78,7 @@ export function rungsEarned(game: Game): LadderRungId[] {
 
 function parseLadder(value: unknown): Record<string, LadderRungId[]> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  const known = new Set(ladderRungs.map(rung => rung.id as string));
+  const known = new Set(["steady", ...ladderRungs.map(rung => rung.id as string)]);
   return Object.fromEntries(Object.entries(value as Record<string, unknown>)
     .filter(([key, rungs]) => /^\d+$/.test(key) && Array.isArray(rungs))
     .map(([key, rungs]) => [key, (rungs as unknown[]).filter((id): id is LadderRungId => typeof id === "string" && known.has(id))]));
@@ -182,8 +182,9 @@ export function campaignChanges(before: CampaignState, after: CampaignState, gam
   const xp = after.xp - before.xp;
   if (xp) lines.push(msg("engine.campaign.experience", { xp, now: after.xp, score }));
   for (const capability of unlockedCapabilities(after.xp)) if (capability.unlocked && !unlockedCapabilities(before.xp).find(item => item.at === capability.at)!.unlocked) lines.push(msg("engine.campaign.unlocked", { title: lit(capability.title), detail: lit(capability.detail) }));
-  const climbed = (after.ladder?.[String(game.scenario)] ?? []).filter(id => !(before.ladder?.[String(game.scenario)] ?? []).includes(id));
-  for (const id of climbed) lines.push(msg("engine.campaign.ladder", { rung: lit(ladderRungs.find(rung => rung.id === id)!.title, "lowerFirst"), climbed: (after.ladder?.[String(game.scenario)] ?? []).length, rungs: ladderRungs.length }));
+  const active = ladderRungs.filter(rung => (after.ladder?.[String(game.scenario)] ?? []).includes(rung.id));
+  const climbed = active.filter(rung => !(before.ladder?.[String(game.scenario)] ?? []).includes(rung.id));
+  for (const rung of climbed) lines.push(msg("engine.campaign.ladder", { rung: lit(rung.title, "lowerFirst"), climbed: active.length, rungs: ladderRungs.length }));
   if (after.completed.length > before.completed.length) lines.push(msg("engine.campaign.caseCleared", { cleared: after.completed.length }));
   else if (game.status === "lost") lines.push(msg("engine.campaign.caseStaysOpen"));
   return lines;
@@ -319,7 +320,7 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     streak: won ? current.streak + 1 : drill ? current.streak : 0,
     specialistFatigue,
     mastery: { ...current.mastery, [String(game.scenario)]: Math.max(current.mastery[String(game.scenario)] ?? 0, mastery) },
-    ladder: { ...(current.ladder ?? {}), [String(game.scenario)]: ladderRungs.map(rung => rung.id).filter(id => (current.ladder?.[String(game.scenario)] ?? []).includes(id) || rungsEarned(game).includes(id)) },
+    ladder: { ...(current.ladder ?? {}), [String(game.scenario)]: [...new Set([...(current.ladder?.[String(game.scenario)] ?? []), ...rungsEarned(game)])] },
     commandPosture,
     unresolvedThreads: Math.max(0, current.unresolvedThreads + (drill ? 0 : won && game.objectiveProgress < 65 ? -1 : 1)),
     actorSightings,

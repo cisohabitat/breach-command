@@ -139,7 +139,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           )}
         </DialogHeader>
         {game && outcome && <>
-          {debrief && session.voiceEnabled && !session.botRun && !session.settings && !session.rules && !session.newConfirm && <CaptainDebrief game={game} grade={outcome.grade} history={session.voiceHistory} />}
+          {debrief && session.voiceEnabled && !session.botRun && !session.settings && !session.rules && !session.newConfirm && <CaptainDebrief game={game} grade={outcome.grade} recoveryRisk={responseOptionsFor(game).recovery.find(option => option.id === game.responseChoices[2])?.residual} history={session.voiceHistory} />}
           <section className="first-read" aria-label={t("debriefDialog.beforeTheDetail")}>
             {(() => {
               const review = getBeginnerReview(game);

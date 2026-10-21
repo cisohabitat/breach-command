@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
-import { getOutcome, newGame, playTurn, resolveDecision, resolveResponse } from "../../lib/advanced-game";
+import { getOutcome, newGame, playTurn, resolveDecision, resolveResponse, responseOptionsFor } from "../../lib/advanced-game";
 import { captainVoiceMessages } from "../../lib/i18n/en/captain-voice";
 import { captainDebriefFor } from "../../lib/captain-debrief";
 import { openWithSave, pendingDecisionGame, responsePhaseGame, twoStagesGame } from "./fixtures";
@@ -503,7 +503,8 @@ test("resuming historical evidence choices does not replay their reactions", asy
 test("spoken debrief follows the result, plays three segments, and respects skip and replay", async ({ page }) => {
   const initial = responsePhaseGame();
   const finished = ["isolate", "preserve", "rebuild"].reduce((game, choice) => resolveResponse(game, choice), initial);
-  const lines = captainDebriefFor(finished, getOutcome(finished).grade).map(cue => captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);
+  const risk = responseOptionsFor(finished).recovery.find(option => option.id === finished.responseChoices[2])?.residual;
+  const lines = captainDebriefFor(finished, getOutcome(finished).grade, risk).map(cue => captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);
   await mockSpeech(page);
   await openWithSave(page, initial, false, voicePreferences);
   await page.getByRole("button", { name: "Resume", exact: true }).click();

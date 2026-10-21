@@ -103,6 +103,11 @@ for (const mode of ["campaign", "expert"] as const) for (const width of [375, 11
     await page.getByRole("button", { name: "Run procedure", exact: true }).click();
     const report = page.locator(".report-dialog");
     await expect(report.locator(".report-inconclusive")).toContainText("rules out no route or source");
+    await expect(report.locator(".report-narrative")).toHaveCount(1);
+    const explanation = report.locator(".report-collection-details");
+    await expect(explanation).toHaveJSProperty("open", false);
+    await expect(explanation.locator(".report-context")).toBeHidden();
+    await expect(report.locator(".turn-movement .effect-list")).toBeVisible();
     await expect(report.locator(".report-standing")).toHaveCount(0);
     const sources = report.locator(".report-available-sources");
     if (mode === "expert") await expect(sources).toHaveCount(0);
@@ -115,6 +120,7 @@ for (const mode of ["campaign", "expert"] as const) for (const width of [375, 11
     await expect(report.getByRole("button", { name: "Continue investigation", exact: true })).toBeVisible();
     if (mode === "campaign" && width === 1180) {
       await report.locator(".report-collection-details > summary").click();
+      await expect(explanation.locator(".report-context")).toContainText("failed check settles nothing");
       await report.getByRole("button", { name: "Continue investigation", exact: true }).click();
       await page.locator(".procedure-card:not(:disabled)").first().click();
       await page.getByRole("button", { name: "Run procedure", exact: true }).click();
