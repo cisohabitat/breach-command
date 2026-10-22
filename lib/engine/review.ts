@@ -475,7 +475,7 @@ export function recommendNext(game: Game, nextOpen: number, firstOperation = fal
   const title = (scenario: number, difficulty: Game["difficulty"]) => msg("record.nextTitle", { number: scenario + 1, title: ref(`scenarios.${scenarios[scenario].id}.title`), difficulty: ref(`difficulties.${difficulty}.title`) });
   if (game.status === "lost") {
     const loss = getLossReason(game);
-    if (firstOperation && game.mode === "campaign" && game.difficulty !== "training") {
+    if (firstOperation && game.mode === "campaign" && game.seed === null && game.difficulty !== "training") {
       return { scenario: game.scenario, difficulty: "training", title: title(game.scenario, "training"), reason: msg("record.firstLossTraining", { loss: loss.title }) };
     }
     if (loss.cause === "window") {

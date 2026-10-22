@@ -591,6 +591,7 @@ test("suggests the next operation from the record, and says why", async () => {
   }
   assert.equal(recommendNext({ ...windowLoss, difficulty: "training", impact: 100 }, 7, true).difficulty, "training");
   assert.equal(recommendNext({ ...windowLoss, mode: "daily", impact: 100 }, 7, true).difficulty, "crisis", "the campaign offer does not change a seeded challenge recommendation");
+  assert.equal(recommendNext({ ...windowLoss, seed: 123, impact: 100 }, 7, true).difficulty, "crisis", "a shared code in Campaign mode keeps its existing recommendation too");
   // A clear moves on to the next open case; a strong one at Training steps up.
   let game = newGame(0, "training");
   for (let guard = 0; guard < 80 && ["playing", "response"].includes(game.status); guard++) {

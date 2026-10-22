@@ -8,7 +8,7 @@ release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
 - Record actual procedure-turn meter movement after the 0–100 limits, so reports and new check histories agree with the readouts at a limit.
 - Ask academy players to confirm a second stage before prompting them to infer the objective.
-- Offer Training after a player's first campaign loss above Training, retaining the loss cause and the freedom to choose another difficulty.
+- Offer Training when a player's first recorded operation is an unseeded campaign loss above Training, retaining the loss cause and the freedom to choose another difficulty.
 
 ## 0.10.3, 21 October 2026
 
