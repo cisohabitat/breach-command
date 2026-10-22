@@ -3,6 +3,9 @@ import { catalogue } from "../catalogue.ts";
 // The strings of components/game/action-sheet.tsx (app/page.tsx for page), loaded with it.
 export const actionSheetMessages = catalogue({
   actionSheet: {
+    "terminalClock": "The terminal schedule loses margin each turn and faster from turn four.",
+    "clearingClock": "Clearing integrity falls with delay; failed checks cost extra margin.",
+    "collectionTradeoff": "Focused scope with Balanced analysis avoids the extra roll penalty of Enterprise or Rapid. Enterprise pushes back actor progress more; Rapid reduces immediate business pressure. Neither saves a turn. Compare the effects before carrying a plan forward.",
     "optionalPlan": "Change collection plan (optional)",
     "openingPlan": "Begin with Focused scope and Balanced analysis, or explore the alternatives here. Plan options stay expanded after your first two checks or when comparison becomes useful.",
     "turnCost": "Costs 1 turn. Plan effects add to the turn’s pressure costs.",

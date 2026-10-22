@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.5, 22 October 2026
+
+- Explain collection-plan roll and pressure tradeoffs, including that Rapid and Enterprise do not save a turn.
+- Bring terminal and clearing clocks into collection planning, and explain the continuity specialist's delay protection in those case briefs.
+- Correct the balance benchmark documentation: the Bot uses public investigation evidence but internal scores for command, sector and response choices.
+- Preserve game rules, difficulty, saved operations and BC10 challenge reproduction.
+
 ## 0.10.4, 22 October 2026
 
 - Record actual procedure-turn meter movement after the 0–100 limits, so reports and new check histories agree with the readouts at a limit.

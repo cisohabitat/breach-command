@@ -30,13 +30,13 @@ export const specialists = {
 } as const;
 
 export const procedureScopes = {
-  focused: { title: "Focused", description: "Test the working hypothesis against the most relevant system.", modifier: 0, impact: 0, objective: -2 },
-  enterprise: { title: "Enterprise", description: "Search connected environments for broader scope at a time cost.", modifier: -1, impact: 4, objective: -5 },
+  focused: { title: "Focused", description: "Test the working hypothesis without an extra roll penalty. Costs one turn.", modifier: 0, impact: 0, objective: -2 },
+  enterprise: { title: "Enterprise", description: "Push actor progress back further, at higher business pressure and a harder roll. Still costs one turn.", modifier: -1, impact: 4, objective: -5 },
 } as const;
 
 export const procedureIntensities = {
-  rapid: { title: "Rapid", description: "Move quickly with lower analytical confidence.", modifier: -1, impact: -2, cooldown: 0 },
-  balanced: { title: "Balanced", description: "Balance confidence, time and operational pressure.", modifier: 0, impact: 0, cooldown: 0 },
+  rapid: { title: "Rapid", description: "Reduce immediate business pressure at the cost of a harder roll. Still costs one turn.", modifier: -1, impact: -2, cooldown: 0 },
+  balanced: { title: "Balanced", description: "Keep the usual roll and pressure costs. Costs one turn.", modifier: 0, impact: 0, cooldown: 0 },
   exhaustive: { title: "Exhaustive", description: "Increase confidence, but consume time and specialist capacity.", modifier: 2, impact: 5, cooldown: 1 },
 } as const;
 

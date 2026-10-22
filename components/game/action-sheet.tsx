@@ -57,6 +57,7 @@ export function ActionSheet({ session }: { session: GameSession }) {
       >
         <SheetHeader><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc && <Glossed text={proc.description} />}</SheetDescription></SheetHeader>
         {proc && game && <p className="carried-plan" role="status">{game.turns.length ? t("actionSheet.carriedFromYour") : t("actionSheet.startingPlan")}<strong>{procedureScopes[actionScope].title}{t("actionSheet.scope")}</strong>{t("actionSheet.and")}<strong>{procedureIntensities[actionIntensity].title}{t("actionSheet.analysis")}</strong>. {game.turns.length ? t("actionSheet.theseStaySelected") : t("actionSheet.changeThemIn")}</p>}
+        {proc && game && game.mode !== "expert" && (game.scenario === 3 || game.scenario === 9) && <p className="relationship-helper collection-guidance">{t(game.scenario === 3 ? "actionSheet.terminalClock" : "actionSheet.clearingClock")} {t("actionSheet.collectionTradeoff")}</p>}
         {proc && game && <>
           <div className="action-note"><span className="eyebrow">{t("actionSheet.hypothesisCheck")}</span><p><Glossed text={proc.question} /></p></div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
