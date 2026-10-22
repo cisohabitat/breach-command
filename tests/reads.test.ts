@@ -581,6 +581,16 @@ test("suggests the next operation from the record, and says why", async () => {
   const meterLoss = recommendNext({ ...windowLoss, difficulty: "operational", impact: 100 }, 7);
   assert.deepEqual([meterLoss.scenario, meterLoss.difficulty], [4, "operational"]);
   assert.match(en(meterLoss.reason), /Business impact reached its limit/);
+  for (const difficulty of ["operational", "crisis"] as const) {
+    for (const meters of [{ impact: 100 }, { continuity: 0 }, { sectorHealth: 0 }, { objectiveProgress: 100 }, {}]) {
+      const first = recommendNext({ ...windowLoss, difficulty, ...meters }, 7, true);
+      assert.deepEqual([first.scenario, first.difficulty], [4, "training"], "a first campaign loss offers a supported retry");
+      assert.match(en(first.reason), /Try this case at Training/);
+      assert.match(en(first.reason), /choose another difficulty/);
+    }
+  }
+  assert.equal(recommendNext({ ...windowLoss, difficulty: "training", impact: 100 }, 7, true).difficulty, "training");
+  assert.equal(recommendNext({ ...windowLoss, mode: "daily", impact: 100 }, 7, true).difficulty, "crisis", "the campaign offer does not change a seeded challenge recommendation");
   // A clear moves on to the next open case; a strong one at Training steps up.
   let game = newGame(0, "training");
   for (let guard = 0; guard < 80 && ["playing", "response"].includes(game.status); guard++) {

@@ -440,7 +440,8 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.specialist === "communications") impactChange -= 2;
   g.impact = clamp(g.impact + impactChange);
   g.continuity = clamp(g.continuity + continuityChange);
-  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange, continuityChange, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, parts, sectorChange, objectiveChange, hypothesisTarget, hypothesisMatched, discriminating, windfall: !!revealed && revealed !== hypothesisTarget });
+  // Reports and saved history describe the movement after the meters' limits.
+  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange: g.impact - game.impact, continuityChange: g.continuity - game.continuity, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, parts, sectorChange: g.sectorHealth - game.sectorHealth, objectiveChange: g.objectiveProgress - game.objectiveProgress, hypothesisTarget, hypothesisMatched, discriminating, windfall: !!revealed && revealed !== hypothesisTarget });
   if (breached(g)) settle(g, "lost");
   else if (exerciseEnd) settle(g, "exercise");
   else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");

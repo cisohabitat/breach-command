@@ -81,7 +81,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
   } = session;
   const ledger = game ? getHypothesisLedger(game) : [];
   // The same suggestion the landing page will show a returning player.
-  const recommendation = game ? recommendNext(game, nextCase(campaign, scenarios.length)) : null;
+  const recommendation = game ? recommendNext(game, nextCase(campaign, scenarios.length), session.ledger.length === 1 && !session.botRun) : null;
   const revisions = game ? countRevisions(game) : 0;
   const choices = game ? reviewChoices(game) : [];
   // The detail lists fold behind summaries that state what they hold: open, the

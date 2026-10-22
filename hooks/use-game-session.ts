@@ -581,12 +581,13 @@ export function useGameSession() {
     setCampaign(updated);
     if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice(msg("session.campaignNotKept"));
     // What the review suggests next, kept so a returning player is met with it.
-    const next = engine().recommendNext(result, nextCase(updated, scenarios.length));
+    const previousLedger = ledger;
+    const next = engine().recommendNext(result, nextCase(updated, scenarios.length), previousLedger.length === 0);
     const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? engine().getLossReason(result).title : result.status === "exercise" ? msg("record.endingExercise") : msg("record.endingStoodDown"), score, endedAt: Date.now(), next };
     writeLastOperation(record);
     setLastOperation(record);
     const entry: LedgerEntry = { at: Date.now(), scenario: result.scenario, difficulty: result.difficulty, mode: result.mode, outcome: result.status as LedgerEntry["outcome"], score, hypothesis: engine().getOutcome(result).breakdown.hypothesis, stages: result.revealed.length, turns: result.turns.length, code: operationChallenge(result) };
-    const nextLedger = [...readLedger(scenarios.length), entry];
+    const nextLedger = [...previousLedger, entry];
     writeLedger(nextLedger);
     setLedger(nextLedger);
   }

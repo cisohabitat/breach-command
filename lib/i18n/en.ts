@@ -61,6 +61,7 @@ export const en = {
   "record.windowEasier": "The window closed with {revealed} of 4 stages confirmed. One rung down, {difficulty} gives a longer window, so the reading has room to be revised.",
   "record.windowTraining": "The window closed with {revealed} of 4 stages confirmed. One rung down, {difficulty} gives a longer window and the observation behind each stage, so the reading has room to be revised.",
   "record.lossSameRung": "{loss}. Play it again at the same rung and watch that readout: the investigation was not what ended it.",
+  "record.firstLossTraining": "{loss}. Try this case at Training: a longer window, gentler pressure and an observation for each stage give you room to learn. You can still choose another difficulty at the incident desk.",
   "record.clearedOperational": "You cleared it with {score} of 100. Operational withdraws the Training clue: the first reading is yours to make.",
   "record.clearedCrisis": "You cleared it with {score} of 100. Crisis gives one fewer command action, a moving objective and an adversary that adapts ahead of you.",
   "record.clearedSameRung": "You cleared it with {score} of 100. The next open case at the same rung, before stepping up.",

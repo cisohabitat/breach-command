@@ -4,6 +4,12 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.4, 22 October 2026
+
+- Record actual procedure-turn meter movement after the 0–100 limits, so reports and new check histories agree with the readouts at a limit.
+- Ask academy players to confirm a second stage before prompting them to infer the objective.
+- Offer Training after a player's first campaign loss above Training, retaining the loss cause and the freedom to choose another difficulty.
+
 ## 0.10.3, 21 October 2026
 
 - Mix seeded setup draws so all 256 attack-chain combinations are available in every scenario; advance challenge codes to BC10 and preserve older saved incidents without emitting misleading replay codes.

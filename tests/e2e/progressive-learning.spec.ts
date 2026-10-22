@@ -6,6 +6,19 @@ import { openWithSave, pendingDecisionGame, twoStagesGame } from "./fixtures";
 
 const resumeAxe = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
+for (const stages of [1, 2]) {
+  test(`academy names the available task after ${stages} confirmed stages`, async ({ page }) => {
+    const game = stages === 1 ? resolveDecision(pendingDecisionGame(), "observe") : twoStagesGame();
+    await openWithSave(page, game, true, { voice: false, sound: false });
+    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: "Game settings", exact: true }).click();
+    await page.getByRole("button", { name: "Restart command tutorial", exact: true }).click();
+    const coach = page.locator(".tutorial-coach");
+    await expect(coach).toContainText(stages === 1 ? "Confirm a second stage" : "Infer the objective");
+    if (stages === 1) await expect(coach).not.toContainText("Infer the objective");
+  });
+}
+
 for (const width of [375, 1280]) {
   test(`uncleared cases offer a first goal before mastery at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

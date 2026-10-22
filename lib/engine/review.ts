@@ -466,15 +466,18 @@ export type Recommendation = { scenario: number; difficulty: Game["difficulty"];
 // What to play next, from the record of the operation just finished. A loss to
 // the window is the reading running out at the last open stage, so the same
 // case comes back a rung easier, where Training's clue says what was observed;
-// a loss to a meter is a different lesson, kept at the same rung; a strong
-// clear moves up a rung on the next open case; anything else carries on at the
+// a first campaign loss offers Training; later meter losses keep the same rung.
+// A strong clear moves up a rung on the next open case; anything else carries on at the
 // same rung. The reason quotes the record, so the advice can be checked.
-export function recommendNext(game: Game, nextOpen: number): Recommendation {
+export function recommendNext(game: Game, nextOpen: number, firstOperation = false): Recommendation {
   const rungs: Game["difficulty"][] = ["training", "operational", "crisis"];
   const rung = rungs.indexOf(game.difficulty);
   const title = (scenario: number, difficulty: Game["difficulty"]) => msg("record.nextTitle", { number: scenario + 1, title: ref(`scenarios.${scenarios[scenario].id}.title`), difficulty: ref(`difficulties.${difficulty}.title`) });
   if (game.status === "lost") {
     const loss = getLossReason(game);
+    if (firstOperation && game.mode === "campaign" && game.difficulty !== "training") {
+      return { scenario: game.scenario, difficulty: "training", title: title(game.scenario, "training"), reason: msg("record.firstLossTraining", { loss: loss.title }) };
+    }
     if (loss.cause === "window") {
       const easier = rungs[Math.max(0, rung - 1)];
       const revealed = game.revealed.length;
