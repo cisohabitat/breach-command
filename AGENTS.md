@@ -450,6 +450,8 @@ Run `pnpm test:a11y` for any change to markup, labels or the responsive rules th
 
 ## Publication
 
+Verify allows 30 minutes for Chromium and 35 for WebKit/Firefox, including dependency installation and the production build. Keep the complete suites, per-test limits and performance budgets intact; runner setup previously consumed enough of the job allowance to cancel a healthy cross-browser run before its final tests.
+
 Fetch runner baselines with the explicit refspec in `docs/RELEASING.md` before comparing or checking them out. In a single-branch clone, `git fetch origin ci/visual-baselines` updates `FETCH_HEAD` but can leave `origin/ci/visual-baselines` stale; do not accept a visual comparison against that old reference.
 
 The user authorizes automatically publishing completed, verified changes to `main`. Follow `docs/RELEASING.md`, including the release version, documentation, visual baselines when affected, and passing pull-request checks; merge and verify the subsequent main run and production deployment without asking for another push confirmation. Report any blocked or failed checks and resolve them before declaring publication complete.
