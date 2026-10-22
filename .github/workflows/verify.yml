@@ -50,7 +50,7 @@ jobs:
   browser:
     name: Browser suites
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -106,7 +106,7 @@ jobs:
   other-browsers:
     name: WebKit and Firefox
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -126,13 +126,34 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-webkit-firefox-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Use canonical Ubuntu HTTPS mirror
+        run: |
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          directory = Path('/etc/apt/sources.list.d')
+          sources = [Path('/etc/apt/sources.list'), *directory.glob('*.list'), *directory.glob('*.sources'), *Path('/etc/apt').glob('apt-mirrors*.txt')]
+          changed = 0
+          for source in sources:
+              if not source.is_file():
+                  continue
+              before = source.read_text()
+              after = before.replace('azure.archive.ubuntu.com', 'archive.ubuntu.com').replace('http://archive.ubuntu.com/ubuntu', 'https://archive.ubuntu.com/ubuntu').replace('http://security.ubuntu.com/ubuntu', 'https://security.ubuntu.com/ubuntu')
+              if after != before:
+                  source.write_text(after)
+                  changed += 1
+          assert all('azure.archive.ubuntu.com' not in source.read_text() for source in sources if source.is_file()), 'Azure mirror remains in an apt source'
+          print(f'Updated Ubuntu archive mirror in {changed} source file(s).')
+          PY
       - name: Install WebKit and Firefox
         if: steps.browsers.outputs.cache-hit != 'true'
+        timeout-minutes: 10
         run: pnpm exec playwright install --with-deps webkit firefox
       - name: Install WebKit and Firefox system dependencies
         if: steps.browsers.outputs.cache-hit == 'true'
+        timeout-minutes: 10
         run: pnpm exec playwright install-deps webkit firefox
       - name: Start virtual audio output
+        timeout-minutes: 5
         run: |
           sudo apt-get install --yes --no-install-recommends pulseaudio pulseaudio-utils
           pulseaudio --start --exit-idle-time=-1

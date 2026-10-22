@@ -9,7 +9,10 @@ push to `main` is a release, so it goes out only through this procedure.
    `pnpm balance:check`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`,
    `git diff --check`) and the browser suites against the build.
 2. If the change is visual on purpose, run the **Record visual baselines**
-   workflow on the branch, review every changed image, and bring them into
+   workflow on the branch. Fetch its recorded revision explicitly with
+   `git fetch origin +refs/heads/ci/visual-baselines:refs/remotes/origin/ci/visual-baselines`:
+   single-branch clones otherwise leave that tracking reference stale.
+   Review every changed image, and bring intentional changes into
    the branch (`git checkout origin/ci/visual-baselines --
    tests/e2e/visual.spec.ts-snapshots`).
 3. If the change moves balance on purpose, measure it at 3,000 per
