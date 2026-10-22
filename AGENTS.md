@@ -450,7 +450,7 @@ Run `pnpm test:a11y` for any change to markup, labels or the responsive rules th
 
 ## Publication
 
-Verify allows 30 minutes for Chromium and 35 for WebKit/Firefox, including dependency installation and the production build. Keep the complete suites, per-test limits and performance budgets intact; runner setup previously consumed enough of the job allowance to cancel a healthy cross-browser run before its final tests.
+Verify allows 30 minutes for Chromium and 35 for WebKit/Firefox, including dependency installation and the production build. Cross-browser dependency setup uses Ubuntu's canonical HTTPS mirror, with a ten-minute setup limit, after the Azure mirror consumed an entire job downloading packages. Inspect setup failures separately from test execution. Keep the complete suites, per-test limits and performance budgets intact.
 
 Fetch runner baselines with the explicit refspec in `docs/RELEASING.md` before comparing or checking them out. In a single-branch clone, `git fetch origin ci/visual-baselines` updates `FETCH_HEAD` but can leave `origin/ci/visual-baselines` stale; do not accept a visual comparison against that old reference.
 

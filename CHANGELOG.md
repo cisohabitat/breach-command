@@ -10,7 +10,7 @@ release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 - Bring terminal and clearing clocks into collection planning, and explain the continuity specialist's delay protection in those case briefs.
 - Correct the balance benchmark documentation: the Bot uses public investigation evidence but internal scores for command, sector and response choices.
 - Preserve game rules, difficulty, saved operations and BC10 challenge reproduction.
-- Allow complete browser verification to finish after slow runner setup, retaining every test and performance budget.
+- Use Ubuntu's canonical HTTPS package mirror and bounded setup steps so complete browser verification can finish, retaining every test and performance budget.
 
 ## 0.10.4, 22 October 2026
 
