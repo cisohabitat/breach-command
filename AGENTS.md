@@ -450,6 +450,8 @@ Run `pnpm test:a11y` for any change to markup, labels or the responsive rules th
 
 ## Publication
 
+Fetch runner baselines with the explicit refspec in `docs/RELEASING.md` before comparing or checking them out. In a single-branch clone, `git fetch origin ci/visual-baselines` updates `FETCH_HEAD` but can leave `origin/ci/visual-baselines` stale; do not accept a visual comparison against that old reference.
+
 The user authorizes automatically publishing completed, verified changes to `main`. Follow `docs/RELEASING.md`, including the release version, documentation, visual baselines when affected, and passing pull-request checks; merge and verify the subsequent main run and production deployment without asking for another push confirmation. Report any blocked or failed checks and resolve them before declaring publication complete.
 
 Production is [breach-command.vercel.app](https://breach-command.vercel.app), deployed from the existing Vercel project `breach-command`. Publish only a tested, committed source state and keep the private `cisohabitat/breach-command` repository synchronized with the deployed version.
