@@ -14,6 +14,7 @@ export const tutorialCoachMessages = catalogue({
     "balanceEvidenceAnd": "Interpret the result",
     "whenAStage": "Check what the result does and does not establish. A confirmed stage also needs a response.",
     "inferTheObjective": "Infer the objective",
+    "confirmASecondStage": "Confirm a second stage",
     "twoConfirmedStages": "Two confirmed stages improve the assessment of adversary intent; record it as a case theory.",
     "chooseTheExplanation": "Choose the working reading that fits what the team noticed. Its own sources will be marked.",
     "openInvestigateThen": "Open Investigate and choose the working reading that fits what the team noticed.",

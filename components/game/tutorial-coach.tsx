@@ -12,7 +12,7 @@ export function TutorialCoach({ game, workspace, onNavigate, onDismiss, focused 
     { done: !!game.hypothesis, title: t("tutorialCoach.formAWorking"), detail: t("tutorialCoach.chooseTheAccess") },
     { done: game.turns.length > 0, title: t("tutorialCoach.planAnEvidence"), detail: t("tutorialCoach.selectAProcedure") },
     { done: game.decisions.length > 0, title: t("tutorialCoach.balanceEvidenceAnd"), detail: t("tutorialCoach.whenAStage") },
-    { done: !!game.caseTheory, title: t("tutorialCoach.inferTheObjective"), detail: t("tutorialCoach.twoConfirmedStages") },
+    { done: !!game.caseTheory, title: t(game.revealed.length < 2 ? "tutorialCoach.confirmASecondStage" : "tutorialCoach.inferTheObjective"), detail: t("tutorialCoach.twoConfirmedStages") },
   ];
   const current = steps.findIndex(step => !step.done);
   const nextMove = current === 0

@@ -408,6 +408,8 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Required verification
 
+First-session guidance (0.10.4): procedure turns record all four meter deltas after clamping; report movement must agree with readouts at 0 and 100. Preserve the actual game state, dice and score. Existing turn records stay as written, without a schema change. The academy's final step says to confirm a second stage until two are public, then to infer the objective. A first recorded operation ending in a campaign loss above Training offers Training; count human operations from the local ledger, keep Bot practice out, and use the same first-operation context in the stored recommendation and debrief. Later meter losses and seeded challenges retain their existing recommendations. Cover all loss causes, the review-to-returning-desk path, the capped report and both academy states.
+
 Review milestone effects use sibling native disclosures outside the paragraph;
 keep their summary available without expanding every meter row. The complete
 check log is a separate nested fold. Audit both expanded and compact states.

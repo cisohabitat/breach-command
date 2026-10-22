@@ -96,6 +96,19 @@ test("gives crisis its own shape", () => {
   assert.equal(reroute("operational").changed,false,"ordinary difficulties only re-route when the response presses");
 });
 
+test("records actual turn movement at meter limits", () => {
+  const before = { ...baseline(), impact: 99, continuity: 1, sectorHealth: 1, objectiveProgress: 99, injectDeck: [] };
+  const after = playTurn(before, "cloud", 2);
+  const turn = after.turns[0];
+  assert.deepEqual([after.impact, after.continuity, after.sectorHealth, after.objectiveProgress], [100, 0, 0, 100]);
+  assert.deepEqual([turn.impactChange, turn.continuityChange, turn.sectorChange, turn.objectiveChange], [1, -1, -1, 1], "the report records reachable movement, not unapplied pressure");
+  assert.equal(before.impact, 99, "the original operation is unchanged");
+  const relieved = playTurn({ ...baseline(), impact: 0, continuity: 100, sectorHealth: 100, injectDeck: [7] }, "endpoint", 20);
+  assert.equal(relieved.impact, 0);
+  assert.equal(relieved.turns[0].impactChange, 0, "relief cannot report a drop below zero");
+  assert.equal(relieved.turns[0].sectorChange, 0, "recovery cannot report a rise above full margin");
+});
+
 test("leaves nothing outstanding when an operation ends", () => {
   // A finished operation holds nothing outstanding. A turn that both reveals a
   // stage and crosses a losing threshold used to end the game with the evidence

@@ -8,7 +8,7 @@ See [the atlas guide](public/art/icons/README.md) for its layout and provenance.
 Breach Command is a public, single-player incident-response card game played against a rule-based computer Incident Captain. Its scenarios, wording, characters, systems and presentation are original and fictional.
 
 Play the current release at [breach-command.vercel.app](https://breach-command.vercel.app).
-Release **0.10.3**: see the [release notes](CHANGELOG.md#0103-21-october-2026).
+Release **0.10.4**: see the [release notes](CHANGELOG.md#0104-22-october-2026).
 
 The **Practice desk**, at `/practice`, offers three short exercises with three
 decisions each: bounded signals, confidence in causal explanations and containment
@@ -233,7 +233,7 @@ native disabled behavior follow the existing rules.
 
 Investigation task prompts use a quiet margin rule, with the available case-theory or comparison action emphasized. Procedure names lead their supporting descriptions, and related source/status labels sit together without changing source order or guidance. Sections have more separation; procedure, evidence and specialist emblems share 28 px frames, while report evidence miniatures preserve their 3:2 proportions. Confirmed report findings appear before the response index with a distinct heading; every response, exact effect, rationale and navigation control remains available.
 
-The first-operation academy asks players to test their reading and explains that a result may support or challenge it. Procedure labels describe own sources without claiming that an unrun check already supports the hypothesis.
+The first-operation academy asks players to test their reading and explains that a result may support or challenge it. Its final step asks for a second confirmed stage before asking players to infer the objective. Procedure labels describe own sources without claiming that an unrun check already supports the hypothesis.
 
 Guided Training keeps the first two checks focused on choosing a working reading, testing it and interpreting the result. The opening defines "hypothesis" alongside that phrase and shows one academy lesson at a time. Map, specialist and evidence reference material starts folded on every screen size, with manual access throughout; desktop reference expands after two checks or when theory/comparison becomes useful. Reports show actual turn effects and why they occurred before optional roll calculations. Longer check explanations are available on request, while turn costs and exact plan effects remain visible. Guidance-off and Expert retain their usual reference layout.
 
@@ -257,7 +257,7 @@ as the fallback. Images are cached only once seen, never precached.
 
 Campaign progression is stored in browser local storage. Mid-operation sessions are versioned and migrated by `lib/session.ts`, which refuses a save from a newer build or one describing a state the engine's own transitions could not produce. A save from a newer build is never deleted or overwritten: it is set aside before anything else is saved, and a build that can read it offers it again. Only an operation still in progress is offered for resume; a finished operation's save is cleared. Ironman mode intentionally disables normal mid-operation saving. Clearing browser storage resets local progress. The balance record counts wins, losses and authorised exercises separately — an exercise is never recorded as a defeat.
 
-After each operation the review suggests what to play next, from the record: a loss to the investigation window suggests the same case a rung lower, a loss to another meter the same case again, a strong win the next case a rung higher. The suggestion and the last operation are kept on the device (`lib/last-operation.ts`), and the landing page shows them to a returning player with a way to set the suggestion up.
+After a player's first recorded operation ends in an unseeded campaign loss above Training, the review offers the same case at Training, with its longer window and stage observations; the player can still select another difficulty. Later losses and shared-code operations retain the existing recommendations: a loss to the investigation window suggests the same case a rung lower, a loss to another meter the same case again, and a strong win the next case a rung higher. The suggestion and the last operation are kept on the device (`lib/last-operation.ts`), and the landing page shows them to a returning player with a way to set the suggestion up. New procedure turns record actual meter movement after the 0–100 limits. Existing saved turn records remain as written; the session schema and BC10 challenge rules are unchanged.
 
 Every storage access goes through `lib/storage.ts`, which answers rather than throws. In a private window, with site data blocked, or against a full quota the game reports that nothing is being kept and continues from memory. If a newer build's save cannot be parked, its original slot is preserved, the new operation stays in memory, and later writes retry parking before replacing or clearing that slot.
 
