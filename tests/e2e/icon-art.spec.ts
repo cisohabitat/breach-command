@@ -8,12 +8,13 @@ for (const [index, width] of widths.entries()) {
   test(`field-kit art stays beside readable controls at ${width}px`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 900 });
     await openWithSave(page, setHypothesis(newGame(index % 10, "training", () => 0), "identity"));
+    await page.getByRole("button", { name: "Start another incident", exact: true }).click();
     const emblems = page.locator(".specialist-roster .specialist-name");
     await expect(emblems).toHaveCount(6);
     expect(await emblems.evaluateAll(elements => new Set(elements.map(element => getComputedStyle(element, "::after").backgroundPosition)).size)).toBe(6);
     await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").some(entry => entry.name.endsWith("/art/icons/field-kit.webp")))).toBe(true);
     await page.locator(".specialist-roster").screenshot({ path: info.outputPath("specialist-emblems.png") });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     const icons = page.locator(".procedure-code");
     await expect(icons).toHaveCount(12);
     await expect(icons.first()).toBeVisible();
@@ -32,7 +33,7 @@ for (const [index, width] of widths.entries()) {
 
 test("source miniatures follow completed collection sources and leave findings readable", async ({ page }, info) => {
   await openWithSave(page, twoStagesGame());
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const findings = page.locator(".evidence-cards button");
   await expect(findings.first()).toBeAttached();
   expect(await findings.count()).toBeGreaterThanOrEqual(2);
@@ -47,7 +48,7 @@ test("source miniatures follow completed collection sources and leave findings r
 test("phone cooldown text does not overlap procedure art", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await openWithSave(page, twoStagesGame());
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(page.locator(".procedure-card.cooling").first()).toBeVisible();
   for (const card of await page.locator(".procedure-card.cooling").all()) {
     const icon = await card.locator(".procedure-code").boundingBox();
@@ -59,7 +60,7 @@ test("phone cooldown text does not overlap procedure art", async ({ page }) => {
 test("an unavailable atlas leaves procedure selection usable", async ({ page }) => {
   await page.route("**/art/icons/field-kit.webp", route => route.abort());
   await openWithSave(page, setHypothesis(newGame(0, "training", () => 0), "identity"));
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.locator(".procedure-card:not(:disabled)").first().click();
   await expect(page.getByRole("button", { name: "Run procedure", exact: true })).toBeVisible();
 });

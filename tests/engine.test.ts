@@ -538,7 +538,8 @@ test("gives each difficulty its own allowance of free turns", () => {
   // The score's investigation part allows two more turns at Training and one more
   // at Operational than at Crisis, in step with their longer windows.
   for (const [difficulty,free] of [["training",6],["operational",5],["crisis",4]] as [Difficulty,number][]) {
-    const game=newGame(0,difficulty,()=>0);
+    const initial=newGame(0,difficulty,()=>0);
+    const game={...initial,revealed:[...initial.chain]};
     const turns=Array.from({length:free+1},()=>game.turns[0]??({} as Game["turns"][number]));
     assert.equal(getScoreBreakdown({...game,turns:turns.slice(0,free)}).investigation,25,`${difficulty} allows ${free} turns`);
     assert.equal(getScoreBreakdown({...game,turns}).investigation,22,`${difficulty} charges the turn after`);

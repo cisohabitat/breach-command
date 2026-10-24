@@ -10,7 +10,7 @@ test("a high score cannot praise service protection when recovery leaves service
   const finding = attacks.find(attack => attack.id === initial.chain[0])!;
   const checked = playTurn(setHypothesis(initial, attackVector(finding.id)), finding.detect[0], 20);
   const decided = resolveDecision(checked, "act");
-  let game: Game = { ...decided, status: "response", impact: 0, continuity: 78, sectorHealth: 98, responseScore: 0 };
+  let game: Game = { ...decided, revealed: [...decided.chain], status: "response", impact: 0, continuity: 78, sectorHealth: 98, responseScore: 0 };
   for (const choice of ["isolate", "verify", "rebuild"]) game = resolveResponse(game, choice);
   assert.equal(game.status, "won");
   assert.equal(game.continuity, CONTINUITY_AT_RISK);

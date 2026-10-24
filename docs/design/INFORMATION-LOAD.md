@@ -1,5 +1,13 @@
 # Information density and learning load
 
+0.10.9 presents one named Resume card before replacement setup, concise response
+rows with exact costs and optional rationale, expandable source/result details,
+and a public ready-source filter. Meter calculations reconcile all recorded
+contributions. Training, Operational and Crisis guidance have explicit assistance
+levels; debrief comparisons use recorded decision-time context. The fourth practice
+exercise adds lineage uncertainty without changing campaign scores. See
+`PLAYTEST-REMEDIATION.md` for scope, deterministic checks and measurement limits.
+
 0.10.2 keeps the failed-check evidence limit and actual meter changes visible,
 with the original failure narrative and pressure explanation under roll details.
 Successful finding narratives, voice captions and Listen remain visible. Uncleared

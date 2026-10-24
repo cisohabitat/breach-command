@@ -9,7 +9,7 @@ import { openWithSave, pendingDecisionGame, responsePhaseGame, twoStagesGame } f
 const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
 
 async function openEvidence(page: import("@playwright/test").Page) {
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const reference = page.locator(".reference-fold");
   if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
   await page.locator(".evidence-detail").evaluate(element => { (element as HTMLDetailsElement).open = true; });
@@ -82,7 +82,7 @@ test("current stage follows confirmed findings and ignores unrevealed techniques
   }) };
   for (const fixture of [game, alternate]) {
     await openWithSave(page, fixture);
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: /^Command/ }).first().click();
     const chain = page.locator(".chain-sheet");
     await expect(chain.locator('[aria-current="step"]')).toHaveCount(1);
@@ -100,7 +100,7 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     if (width === 1280) await page.emulateMedia({ reducedMotion: "no-preference" });
     const game = responsePhaseGame();
     await openWithSave(page, game, false, { voice: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await expect(page.locator('.chain-sheet [aria-current="step"]')).toHaveCount(0);
     for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
     await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
@@ -121,7 +121,7 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     const firstFinding = game.turns.flatMap(turn => [turn.revealed, turn.injectReveal]).find(id => game.decisions.some(record => record.stage === id));
     const decision = game.decisions.find(record => record.stage === firstFinding)!;
     await expect(timeline.locator(".milestone-effects .effect-list").first().locator("b")).toHaveText([decision.impactChange, decision.continuityChange, decision.sectorChange, decision.objectiveChange].map(signed));
-    await log.locator("summary").click();
+    await log.locator(":scope > summary").click();
     await expect(log.locator(":scope > div")).toHaveCount(game.turns.length);
     await expect(log.locator(".effect-list").first()).toContainText("Business impact");
     expect(await timeline.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
@@ -160,7 +160,7 @@ test("continuity and impact colours follow the existing labelled thresholds", as
   const colours: string[] = [];
   for (const [continuity, impact, status] of [[76, 39, "Stable"], [75, 40, "Degraded"], [45, 70, "At risk"]] as const) {
     await openWithSave(page, { ...twoStagesGame(), continuity, impact }, false, { voice: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     const meter = page.locator(".continuity-meter");
     await expect(meter.locator("small")).toHaveText(status);
     const colour = await meter.locator("strong").evaluate(element => getComputedStyle(element).color);
@@ -174,7 +174,7 @@ test("continuity and impact colours follow the existing labelled thresholds", as
 
 for (const highContrast of [false, true]) test(`confidence inks stay readable on paper with high contrast ${highContrast}`, async ({ page }) => {
   await openWithSave(page, pendingDecisionGame(), true, { highContrast, voice: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const assessment = page.getByRole("dialog").locator(".evidence-assessment");
   await expect(assessment).toContainText("Signal: strong");
   await expect(assessment).toContainText("Confidence: weak");

@@ -15,7 +15,9 @@ export { isCampaignBackup } from "./campaign-backup.ts";
 // issue a misleading replay code. Older builds park these saves intact.
 // 21: action-record provenance and actual comparison effects. Old operations
 // retain their original comparison rules; never manufacture historical links.
-export const SESSION_VERSION = 21;
+// 22: completion/testing-aware scoring, recorded meter calculations and
+// decision-time context. Older operations retain their original score rules.
+export const SESSION_VERSION = 22;
 
 // A stored sentence: a message from version 19, or an older save's English,
 // kept as the player read it.
@@ -107,6 +109,7 @@ export function parseSession(raw: string): SavedSession | null {
     if (Number(parsed.version) > SESSION_VERSION) return null;
     const game = parsed.game as Game;
     if (game.comparisonVersion !== undefined && game.comparisonVersion !== 2) return null;
+    if (game.scoringVersion !== undefined && game.scoringVersion !== 2) return null;
     if (game.challengeVersion !== undefined && (!Number.isSafeInteger(game.challengeVersion) || game.challengeVersion < 1)) return null;
     if (!Number.isInteger(game.scenario) || !scenarios[game.scenario]) return null;
     if (!isKnown(difficulties, game.difficulty)) return null;
@@ -134,6 +137,21 @@ export function parseSession(raw: string): SavedSession | null {
     if (Array.isArray(game.injectDeck) && !game.injectDeck.every(index => Number.isInteger(index) && index >= 0 && index < injects.length)) return null;
     if (Array.isArray(game.established) && !game.established.every(id => typeof id === "string")) return null;
     const numericObject = (value: unknown) => !!value && typeof value === "object" && !Array.isArray(value) && Object.values(value).every(Number.isFinite);
+    const meterKeys = ["impact", "continuity", "sector", "objective"] as const;
+    const meters = (value: unknown, min = 0, max = 100) => !!value && typeof value === "object" && !Array.isArray(value)
+      && meterKeys.every(key => { const n = (value as Record<string, unknown>)[key]; return typeof n === "number" && Number.isFinite(n) && n >= min && n <= max; });
+    for (const turn of game.turns) {
+      if (!turn || typeof turn !== "object" || turn.movement === undefined) continue;
+      const m = turn.movement;
+      if (!m || !meters(m.before) || !meters(m.after) || !Array.isArray(m.parts) || m.parts.length > 6
+        || !m.parts.every(part => part && ["turn", "plan", "discovery", "incident", "specialist", "limits"].includes(part.kind) && meters(part.changes, -200, 200))
+        || new Set(m.parts.map(part => part.kind)).size !== m.parts.length
+        || !meterKeys.every(key => m.before[key] + m.parts.reduce((sum, part) => sum + part.changes[key], 0) === m.after[key])
+        || ![ ["impact", turn.impactChange], ["continuity", turn.continuityChange], ["sector", turn.sectorChange], ["objective", turn.objectiveChange] ].every(([key, change]) => m.after[key as keyof typeof m.after] - m.before[key as keyof typeof m.before] === change)) return null;
+    }
+    if (Array.isArray(game.decisions) && !game.decisions.every(record => record.context === undefined || (record.context && meters(record.context)
+      && Number.isInteger(record.context.turn) && record.context.turn >= 0 && record.context.turn <= game.turns.length
+      && Number.isInteger(record.context.tempo) && record.context.tempo >= 0 && record.context.tempo <= 3))) return null;
     if (game.lastUsed !== undefined && !numericObject(game.lastUsed)) return null;
     if (game.adversaryMemory != null && (!numericObject(game.adversaryMemory.procedureCounts)
       || ![game.adversaryMemory.observeChoices, game.adversaryMemory.actChoices, game.adversaryMemory.hypothesisChanges].every(Number.isFinite))) return null;
@@ -217,6 +235,7 @@ export function parseSession(raw: string): SavedSession | null {
       seed: typeof game.seed === "number" && Number.isFinite(game.seed) ? game.seed : null,
       ...(game.challengeVersion !== undefined ? { challengeVersion: game.challengeVersion } : {}),
       ...(game.comparisonVersion === 2 ? { comparisonVersion: 2 as const } : {}),
+      ...(game.scoringVersion === 2 ? { scoringVersion: 2 as const } : {}),
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],
       adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
       pendingDecision: finished ? null : game.pendingDecision ?? null,

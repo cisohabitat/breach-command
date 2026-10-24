@@ -4,6 +4,16 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.9, 24 October 2026
+
+- Scale investigation pace credit by confirmed stages and distinguish useful hypothesis tests from unverified correct guesses. The reported four-turn, one-stage loss now earns 6/25 investigation and 1/10 testing, rather than two perfect components.
+- Add expandable, recorded meter calculations and decision-time comparisons with actual alternatives. Explain why zero impact can coexist with recovery uncertainty.
+- Compact evidence responses into comparable rows with exact costs and optional reasoning. Add a view of ready sources based only on published coverage.
+- Present one named resume action with saved difficulty, turn, stage count and pending task; keep another incident's setup separate.
+- Distinguish Training suggestions, Operational trade-offs and Crisis questions, and correct cadence-driven adaptation wording that falsely implied intervention.
+- Add an optional uncertain-lineage practice exercise. Migrate the learning notebook to version 2 without changing earlier answers.
+- New operations use BC12 and session 22; older operations retain their original score model and historical records. Difficulty pressure and seeded draws are unchanged.
+
 ## 0.10.8, 24 October 2026
 
 - Correct the missing “I” in “CONTAIN” on the tall-phone title artwork; preserve its responsive composition, entry control and release label.

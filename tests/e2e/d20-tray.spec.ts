@@ -12,7 +12,7 @@ for (const width of [320, 375, 390, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1
     localStorage.setItem("breach-command.preferences", JSON.stringify({ sound: false, music: false, voice: false, haptics: false }));
   }, [SESSION_KEY, serialiseSession(setHypothesis(newGame(0, "training", () => 0), "identity"), true, false)]);
   await page.goto("/play", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.locator(".procedure-card:not(:disabled)").first().click();
   await expect(page.locator(".action-sheet")).toBeVisible();
   // Finish the sheet's native entry before freezing rAF/timers for the die.

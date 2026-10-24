@@ -37,13 +37,13 @@ test("text keeps to the type system", async ({ page, browserName }) => {
   await openWithSave(page, null);
   await check(page, "assignment");
   await openWithSave(page, twoStagesGame());
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.waitForTimeout(600);
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
   await check(page, "investigate");
   await openWithSave(page, responsePhaseGame());
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.waitForTimeout(600);
   for (let phase = 0; phase < 3; phase++) {
     await page.locator(".response-options > button").first().click();

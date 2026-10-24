@@ -5,7 +5,7 @@ import { SESSION_KEY } from "../../lib/session";
 
 async function openMap(page: Page, game: Game = twoStagesGame()) {
   await openWithSave(page, game, false, { voice: false, sound: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: /^Investigate/ }).first().click();
   const reference = page.locator(".reference-fold");
   if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();

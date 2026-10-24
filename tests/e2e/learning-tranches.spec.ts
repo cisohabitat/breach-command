@@ -74,7 +74,7 @@ test("response confidence is optional, snapshots public evidence and survives Re
     localStorage.setItem("breach-command.preferences", JSON.stringify({ sound: false, voice: false, music: false, reflection: true }));
   }, serialiseSession(initial, false, false));
   await page.goto("/play", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const key = await page.evaluate(() => JSON.parse(localStorage.getItem("breach-command.session")!).learningId);
   expect(key).toBeTruthy();
   const panel = page.locator(".response-panel");
@@ -92,7 +92,7 @@ test("response confidence is optional, snapshots public evidence and survives Re
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("breach-command.session")!));
   expect(saved.game).toEqual(expected);
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("breach-command.session")!).learningId)).toBe(key);
   await panel.locator(".response-options > button").first().click();
   if (await panel.isVisible()) {
@@ -117,7 +117,7 @@ for (const scenario of [1, 8]) test(`recorded decisions carry into later Command
   game = playTurn(game, stage.detect.find(id => procedures.some(p => p.id === id))!, 20);
   game = resolveDecision(game, "contain");
   await openWithSave(page, game, false, { voice: false, music: false, sound: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   for (const tab of ["Command", "Briefing"]) {
     await page.getByRole("button", { name: new RegExp(`^${tab}`) }).first().click();
     const carry = page.locator(".decision-carry:visible");
@@ -157,7 +157,7 @@ test("confidence is off by default and the explicit opt-in survives a reload", a
     localStorage.setItem("breach-command.tutorial-complete", "true");
   }, serialiseSession(responsePhaseGame(), false, false));
   await page.goto("/play", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(page.getByText("Optional confidence reflection", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Game settings" }).click();
   await expect(page.locator("#reflection-setting")).toHaveAttribute("aria-checked", "false");
@@ -166,7 +166,7 @@ test("confidence is off by default and the explicit opt-in survives a reload", a
   await page.keyboard.press("Escape");
   await expect(page.getByText("Optional confidence reflection", { exact: true }).first()).toBeVisible();
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(page.getByText("Optional confidence reflection", { exact: true }).first()).toBeVisible();
 });
 
@@ -197,7 +197,7 @@ test("reflection quota failure warns outside the form and leaves the response an
     };
   }, serialiseSession(initial, false, false));
   await page.goto("/play", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const panel = page.locator(".response-panel");
   await panel.locator("summary").filter({ hasText: "Optional confidence reflection" }).click();
   await panel.getByRole("radio", { name: "High", exact: true }).check();

@@ -21,52 +21,52 @@ const sectorMoments = [
 ] as const;
 
 export function SectorSituation({ game }: { game: Game }) {
-  const { t } = useMessages();
+  const { t } = useMessages("livingIncident");
   const [title, detail] = sectorMoments[game.scenario];
   const severity = game.continuity <= 45 ? "critical" : game.continuity <= 75 ? "degraded" : "stable";
   return <div className={`sit-entry sector-condition ${severity}`}>
     <span className="sit-label">{t("fieldGuideDialog.sectorCondition")}</span>
     {/* The figure is the continuity readout's, already in the top row; here the
         condition is said in words. */}
-    <div className="sit-body"><p><strong>{t(title)}.</strong> {game.revealed.length >= 2 ? scenarios[game.scenario].constraints : t(detail)}</p><small>{t("livingIncident.is", { getOperationalLabel: getOperationalLabel(game) })}{severity === "critical" ? t("livingIncident.atRisk") : severity === "degraded" ? t("livingIncident.degraded") : t("livingIncident.stable2")}.</small></div>
+    <div className="sit-body"><p><strong>{t(title)}.</strong> {game.revealed.length >= 2 ? scenarios[game.scenario].constraints : t(detail)}</p><small>{t("is", { getOperationalLabel: getOperationalLabel(game) })}{severity === "critical" ? t("atRisk") : severity === "degraded" ? t("degraded") : t("stable2")}.</small></div>
   </div>;
 }
 
 const clampReadout = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
 
 export function SectorOperationalScene({ game }: { game: Game }) {
-  const { t } = useMessages();
+  const { t } = useMessages("livingIncident");
   if (![1, 2, 7].includes(game.scenario)) return null;
 
   const configs = {
     1: {
-      eyebrow: t("livingIncident.clinicalServiceLanes"),
-      title: t("livingIncident.patientCareContinuity"),
-      detail: t("livingIncident.liveServiceLanes"),
+      eyebrow: t("clinicalServiceLanes"),
+      title: t("patientCareContinuity"),
+      detail: t("liveServiceLanes"),
       lanes: [
-        { label: t("livingIncident.clinicalAccess"), value: game.continuity },
-        { label: t("livingIncident.diagnosticServices"), value: game.sectorHealth },
-        { label: t("livingIncident.patientRecords"), value: 100 - game.objectiveProgress },
+        { label: t("clinicalAccess"), value: game.continuity },
+        { label: t("diagnosticServices"), value: game.sectorHealth },
+        { label: t("patientRecords"), value: 100 - game.objectiveProgress },
       ],
     },
     2: {
-      eyebrow: t("livingIncident.engineeringOperatingEnvelope"),
-      title: t("livingIncident.generationAndControl"),
-      detail: t("livingIncident.marginsCombinePlant"),
+      eyebrow: t("engineeringOperatingEnvelope"),
+      title: t("generationAndControl"),
+      detail: t("marginsCombinePlant"),
       lanes: [
-        { label: t("livingIncident.generationMargin"), value: game.sectorHealth },
-        { label: t("livingIncident.controlRoom"), value: game.continuity },
-        { label: t("livingIncident.remoteMaintenance"), value: 100 - game.objectiveProgress },
+        { label: t("generationMargin"), value: game.sectorHealth },
+        { label: t("controlRoom"), value: game.continuity },
+        { label: t("remoteMaintenance"), value: 100 - game.objectiveProgress },
       ],
     },
     7: {
-      eyebrow: t("livingIncident.routingDomainPulse"),
-      title: t("livingIncident.networkServicePropagation"),
-      detail: t("livingIncident.domainTelemetryReflects"),
+      eyebrow: t("routingDomainPulse"),
+      title: t("networkServicePropagation"),
+      detail: t("domainTelemetryReflects"),
       lanes: [
-        { label: t("livingIncident.coreRouting"), value: 100 - game.objectiveProgress },
-        { label: t("livingIncident.managementPlane"), value: game.sectorHealth },
-        { label: t("livingIncident.subscriberService"), value: game.continuity },
+        { label: t("coreRouting"), value: 100 - game.objectiveProgress },
+        { label: t("managementPlane"), value: game.sectorHealth },
+        { label: t("subscriberService"), value: game.continuity },
       ],
     },
   } as const;
@@ -81,7 +81,7 @@ export function SectorOperationalScene({ game }: { game: Game }) {
     </div>
     {config.lanes.map(lane => {
       const value = clampReadout(lane.value);
-      const status = value > 75 ? t("livingIncident.stable") : value > 45 ? t("livingIncident.constrained") : t("livingIncident.atRisk2");
+      const status = value > 75 ? t("stable") : value > 45 ? t("constrained") : t("atRisk2");
       return <div className={`sit-entry sit-lane ${value <= 45 ? "at-risk" : value <= 75 ? "constrained" : "stable"}`} key={lane.label}>
         <span className="sit-label">{lane.label}</span>
         <div className="sit-body"><div className="sector-scene-track" aria-hidden="true"><i style={{ width: `${value}%` }} /></div><small>{status}</small></div>
@@ -92,22 +92,22 @@ export function SectorOperationalScene({ game }: { game: Game }) {
 }
 
 export function SpecialistTransmission({ game }: { game: Game }) {
-  const { t, say } = useMessages();
+  const { t, say } = useMessages("livingIncident");
   const specialist = namedSpecialists[game.specialist];
   const topology = infrastructureTopologies[game.scenario];
   const node = topology.nodes.find(item => item.id === game.focusedNode) ?? topology.nodes[0];
   const isolated = Object.values(game.nodePosture).filter(value => value === "isolated").length;
   const attribution = getAttributionRead(game);
   const advice = game.pendingSetPiece
-    ? t("livingIncident.theSectorDecision")
+    ? t("theSectorDecision")
     : game.impact >= 70
-      ? t("livingIncident.pressureIsCritical", { nodeLabel: node.label })
+      ? t("pressureIsCritical", { nodeLabel: node.label })
       : isolated
-        ? t("livingIncident.nodesIsolated", { count: isolated })
+        ? t("nodesIsolated", { count: isolated })
         : readyToCorrelate(game)
-          ? t("livingIncident.theEvidencePicture", { nodeLabel: node.label })
-          : t("livingIncident.focusCollectionOn", { nodeLabel: node.label, voice: specialist.voice });
+          ? t("theEvidencePicture", { nodeLabel: node.label })
+          : t("focusCollectionOn", { nodeLabel: node.label, voice: specialist.voice });
   return <section className="specialist-transmission" data-specialist={game.specialist} aria-live="polite">
-    <div><small>{specialist.callsign}, {attribution.confidence === "ATTRIBUTED" ? t("livingIncident.attributed") : t("livingIncident.confidenceAttribution", { confidence: say(withForm(level(attribution.confidence), "lower")) })}</small><strong>{specialist.name}</strong><p>{advice}</p></div>
+    <div><small>{specialist.callsign}, {attribution.confidence === "ATTRIBUTED" ? t("attributed") : t("confidenceAttribution", { confidence: say(withForm(level(attribution.confidence), "lower")) })}</small><strong>{specialist.name}</strong><p>{advice}</p></div>
   </section>;
 }

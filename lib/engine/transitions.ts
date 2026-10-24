@@ -16,6 +16,19 @@ const transitionMsg = scopedMsg("engine");
 const rationaleMsg = scopedMsg("engine.rationale");
 const correlationMsg = scopedMsg("engine.correlation");
 
+function turnMovement(before: Game, after: Game, changes: Record<"turn" | "plan" | "discovery" | "incident" | "specialist", import("./types.ts").MeterValues>): import("./types.ts").TurnMovement {
+  const values = (game: Game) => ({ impact: game.impact, continuity: game.continuity, sector: game.sectorHealth, objective: game.objectiveProgress });
+  const start = values(before), end = values(after);
+  const parts = (Object.keys(changes) as (keyof typeof changes)[]).map(kind => ({ kind, changes: changes[kind] }));
+  const limits = { impact: 0, continuity: 0, sector: 0, objective: 0 };
+  for (const key of Object.keys(limits) as (keyof typeof limits)[]) limits[key] = end[key] - start[key] - parts.reduce((sum, part) => sum + part.changes[key], 0);
+  const all = [...parts, { kind: "limits" as const, changes: limits }];
+  // JSON has one zero. Normalise arithmetic -0 before recording so a save
+  // round-trip preserves the calculation exactly.
+  for (const part of all) for (const key of Object.keys(limits) as (keyof typeof limits)[]) if (part.changes[key] === 0) part.changes[key] = 0;
+  return { before: start, after: end, parts: all.filter(part => Object.values(part.changes).some(value => value !== 0)) };
+}
+
 // Where the bonus or penalty waiting for the next roll came from, so the roll
 // can name it: "Since your last roll +2" covered a monitored node, an inject and
 // a decision alike. Two different sources read as several.
@@ -86,6 +99,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   return {
     scenario,
     comparisonVersion: 2,
+    scoringVersion: 2,
     ...(setup.seed == null ? {} : { challengeVersion: CHALLENGE_VERSION }),
     difficulty,
     chain: scenarios[scenario].choices.map(options => options[random(options.length)]),
@@ -427,7 +441,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       const adaptation = target !== null ? selectAdaptation(g, target, g.chain[target]) : null;
       if (adaptation && target !== null) {
         g.chain[target] = adaptation.id;
-        adversaryEvent = transitionMsg("adversary.withReaction", { event: adversaryEvent, reaction: words.reaction(g.scenario) });
+        adversaryEvent = transitionMsg("adversary.withReaction", { event: adversaryEvent, reaction: g.comparisonVersion === 2 ? transitionMsg("adversary.investigationReaction") : words.reaction(g.scenario) });
         g.adversaryEvent = adversaryEvent;
       }
     }
@@ -460,8 +474,17 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   if (g.specialist === "communications") impactChange -= 2;
   g.impact = clamp(g.impact + impactChange);
   g.continuity = clamp(g.continuity + continuityChange);
+  const movement = g.scoringVersion === 2 ? turnMovement(game, g, {
+    turn: { impact: success ? 3 : 10, continuity: success ? 0 : -1,
+      sector: -(sector.baseLoss - trainingRelief + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)),
+      objective: 6 + g.adversaryTempo * 3 + (success || planningBonus > 0 ? 0 : 4) + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) },
+    plan: { impact: scope.impact + intensity.impact, continuity: plan.intensity === "exhaustive" ? -sector.exhaustiveContinuity : 0, sector: scopeSector, objective: scope.objective + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0) },
+    discovery: { impact: revealed ? 1 - (success ? 3 : 10) - scope.impact - intensity.impact : 0, continuity: 0, sector: (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0), objective: revealed ? -6 : 0 },
+    specialist: { impact: g.specialist === "communications" ? -2 : 0, continuity: 0, sector: protection + (g.specialist === "communications" ? sector.commsRecovery : 0), objective: 0 },
+    incident: { impact: impactChange - (revealed ? 1 : (success ? 3 : 10) + scope.impact + intensity.impact) + (g.specialist === "communications" ? 2 : 0), continuity: continuityChange - (success ? 0 : -1) + (plan.intensity === "exhaustive" ? sector.exhaustiveContinuity : 0), sector: sectorSpecific, objective: objectiveSpecific },
+  }) : undefined;
   // Reports and saved history describe the movement after the meters' limits.
-  g.turns.push({ number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange: g.impact - game.impact, continuityChange: g.continuity - game.continuity, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, parts, sectorChange: g.sectorHealth - game.sectorHealth, objectiveChange: g.objectiveProgress - game.objectiveProgress, hypothesisTarget, hypothesisMatched, discriminating, windfall: !!revealed && revealed !== hypothesisTarget });
+  g.turns.push({ ...(movement ? { movement } : {}), number, procedure, raw, modifier, planningBonus, total, success, revealed, narrative, inject, injectReveal, impactChange: g.impact - game.impact, continuityChange: g.continuity - game.continuity, adversaryEvent, hypothesis: g.hypothesis, plan, specialistBonus, parts, sectorChange: g.sectorHealth - game.sectorHealth, objectiveChange: g.objectiveProgress - game.objectiveProgress, hypothesisTarget, hypothesisMatched, discriminating, windfall: !!revealed && revealed !== hypothesisTarget });
   if (breached(g)) settle(g, "lost");
   else if (exerciseEnd) settle(g, "exercise");
   else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");
@@ -611,6 +634,7 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
   }
 
   g.decisions.push({
+    ...(g.scoringVersion === 2 ? { context: { ...before, turn: g.turns.length } } : {}),
     stage: stageId,
     choice,
     title: words.decision(g.scenario, attack.stage, decisionTitles[choice]),

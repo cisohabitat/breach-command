@@ -6,7 +6,7 @@ import { practiceCases, practiceScore } from "../lib/practice.ts";
 import { parseSession, serialiseSession, serialiseBackupSession } from "../lib/session.ts";
 import { msg } from "../lib/i18n/message.ts";
 
-test("practice covers three bounded, deterministic exercises and keeps first choices", () => {
+test("practice covers four bounded, deterministic exercises and keeps first choices", () => {
   for (const [id, questions] of Object.entries(practiceCases)) {
     assert.equal(questions.length, 3);
     assert.ok(questions.every(q => q.options.length === 3 && q.correct >= 0 && q.correct < 3));
@@ -16,7 +16,7 @@ test("practice covers three bounded, deterministic exercises and keeps first cho
 });
 test("learning input rejects unsafe counts, identifiers, incomplete attempts and future versions", () => {
   assert.deepEqual(parseLearning(emptyLearning()), emptyLearning());
-  for (const value of [null, { ...emptyLearning(), version: 2 }, { ...emptyLearning(), attempts: [{ at: 1, lesson: "signal", answers: [1] }] }, { ...emptyLearning(), attempts: [{ at: 1, lesson: "constructor", answers: [1, 0, 2] }] }, { ...emptyLearning(), attempts: [{ at: -1, lesson: "signal", answers: [1, 0, 2] }] }]) assert.equal(parseLearning(value), null);
+  for (const value of [null, { ...emptyLearning(), version: 3 }, { ...emptyLearning(), attempts: [{ at: 1, lesson: "signal", answers: [1] }] }, { ...emptyLearning(), attempts: [{ at: 1, lesson: "constructor", answers: [1, 0, 2] }] }, { ...emptyLearning(), attempts: [{ at: -1, lesson: "signal", answers: [1, 0, 2] }] }]) assert.equal(parseLearning(value), null);
   const snapshot = { operation: "operation-1", phase: 0, confidence: "high", choice: "targeted", confirmed: 4, findings: 2, strong: 1, impact: 20, continuity: 80 };
   assert.ok(parseLearning({ ...emptyLearning(), reflections: [snapshot] }));
   for (const bad of [{ strong: 3 }, { phase: 3 }, { impact: NaN }, { operation: "<script>" }, { confidence: "certain" }]) assert.equal(parseLearning({ ...emptyLearning(), reflections: [{ ...snapshot, ...bad }] }), null);

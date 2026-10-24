@@ -41,7 +41,7 @@ test.afterEach(() => {
   Math.random = realRandom;
   Object.defineProperty(globalThis, "crypto", realCrypto);
 });
-async function resume(page: Page) { await page.getByRole("button", { name: "Resume", exact: true }).click(); await page.waitForTimeout(600); }
+async function resume(page: Page) { await page.getByRole("button", { name: /^Resume “.+”$/ }).click(); await page.waitForTimeout(600); }
 for (const width of widths) {
   test(`styles at ${width}`, async ({ page }) => {
     test.skip(!process.env.STYLE_DIR, "an instrument: set STYLE_DIR to record");

@@ -34,7 +34,7 @@ for (const width of [375, 1280]) {
       localStorage.setItem(key, save);
     }, [SESSION_KEY, serialiseSession(game, true, false)] as const);
     await page.goto("/play", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: /^Cloud control-plane abuse/ }).click();
     await page.locator('[data-procedure="cloud"]').click();
     await page.getByRole("button", { name: "Run procedure", exact: true }).click();

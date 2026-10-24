@@ -8,7 +8,7 @@ test("final evidence decisions show no unusable future-roll benefits or penaltie
   const final = response.decisions.at(-1)!;
   const game = { ...response, status: "playing" as const, pendingDecision: final.stage, decisions: response.decisions.slice(0, -1) };
   await openWithSave(page, game);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const report = page.locator(".report-dialog");
   await expect(report).toBeVisible();
   await expect(report).not.toContainText("Next roll");
@@ -17,13 +17,13 @@ test("final evidence decisions show no unusable future-roll benefits or penaltie
   await expect(report).not.toContainText("Next roll");
   // Earlier decisions still describe their usable modifier.
   await openWithSave(page, pendingDecisionGame());
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(report).toContainText("Next roll");
 });
 
 test("response review ranks full points including sector and objective bonuses", async ({ page }) => {
   await openWithSave(page, { ...responsePhaseGame(), objective: "exfiltration" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").nth(2).click();
   await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
   await page.locator("#debrief-decisions > details > summary").click();
@@ -40,7 +40,7 @@ test("saved record evidence and zero-reward assessments are rendered without inv
   expect(compared.impact).toBe(5);
   expect(compared.objectiveProgress).toBe(11);
   await openWithSave(page, compared);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: /^Investigate/ }).click();
   const reference = page.locator(".reference-fold");
   if (!(await reference.evaluate(element => (element as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();

@@ -8,7 +8,7 @@ import { openWithSave, responsePhaseGame } from "./fixtures";
 test("the result image is drawn and saved, and its card names no technique", async ({ page }) => {
   const game = responsePhaseGame(true);
   await openWithSave(page, game);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.waitForLoadState("networkidle");
   for (let phase = 0; phase < 3; phase++) {
     await page.locator(".response-options > button").first().click();
@@ -41,7 +41,7 @@ test("the result image is drawn in the player's language", async ({ page }) => {
     };
   });
   await openWithSave(page, responsePhaseGame(true), false, null, "/play?locale=en-XA");
-  await page.getByRole("button", { name: /^\[Réšümé·+\]$/ }).click();
+  await page.getByRole("button", { name: /^\[Réšümé “.+”·+\]$/ }).click();
   await page.waitForLoadState("networkidle");
   for (let phase = 0; phase < 3; phase++) {
     await page.locator(".response-options > button").first().click();

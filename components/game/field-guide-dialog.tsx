@@ -9,23 +9,23 @@ register(fieldGuideDialogMessages);
 
 export function FieldGuideDialog({ session }: { session: GameSession }) {
   const { glossaryTerms, plainLanguage } = glossary();
-  const { t, rich } = useMessages();
+  const { t, rich } = useMessages("fieldGuideDialog");
   const { rules, setRules } = session;
 
   return (
     <Dialog open={rules} onOpenChange={setRules}>
       <DialogContent className="game-dialog wide-dialog paper-dialog">
-        <DialogHeader><div className="eyebrow">{rich("fieldGuideDialog.formBc0022", {  }, { span: chunk => <span className="separator">{chunk}</span>, span2: chunk => <span>{chunk}</span> })}</div><DialogTitle>{t("fieldGuideDialog.howAnOperation")}</DialogTitle><DialogDescription>{t("fieldGuideDialog.aCompleteSolo")}</DialogDescription></DialogHeader>
+        <DialogHeader><div className="eyebrow">{rich("formBc0022", {  }, { span: chunk => <span className="separator">{chunk}</span>, span2: chunk => <span>{chunk}</span> })}</div><DialogTitle>{t("howAnOperation")}</DialogTitle><DialogDescription>{t("aCompleteSolo")}</DialogDescription></DialogHeader>
         <div className="rules-content">
           <section className="quick-start-guide" aria-label={t("briefingScreen.quickStart")}>
-            <div><span>1</span><p>{rich("fieldGuideDialog.strongFormA", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
-            <div><span>2</span><p>{rich("fieldGuideDialog.strongTestIt", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
-            <div><span>3</span><p>{rich("fieldGuideDialog.strongDecideStrong", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
-            <div><span>4</span><p>{rich("fieldGuideDialog.strongRespondStrong", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
+            <div><span>1</span><p>{rich("strongFormA", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
+            <div><span>2</span><p>{rich("strongTestIt", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
+            <div><span>3</span><p>{rich("strongDecideStrong", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
+            <div><span>4</span><p>{rich("strongRespondStrong", {  }, { strong: chunk => <strong>{chunk}</strong> })}</p></div>
           </section>
-          <section className="plain-language" aria-label={t("fieldGuideDialog.plainLanguage")}>
-            <h3>{t("fieldGuideDialog.plainLanguage")}</h3>
-            <p>{t("fieldGuideDialog.theInterfaceUses")}</p>
+          <section className="plain-language" aria-label={t("plainLanguage")}>
+            <h3>{t("plainLanguage")}</h3>
+            <p>{t("theInterfaceUses")}</p>
             <dl>
               {Object.entries(plainLanguage).map(([term, meaning]) => (
                 <div key={term}><dt>{glossaryTerms[term]}</dt><dd>{meaning}</dd></div>
@@ -33,29 +33,29 @@ export function FieldGuideDialog({ session }: { session: GameSession }) {
             </dl>
           </section>
           <div className="rules-grid">
-            <section><h3>{t("fieldGuideDialog.objective")}</h3><p>{t("fieldGuideDialog.revealFourHidden")}</p></section>
-            <section><h3>{t("fieldGuideDialog.hypothesesEvidence")}</h3><p>{t("fieldGuideDialog.recordOneExplanation")}</p></section>
-            <section><h3>{t("fieldGuideDialog.adaptiveAdversary")}</h3><p>{t("fieldGuideDialog.theActorEscalates")}</p></section>
-            <section><h3>{t("fieldGuideDialog.contextualDecisions")}</h3><p>{t("fieldGuideDialog.eachDiscoveryOffers")}</p></section>
-            <section><h3>{t("fieldGuideDialog.consequences")}</h3><p>{t("fieldGuideDialog.evidenceDecisionsDescribe")}</p></section>
-            <section><h3>{t("fieldGuideDialog.scoreRecovery")}</h3><p>{t("fieldGuideDialog.the100PointReview")}</p></section>
-            <section><h3>{t("fieldGuideDialog.savedSessions")}</h3><p>{t("fieldGuideDialog.yourCurrentInvestigation")}</p></section>
-            <section><h3>{t("briefingScreen.fastResolution")}</h3><p>{t("fieldGuideDialog.afterTurnOne")}</p></section>
-            <section><h3>{t("fieldGuideDialog.commandEvents")}</h3><p>{t("fieldGuideDialog.operationalInterruptionsTest")}</p></section>
-            <section><h3>{t("fieldGuideDialog.campaignProgression")}</h3><p>{t("fieldGuideDialog.completedIncidentsBest")}</p></section>
-            <section><h3>{t("fieldGuideDialog.sectorCondition")}</h3><p>{t("fieldGuideDialog.everySectorHas")}</p></section>
-            <section><h3>{t("fieldGuideDialog.teamDeployment")}</h3><p>{t("fieldGuideDialog.selectOneSpecialist")}</p></section>
-            <section><h3>{t("fieldGuideDialog.scopeIntensity")}</h3><p>{t("fieldGuideDialog.focusedChecksAre")}</p></section>
-            <section><h3>{t("fieldGuideDialog.advancedModes")}</h3><p>{t("fieldGuideDialog.dailyWeeklyIronman")}</p></section>
-            <section><h3>{t("fieldGuideDialog.infrastructureActions")}</h3><p>{t("fieldGuideDialog.selectingNodeChanges")}</p></section>
-            <section><h3>{t("fieldGuideDialog.evidenceCorrelation")}</h3><p>{t("fieldGuideDialog.successfulProceduresPreserve")}</p></section>
-            <section><h3>{t("fieldGuideDialog.sectorSetPieces")}</h3><p>{t("fieldGuideDialog.eachIncidentHas")}</p></section>
-            <section><h3>{t("fieldGuideDialog.campaignActs")}</h3><p>{t("fieldGuideDialog.tenIncidentsForm")}</p></section>
-            <section><h3>{t("evidenceWorkspace.caseTheory")}</h3><p>{t("fieldGuideDialog.declareWhatThe")}</p></section>
-            <section><h3>{t("fieldGuideDialog.campaignDirector")}</h3><p>{t("fieldGuideDialog.yourCommandPosture")}</p></section>
-            <section><h3>{t("fieldGuideDialog.mitreAttCk")}</h3><p>{t("fieldGuideDialog.everyTechniqueIn")}</p></section>
-            <section><h3>{t("fieldGuideDialog.runningItWith")}</h3><p>{rich("fieldGuideDialog.theAEducator", {  }, { a: chunk => <a href="/educators" target="_blank" rel="noopener">{chunk}</a> })}</p></section>
-            <section><h3>{t("fieldGuideDialog.portableBackup")}</h3><p>{t("fieldGuideDialog.settingsCanExport")}</p></section>
+            <section><h3>{t("objective")}</h3><p>{t("revealFourHidden")}</p></section>
+            <section><h3>{t("hypothesesEvidence")}</h3><p>{t("recordOneExplanation")}</p></section>
+            <section><h3>{t("adaptiveAdversary")}</h3><p>{t("theActorEscalates")}</p></section>
+            <section><h3>{t("contextualDecisions")}</h3><p>{t("eachDiscoveryOffers")}</p></section>
+            <section><h3>{t("consequences")}</h3><p>{t("evidenceDecisionsDescribe")}</p></section>
+            <section><h3>{t("scoreRecovery")}</h3><p>{t("the100PointReview")}</p></section>
+            <section><h3>{t("savedSessions")}</h3><p>{t("yourCurrentInvestigation")}</p></section>
+            <section><h3>{t("briefingScreen.fastResolution")}</h3><p>{t("afterTurnOne")}</p></section>
+            <section><h3>{t("commandEvents")}</h3><p>{t("operationalInterruptionsTest")}</p></section>
+            <section><h3>{t("campaignProgression")}</h3><p>{t("completedIncidentsBest")}</p></section>
+            <section><h3>{t("sectorCondition")}</h3><p>{t("everySectorHas")}</p></section>
+            <section><h3>{t("teamDeployment")}</h3><p>{t("selectOneSpecialist")}</p></section>
+            <section><h3>{t("scopeIntensity")}</h3><p>{t("focusedChecksAre")}</p></section>
+            <section><h3>{t("advancedModes")}</h3><p>{t("dailyWeeklyIronman")}</p></section>
+            <section><h3>{t("infrastructureActions")}</h3><p>{t("selectingNodeChanges")}</p></section>
+            <section><h3>{t("evidenceCorrelation")}</h3><p>{t("successfulProceduresPreserve")}</p></section>
+            <section><h3>{t("sectorSetPieces")}</h3><p>{t("eachIncidentHas")}</p></section>
+            <section><h3>{t("campaignActs")}</h3><p>{t("tenIncidentsForm")}</p></section>
+            <section><h3>{t("evidenceWorkspace.caseTheory")}</h3><p>{t("declareWhatThe")}</p></section>
+            <section><h3>{t("campaignDirector")}</h3><p>{t("yourCommandPosture")}</p></section>
+            <section><h3>{t("mitreAttCk")}</h3><p>{t("everyTechniqueIn")}</p></section>
+            <section><h3>{t("runningItWith")}</h3><p>{rich("theAEducator", {  }, { a: chunk => <a href="/educators" target="_blank" rel="noopener">{chunk}</a> })}</p></section>
+            <section><h3>{t("portableBackup")}</h3><p>{t("settingsCanExport")}</p></section>
           </div>
         </div>
       </DialogContent>

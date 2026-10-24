@@ -275,7 +275,7 @@ test("speaks plainly to a player who is new to the subject", () => {
     b.responseScore = 50;
     return b;
   })();
-  const oneTurn = playTurn(baseline(), "endpoint", 20).turns[0];
+  const oneTurn = playTurn(baseline(), "identity", 20).turns[0];
   const graded = (matched: boolean[]) => en(getBeginnerReview({
     ...clean,
     turns: matched.map((hypothesisMatched, index) => ({
@@ -428,7 +428,8 @@ test("explains each part of the score in the player's own numbers", () => {
   const breakdown=getScoreBreakdown(run);
   assert.equal(rows.reduce((sum,row)=>sum+row.value,0),breakdown.total,"the rows add up to the score");
   assert.equal(rows.reduce((sum,row)=>sum+row.maximum,0),100);
-  assert.ok(rows.find(row=>row.label==="Investigation")!.rule.includes("You took 6 turns"),"the turn rule uses the player's count");
+  assert.ok(rows.find(row=>row.label==="Investigation")!.rule.includes("after 6 turns"),"the turn rule uses the player's count");
+  assert.ok(rows.find(row=>row.label==="Investigation")!.rule.includes(`${run.revealed.length}/4 confirmed stages`),"completion is stated alongside pace");
   assert.ok(/not reached/.test(rows.find(row=>row.label==="Containment & recovery")!.rule),"an unreached response says why it scored nothing");
 });
 

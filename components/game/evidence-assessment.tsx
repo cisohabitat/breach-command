@@ -9,7 +9,7 @@ import { evidenceAssessmentMessages } from "@/lib/i18n/en/evidence-assessment";
 register(evidenceAssessmentMessages);
 
 export function EvidenceAxes({ game, item, standalone = false }: { game: Game; item: EvidenceItem; standalone?: boolean }) {
-  const { t } = useMessages();
+  const { t } = useMessages("evidenceAssessment");
   const read = getEvidenceAssessment(game, item);
   const axes = <span className="evidence-axes">
       <span><Activity size={14} aria-hidden="true" />{t(read.signal === "strong" ? "evidenceAssessment.strongSignal" : "evidenceAssessment.weakSignal")}</span>
@@ -19,7 +19,7 @@ export function EvidenceAxes({ game, item, standalone = false }: { game: Game; i
 }
 
 export function EvidenceAssessment({ game, item, compact = false }: { game: Game; item: EvidenceItem; compact?: boolean }) {
-  const { t } = useMessages();
+  const { t } = useMessages("evidenceAssessment");
   const read = getEvidenceAssessment(game, item);
   const analyst = getEvidenceSpecialist(game, item);
   // The report can disclose the longer basis on demand. Other findings live
@@ -27,24 +27,24 @@ export function EvidenceAssessment({ game, item, compact = false }: { game: Game
   const Root = compact ? "section" : "span";
   const basis = t(read.basis === "corroborated" ? "evidenceAssessment.basisCorroborated" : read.basis === "exhaustive" ? "evidenceAssessment.basisExhaustive" : read.basis === "single" ? "evidenceAssessment.basisSingle" : "evidenceAssessment.basisRecorded");
   return <Root className="evidence-assessment" data-signal={read.signal} data-confidence={read.confidence}>
-    <span className="source-analyst" data-specialist={analyst}><SpecialistPortrait specialist={analyst} /><span>{t("evidenceAssessment.sourceReview", { name: namedSpecialists[analyst].name, role: specialists[analyst].title })}</span></span>
+    <span className="source-analyst" data-specialist={analyst}><SpecialistPortrait specialist={analyst} /><span>{t("sourceReview", { name: namedSpecialists[analyst].name, role: specialists[analyst].title })}</span></span>
     <EvidenceAxes game={game} item={item} />
     <small>{t(item.supports ? "evidenceAssessment.signalConfirmed" : "evidenceAssessment.signalEmpty")}</small>
-    {compact ? <details className="decision-primer"><summary>{t("evidenceAssessment.confidenceBasis")}: {t(read.confidence === "strong" ? "evidenceAssessment.supportedInterpretation" : "evidenceAssessment.seekCorroboration")}</summary><p>{basis}</p></details> : <small>{basis}</small>}
+    {compact ? <details className="decision-primer"><summary>{t("confidenceBasis")}: {t(read.confidence === "strong" ? "evidenceAssessment.supportedInterpretation" : "evidenceAssessment.seekCorroboration")}</summary><p>{basis}</p></details> : <small>{basis}</small>}
   </Root>;
 }
 
 export function SignalGuide() {
-  const { t } = useMessages();
+  const { t } = useMessages("evidenceAssessment");
   return <details className="signal-guide decision-primer">
-    <summary>{t("evidenceAssessment.signalGuide")}</summary>
-    <p>{t("evidenceAssessment.axesExplained")}</p>
+    <summary>{t("signalGuide")}</summary>
+    <p>{t("axesExplained")}</p>
     <ul>
-      <li>{t("evidenceAssessment.exampleStrongStrong")}</li>
-      <li>{t("evidenceAssessment.exampleStrongWeak")}</li>
-      <li>{t("evidenceAssessment.exampleWeakStrong")}</li>
-      <li>{t("evidenceAssessment.exampleWeakWeak")}</li>
+      <li>{t("exampleStrongStrong")}</li>
+      <li>{t("exampleStrongWeak")}</li>
+      <li>{t("exampleWeakStrong")}</li>
+      <li>{t("exampleWeakWeak")}</li>
     </ul>
-    <p>{t("evidenceAssessment.responseTradeoff")}</p>
+    <p>{t("responseTradeoff")}</p>
   </details>;
 }

@@ -11,7 +11,7 @@ const PREFERENCES = "breach-command.preferences";
 test("Bot Commander replay neither changes campaign progress nor repeats the human rewards", async ({ page }) => {
   test.setTimeout(90_000);
   await openWithSave(page, responsePhaseGame(true), false, { sound: false, voice: false, music: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
   await page.getByRole("button", { name: "Open after-action review", exact: true }).click();
   await expect(page.locator(".campaign-change")).toContainText("Experience +");
@@ -95,7 +95,7 @@ test.describe("local persistence", () => {
     await page.goto("/play", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".briefing-screen")).toBeVisible();
     await page.waitForTimeout(500);
-    await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Resume “.+”$/ })).toHaveCount(0);
     expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY), "an ended operation's save is cleared").toBeNull();
   });
 
@@ -149,7 +149,7 @@ test.describe("local persistence", () => {
       } catch {}
     }, [PARKED_SESSION_KEY, inProgress] as const);
     await page.goto("/play", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Resume “.+”$/ })).toBeVisible();
     expect(await page.evaluate(key => localStorage.getItem(key), PARKED_SESSION_KEY), "it leaves the parking slot").toBeNull();
   });
 
@@ -192,7 +192,7 @@ test.describe("local persistence", () => {
       localStorage.setItem(key, value);
     }, [SESSION_KEY, saved] as const);
     await page.goto("/play", { waitUntil: "networkidle" });
-    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Resume “.+”$/ })).toBeVisible();
     await page.getByRole("button", { name: "Game settings" }).click();
     await page.getByRole("button", { name: "Export", exact: true }).click();
     const backup = JSON.parse(await page.getByRole("textbox", { name: "Progress backup" }).inputValue());
@@ -211,7 +211,7 @@ test.describe("local persistence", () => {
       localStorage.setItem("breach-command.ledger", "[]");
     }, { saved, campaign });
     await page.goto("/play", { waitUntil: "networkidle" });
-    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Resume “.+”$/ })).toBeVisible();
     await page.getByRole("button", { name: "Game settings" }).click();
     for (const damaged of [{}, { completed: "damaged", xp: "broken", operations: "broken" }, { ...defaultCampaign, commandPosture: { observe: "many" } }]) {
       await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign: damaged, telemetry: { wins: 99 }, ledger: [], session: serialiseSession(newGame(4, "training", () => 0), true, false) }));
@@ -239,7 +239,7 @@ test.describe("local persistence", () => {
       };
     }, [SESSION_KEY, previous] as const);
     await page.goto("/play", { waitUntil: "networkidle" });
-    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Resume “.+”$/ })).toBeVisible();
     await page.getByRole("button", { name: "Game settings" }).click();
     const campaign = { ...defaultCampaign, xp: 75 };
     await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign, session: restored }));
@@ -249,11 +249,11 @@ test.describe("local persistence", () => {
     expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toBe(previous);
     expect(JSON.parse(await page.evaluate(key => localStorage.getItem(key)!, CAMPAIGN_KEY)).xp).toBe(75);
     await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await expect(page.locator(".game-screen")).toBeVisible();
     await expect(page.locator(".game-screen")).toContainText(scenarios[4].title);
     await page.reload({ waitUntil: "networkidle" });
-    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Resume “.+”$/ })).toBeVisible();
     expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).game.scenario, SESSION_KEY)).toBe(0);
   });
 
@@ -266,7 +266,7 @@ test.describe("local persistence", () => {
       localStorage.setItem(key, value);
     }, [SESSION_KEY, previous] as const);
     await page.goto("/play", { waitUntil: "networkidle" });
-    await expect(page.getByRole("button", { name: "Resume", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Resume “.+”$/ })).toBeVisible();
     await page.getByRole("button", { name: "Game settings" }).click();
     await page.getByRole("textbox", { name: "Progress backup" }).fill(JSON.stringify({ format: "breach-command-backup", version: 1, campaign: { ...defaultCampaign, xp: 75 }, session: malformed }));
     await page.getByRole("button", { name: "Restore backup" }).click();
@@ -275,7 +275,7 @@ test.describe("local persistence", () => {
     expect(await page.evaluate(key => localStorage.getItem(key), SESSION_KEY)).toBe(previous);
     expect(JSON.parse(await page.evaluate(key => localStorage.getItem(key)!, CAMPAIGN_KEY)).xp).toBe(75);
     await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await expect(page.locator(".game-screen")).toContainText(scenarios[0].title);
   });
 
@@ -295,7 +295,7 @@ test.describe("local persistence", () => {
     await page.getByRole("button", { name: "Replace this device’s progress" }).click();
     await expect.poll(() => page.evaluate(key => JSON.parse(localStorage.getItem(key) ?? "null")?.game.variant.title.key, SESSION_KEY)).toBe("engine.variant.standardTitle");
     await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await expect(page.locator(".game-screen")).toContainText(scenarios[0].title);
     expect((await page.locator("body").innerText()).length).toBeLessThan(100_000);
   });

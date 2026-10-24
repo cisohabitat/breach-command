@@ -49,7 +49,7 @@ for (const [width, highContrast] of [
     const node = infrastructureTopologies[game.scenario].nodes[0];
     game = resolveMapAction(game, node.id, "isolate");
     await openWithSave(page, game, false, { voice: false, sound: false, highContrast });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     const cooling = page.locator(".procedure-card.cooling");
     await expect(cooling.first()).toBeDisabled();
     await expect(cooling.first().locator(".procedure-bottom")).toHaveText("On cooldown");
@@ -71,7 +71,7 @@ for (const width of [375, 1280]) {
   test(`unavailable workspace remains readable at ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await openWithSave(page, responsePhaseGame(), false, { voice: false, sound: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     const investigate = page.getByRole("button", { name: /^Investigate/ }).first();
     await expect(investigate).toBeDisabled();
     await expectReadable(investigate);
@@ -82,7 +82,7 @@ for (const width of [375, 1280]) {
     // The command locks theory; once resolved, the missing reading locks procedures.
     const game = { ...twoStagesGame(), hypothesis: null, pendingCommand: Object.keys(commandEvents)[0] as keyof typeof commandEvents };
     await openWithSave(page, game, false, { voice: false, sound: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: /^Investigate/ }).first().click();
     await unfoldReference(page);
     await page.locator(".theory-guide").evaluate(element => { (element as HTMLDetailsElement).open = true; });

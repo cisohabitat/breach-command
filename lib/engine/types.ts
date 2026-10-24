@@ -41,7 +41,15 @@ export type TurnInject = { id: string; reason: Message; effectLabel?: Message };
 // more are named together on the roll's breakdown.
 export type CarriedSource = { source: Message; change: number };
 
+export type MeterValues = { impact: number; continuity: number; sector: number; objective: number };
+export type TurnMovement = {
+  before: MeterValues;
+  after: MeterValues;
+  parts: { kind: "turn" | "plan" | "discovery" | "incident" | "specialist" | "limits"; changes: MeterValues }[];
+};
+
 export type Turn = {
+  movement?: TurnMovement;
   number: number;
   procedure: string;
   raw: number;
@@ -82,6 +90,7 @@ export type Turn = {
 export type DecisionChoice = "observe" | "act" | "attribute" | "contain" | "notify";
 
 export type DecisionRecord = {
+  context?: MeterValues & { turn: number; tempo: number };
   stage: string;
   choice: DecisionChoice;
   title: Message;
@@ -176,6 +185,7 @@ export type Game = {
   // Optional replay metadata: absent on saves predating the current generator.
   challengeVersion?: number;
   comparisonVersion?: 2;
+  scoringVersion?: 2;
 };
 
 export type GameSetup = {

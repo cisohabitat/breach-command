@@ -46,7 +46,7 @@ async function prepare(page: Page, sound = true, fast = false, game: Game | null
   }, [SESSION_KEY, game ? serialiseSession(game, true, fast) : "", sound] as const);
   await page.goto("/play", { waitUntil: "networkidle" });
   if (game) {
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     if (!fast) await page.locator(".procedure-card:not(:disabled)").first().click();
   }
 }

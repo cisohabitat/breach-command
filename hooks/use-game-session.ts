@@ -85,6 +85,7 @@ export function useGameSession() {
   const [debrief, setDebrief] = useState(false);
   const [scenarioChoice, setScenarioChoice] = useState(0);
   const [savedSession, setSavedSession] = useState<SavedSession | null>(null);
+  const [checkingResume, setCheckingResume] = useState(false);
   const [announcement, setAnnouncement] = useState<Message | null>(null);
   const [settings, setSettings] = useState(false);
   const [mode, setMode] = useState<GameMode>("campaign");
@@ -715,8 +716,9 @@ export function useGameSession() {
   // a start or import waits on the same load, so the newer-build check below
   // still runs before anything is written to the save slot.
   useEffect(() => {
-    if (!readStored(SESSION_KEY) && !readStored(PARKED_SESSION_KEY)) return;
     let cancelled = false;
+    if (!readStored(SESSION_KEY) && !readStored(PARKED_SESSION_KEY)) return;
+    queueMicrotask(() => { if (!cancelled) setCheckingResume(true); });
     void loadGame().then(({ session: saves }) => {
       if (cancelled) return;
       let stored = readStored(SESSION_KEY);
@@ -742,7 +744,7 @@ export function useGameSession() {
         removeStored(SESSION_KEY);
         setStorageNotice(msg("session.saveUnreadable"));
       }
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => { if (!cancelled) setCheckingResume(false); });
     return () => { cancelled = true; };
   }, []);
 
@@ -882,6 +884,7 @@ export function useGameSession() {
     resumed: !!game && game === resumedGame,
     campaign,
     savedSession,
+    checkingResume,
     difficulty, setDifficulty,
     scenarioChoice, setScenarioChoice,
     mode, setMode: chooseMode, campaignChange,

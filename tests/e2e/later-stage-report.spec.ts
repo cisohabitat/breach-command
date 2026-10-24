@@ -43,7 +43,7 @@ for (const tested of [1, 2]) for (const width of [320, 375, 430, 768, 810, 820, 
     await page.setViewportSize({ width, height: 900 });
     const { game, source } = laterStageFixture(tested);
     await openWithSave(page, game, false, { voice: false, sound: false, music: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.locator(`[data-procedure="${source}"]`).click();
     await page.getByRole("button", { name: "Run procedure", exact: true }).click();
     const report = page.locator(".report-dialog");
