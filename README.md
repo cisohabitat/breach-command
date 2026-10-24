@@ -59,7 +59,7 @@ After the cargo-source correction, a fresh 9,000-operation simulation records
 95.9% / 89.0% / 73.7% wins at Training / Operational / Crisis. These measure the
 Bot Commander on seeded standard incidents, not human completion rates.
 
-The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones use a dedicated composition with extra sky and terrace space to keep the embedded logo fully visible. The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
+The title artwork fills the viewport on desktop, iPad and phone, cropping its edges as needed. Tall phones use a dedicated composition with extra sky and terrace space to keep the embedded logo fully visible. Its tagline reads “DETECT · CONTAIN · RESPOND · RECOVER.” The entry button and release/build label remain within the screen's safe area as browser controls resize the view.
 
 The home page opens with the supplied Breach Command incident-command artwork: landscape on wide screens and portrait on tall screens. The bottom-left of the artwork shows the current release and build, matching the game footer. Select **Stop the Breach** to reach the incident desk at `/play`, where you can begin or resume an operation. You can bookmark `/play` to open the desk directly. Both entry pages remain available offline after visiting the desk; theme images are decorative and load separately from the game.
 
