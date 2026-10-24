@@ -13,7 +13,9 @@ export { isCampaignBackup } from "./campaign-backup.ts";
 // language; an older save's sentences are kept as they were, verbatim.
 // 20: retain the seeded setup's challenge version so a later generator cannot
 // issue a misleading replay code. Older builds park these saves intact.
-export const SESSION_VERSION = 20;
+// 21: action-record provenance and actual comparison effects. Old operations
+// retain their original comparison rules; never manufacture historical links.
+export const SESSION_VERSION = 21;
 
 // A stored sentence: a message from version 19, or an older save's English,
 // kept as the player read it.
@@ -104,6 +106,7 @@ export function parseSession(raw: string): SavedSession | null {
     if (parsed.version !== undefined && (!Number.isInteger(parsed.version) || Number(parsed.version) < 1)) return null;
     if (Number(parsed.version) > SESSION_VERSION) return null;
     const game = parsed.game as Game;
+    if (game.comparisonVersion !== undefined && game.comparisonVersion !== 2) return null;
     if (game.challengeVersion !== undefined && (!Number.isSafeInteger(game.challengeVersion) || game.challengeVersion < 1)) return null;
     if (!Number.isInteger(game.scenario) || !scenarios[game.scenario]) return null;
     if (!isKnown(difficulties, game.difficulty)) return null;
@@ -141,11 +144,18 @@ export function parseSession(raw: string): SavedSession | null {
     if (!evidence.every(item => idText(item.id) && Number.isFinite(item.turn)
       && ["LOW", "MODERATE", "HIGH"].includes(item.confidence)
       && (item.supports == null || knownAttack(item.supports)))) return null;
+    const recordId = (id: unknown) => typeof id === "string" && /^[A-Z0-9-]{1,64}$/.test(id);
+    if (!evidence.every(item => item.trace === undefined || (item.trace && typeof item.trace === "object" && !Array.isArray(item.trace) && recordId(item.trace.record) && recordId(item.trace.parent) && item.trace.record !== item.trace.parent))) return null;
     const evidenceIds = new Set(evidence.map(item => item.id));
     if (evidenceIds.size !== evidence.length) return null;
     if (Array.isArray(game.correlations) && !game.correlations.every(record => Array.isArray(record.evidence)
       && record.evidence.length === 2 && record.evidence[0] !== record.evidence[1]
-      && record.evidence.every(id => idText(id) && evidenceIds.has(id)))) return null;
+      && record.evidence.every(id => idText(id) && evidenceIds.has(id))
+      && typeof record.valid === "boolean" && (record.correct === undefined || typeof record.correct === "boolean")
+      && (record.assessment === undefined || ["causal", "coincidental"].includes(record.assessment))
+      && (record.effects === undefined || (record.effects && typeof record.effects === "object" && !Array.isArray(record.effects)
+        && [record.effects.impact, record.effects.objective, record.effects.roll].every(Number.isFinite)
+        && Math.abs(record.effects.impact) <= 100 && Math.abs(record.effects.objective) <= 100 && Math.abs(record.effects.roll) <= 5 && typeof record.effects.rewarded === "boolean")))) return null;
     if (Array.isArray(game.mapHistory) && !game.mapHistory.every(record => idText(record.node)
       && ["monitor", "isolate"].includes(record.action) && Number.isFinite(record.turn))) return null;
     if (Array.isArray(game.hypothesisHistory) && !game.hypothesisHistory.every(record => Number.isFinite(record.turn)
@@ -206,6 +216,7 @@ export function parseSession(raw: string): SavedSession | null {
       responseChoices,
       seed: typeof game.seed === "number" && Number.isFinite(game.seed) ? game.seed : null,
       ...(game.challengeVersion !== undefined ? { challengeVersion: game.challengeVersion } : {}),
+      ...(game.comparisonVersion === 2 ? { comparisonVersion: 2 as const } : {}),
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],
       adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
       pendingDecision: finished ? null : game.pendingDecision ?? null,

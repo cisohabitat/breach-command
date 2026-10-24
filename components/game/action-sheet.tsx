@@ -14,7 +14,7 @@ register(actionSheetMessages);
 const rollLine = (modifier: number): Effect => ({ kind: "roll", which: "this", amount: modifier, cap: null });
 
 export function ActionSheet({ session }: { session: GameSession }) {
-  const { t, rich, say } = useMessages();
+  const { t, rich, say } = useMessages("actionSheet");
   const {
     proc, rolling, setSelected, game, run,
     actionScope, setActionScope, actionIntensity, setActionIntensity, procedureAligned, config,
@@ -26,8 +26,8 @@ export function ActionSheet({ session }: { session: GameSession }) {
   const breakdown = proc && game ? getModifierBreakdown(game, proc.id, { scope: actionScope, intensity: actionIntensity }) : null;
   const opening = game && session.guidance === "training" && game.turns.length < 2 && !readyForTheory(game) && !readyToCorrelate(game);
   const planner = game && <div className="procedure-planner">
-    <div role="group" aria-label={t("actionSheet.scope2")}><span className="eyebrow">{t("actionSheet.scope2")}</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureScopes[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureScopes[id].modifier), meterEffect(game, "impact", procedureScopes[id].impact), meterEffect(game, "objective", procedureScopes[id].objective)]} /></button>)}</div></div>
-    <div role="group" aria-label={t("actionSheet.intensity")}><span className="eyebrow">{t("actionSheet.intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("actionSheet.selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureIntensities[id].modifier), meterEffect(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && t("actionSheet.sourceRestsLonger", { count: procedureIntensities[id].cooldown })]} /></button>)}</div></div>
+    <div role="group" aria-label={t("scope2")}><span className="eyebrow">{t("scope2")}</span><div>{(Object.keys(procedureScopes) as ProcedureScope[]).map(id => <button key={id} type="button" aria-pressed={actionScope === id} className={actionScope === id ? "active" : ""} onClick={() => setActionScope(id)}><strong>{procedureScopes[id].title}{actionScope === id && <b className="plan-selected">{t("selected")}</b>}</strong><small>{procedureScopes[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureScopes[id].modifier), meterEffect(game, "impact", procedureScopes[id].impact), meterEffect(game, "objective", procedureScopes[id].objective)]} /></button>)}</div></div>
+    <div role="group" aria-label={t("intensity")}><span className="eyebrow">{t("intensity")}</span><div>{(Object.keys(procedureIntensities) as ProcedureIntensity[]).map(id => <button key={id} type="button" aria-pressed={actionIntensity === id} className={actionIntensity === id ? "active" : ""} onClick={() => setActionIntensity(id)}><strong>{procedureIntensities[id].title}{actionIntensity === id && <b className="plan-selected">{t("selected")}</b>}</strong><small>{procedureIntensities[id].description}</small><EffectList className="plan-effects" items={[rollLine(procedureIntensities[id].modifier), meterEffect(game, "impact", procedureIntensities[id].impact), !!procedureIntensities[id].cooldown && t("sourceRestsLonger", { count: procedureIntensities[id].cooldown })]} /></button>)}</div></div>
   </div>;
 
   return (
@@ -56,42 +56,42 @@ export function ActionSheet({ session }: { session: GameSession }) {
         }}
       >
         <SheetHeader><SheetTitle>{proc?.title}</SheetTitle><SheetDescription>{proc && <Glossed text={proc.description} />}</SheetDescription></SheetHeader>
-        {proc && game && <p className="carried-plan" role="status">{game.turns.length ? t("actionSheet.carriedFromYour") : t("actionSheet.startingPlan")}<strong>{procedureScopes[actionScope].title}{t("actionSheet.scope")}</strong>{t("actionSheet.and")}<strong>{procedureIntensities[actionIntensity].title}{t("actionSheet.analysis")}</strong>. {game.turns.length ? t("actionSheet.theseStaySelected") : t("actionSheet.changeThemIn")}</p>}
+        {proc && game && <p className="carried-plan" role="status">{game.turns.length ? t("carriedFromYour") : t("startingPlan")}<strong>{procedureScopes[actionScope].title}{t("scope")}</strong>{t("and")}<strong>{procedureIntensities[actionIntensity].title}{t("analysis")}</strong>. {game.turns.length ? t("theseStaySelected") : t("changeThemIn")}</p>}
         {proc && game && game.mode !== "expert" && (game.scenario === 3 || game.scenario === 9) && <p className="relationship-helper collection-guidance">{sectorSystems[game.scenario].rule}</p>}
         {proc && game && <>
-          <div className="action-note"><span className="eyebrow">{t("actionSheet.hypothesisCheck")}</span><p><Glossed text={proc.question} /></p></div>
+          <div className="action-note"><span className="eyebrow">{t("hypothesisCheck")}</span><p><Glossed text={proc.question} /></p></div>
           <div className={`alignment-notice ${procedureAligned ? "aligned" : ""} ${read ? `level-${read.level}` : ""}`}>
             <span>
               {read && <strong>{say(read.label)}. </strong>}
-              {read ? say(read.detail) : procedureAligned ? t("actionSheet.thisProcedureTests") : t("actionSheet.thisProcedureDoes")}
+              {read ? say(read.detail) : procedureAligned ? t("thisProcedureTests") : t("thisProcedureDoes")}
             </span>
           </div>
           {/* What the roll needs sits above the plan that changes it: below the
               planner it was under the pinned run button on a tablet. */}
           {/* One typed line of the procedure form, not a row of big-number tiles. */}
-          <p className="roll-preview">{t("actionSheet.roll")}<b>d20 {(breakdown?.total ?? 0) < 0 ? "−" : "+"} {Math.abs(breakdown?.total ?? 0)}</b>{rich("actionSheet.needBB", { threshold: config.threshold }, { b: chunk => <b>{chunk}</b> })}</p>
+          <p className="roll-preview">{t("roll")}<b>d20 {(breakdown?.total ?? 0) < 0 ? "−" : "+"} {Math.abs(breakdown?.total ?? 0)}</b>{rich("needBB", { threshold: config.threshold }, { b: chunk => <b>{chunk}</b> })}</p>
           {breakdown && (
             <details className="modifier-details">
-              <summary>{t("actionSheet.howThisModifier")}<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => say(describePart(part))).join(", ") || (breakdown.parts.some(part => part.suppressed) ? t("actionSheet.oneBonusIs") : t("actionSheet.nothingApplies"))}</span></summary>
+              <summary>{t("howThisModifier")}<span>{breakdown.parts.filter(part => part.value !== 0 || part.shown).map(part => say(describePart(part))).join(", ") || (breakdown.parts.some(part => part.suppressed) ? t("oneBonusIs") : t("nothingApplies"))}</span></summary>
               <ul className="modifier-breakdown">
                 {breakdown.parts.filter(part => part.value !== 0 || part.suppressed || part.shown).map(part => (
                   <li key={say(part.label)} className={part.suppressed ? "suppressed" : ""}><span>{say(part.label)}</span><strong>{part.suppressed ? "—" : `${part.value < 0 ? "−" : "+"}${Math.abs(part.value)}`}</strong><small>{say(part.detail)}</small></li>
                 ))}
-                {breakdown.parts.every(part => part.value === 0 && !part.suppressed && !part.shown) && <li><span>{t("actionSheet.noModifiersApply")}</span><strong>0</strong><small>{t("actionSheet.thisIsPlain")}</small></li>}
+                {breakdown.parts.every(part => part.value === 0 && !part.suppressed && !part.shown) && <li><span>{t("noModifiersApply")}</span><strong>0</strong><small>{t("thisIsPlain")}</small></li>}
               </ul>
             </details>
           )}
           {opening ? <OpeningPlan key={proc.id} expanded={actionScope !== "focused" || actionIntensity !== "balanced"}>{planner}</OpeningPlan> : planner}
           <details className="modifier-details" key={proc.id}>
-            <summary>{t("actionSheet.checkDetails")}</summary>
-            <p className="muted small">{t("actionSheet.successRevealsStage")}</p>
-            <p className="relationship-helper">{t("actionSheet.evidenceConfidence")}</p>
+            <summary>{t("checkDetails")}</summary>
+            <p className="muted small">{t("successRevealsStage")}</p>
+            <p className="relationship-helper">{t("evidenceConfidence")}</p>
           </details>
           <div className="procedure-commit">
             <strong>{proc.title}</strong>
-            <small>{t("actionSheet.commitPlan", { scope: procedureScopes[actionScope].title, intensity: procedureIntensities[actionIntensity].title })}</small>
-            <p id="procedure-turn-cost">{t("actionSheet.turnCost")}</p>
-            <button className="primary-button full" aria-describedby="procedure-turn-cost" onClick={() => run(proc.id)}>{t("actionSheet.runProcedure")}</button>
+            <small>{t("commitPlan", { scope: procedureScopes[actionScope].title, intensity: procedureIntensities[actionIntensity].title })}</small>
+            <p id="procedure-turn-cost">{t("turnCost")}</p>
+            <button className="primary-button full" aria-describedby="procedure-turn-cost" onClick={() => run(proc.id)}>{t("runProcedure")}</button>
           </div>
         </>}
       </SheetContent>
@@ -100,11 +100,11 @@ export function ActionSheet({ session }: { session: GameSession }) {
 }
 
 function OpeningPlan({ expanded, children }: { expanded: boolean; children: ReactNode }) {
-  const { t } = useMessages();
+  const { t } = useMessages("actionSheet");
   // Seed once from the carried plan; returning to defaults must not close a
   // disclosure around the focused control. Thereafter the player owns it.
   const [open, setOpen] = useState(expanded);
   return <details className="modifier-details plan-options" open={open} onToggle={event => setOpen(event.currentTarget.open)}>
-    <summary>{t("actionSheet.optionalPlan")}</summary><p className="muted small">{t("actionSheet.openingPlan")}</p>{children}
+    <summary>{t("optionalPlan")}</summary><p className="muted small">{t("openingPlan")}</p>{children}
   </details>;
 }

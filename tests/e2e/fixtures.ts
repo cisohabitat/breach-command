@@ -68,6 +68,9 @@ export function twoStagesGame(): Game {
   if (game.pendingCommand) game = resolveCommand(game, "a");
   if (game.pendingSetPiece) game = resolveSetPiece(game, "a");
   if (game.revealed.length < 2 || game.status !== "playing") throw new Error("the fixture should hold two confirmed stages");
+  // Explicit, stable initiating records for the comparison interaction and
+  // screenshot fixture. Adjacency alone must never make this pair causal.
+  game = { ...game, evidence: game.evidence.map((item, index) => ({ ...item, trace: { record: `F${index + 1}`, parent: index ? `F${index}` : "EXTERNAL" } })) };
   return game;
 }
 

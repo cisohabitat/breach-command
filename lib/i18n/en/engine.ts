@@ -86,6 +86,10 @@ export const engineMessages = catalogue({
     "isolate": "{node} isolated. {rule}",
   },
   "engine.correlation": {
+    "recordLinked": "The findings contain a direct initiating-record reference to {record}. That supports this link, not a causal claim about the whole incident.",
+    "notEstablished": "These records do not establish a direct causal link. That does not prove the activities are unrelated. Stage, route, location and timing alone are insufficient.",
+    "recordMissed": "One action record explicitly names {record} as the action that initiated it. Revisit that reference before rejecting this direct link.",
+    "unsupportedClaim": "A causal link was claimed without an initiating-record reference. Shared stages, routes, locations and timing do not establish it.",
     "basisConsecutive": "they sit in consecutive stages of the chain — {first} then {second} — so one is what the next one needed",
     "basisRoute": "both sit on the {route} route, so they are steps in the same line of access",
     "credible": "{first} and {second} form a credible causal sequence: {basis}.",

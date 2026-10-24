@@ -164,8 +164,8 @@ test("holds the turn limit, modes, specialists and map actions", () => {
   g=baseline();g=resolveMapAction(g,"boundary","monitor");assert.equal(g.nodePosture.boundary,"monitored");assert.equal(g.mapActionsRemaining,2);assert.equal(g.nextModifier,2);g=resolveMapAction(g,"service","isolate");assert.equal(g.nodePosture.service,"isolated");assert.ok(g.continuity<100);
   g=baseline();g=playTurn(g,"email",12);if(g.pendingDecision)g=resolveDecision(g,"observe");g=playTurn(g,"cloud",12);if(g.pendingDecision)g=resolveDecision(g,"observe");assert.ok(g.pendingSetPiece);g=resolveSetPiece(g,"a");assert.equal(g.setPieceHistory.length,1);assert.equal(g.pendingSetPiece,null);
   g=baseline();g.evidence=[
-    {id:"E1",turn:1,title:legacy("Initial access"),source:legacy("Email"),system:legacy("User access"),confidence:"HIGH",supports:"phish",detail:legacy("A")},
-    {id:"E2",turn:2,title:legacy("Movement"),source:legacy("Identity"),system:legacy("Admin plane"),confidence:"HIGH",supports:"spray",detail:legacy("B")},
+    {id:"E1",turn:1,title:legacy("Initial access"),source:legacy("Email"),system:legacy("User access"),confidence:"HIGH",supports:"phish",detail:legacy("A"),trace:{record:"R1",parent:"X1"}},
+    {id:"E2",turn:2,title:legacy("Movement"),source:legacy("Identity"),system:legacy("Admin plane"),confidence:"HIGH",supports:"spray",detail:legacy("B"),trace:{record:"R2",parent:"R1"}},
   ];
   g=correlateEvidence(g,["E1","E2"]);assert.equal(g.correlations[0].valid,true);assert.equal(g.nextModifier,2);
   g=baseline();g.evidence=[

@@ -9,7 +9,8 @@ import { commandEvents, decisionChoices, decisionLanguageFor, decisionTitles, in
 import { type CarriedSource, type CommandEventId, type DecisionChoice, type EvidenceItem, type Game, type GameSetup, type MapAction, type NodePosture, type ResponsePhase, type SetPieceChoice, type TurnInject } from "./types.ts";
 import { scopedMsg, type Message } from "../i18n/message.ts";
 import { words } from "./words.ts";
-import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, responseFit, decisionRollShift, ownSourceBonus, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
+import { evidenceRecordLink, newCorroboration } from "../evidence-assessment.ts";
+import { FAILED_CHECK, availableIn, breached, clamp, cooldownWindow, crisisRerouteTarget, getAdversaryProfile, getMapActionEffect, getModifierBreakdown, carryModifier, responseFit, responseOptionScore, decisionRollShift, ownSourceBonus, proceduresFor, responseOptionsFor, settle, shuffle, stageOf, SPECIALIST_EXHAUSTED_AT } from "./rules.ts";
 
 const transitionMsg = scopedMsg("engine");
 const rationaleMsg = scopedMsg("engine.rationale");
@@ -41,6 +42,22 @@ function recentLast(deck: number[], idOf: (index: number) => string, recent: str
   return [...deck.filter(index => !recent.includes(idOf(index))), ...deck.filter(index => recent.includes(idOf(index))).sort((a, b) => recent.indexOf(idOf(a)) - recent.indexOf(idOf(b)))];
 }
 
+// Fictional action records are incident facts, revealed only with a finding.
+// Their direct initiating references can branch or skip a stage; stage/route
+// adjacency never supplies a link. This uses no gameplay random draws.
+function traceFor(game: Game, attackId: string) {
+  if (game.comparisonVersion !== 2) return undefined;
+  const stage = attacks.find(attack => attack.id === attackId)!.stage;
+  let hash = 2166136261;
+  const mix = (text: string) => { for (const char of text) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) >>> 0; };
+  mix(`${game.scenario}:${game.seed}:${game.variant.id}`);
+  const prefix = hash.toString(36).toUpperCase();
+  const record = (index: number) => `${prefix}-${index + 1}`;
+  mix(attackId);
+  const parent = hash % (stage + 1);
+  return { record: record(stage), parent: parent < stage ? record(parent) : `${prefix}-X${stage + 1}` };
+}
+
 export function newGame(scenario: number, difficulty: Difficulty = "operational", random = (max: number) => randomInt(max), setup: GameSetup = {}): Game {
   if (!Number.isInteger(scenario) || !scenarios[scenario]) throw new Error("Unknown incident");
   if (!difficulties[difficulty]) throw new Error("Unknown difficulty");
@@ -68,6 +85,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   const startingContinuity = 100 + (campaignTier >= 3 ? 5 : 0) + (campaignReadiness >= 60 ? 3 : campaignReadiness < 30 ? -5 : 0) + variant.continuity + routeContinuity;
   return {
     scenario,
+    comparisonVersion: 2,
     ...(setup.seed == null ? {} : { challengeVersion: CHALLENGE_VERSION }),
     difficulty,
     chain: scenarios[scenario].choices.map(options => options[random(options.length)]),
@@ -285,6 +303,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
       system: words.node(g.scenario, focusNode.id),
       confidence: revealed || plan.intensity === "exhaustive" ? "HIGH" : "MODERATE",
       supports: revealed,
+      ...(revealed ? { trace: traceFor(g, revealed) } : {}),
       detail: revealed ? words.attack(revealed, "evidence") : transitionMsg("evidence.noStageDetail", { node: words.node(g.scenario, focusNode.id) }),
     });
   }
@@ -366,6 +385,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
         system: words.node(g.scenario, focusNode.id),
         confidence: "HIGH",
         supports: injectReveal,
+        trace: traceFor(g, injectReveal),
         detail: words.attack(injectReveal, "evidence"),
       });
     }
@@ -666,15 +686,20 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
   const [first, second] = items as [EvidenceItem, EvidenceItem];
   const firstAttack = first.supports ? attacks.find(item => item.id === first.supports) : null;
   const secondAttack = second.supports ? attacks.find(item => item.id === second.supports) : null;
-  const valid = !!firstAttack && !!secondAttack && (Math.abs(firstAttack.stage - secondAttack.stage) <= 1 || attackVector(firstAttack.id) === attackVector(secondAttack.id));
+  const records = game.comparisonVersion === 2;
+  const link = evidenceRecordLink(first, second);
+  const valid = records ? !!link : !!firstAttack && !!secondAttack && (Math.abs(firstAttack.stage - secondAttack.stage) <= 1 || attackVector(firstAttack.id) === attackVector(secondAttack.id));
   const correct = (assessment === "causal") === valid;
+  const rewarded = correct && (records ? newCorroboration(game, first, second) : true);
   const theoryAligned = correct && valid && game.caseTheory === game.objective;
   // Only a valid pair has a basis, and only a valid pair reads one out.
   const basis: Message = firstAttack && secondAttack && Math.abs(firstAttack.stage - secondAttack.stage) <= 1
     ? correlationMsg("basisConsecutive", { first: words.stage(Math.min(firstAttack.stage, secondAttack.stage), "inSentence"), second: words.stage(Math.max(firstAttack.stage, secondAttack.stage), "inSentence") })
     : correlationMsg("basisRoute", { route: words.route(firstAttack ? attackVector(firstAttack.id) : "identity", "lower") });
   const sameSystem = JSON.stringify(first.system) === JSON.stringify(second.system);
-  const finding: Message = correct
+  const finding: Message = records
+    ? correlationMsg(correct ? valid ? "recordLinked" : "notEstablished" : valid ? "recordMissed" : "unsupportedClaim", { record: link ?? "" })
+    : correct
     ? valid
       ? correlationMsg("credible", { first: first.title, second: second.title, basis })
       : sameSystem
@@ -687,13 +712,14 @@ export function correlateEvidence(game: Game, evidenceIds: [string, string], ass
         // theft"), and was told they had judged on timing. Say what rules it out.
         ? correlationMsg("wronglyCausal", { first: words.stage(firstAttack.stage, "inSentence"), second: words.stage(secondAttack.stage, "inSentence") })
         : correlationMsg("causalNoStage");
+  const nextModifier = rewarded ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier;
+  const impact = clamp(game.impact + (rewarded ? (theoryAligned ? -5 : -3) : correct ? 0 : 4));
+  const objectiveProgress = clamp(game.objectiveProgress + (rewarded ? (theoryAligned ? -10 : -6) : correct ? 0 : 3));
+  const effects = { impact: impact - game.impact, objective: objectiveProgress - game.objectiveProgress, roll: nextModifier - game.nextModifier, rewarded };
   const g: Game = {
-    ...game,
-    nextModifier: correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier,
-    nextModifierSources: carriedSource(game.nextModifier, game.nextModifierSources, correct ? carryModifier(game.nextModifier, theoryAligned ? 3 : 2) : game.nextModifier, transitionMsg("source.comparison"), correct ? (theoryAligned ? 3 : 2) : 0),
-    impact: clamp(game.impact + (correct ? (theoryAligned ? -5 : -3) : 4)),
-    objectiveProgress: clamp(game.objectiveProgress + (correct ? (theoryAligned ? -10 : -6) : 3)),
-    correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding }],
+    ...game, nextModifier, impact, objectiveProgress,
+    nextModifierSources: carriedSource(game.nextModifier, game.nextModifierSources, nextModifier, transitionMsg("source.comparison"), rewarded ? (theoryAligned ? 3 : 2) : 0),
+    correlations: [...game.correlations, { evidence: evidenceIds, valid, assessment, correct, finding, ...(records ? { effects } : {}) }],
   };
   return breached(g) ? settle(g, "lost") : g;
 }
@@ -704,10 +730,10 @@ export function resolveResponse(game: Game, choice: string): Game {
   const option = responseOptionsFor(game)[phase].find(item => item.id === choice);
   if (!option) throw new Error("Unknown response choice.");
   const g: Game = { ...game, responseChoices: [...game.responseChoices, choice] };
-  const { preferred, objectiveAligned } = responseFit(g, g.responseChoices.length - 1, choice);
+  const { objectiveAligned } = responseFit(g, g.responseChoices.length - 1, choice);
   g.impact = clamp(g.impact + option.impact);
   g.continuity = clamp(g.continuity + option.continuity);
-  g.responseScore += option.score + (preferred ? 4 : 0) + (objectiveAligned ? 4 : 0);
+  g.responseScore += responseOptionScore(g, g.responseChoices.length - 1, option);
   if (objectiveAligned) g.objectiveProgress = clamp(g.objectiveProgress - 10);
   // A response option that spends the last of the service or the impact margin
   // loses the operation like any other step; the response is not exempt.

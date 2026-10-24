@@ -332,7 +332,7 @@ test("explains a score the player can check against what they saw", () => {
 
   // The correlation result states why a sequence is causal. Naming the two
   // systems taught that sharing a node is the reason, which it is not.
-  const withEvidence = { ...baseline(), evidence: [
+  const withEvidence = { ...baseline(), comparisonVersion: undefined, evidence: [
     { id: "E1", turn: 1, title: legacy("Initial access"), source: legacy("Email"), system: legacy("User access"), confidence: "HIGH" as const, supports: "phish", detail: legacy("A") },
     { id: "E2", turn: 2, title: legacy("Movement"), source: legacy("Identity"), system: legacy("User access"), confidence: "HIGH" as const, supports: "spray", detail: legacy("B") },
   ] };
@@ -341,7 +341,7 @@ test("explains a score the player can check against what they saw", () => {
   assert.ok(/consecutive stages/.test(say(causal.finding)), "it names stage adjacency as the basis");
   assert.ok(!/across User access and User access/.test(say(causal.finding)), "and never offers the shared system as the reason");
 
-  const unrelated = { ...baseline(), evidence: [
+  const unrelated = { ...baseline(), comparisonVersion: undefined, evidence: [
     { id: "E1", turn: 1, title: legacy("Initial access"), source: legacy("Email"), system: legacy("User access"), confidence: "HIGH" as const, supports: "phish", detail: legacy("A") },
     { id: "E2", turn: 2, title: legacy("Noise"), source: legacy("Cloud"), system: legacy("User access"), confidence: "LOW" as const, supports: null, detail: legacy("B") },
   ] };
@@ -350,7 +350,7 @@ test("explains a score the player can check against what they saw", () => {
   assert.ok(/not consecutive stages and sit on different routes|confirmed no stage/.test(say(wrong.finding)), "a wrong causal call is told what rules the sequence out");
 
   assert.ok(plainLanguage["evidence boundary"], "the vocabulary a playtest asked about is translated");
-  assert.ok(/consecutive stages|same route/.test(plainLanguage["causal sequence"]), "and the causal rule is stated in the glossary too");
+  assert.match(plainLanguage["causal sequence"], /record.*initiator/, "the current glossary requires an initiating-record reference");
 });
 
 test("credits a reading that was wrong but properly tested", () => {

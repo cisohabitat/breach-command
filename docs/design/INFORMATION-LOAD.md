@@ -67,7 +67,10 @@ These remain design hypotheses about learning, not measured human outcomes.
 ## Verification and release
 
 The 0.9.53 clarity pass marks the first unconfirmed stage explicitly and puts
-sources and the two evidence axes directly in comparison endpoints. The review
+sources and the two evidence axes directly in comparison endpoints. New findings
+also show their action-record and initiating-record IDs. The comparison help
+explains that only an explicit reference proves the direct link; “Link not
+established” does not prove unrelated activity. The review
 places a compact milestone timeline before detailed scoring. Finding responses
 keep exact recorded effects in adjacent native disclosures; the complete check
 log stays available separately. Index navigation opens the requested section

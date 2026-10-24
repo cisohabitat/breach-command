@@ -4,6 +4,14 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.7, 24 October 2026
+
+- Stop repeat comparison rewards for empty findings or already corroborated evidence. New independent record links earn relief; unsupported assessments retain their costs.
+- Base new causal assessments on explicit initiating action records, with a separate “Link not established” choice. Stage, route and collection timing alone prove no link. Show actual comparison effects after meter limits.
+- Rank response options in the review using the same sector and objective bonuses as resolution, and remove unusable next-roll effects from final evidence decisions.
+- Introduce BC11 challenge codes and session version 21; older operations preserve their original comparison rules, records and dice.
+- Share typed component message prefixes to keep these changes within the existing script budgets.
+
 ## 0.10.6, 24 October 2026
 
 - Remove the unused operations-map component, its six-message catalogue and styles, and the unused stage-icon helper.

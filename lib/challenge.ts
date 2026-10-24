@@ -12,10 +12,10 @@ const specialistIds: SpecialistId[] = ["hunter", "forensics", "identity", "ot", 
 
 // A code promises the same operation, so it carries the version of the content
 // it was made against. Increment this whenever a scenario's technique pools, the
-// techniques themselves or the seeded draws change: an older code would
+// techniques themselves, operation rules or the seeded draws change: an older code would
 // otherwise decode cleanly and quietly play a different incident. Version 1
 // codes were written as "BC-…" before the version was part of the code.
-export const CHALLENGE_VERSION = 10;
+export const CHALLENGE_VERSION = 11;
 const checksumOf = (text: string) => [...text].reduce((sum, char) => (sum + char.charCodeAt(0)) % 97, 0);
 
 export function encodeChallenge(setup: ChallengeSetup) {

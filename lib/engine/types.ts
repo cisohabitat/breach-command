@@ -19,9 +19,9 @@ export type AdversaryMemory = {
 
 export type CommandRecord = { event: CommandEventId; choice: "a" | "b"; title: Message; quality: number; effect: Message };
 
-export type EvidenceItem = { id: string; turn: number; title: Message; source: Message; system: Message; confidence: "LOW" | "MODERATE" | "HIGH"; supports: string | null; detail: Message };
+export type EvidenceItem = { id: string; turn: number; title: Message; source: Message; system: Message; confidence: "LOW" | "MODERATE" | "HIGH"; supports: string | null; detail: Message; trace?: { record: string; parent: string } };
 
-export type CorrelationRecord = { evidence: [string, string]; valid: boolean; assessment: "causal" | "coincidental"; correct: boolean; finding: Message };
+export type CorrelationRecord = { evidence: [string, string]; valid: boolean; assessment: "causal" | "coincidental"; correct: boolean; finding: Message; effects?: { impact: number; objective: number; roll: number; rewarded: boolean } };
 
 export type SetPieceChoice = "a" | "b" | "c";
 
@@ -175,6 +175,7 @@ export type Game = {
   seed: number | null;
   // Optional replay metadata: absent on saves predating the current generator.
   challengeVersion?: number;
+  comparisonVersion?: 2;
 };
 
 export type GameSetup = {
