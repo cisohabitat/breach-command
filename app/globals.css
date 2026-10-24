@@ -2774,7 +2774,7 @@ unmount the node in the same frame the state closes. Entrances are untouched. */
    mono capitals on every label (the case line, the window, the meters' names,
    the chain's states, the map's tiles, the footer) were a "terminal" garnish
    applied everywhere, which is what made them read as generated. */
-.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes :is(small,em),.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,:is(.procedure-planner,.case-theory) .plan-selected,.training-prompt .prompt-sources,.service-node small {
+.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes :is(small,em),.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,:is(.procedure-planner,.case-theory) .plan-selected,.training-prompt .prompt-sources {
   font-family:var(--font-ui);
   text-transform:none;
   letter-spacing:0;

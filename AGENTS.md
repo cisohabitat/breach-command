@@ -34,6 +34,11 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Technical baseline
 
+- Release audit maintenance (0.10.6): Next.js / eslint-config-next 16.4.2 and
+  the bounded Zod 4.6.7 override address the October advisories. Both lint
+  consumers support Zod 4. Keep the seven-day age policy and security gate;
+  see `docs/SECURITY-REVIEW.md` for the affected advisories and review.
+
 - Collection guidance in cases 4 and 10 names only published clocks and plan effects. Expert withholds that coaching. Rapid and Enterprise each still cost one turn; do not imply either skips sector decay. Preserve the rule tables and BC10 reproduction when improving these descriptions. The Bot's investigation uses public evidence, but command/sector quality and response score are internal metadata: describe balance figures as an assisted reference, not human completion rates or a public-only benchmark.
 
 - Learning tranche (0.10.0): `/practice` is a separate client route with three authored, three-decision exercises. Preserve first-choice answers and separate attempts; never turn practice into campaign score or mutate a saved operation. All question/feedback text is catalogued. Recommendations and operation summaries run only after an operation ends. Follow `getBeginnerReview(game).next` by its message identifier before falling back to recorded facts: a service cost must not replace a corroboration lesson with containment practice. Pass the same priority to the notebook; never parse translated prose or read hidden answers to choose an exercise.
@@ -327,6 +332,10 @@ These instructions apply to the entire repository. Preserve the game as a polish
 
 ## Change discipline
 
+- Before removing files, trace app imports, dynamic asset paths, catalogue registries,
+  tests, scripts and CI. Keep the current infrastructure map, finding miniatures
+  and shared map-heading styles when cleaning up superseded game surfaces.
+
 - Landscape/reference polish (0.9.58): at widths above 650 px, landscape
   heights up to 850 px use the compact header and tabs, including iPad
   landscape. Preserve full labels, decision badges and 44 px controls. Keep
@@ -450,7 +459,7 @@ Run `pnpm test:a11y` for any change to markup, labels or the responsive rules th
 
 ## Publication
 
-Verify allows 30 minutes for Chromium and 35 for WebKit/Firefox, including dependency installation and the production build. Cross-browser dependency setup uses Ubuntu's canonical HTTPS mirror, with a ten-minute setup limit, after the Azure mirror consumed an entire job downloading packages. Update the runner's `apt-mirrors*.txt` indirection as well as `.list`/`.sources` files, and inspect setup failures separately from test execution. Keep the complete suites, per-test limits and performance budgets intact.
+Verify allows 30 minutes for Chromium and 35 for WebKit/Firefox, including dependency installation and the production build. Both browser jobs use Ubuntu's canonical HTTPS mirror after the Azure mirror consumed an entire job downloading packages; WebKit/Firefox setup has a ten-minute limit. Update the runner's `apt-mirrors*.txt` indirection as well as `.list`/`.sources` files, and inspect setup failures separately from test execution. Keep the complete suites, per-test limits and performance budgets intact.
 
 Fetch runner baselines with the explicit refspec in `docs/RELEASING.md` before comparing or checking them out. In a single-branch clone, `git fetch origin ci/visual-baselines` updates `FETCH_HEAD` but can leave `origin/ci/visual-baselines` stale; do not accept a visual comparison against that old reference.
 
@@ -475,7 +484,7 @@ and keep the first move clear on phones. `public/art/sectors` holds ten local
 WebP files named by scenario ID; `public/sw.js` keeps each as it is seen rather than precaching them. The sectors whose incident reaches operational technology are named in `operationalTechnologySectors` (`lib/scenarios.ts`), never by case number.
 
 Story artwork: `components/game/story-art.tsx` supplies six decorative specialist
-portraits, three act scenes, three ending scenes and four source artifacts.
+portraits, three act scenes, three ending scenes and twelve finding miniatures.
 Show source artifacts only on confirmed findings and derive them from the
 procedure/sector, never a hidden technique. Real evidence stays readable text.
 Keep ending art after the result and review control. All assets are local WebP
@@ -496,7 +505,7 @@ Field-kit art (15 October 2026): the user explicitly requested procedure icons,
 evidence-source miniatures and specialist emblems. This replaces the earlier
 number-only procedure treatment. Use the original transparent raster atlas at
 `public/art/icons/field-kit.webp`, documented in its README, with full text labels
-beside it. Keep the ruled procedure list, portraits and larger source scenes.
+beside it. Keep the ruled procedure list, portraits and finding miniatures.
 The miniatures read collection-source ids only, never the hidden chain. All art
 is decorative, reserves its space and is hidden in print; do not add the atlas
 to service-worker precache. `docs/design/ART-DIRECTION.md` records the decision.

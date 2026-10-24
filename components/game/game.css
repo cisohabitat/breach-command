@@ -718,7 +718,7 @@
   grid-row:1/3;
   color:var(--lime);
 }
-.evidence-decision button strong {
+.evidence-decision button strong,.settings-list b {
   font-size:var(--type-body);
   font-weight:600;
 }
@@ -1355,13 +1355,6 @@
   grid-template-columns:repeat(5,1fr);
   flex-wrap:wrap;
 }
-.operations-map {
-  border:1px solid #434850;
-  background:#15181d;
-  border-radius:3px;
-  padding:18px;
-  margin:20px 0;
-}
 .map-heading {
   display:flex;
   flex-wrap:wrap;
@@ -1369,103 +1362,6 @@
   justify-content:space-between;
   gap:4px 12px;
   margin-bottom:0;
-}
-.map-tempo {
-  display:flex;
-  align-items:center;
-  gap:6px;
-  border:1px solid #555c65;
-  border-radius:2px;
-  padding:7px 10px;
-  font:500 var(--type-caption) var(--font-mono);
-  color:#cfc7b6;
-}
-.map-tempo.tempo-2,.map-tempo.tempo-3 {
-  border-color:#9a694e;
-  color:#f2b291;
-  background:#39271f;
-}
-.map-path {
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:18px;
-  margin:25px 0 20px;
-}
-.map-step {
-  position:relative;
-  min-width:0;
-  text-align:center;
-}
-.map-node {
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  margin:0 auto 9px;
-  border:1px solid #484d53;
-  background:#1d2127;
-  color:#787d84;
-  position:relative;
-  z-index:2;
-}
-.map-step.confirmed .map-node {
-  border-color:var(--stage-color);
-  color:var(--stage-color);
-}
-.map-step.active .map-node {
-  border-color:#e8c968;
-  color:#e8c968;
-  animation:pulse 1s 4 alternate;
-}
-.map-step small {
-  display:block;
-  color:#858a91;
-  font-size:var(--type-micro);
-}
-.map-step strong {
-  display:block;
-  font-size:var(--type-caption);
-  line-height:var(--leading-compact);
-  margin-top:4px;
-  color:#cac4b6;
-  overflow-wrap:anywhere;
-}
-.map-link {
-  position:absolute;
-  height:1px;
-  background:var(--stage-color);
-  top:24px;
-  inset-inline-start:calc(50% + 24px);
-  width:calc(100% + 18px - 48px);
-  z-index:1;
-}
-.service-node {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  border-top:1px solid #333840;
-  padding-top:14px;
-  color:var(--lime);
-}
-.service-node span {
-  min-width:0;
-  flex:1;
-}
-.service-node small {
-  display:block;
-  font:500 var(--type-micro) var(--font-mono);
-  color:#858b93;
-}
-.service-node strong {
-  display:block;
-  font-size:var(--type-caption);
-  font-weight:500;
-  color:#d3cdbe;
-  margin-top:3px;
-}
-.service-node>b {
-  font:500 var(--type-lead) var(--font-mono);
 }
 .command-event-heading {
   align-items:flex-start;
@@ -1582,10 +1478,6 @@
   grid-row:1/3;
   color:var(--lime);
 }
-.settings-list b {
-  font-size:var(--type-body);
-  font-weight:600;
-}
 .settings-list small {
   font-size:var(--type-caption);
   color:#b2aa98;
@@ -1601,33 +1493,9 @@
 .high-contrast button:focus-visible {
   outline-width:3px;
 }
-@media(max-width:850px) {
-  .game-heading>div:first-child {
-    width:100%;
-  }
-  .map-path {
-    gap:10px;
-  }
-  .map-link {
-    width:calc(100% + 10px - 48px);
-  }
-}
 @media(max-width:650px) {
   .career-card {
     margin-top:20px;
-  }
-  .operations-map {
-    padding:15px 12px;
-  }
-  .map-path {
-    grid-template-columns:1fr 1fr;
-    gap:16px 8px;
-  }
-  .map-step:nth-child(2) .map-link,.investigation-dashboard .procedure-card.established .procedure-bottom svg,.hypothesis-board.has-reading .hypothesis-standing .standing-meter {
-    display:none;
-  }
-  .map-link {
-    width:calc(100% + 8px - 48px);
   }
   .command-options {
     grid-template-columns:1fr;
@@ -1640,9 +1508,6 @@
 @media(max-width:430px) {
   .map-heading {
     flex-direction:column;
-  }
-  .map-tempo {
-    align-self:flex-start;
   }
   .career-card {
     grid-template-columns:1fr auto;
@@ -1939,6 +1804,9 @@
   background:none;
 }
 @media(max-width:850px) {
+  .game-heading>div:first-child {
+    width:100%;
+  }
   .mode-picker>div {
     grid-template-columns:repeat(3,1fr);
   }
@@ -3943,7 +3811,7 @@ span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   margin-bottom:3px;
 }
 @media(max-width:650px) {
-  .tutorial-steps>div:not(.current),.workspace-tabs button>b {
+  .investigation-dashboard .procedure-card.established .procedure-bottom svg,.hypothesis-board.has-reading .hypothesis-standing .standing-meter,.tutorial-steps>div:not(.current),.workspace-tabs button>b {
     display:none;
   }
   .tutorial-next {
@@ -5927,7 +5795,7 @@ span.effect-list>span.effect.term>em {
 .career-progress {
   height:2px;
 }
-.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.map-step small,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes :is(small,em),.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,:is(.procedure-planner,.case-theory) .plan-selected,.training-prompt .prompt-sources,.service-node small {
+.case-line,.operation-status>.mono,.sector-margin-line .mono,.case-meters>div>.mono,.chain-status,.adversary-state,.hypothesis-ledger>details>div b,.known-facts b,.topology-routes .route-status,.resolution-steps li b,.act-number,.route-ruled-out,.map-command-bar em,.spent-label,.procedure-bottom,.topology-nodes :is(small,em),.focus-instruction,.desk-line,.brand-light,.game-footer,.alignment-label,:is(.procedure-planner,.case-theory) .plan-selected,.training-prompt .prompt-sources {
   font-family:var(--font-ui);
   text-transform:none;
   letter-spacing:0;
