@@ -190,7 +190,7 @@ async function compareFindings(page: Page, assessment: "causal" | "coincidental"
   const findings = page.locator(".evidence-cards button").filter({ has: page.locator('[data-signal="strong"]') });
   await findings.nth(0).click();
   await findings.nth(1).click();
-  await page.getByRole("button", { name: assessment === "causal" ? "Causal sequence" : "Coincidental overlap", exact: true }).click();
+  await page.getByRole("button", { name: assessment === "causal" ? "Causal sequence" : "Link not established", exact: true }).click();
   await page.getByRole("button", { name: "Test assessment", exact: true }).click();
 }
 

@@ -199,6 +199,11 @@ export function responseFit(game: Game, phaseIndex: number, choice: string) {
   return { preferred, objectiveAligned: objectiveResponses[game.objective][phaseIndex] === choice };
 }
 
+export function responseOptionScore(game: Game, phaseIndex: number, option: { id: string; score: number }) {
+  const fit = responseFit(game, phaseIndex, option.id);
+  return option.score + (fit.preferred ? 4 : 0) + (fit.objectiveAligned ? 4 : 0);
+}
+
 // One part of the roll in words. Two or more carried sources share one label —
 // "Inject: Hard going −2; Monitored Access boundary +2, together" — and printed
 // with its value after it the line read as a sum to do in the head, so it is

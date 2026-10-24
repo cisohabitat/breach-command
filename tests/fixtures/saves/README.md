@@ -25,3 +25,9 @@ Version 20 adds challenge-generator metadata for reproducible operations. Older
 saves without it keep their chain and dice but cannot issue a current-version
 replay code. The canonical unseeded opening remains unseeded; challenge-version
 round trips are checked separately in `tests/challenge-diversity.test.ts`.
+
+Version 21 adds comparison-model metadata, public action-record references and
+actual clamped comparison effects. Its canonical opening exercises the new
+model; versions 10–20 retain the legacy comparison model without invented
+references. `tests/correlation-records.test.ts` covers provenance and effects
+validation, round trips, independent rewards and clamped reward consumption.

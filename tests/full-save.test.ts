@@ -51,6 +51,8 @@ function replay(): Game {
   };
   const { difficulty, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute } = fixture.setup;
   let game = newGame(scenario, difficulty, historicalRandom, { seed, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute, variant: incidentVariant(scenario, campaignRoute, seed) });
+  // Keep the historical comparison model too; new incidents use recorded provenance.
+  game = { ...game, comparisonVersion: undefined };
   // Since 0.9.19 an operation's search for an event starts elsewhere
   // (commandEventStart), and since 0.9.23 a variant can draw a sector's third
   // crisis, so the same seed can meet a different event or crisis; the replay

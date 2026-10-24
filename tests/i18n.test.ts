@@ -184,9 +184,10 @@ test("every key a component reads is in the base or its own catalogue", () => {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     const stem = source.match(/from "@\/lib\/i18n\/en\/([a-z-]+)"/)?.[1];
     const own = stem ? catalogues[stem] : {};
+    const expanded = new Set(scopedMessageKeys(source, [...Object.keys(en), ...Object.keys(own)], true));
     const prefixes = new Set([...Object.keys(en), ...Object.keys(own)].map(key => key.split(".")[0]));
     for (const [, key] of source.matchAll(/"([a-z][A-Za-z]*\.[A-Za-z0-9]+)"/g)) if (prefixes.has(key.split(".")[0]) && !(key in en) && !(key in own)) missing.push(`${file}: ${key}`);
-    for (const key of Object.keys(own)) if (!source.includes(`"${key}"`) && !library.includes(`"${key}"`)) unused.push(`${stem}: ${key}`);
+    for (const key of Object.keys(own)) if (!expanded.has(key) && !source.includes(`"${key}"`) && !library.includes(`"${key}"`)) unused.push(`${stem}: ${key}`);
   }
   assert.deepEqual(missing, []);
   assert.deepEqual(unused, [], "a key nothing reads only adds bytes; remove it");
@@ -213,7 +214,9 @@ test("markup in a message renders through the component's tags", () => {
     const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const visit = (node: ts.Node) => {
       if (ts.isCallExpression(node) && node.expression.getText() === "rich" && ts.isStringLiteral(node.arguments[0]) && node.arguments[2] && ts.isObjectLiteralExpression(node.arguments[2])) {
-        const key = node.arguments[0].text;
+        const literal = node.arguments[0].text;
+        const prefix = source.match(/useMessages\("([a-zA-Z.]+)"\)/)?.[1];
+        const key = prefix && !literal.includes(".") ? `${prefix}.${literal}` : literal;
         const text = [en, ...Object.values(catalogues)].map(catalogue => (catalogue as Record<string, unknown>)[key]).find(Boolean) as string;
         const opened = [...text.matchAll(/<([a-z][a-z0-9]*)>/g)].map(match => match[1]);
         const closed = [...text.matchAll(/<\/([a-z][a-z0-9]*)>/g)].map(match => match[1]);
@@ -233,20 +236,28 @@ test("markup in a message renders through the component's tags", () => {
 // (lib/game-loader.ts), which carries them, so no component imports them, which
 // would copy them into that part's script. What the first load says is in the
 // base. And every engine key is one the engine writes.
-function scopedMessageKeys(source: string, known: string[]) {
-  const tree = ts.createSourceFile("messages.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+function scopedMessageKeys(source: string, known: string[], jsx = false) {
+  const tree = ts.createSourceFile("messages.tsx", source, ts.ScriptTarget.Latest, true, jsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
   const writers = new Map<string, string>();
+  const fullReaders = new Set<string>();
   const keys = new Set<string>();
   const collect = (node: ts.Node) => {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isCallExpression(node.initializer)
       && node.initializer.expression.getText(tree) === "scopedMsg" && ts.isStringLiteral(node.initializer.arguments[0])) writers.set(node.name.text, node.initializer.arguments[0].text);
+    if (ts.isVariableDeclaration(node) && ts.isObjectBindingPattern(node.name) && node.initializer && ts.isCallExpression(node.initializer)
+      && node.initializer.expression.getText(tree) === "useMessages" && node.initializer.arguments[0] && ts.isStringLiteral(node.initializer.arguments[0])) {
+      for (const binding of node.name.elements) if (["t", "rich"].includes(binding.propertyName?.getText(tree) ?? binding.name.getText(tree))) {
+        writers.set(binding.name.getText(tree), node.initializer.arguments[0].text);
+        fullReaders.add(binding.name.getText(tree));
+      }
+    }
     ts.forEachChild(node, collect);
   };
   collect(tree);
-  const read = (prefix: string, node: ts.Expression) => {
-    if (ts.isConditionalExpression(node)) { read(prefix, node.whenTrue); read(prefix, node.whenFalse); }
+  const read = (prefix: string, node: ts.Expression, fullAllowed = false) => {
+    if (ts.isConditionalExpression(node)) { read(prefix, node.whenTrue, fullAllowed); read(prefix, node.whenFalse, fullAllowed); }
     else if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
-      const key = `${prefix}.${node.text}`;
+      const key = fullAllowed && node.text.includes(".") ? node.text : `${prefix}.${node.text}`;
       assert.ok(known.includes(key), `scoped writer names a known key: ${key}`);
       keys.add(key);
     } else if (ts.isTemplateExpression(node)) {
@@ -258,12 +269,20 @@ function scopedMessageKeys(source: string, known: string[]) {
     }
   };
   const visit = (node: ts.Node) => {
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && writers.has(node.expression.text) && node.arguments[0]) read(writers.get(node.expression.text)!, node.arguments[0]);
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && writers.has(node.expression.text) && node.arguments[0]) read(writers.get(node.expression.text)!, node.arguments[0], fullReaders.has(node.expression.text));
     ts.forEachChild(node, visit);
   };
   visit(tree);
   return [...keys];
 }
+
+test("scoped component readers retain full shared keys and audit every local literal and conditional", () => {
+  const source = 'const {t, rich: markup} = useMessages("review"); t("one"); t(ok ? "two" : "three"); t("shell.home"); markup("one", {}, {});';
+  const known = ["review.one", "review.two", "review.three", "shell.home"];
+  assert.deepEqual(scopedMessageKeys(source, known, true).sort(), known.sort());
+  assert.throws(() => scopedMessageKeys(source.replace('"one"', '"missing"'), known, true), /known key: review.missing/);
+  assert.throws(() => scopedMessageKeys(source.replace('"shell.home"', '"shell.missing"'), known, true), /known key: shell.missing/);
+});
 
 test("the scoped-key audit expands literal, conditional and template writers and rejects unknown keys", () => {
   const source = 'const write = scopedMsg("engine"); write("one"); write(ok ? "two" : other ? "three" : "four"); write(`choice.${choice}`);';

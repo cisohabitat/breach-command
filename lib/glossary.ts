@@ -45,7 +45,7 @@ export const plainLanguage: Record<string, string> = {
   "bounded containment": "Shutting down one specific path rather than the whole service, so less of the business stops.",
   "assurance gate": "The step between stopping the attack and restoring service, where you check the environment is actually clean.",
   "residual risk": "What is still uncertain after you act — the part of the problem the chosen option does not settle.",
-  "causal sequence": "One finding is what the next one needed — consecutive stages of the intrusion, or two steps on the same route. Two things on the same system at the same time are not thereby related.",
+  "causal sequence": "One action record explicitly identifies another record as its initiator. Consecutive stages, a shared route, location or timing alone do not establish a causal link.",
   "evidence boundary": "How far out you are currently looking. Widening it brings connected systems into the investigation and costs time.",
   "assurance": "Checking the environment is genuinely clean before you put the service back.",
   "exfiltration": "Data being taken out of the organisation.",

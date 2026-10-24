@@ -20,11 +20,14 @@ function readLocale(): Locale {
 }
 
 export type Translate = (key: MessageKey, params?: Record<string, string | number>) => string;
+type LocalKey<P extends string, K = MessageKey> = K extends `${P}.${infer S}` ? S extends `${string}.${string}` ? never : S : never;
+type ScopedTranslate<P extends string> = (key: MessageKey | LocalKey<P>, params?: Record<string, string | number>) => string;
 // A message with markup: "<strong>{figure}</strong> of {limit} turns remaining".
 // Each tag is rendered by the component's own function, so the element keeps
 // its class and the translator can move it within the sentence. Tags do not
 // nest, and only the names the component passes are read as tags.
 export type Rich = (key: MessageKey, params: Record<string, string | number>, tags: Record<string, (chunk: string) => ReactNode>) => ReactNode;
+type ScopedRich<P extends string> = (key: MessageKey | LocalKey<P>, params: Record<string, string | number>, tags: Record<string, (chunk: string) => ReactNode>) => ReactNode;
 
 // The content tables' words for a locale other than English are replaced once,
 // on the client, after the page has hydrated in English: the overlay loads with
@@ -44,14 +47,16 @@ function loadContent(locale: Locale) {
   });
 }
 
-export function useMessages(): { locale: Locale; t: Translate; rich: Rich; say: (message: Message) => string } {
+export function useMessages<const P extends string = never>(prefix?: P): { locale: Locale; t: ScopedTranslate<P>; rich: ScopedRich<P>; say: (message: Message) => string } {
   const locale = useSyncExternalStore(noSubscription, readLocale, () => "en" as Locale);
   useSyncExternalStore(subscribeContent, () => contentRevision, () => 0);
   useEffect(() => loadContent(locale), [locale]);
+  // Local suffixes contain no dots; full shared keys keep their identifiers.
+  const full = (key: string) => (prefix && !key.includes(".") ? `${prefix}.${key}` : key) as MessageKey;
   return {
     locale,
-    t: (key, params) => translate(locale, key, params),
-    rich: (key, params, tags) => richText(translate(locale, key, params), tags),
+    t: (key, params) => translate(locale, full(key), params),
+    rich: (key, params, tags) => richText(translate(locale, full(key), params), tags),
     // A message the engine wrote (lib/i18n/message.ts), in this locale. The
     // component must import "@/lib/i18n/engine-messages" for its words.
     say: message => sayIn(message, locale),

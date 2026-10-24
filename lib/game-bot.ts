@@ -1,3 +1,4 @@
+import { evidenceRecordLink, newCorroboration } from "./evidence-assessment.ts";
 import { SECTOR_ALERT_AT, attacks, availableIn, commandEvents, getHypothesisStanding, getMapActionEffect, getSectorAlert, sectorSystems, getObjectiveRead, getReadingOdds, hypotheses, hypothesisSources, infrastructureTopologies, proceduresFor, responseOptionsFor, setPieceById, sourceSeesReading, specialists, type AdversaryObjectiveId, type DecisionChoice, type Game, type HypothesisId, type MapAction, type ProcedurePlan, type SetPieceChoice } from "./advanced-game.ts";
 import { lit, scopedMsg, withForm, type Message } from "./i18n/message.ts";
 
@@ -104,8 +105,9 @@ function nextCorrelation(game: Game): BotAction | null {
       if (game.correlations.some(record => record.evidence.includes(first.id) && record.evidence.includes(second.id))) continue;
       const firstAttack = first.supports ? attacks.find(attack => attack.id === first.supports) : null;
       const secondAttack = second.supports ? attacks.find(attack => attack.id === second.supports) : null;
-      const causal = !!firstAttack && !!secondAttack
+      const causal = game.comparisonVersion === 2 ? !!evidenceRecordLink(first, second) : !!firstAttack && !!secondAttack
         && (Math.abs(firstAttack.stage - secondAttack.stage) <= 1 || firstAttack.vector === secondAttack.vector);
+      if (game.comparisonVersion === 2 && !newCorroboration(game, first, second)) continue;
       return {
         type: "correlate",
         evidence: [first.id, second.id],

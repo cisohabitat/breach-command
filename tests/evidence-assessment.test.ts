@@ -10,7 +10,7 @@ function collect(source: string, intensity: "rapid" | "balanced" | "exhaustive")
 
 test("linked evidence exposes no untested relationships and distinguishes comparison outcomes", () => {
   const first = collect("email", "balanced");
-  const second = { ...first.evidence[0], id: "E2-identity", supports: "spray", turn: 2 };
+  const second = { ...first.evidence[0], id: "E2-identity", supports: "spray", turn: 2, trace: { record: "R2", parent: first.evidence[0].trace!.record } };
   const game: Game = { ...first, pendingDecision: null, evidence: [...first.evidence, second] };
   const pair: [string, string] = [game.evidence[0].id, second.id];
   assert.deepEqual(getEvidenceLinks(game, []), []);
@@ -59,7 +59,7 @@ test("signal and confidence vary independently, without using roll magnitude", (
 
 test("only a supported causal comparison across different sources strengthens interpretation", () => {
   const first = collect("email", "balanced");
-  const second = { ...first.evidence[0], id: "E2-identity", supports: "spray", turn: 2, confidence: "LOW" as const };
+  const second = { ...first.evidence[0], id: "E2-identity", supports: "spray", turn: 2, confidence: "LOW" as const, trace: { record: "R2", parent: first.evidence[0].trace!.record } };
   const game: Game = { ...first, pendingDecision: null, evidence: [...first.evidence, second] };
   const before = JSON.stringify(game);
   const compared = correlateEvidence(game, [game.evidence[0].id, second.id], "causal");

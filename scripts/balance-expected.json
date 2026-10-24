@@ -1,11 +1,11 @@
 {
-  "training win rate": 94,
-  "training mean score": 82.8,
-  "operational win rate": 86.2,
-  "operational mean score": 76.5,
-  "crisis win rate": 69.2,
-  "crisis mean score": 67,
+  "training win rate": 93.2,
+  "training mean score": 82,
+  "operational win rate": 83.8,
+  "operational mean score": 75.3,
+  "crisis win rate": 66.7,
+  "crisis mean score": 66,
   "command repeats within an act": 0,
-  "inject repeats within an act": 0.3,
-  "crisis repeats within an act": 0.3
+  "inject repeats within an act": 0,
+  "crisis repeats within an act": 0
 }

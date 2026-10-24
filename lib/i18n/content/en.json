@@ -2067,7 +2067,7 @@
  "plainLanguage.bounded containment": "Shutting down one specific path rather than the whole service, so less of the business stops.",
  "plainLanguage.assurance gate": "The step between stopping the attack and restoring service, where you check the environment is actually clean.",
  "plainLanguage.residual risk": "What is still uncertain after you act — the part of the problem the chosen option does not settle.",
- "plainLanguage.causal sequence": "One finding is what the next one needed — consecutive stages of the intrusion, or two steps on the same route. Two things on the same system at the same time are not thereby related.",
+ "plainLanguage.causal sequence": "One action record explicitly identifies another record as its initiator. Consecutive stages, a shared route, location or timing alone do not establish a causal link.",
  "plainLanguage.evidence boundary": "How far out you are currently looking. Widening it brings connected systems into the investigation and costs time.",
  "plainLanguage.assurance": "Checking the environment is genuinely clean before you put the service back.",
  "plainLanguage.exfiltration": "Data being taken out of the organisation.",

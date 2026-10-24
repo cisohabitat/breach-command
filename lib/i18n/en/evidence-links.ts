@@ -8,6 +8,7 @@ export const evidenceLinksMessages = catalogue({
     "turn": "Turn {turn}",
     "supported": "Supported causal link",
     "unrelated": "No causal link",
+    "notEstablished": "Link not established",
     "disputed": "Causal link disputed",
     "untested": "Untested connection",
     "noInference": "This pair has not been compared. No causal relationship is established yet.",

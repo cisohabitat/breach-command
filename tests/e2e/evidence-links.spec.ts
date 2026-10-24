@@ -140,7 +140,7 @@ for (const assessment of ["causal", "coincidental"] as const) {
     await openEvidence(page);
     const links = page.locator(".evidence-links");
     await expect(links.locator(assessment === "causal" ? '[data-relationship="disputed"]' : '[data-relationship="unrelated"]')).toHaveCount(1);
-    await expect(links).toContainText(assessment === "causal" ? "Causal link disputed" : "No causal link");
+    await expect(links).toContainText(assessment === "causal" ? "Causal link disputed" : "Link not established");
     await expect(links.locator('[data-relationship="untested"]')).toHaveCount(0);
   });
 }
