@@ -13,7 +13,7 @@ export const captainReportDialogMessages = catalogue({
     "sectorShort": "Sector",
     "actorShort": "Actor",
     "rollShort": "Roll",
-    "operationalPressure": "Compare each option's pressure relief with its cost to service, sector margin and the next check. Which trade-off can the current margins support?",
+    "operationalPressure": "Compare each option's relief with service cost, sector margin and the next check.",
     "crisisPressure": "Which margin is most likely to fail before the next useful finding, and what would each response leave the actor able to do?",
     "assistanceTraining": "Training guidance · suggested responses",
     "assistanceOperational": "Operational guidance · trade-offs",
