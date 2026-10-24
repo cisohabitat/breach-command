@@ -4,6 +4,10 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.8, 24 October 2026
+
+- Correct the missing “I” in “CONTAIN” on the tall-phone title artwork; preserve its responsive composition, entry control and release label.
+
 ## 0.10.7, 24 October 2026
 
 - Stop repeat comparison rewards for empty findings or already corroborated evidence. New independent record links earn relief; unsupported assessments retain their costs.
