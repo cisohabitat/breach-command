@@ -18,7 +18,7 @@ export const fieldGuideDialogMessages = catalogue({
     "consequences": "Consequences",
     "evidenceDecisionsDescribe": "Evidence decisions describe what each choice trades in words, and the report states what it did once chosen; command events, sector decisions, map actions and response options state their exact effects beforehand. Bonuses waiting for your next roll — from a monitored node, an inject, a decision or a correct comparison — add together, up to +3 at most and −2 at least. How well a choice fitted the moment is judged in the review. A roll of 20 or 1 on the die, or a run of failed rolls, can trigger an inject: an unplanned event that helps or hinders. An inject can reveal that part of the activity was an authorised exercise; with two or more stages confirmed, the operation stands down there, no response phase is run, and the case counts as cleared in the campaign.",
     "scoreRecovery": "Score & recovery",
-    "the100PointReview": "The 100-point review covers investigation speed, impact, continuity, decision quality, response quality and hypothesis accuracy.",
+    "the100PointReview": "The 100-point review covers investigation completion and pace, impact, continuity, decision quality, response quality and hypothesis testing.",
     "savedSessions": "Saved sessions",
     "yourCurrentInvestigation": "Your current investigation is saved on this device. Refresh safely and resume from the assignment screen.",
     "afterTurnOne": "After turn one, fast mode skips confirmation and dice animation for routine actions. Discoveries and major events still receive full reports.",

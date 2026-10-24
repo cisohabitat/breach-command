@@ -33,15 +33,15 @@ const nodeTypes: Record<string, MessageKey> = { APPLICATION: "infrastructureCons
 const nodeStates: Record<string, MessageKey> = { isolated: "infrastructureConsole.stateIsolated", monitored: "infrastructureConsole.stateMonitored", restored: "infrastructureConsole.stateRestored", normal: "infrastructureConsole.unassessed" };
 const postureIcons = { normal: Circle, monitored: Eye, isolated: ShieldOff, restored: CircleCheck };
 export function InfrastructureConsole({ game, blocked, highlightedNode, onFocus, onAction }: { game: Game; blocked?: boolean; highlightedNode?: string | null; onFocus: (node: string) => void; onAction: (node: string, action: MapAction) => void }) {
-  const { t, rich, say } = useMessages();
+  const { t, rich, say } = useMessages("infrastructureConsole");
   const topology = infrastructureTopologies[game.scenario];
   const activeStage = Math.min(4, game.revealed.length);
   const focused = topology.nodes.find(node => node.id === game.focusedNode) ?? topology.nodes[0];
   const posture = game.nodePosture[focused.id] ?? "normal";
   const criticalFocus = focused.id === topology.critical;
   return (
-    <section id="infrastructure-map" className="infrastructure-console" aria-label={t("infrastructureConsole.interactiveInfrastructureMap")} tabIndex={-1}>
-      <div className="map-heading section-heading"><h2>{topology.title}</h2><span className="focus-instruction">{t("infrastructureConsole.mapAction2Plural", { count: game.mapActionsRemaining })}{t("infrastructureConsole.left")}</span></div>
+    <section id="infrastructure-map" className="infrastructure-console" aria-label={t("interactiveInfrastructureMap")} tabIndex={-1}>
+      <div className="map-heading section-heading"><h2>{topology.title}</h2><span className="focus-instruction">{t("mapAction2Plural", { count: game.mapActionsRemaining })}{t("left")}</span></div>
       <div className="incident-flow" aria-hidden="true"><span style={{ width: `${Math.max(8, activeStage / 4 * 100)}%` }} /></div>
       <div className="topology-shell">
         <div className="topology-nodes">
@@ -51,38 +51,38 @@ export function InfrastructureConsole({ game, blocked, highlightedNode, onFocus,
             const critical = node.id === topology.critical;
             const findings = game.evidence.filter(item => sameMessage(item.system, words.node(game.scenario, node.id)) || legacyText(item.system) === node.label).length;
             return <button key={node.id} id={`infrastructure-node-${node.id}`} className={`${nodePosture} ${game.focusedNode === node.id ? "focused" : ""} ${highlightedNode === node.id ? "finding-location" : ""}`} disabled={blocked} onClick={() => onFocus(node.id)} aria-pressed={game.focusedNode === node.id}>
-              <small>{nodeTypes[node.type] ? t(nodeTypes[node.type]) : node.type}{critical ? t("infrastructureConsole.critical") : ""}</small><strong>{node.label}</strong>
+              <small>{nodeTypes[node.type] ? t(nodeTypes[node.type]) : node.type}{critical ? t("critical") : ""}</small><strong>{node.label}</strong>
               {/* Collection focus is not proof that a system is compromised. */}
-              <em><PostureIcon size={16} aria-hidden="true" /><span>{game.focusedNode === node.id ? t("infrastructureConsole.selected") : ""}{t(nodeStates[nodePosture])}{findings > 0 && <span className="node-findings" role={highlightedNode === node.id ? "status" : undefined}>{highlightedNode === node.id ? t("infrastructureConsole.findingLocation") : t("infrastructureConsole.collectedHere", { findings })}</span>}</span></em>
+              <em><PostureIcon size={16} aria-hidden="true" /><span>{game.focusedNode === node.id ? t("selected") : ""}{t(nodeStates[nodePosture])}{findings > 0 && <span className="node-findings" role={highlightedNode === node.id ? "status" : undefined}>{highlightedNode === node.id ? t("findingLocation") : t("collectedHere", { findings })}</span>}</span></em>
             </button>;
           })}
         </div>
         <details className="topology-detail">
-          <summary>{rich("infrastructureConsole.trustRelationshipsSpan", { edges: topology.edges.length, count: topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length }, { span: chunk => <span>{chunk}</span> })}</summary>
-          <div className="topology-routes" role="group" aria-label={t("infrastructureConsole.trustRelationships")}>{topology.edges.map(edge => {
+          <summary>{rich("trustRelationshipsSpan", { edges: topology.edges.length, count: topology.edges.filter(edge => game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated").length }, { span: chunk => <span>{chunk}</span> })}</summary>
+          <div className="topology-routes" role="group" aria-label={t("trustRelationships")}>{topology.edges.map(edge => {
           const isolated = game.nodePosture[edge.from] === "isolated" || game.nodePosture[edge.to] === "isolated";
           return <div className={isolated ? "route-blocked" : ""} key={`${edge.from}-${edge.to}`}>
             <span className="route-source">{topology.nodes.find(node => node.id === edge.from)?.label}</span>
             <b className="route-relation">{say(lit(edge.label, "lower"))}</b>
             <span className="route-target">{topology.nodes.find(node => node.id === edge.to)?.label}</span>
-            <i className="route-status">{isolated ? <ShieldOff size={14} aria-hidden="true" /> : <Circle size={14} aria-hidden="true" />}{isolated ? t("infrastructureConsole.blocked2") : t("infrastructureConsole.unassessed")}</i>
+            <i className="route-status">{isolated ? <ShieldOff size={14} aria-hidden="true" /> : <Circle size={14} aria-hidden="true" />}{isolated ? t("blocked2") : t("unassessed")}</i>
           </div>;
         })}</div>
         </details>
       </div>
       <div className="map-command-bar">
-        <div><span><small>{t("infrastructureConsole.selectedNode")}</small><strong>{focused.label}</strong><em>{criticalFocus ? t("infrastructureConsole.criticalDependency2") : ""}{posture === "normal" ? t("infrastructureConsole.noActiveControl") : t(nodeStates[posture])}</em>{/* Map focus applies only to the sources that examine the selected system, so a
-            roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">{t("infrastructureConsole.mapFocusAdds1")}{focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(", ").replace(/, ([^,]*)$/, " and $1")}.</small></span></div>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><span><strong>{t("infrastructureConsole.monitor")}</strong><small>{posture === "monitored" ? (game.nextModifierSources.some(item => sameMessage(item.source, msg("engine.source.monitored", { node: words.node(game.scenario, focused.id) })) || !!legacyText(item.source)?.includes(`Monitored ${focused.label}`)) ? t("infrastructureConsole.monitoredItsBonus") : t("infrastructureConsole.alreadyMonitoredIts")) : posture === "isolated" ? t("infrastructureConsole.isolatedNothingLeft") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "monitor")} />}</small></span></button>
-        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><span><strong>{t("infrastructureConsole.isolate")}</strong><small>{posture === "isolated" ? t("infrastructureConsole.alreadyIsolated") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "isolate")} />}</small></span></button>
+        <div><span><small>{t("selectedNode")}</small><strong>{focused.label}</strong><em>{criticalFocus ? t("criticalDependency2") : ""}{posture === "normal" ? t("noActiveControl") : t(nodeStates[posture])}</em>{/* Map focus applies only to the sources that examine the selected system, so a
+            roll showed it on some cards and not others with no word as to why. */}<small className="focus-sources">{t("mapFocusAdds1")}{focused.procedures.map(id => procedureById(game, id)?.title ?? id).join(", ").replace(/, ([^,]*)$/, " and $1")}.</small></span></div>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "monitored" || posture === "isolated"} onClick={() => onAction(focused.id, "monitor")}><span><strong>{t("monitor")}</strong><small>{posture === "monitored" ? (game.nextModifierSources.some(item => sameMessage(item.source, msg("engine.source.monitored", { node: words.node(game.scenario, focused.id) })) || !!legacyText(item.source)?.includes(`Monitored ${focused.label}`)) ? t("monitoredItsBonus") : t("alreadyMonitoredIts")) : posture === "isolated" ? t("isolatedNothingLeft") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "monitor")} />}</small></span></button>
+        <button disabled={blocked || game.mapActionsRemaining === 0 || posture === "isolated"} onClick={() => onAction(focused.id, "isolate")}><span><strong>{t("isolate")}</strong><small>{posture === "isolated" ? t("alreadyIsolated") : <EffectList className="map-cost" items={costLine(t, game, focused.id, "isolate")} />}</small></span></button>
       </div>
       {!!game.mapHistory.length && <button className="compare-findings back-to-procedures" onClick={() => landOnInvestigation(true)}>{t("evidenceWorkspace.backToThe")}<ArrowUp size={14} /></button>}
       <details className="map-intel-detail">
-        <summary>{t("infrastructureConsole.dependencyAndControl")}<span>{game.revealed.length ? t("infrastructureConsole.techniquesConfirmed", { count: game.revealed.length }) : t("infrastructureConsole.noTechniquesConfirmed")}</span></summary>
+        <summary>{t("dependencyAndControl")}<span>{game.revealed.length ? t("techniquesConfirmed", { count: game.revealed.length }) : t("noTechniquesConfirmed")}</span></summary>
         <dl className="map-intel">
-          <div><dt>{t("infrastructureConsole.dependencyHeading")}</dt><dd>{topology.criticalRule}</dd></div>
-          <div><dt>{t("infrastructureConsole.confirmedHeading")}</dt><dd>{game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(", ") : t("infrastructureConsole.none")}</dd></div>
-          <div><dt>{t("infrastructureConsole.controlsHeading")}</dt><dd>{t("infrastructureConsole.mapActionsAre")}</dd></div>
+          <div><dt>{t("dependencyHeading")}</dt><dd>{topology.criticalRule}</dd></div>
+          <div><dt>{t("confirmedHeading")}</dt><dd>{game.revealed.length ? game.revealed.map(id => attacks.find(item => item.id === id)?.title).join(", ") : t("none")}</dd></div>
+          <div><dt>{t("controlsHeading")}</dt><dd>{t("mapActionsAre")}</dd></div>
         </dl>
       </details>
     </section>

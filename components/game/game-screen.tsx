@@ -30,7 +30,7 @@ const lossStatus: Record<LossCause, MessageKey> = {
 };
 
 export function GameScreen({ session }: { session: GameSession }) {
-  const { t, rich, say } = useMessages();
+  const { t, rich, say } = useMessages("gameScreen");
   useFocusSafetyNet();
   const {
     game, activeScenario, config, ended, activeWorkspace, setActiveWorkspace,
@@ -76,27 +76,27 @@ export function GameScreen({ session }: { session: GameSession }) {
         <div className="game-identity">
           {/* Each separator travels with the segment after it, so a breadcrumb that
               wraps on a narrow phone never ends a line on a bare "/". */}
-          <div className="eyebrow case-line"><span>{rich("gameScreen.caseSpanSpan", { scenario: String(game.scenario + 1) }, { span: chunk => <span className="mono">{chunk}</span> })}</span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
+          <div className="eyebrow case-line"><span>{rich("caseSpanSpan", { scenario: String(game.scenario + 1) }, { span: chunk => <span className="mono">{chunk}</span> })}</span>{[activeScenario.sector, config.title, gameModes[game.mode].title].map(part => <span key={part} className="crumb"><span className="separator">/</span> {part}</span>)}</div>
           <h1 tabIndex={-1}>{activeScenario.title}</h1>
           {/* The investigation window rarely decides an operation, so it reads as
               context under the title rather than competing with the three
               pressures that do. */}
           <div className="operation-status">
-            <span className="mono">{game.status === "response" ? t("gameScreen.responsePhase") : ended ? t("gameScreen.finalStatus") : t("gameScreen.investigationWindow")}</span>
-            <span>{!ended && game.status !== "response" ? <>{rich("gameScreen.turnsRemaining", { remaining: Math.max(0, getTurnLimit(game) - game.turns.length), limit: getTurnLimit(game) }, { strong: chunk => <strong>{chunk}</strong> })}</> : game.status === "response" ? t("gameScreen.containAssureAnd") : game.status === "won" ? t("gameScreen.responseComplete") : game.status === "exercise" ? t("gameScreen.exerciseConcluded") : t(lossStatus[getLossReason(game).cause])}</span>
+            <span className="mono">{game.status === "response" ? t("responsePhase") : ended ? t("finalStatus") : t("investigationWindow")}</span>
+            <span>{!ended && game.status !== "response" ? <>{rich("turnsRemaining", { remaining: Math.max(0, getTurnLimit(game) - game.turns.length), limit: getTurnLimit(game) }, { strong: chunk => <strong>{chunk}</strong> })}</> : game.status === "response" ? t("containAssureAnd") : game.status === "won" ? t("responseComplete") : game.status === "exercise" ? t("exerciseConcluded") : t(lossStatus[getLossReason(game).cause])}</span>
             <Progress value={Math.max(0, (getTurnLimit(game) - game.turns.length) / getTurnLimit(game) * 100)} className="turn-progress" aria-label={t("window.label")} />
           </div>
           {/* The sector's own margin ends an operation at zero like the three
               readouts, and a Crisis playtest lost to it having never seen it:
               it lived on Command's board until the alert at 35. It stays in
               view here, in the readout's own name. */}
-          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono"><span className="margin-prefix">{t("gameScreen.sector")}</span><span className="margin-word">{t("gameScreen.margin")}</span></span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
+          <p className={`sector-margin-line ${game.sectorHealth <= SECTOR_ALERT_AT ? "low" : ""}`}><span className="mono"><span className="margin-prefix">{t("sector")}</span><span className="margin-word">{t("margin")}</span></span> <strong>{game.sectorHealth}</strong> {sectorSystems[game.scenario].title}</p>
         </div>
         <div className="case-meters" ref={meters}>
           <div className={`impact-meter ${game.impact >= IMPACT_CRITICAL ? "critical" : game.impact >= 40 ? "rising" : ""} ${meterPulse?.impactCritical ? "crossing" : ""}`}>
-            <span className="mono">{t("gameScreen.businessImpact")}</span><strong>{game.impact}</strong>
-            <Progress value={game.impact} aria-label={t("gameScreen.businessImpact")} />
-            <small>{game.impact < 40 ? t("gameScreen.contained") : game.impact < IMPACT_CRITICAL ? t("gameScreen.rising") : t("gameScreen.critical")}</small>
+            <span className="mono">{t("businessImpact")}</span><strong>{game.impact}</strong>
+            <Progress value={game.impact} aria-label={t("businessImpact")} />
+            <small>{game.impact < 40 ? t("contained") : game.impact < IMPACT_CRITICAL ? t("rising") : t("critical")}</small>
             {meterPulse?.impactCritical && <span key={`impact-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.impact !== 0 && (
               <span key={`impact-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.impact > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
@@ -107,7 +107,7 @@ export function GameScreen({ session }: { session: GameSession }) {
           <div className={`continuity-meter ${game.continuity <= CONTINUITY_AT_RISK ? "critical" : game.continuity <= 75 ? "degraded" : ""} ${meterPulse?.continuityAtRisk ? "crossing" : ""}`}>
             <span className="mono">{getOperationalLabel(game)}</span><strong>{game.continuity}</strong>
             <Progress value={game.continuity} aria-label={getOperationalLabel(game)} />
-            <small>{game.continuity > 75 ? t("gameScreen.stable") : game.continuity > CONTINUITY_AT_RISK ? t("gameScreen.degraded") : t("gameScreen.atRisk")}</small>
+            <small>{game.continuity > 75 ? t("stable") : game.continuity > CONTINUITY_AT_RISK ? t("degraded") : t("atRisk")}</small>
             {meterPulse?.continuityAtRisk && <span key={`continuity-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.continuity !== 0 && (
               <span key={`continuity-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.continuity < 0 ? "adverse" : "favourable"}`} aria-hidden="true">
@@ -116,11 +116,11 @@ export function GameScreen({ session }: { session: GameSession }) {
             )}
           </div>
           <div className={`objective-meter ${game.objectiveProgress >= OBJECTIVE_IMMINENT ? "critical" : ""} ${meterPulse?.objectiveImminent ? "crossing" : ""}`}>
-            <span className="mono">{t("gameScreen.adversaryProgress")}</span><strong>{game.objectiveProgress}</strong>
-            <Progress value={game.objectiveProgress} aria-label={t("gameScreen.adversaryProgress")} />
+            <span className="mono">{t("adversaryProgress")}</span><strong>{game.objectiveProgress}</strong>
+            <Progress value={game.objectiveProgress} aria-label={t("adversaryProgress")} />
             {/* The caption carries the pace as well, so "PACE: PRESSING HARD" beside a low
                 number reads as one picture: little done so far, rising fast. */}
-            <small>{game.objectiveProgress < 40 ? t("gameScreen.early") : game.objectiveProgress < OBJECTIVE_IMMINENT ? t("gameScreen.advancing") : t("gameScreen.imminent")}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? t("gameScreen.pace", { pace: say(withForm(getAdversaryState(game), "lower")) }) : ""}</small>
+            <small>{game.objectiveProgress < 40 ? t("early") : game.objectiveProgress < OBJECTIVE_IMMINENT ? t("advancing") : t("imminent")}{game.adversaryTempo >= 2 && (game.status === "playing" || game.status === "response") ? t("pace", { pace: say(withForm(getAdversaryState(game), "lower")) }) : ""}</small>
             {meterPulse?.objectiveImminent && <span key={`objective-cross-${meterPulse.key}`} className="meter-crossing" aria-hidden="true" />}
             {meterPulse && meterPulse.objective !== 0 && (
               <span key={`objective-delta-${meterPulse.key}`} className={`meter-delta ${meterPulse.objective > 0 ? "adverse" : "favourable"}`} aria-hidden="true">
@@ -131,7 +131,7 @@ export function GameScreen({ session }: { session: GameSession }) {
         </div>
         {/* On a phone the sector's rule folds behind "What moves it"; written out,
             the alert was a hundred and seventy pixels above the procedures. */}
-        {sectorAlert && <div className="sector-alert" role="status"><TriangleAlert size={16} aria-hidden="true" /><span><strong>{say(sectorAlert.title)}.</strong> {say(sectorAlert.detail)} <span className="sector-rule">{sectorAlert.rule}</span><details className="sector-rule-fold"><summary>{t("gameScreen.whatMovesIt")}</summary>{sectorAlert.rule}</details></span></div>}
+        {sectorAlert && <div className="sector-alert" role="status"><TriangleAlert size={16} aria-hidden="true" /><span><strong>{say(sectorAlert.title)}.</strong> {say(sectorAlert.detail)} <span className="sector-rule">{sectorAlert.rule}</span><details className="sector-rule-fold"><summary>{t("whatMovesIt")}</summary>{sectorAlert.rule}</details></span></div>}
       </section>
 
       <BotControl session={session} />
@@ -139,23 +139,23 @@ export function GameScreen({ session }: { session: GameSession }) {
         const brief = getResumeBrief(game);
         if (!brief) return null;
         return <details className="known-facts resume-brief">
-          <summary>{t("gameScreen.resumed")}: {t(brief.next)}</summary>
-          <p>{t("gameScreen.resumeProgress", { checks: brief.checks, confirmed: brief.confirmed })}</p>
-          {brief.last && <p>{t("gameScreen.resumeLast")}{say(brief.last)}</p>}
+          <summary>{t("resumed")}: {t(brief.next)}</summary>
+          <p>{t("resumeProgress", { checks: brief.checks, confirmed: brief.confirmed })}</p>
+          {brief.last && <p>{t("resumeLast")}{say(brief.last)}</p>}
         </details>;
       })()}
 
-      <nav className="workspace-tabs" aria-label={t("gameScreen.commandWorkspace")} ref={tabs}>
+      <nav className="workspace-tabs" aria-label={t("commandWorkspace")} ref={tabs}>
         <button className={activeWorkspace === "command" ? "active" : ""} aria-pressed={activeWorkspace === "command"} onClick={() => setActiveWorkspace("command")}><span><strong>{t("tabs.command")}</strong></span>{(game.pendingDecision || game.pendingCommand || game.pendingSetPiece || game.status === "response") && <b>{t("tabs.decisionWaiting")}</b>}</button>
         <button className={activeWorkspace === "investigate" ? "active" : ""} aria-pressed={activeWorkspace === "investigate"} onClick={() => setActiveWorkspace("investigate")} disabled={game.status !== "playing"}><span><strong>{t("tabs.investigate")}</strong></span><b>{t("tabs.stages", { found: game.revealed.length })}</b></button>
         <button className={activeWorkspace === "briefing" ? "active" : ""} aria-pressed={activeWorkspace === "briefing"} onClick={() => setActiveWorkspace("briefing")}><span><strong>{t("tabs.briefing")}</strong></span><b>{t("tabs.turns", { count: game.turns.length })}</b></button>
         {/* A copy for sighted players who have scrolled past the readouts; the
             readouts themselves stay the accessible source. */}
         <div className={`pinned-readouts ${metersAway ? "shown" : ""}`} aria-hidden="true">
-          <span>{rich("gameScreen.businessImpactEm", { impact: game.impact }, { em: chunk => <em>{chunk}</em> })}</span>
+          <span>{rich("businessImpactEm", { impact: game.impact }, { em: chunk => <em>{chunk}</em> })}</span>
           <span>{getOperationalLabel(game)} <em>{game.continuity}</em></span>
-          <span>{rich("gameScreen.adversaryProgressEm", { objectiveProgress: game.objectiveProgress }, { em: chunk => <em>{chunk}</em> })}</span>
-          <span>{rich("gameScreen.sectorMarginEm", { sectorHealth: game.sectorHealth }, { em: chunk => <em>{chunk}</em> })}</span>
+          <span>{rich("adversaryProgressEm", { objectiveProgress: game.objectiveProgress }, { em: chunk => <em>{chunk}</em> })}</span>
+          <span>{rich("sectorMarginEm", { sectorHealth: game.sectorHealth }, { em: chunk => <em>{chunk}</em> })}</span>
         </div>
       </nav>
 
@@ -169,7 +169,7 @@ export function GameScreen({ session }: { session: GameSession }) {
         <FaultBoundary name="Briefing workspace"><BriefingWorkspace session={session} /></FaultBoundary>
       </div>
 
-      <footer className="game-footer"><span><span className="nowrap">{t("gameScreen.breachCommand")}</span> <span className="separator">/</span> <span className="nowrap">{t("gameScreen.singlePlayerTabletop")}</span></span><button onClick={() => setRules(true)}>{t("gameScreen.fieldGuide")}<CircleHelp size={14} /></button></footer>
+      <footer className="game-footer"><span><span className="nowrap">{t("breachCommand")}</span> <span className="separator">/</span> <span className="nowrap">{t("singlePlayerTabletop")}</span></span><button onClick={() => setRules(true)}>{t("fieldGuide")}<CircleHelp size={14} /></button></footer>
     </main>
   );
 }

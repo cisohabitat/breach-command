@@ -10,7 +10,7 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
   test(`signal and confidence remain readable at ${width}px`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 900 });
     await openWithSave(page, { ...twoStagesGame(), difficulty: "training" });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     if (width <= 650) await page.locator(".reference-fold > summary").click();
     const guide = page.locator(".evidence-workspace .signal-guide");
     await guide.locator("summary").click();
@@ -36,7 +36,7 @@ test("a causal comparison strengthens visible confidence and survives resume", a
   expect(findings).toHaveLength(2);
   expect(findings[0].id.replace(/^E\d+-/, "")).not.toBe(findings[1].id.replace(/^E\d+-/, ""));
   await openWithSave(page, game);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.locator(".evidence-detail").evaluate(element => { (element as HTMLDetailsElement).open = true; });
   for (const item of findings) await page.locator(".evidence-cards button").filter({ has: page.locator(`[data-signal="${getEvidenceAssessment(game, item).signal}"]`) }).filter({ hasText: `Turn ${item.turn}` }).click();
   await page.getByRole("button", { name: "Causal sequence", exact: true }).click();
@@ -47,17 +47,19 @@ test("a causal comparison strengthens visible confidence and survives resume", a
   const resumed = await page.context().newPage();
   await resumed.goto("/play");
   await resumed.waitForLoadState("networkidle");
-  await resumed.getByRole("button", { name: "Resume", exact: true }).click();
+  await resumed.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(resumed.locator(".evidence-cards [data-confidence=strong]")).toHaveCount(2);
   await resumed.close();
 });
 
 test("the decision reports both axes before the response is chosen", async ({ page }, info) => {
-  await openWithSave(page, { ...pendingDecisionGame(), difficulty: "training" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await openWithSave(page, { ...pendingDecisionGame(), difficulty: "training" }, true);
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const decision = page.locator(".evidence-decision");
+  await decision.locator(".decision-evidence > summary").click();
   await expect(decision.locator(".evidence-assessment")).toContainText("Signal: strong");
   await expect(decision.locator(".evidence-assessment")).toContainText("Confidence: weak");
+  await decision.locator(".signal-primer > summary").click();
   await expect(decision.locator(".signal-guide summary")).toBeVisible();
   await decision.locator(".signal-guide summary").click();
   await decision.locator(".evidence-assessment").screenshot({ path: info.outputPath("decision-assessment.png") });

@@ -38,7 +38,7 @@ test.describe("keyboard play", () => {
 
   test("the captain's report opens on the report, not on a decision", async ({ page }) => {
     await openWithSave(page, pendingDecisionGame());
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     const report = page.getByRole("dialog");
     await expect(report).toBeVisible();
     await expect(report.getByText("Operational decision required")).toBeVisible();
@@ -66,7 +66,7 @@ test.describe("keyboard play", () => {
 
   test("focus follows the response sequence instead of dropping to the page", async ({ page }) => {
     await openWithSave(page, responsePhaseGame());
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     for (const next of ["Assurance gate", "Recovery decision"]) {
       const option = page.locator(".response-options > button").first();
       await option.focus();
@@ -119,7 +119,7 @@ test.describe("keyboard play", () => {
 
   test("the case theory and comparison prompts take focus to the evidence workspace", async ({ page }) => {
     await openWithSave(page, twoStagesGame(), true);
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: /Investigate/ }).first().click();
     const theory = page.getByRole("button", { name: /Record a case theory/ });
     await theory.focus();
@@ -138,7 +138,7 @@ test.describe("keyboard play", () => {
   test("the map offer unfolds the reference column on a phone and focuses the map", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openWithSave(page, mapOfferGame(), true);
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: /Investigate/ }).first().click();
     const map = page.locator(".infrastructure-console");
     await expect(map, "folded on a phone until it is wanted").toBeHidden();
@@ -157,7 +157,7 @@ test.describe("keyboard play", () => {
     if (readable) await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     const game = responsePhaseGame();
     await openWithSave(page, game);
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
     await page.getByRole("button", { name: /Copy result/ }).click();
     if (!readable) {

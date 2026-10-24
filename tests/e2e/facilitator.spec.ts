@@ -8,7 +8,7 @@ test("the facilitator sheet prints alone, on one or two pages at A4 and Letter",
   test.skip(browserName !== "chromium", "PDF output is Chromium's");
   const game = responsePhaseGame();
   await openWithSave(page, game);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.waitForLoadState("networkidle");
   for (let phase = 0; phase < 3; phase++) {
     await page.locator(".response-options > button").first().click();
@@ -49,7 +49,7 @@ test("the facilitator sheet prints alone, on one or two pages at A4 and Letter",
 test("the after-action review prints every section, open, not just its first page", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "PDF output is Chromium's");
   await openWithSave(page, responsePhaseGame());
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.waitForLoadState("networkidle");
   for (let phase = 0; phase < 3; phase++) {
     await page.locator(".response-options > button").first().click();

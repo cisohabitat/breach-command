@@ -71,7 +71,7 @@ test.describe("performance budgets", () => {
   test("an operation in progress", async ({ page }) => {
     const value = await measure(page, async () => {
       await openWithSave(page, twoStagesGame());
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     });
     report("operation", value);
     expect(value.scriptBytes, "decoded script by the time play starts, warmed parts included").toBeLessThanOrEqual(budgets.operation.scriptBytes);

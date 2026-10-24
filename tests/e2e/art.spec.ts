@@ -18,7 +18,7 @@ for (const width of [320, 390, 820, 1280]) {
       // The artwork keys on collection source, not the finding it displays.
       game.turns = game.turns.map(turn => ({ ...turn, procedure: source }));
       await openWithSave(page, game);
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
       const image = page.locator(".discovery > .story-art");
       await loaded(image);
       await expect(image).toHaveAttribute("src", `/art/findings/${source}.webp`);
@@ -26,7 +26,7 @@ for (const width of [320, 390, 820, 1280]) {
     }
     for (const profile of Object.keys(adversaryProfiles)) {
       await openWithSave(page, { ...responsePhaseGame(), adversaryProfile: profile as keyof typeof adversaryProfiles });
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
       for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
       await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();
       await page.locator(".debrief-detail-fold > summary").click();
@@ -68,7 +68,7 @@ test("missing artwork keeps the operation and result download usable", async ({ 
   await openWithSave(page, responsePhaseGame());
   await expect(page.locator(".brand-name")).toHaveText("Breach Command");
   await expect(page.getByRole("link", { name: "Breach Command home", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Save image" }).click();

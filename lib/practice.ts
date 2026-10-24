@@ -3,6 +3,11 @@ import type { LessonId } from "./learning.ts";
 
 type Question = { context: MessageKey; prompt: MessageKey; options: [MessageKey, MessageKey, MessageKey]; why: MessageKey; correct: number };
 export const practiceCases: Record<LessonId, Question[]> = {
+  lineage: [
+    { context: "practiceDesk.lineage1Context", prompt: "practiceDesk.lineage1Prompt", options: ["practiceDesk.lineage1A", "practiceDesk.lineage1B", "practiceDesk.lineage1C"], why: "practiceDesk.lineage1Why", correct: 2 },
+    { context: "practiceDesk.lineage2Context", prompt: "practiceDesk.lineage2Prompt", options: ["practiceDesk.lineage2A", "practiceDesk.lineage2B", "practiceDesk.lineage2C"], why: "practiceDesk.lineage2Why", correct: 0 },
+    { context: "practiceDesk.lineage3Context", prompt: "practiceDesk.lineage3Prompt", options: ["practiceDesk.lineage3A", "practiceDesk.lineage3B", "practiceDesk.lineage3C"], why: "practiceDesk.lineage3Why", correct: 1 },
+  ],
   signal: [
     { context: "practiceDesk.signal1Context", prompt: "practiceDesk.signal1Prompt", options: ["practiceDesk.signal1A", "practiceDesk.signal1B", "practiceDesk.signal1C"], why: "practiceDesk.signal1Why", correct: 1 },
     { context: "practiceDesk.signal2Context", prompt: "practiceDesk.signal2Prompt", options: ["practiceDesk.signal2A", "practiceDesk.signal2B", "practiceDesk.signal2C"], why: "practiceDesk.signal2Why", correct: 0 },
@@ -19,8 +24,8 @@ export const practiceCases: Record<LessonId, Question[]> = {
     { context: "practiceDesk.containment3Context", prompt: "practiceDesk.containment3Prompt", options: ["practiceDesk.containment3A", "practiceDesk.containment3B", "practiceDesk.containment3C"], why: "practiceDesk.containment3Why", correct: 2 },
   ],
 };
-export const lessonTitles = { signal: "practiceDesk.signal", confidence: "practiceDesk.confidence", containment: "practiceDesk.containment" } as const;
-export const lessonDetails = { signal: "practiceDesk.signalDetail", confidence: "practiceDesk.confidenceDetail", containment: "practiceDesk.containmentDetail" } as const;
+export const lessonTitles = { signal: "practiceDesk.signal", confidence: "practiceDesk.confidence", containment: "practiceDesk.containment", lineage: "practiceDesk.lineage" } as const;
+export const lessonDetails = { signal: "practiceDesk.signalDetail", confidence: "practiceDesk.confidenceDetail", containment: "practiceDesk.containmentDetail", lineage: "practiceDesk.lineageDetail" } as const;
 export function practiceScore(lesson: LessonId, answers: number[]) {
   return answers.reduce((score, answer, index) => score + (practiceCases[lesson][index]?.correct === answer ? 1 : 0), 0);
 }

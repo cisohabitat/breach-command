@@ -75,7 +75,7 @@ for (const width of [390, 1280]) {
     expect(await obscuredFocus(page, 80), "assignment focus").toEqual([]);
 
     await openWithSave(page, twoStagesGame());
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.waitForTimeout(500);
     expect(await undersizedTargets(page), "mission brief").toEqual([]);
     await page.keyboard.press("Escape");
@@ -84,13 +84,13 @@ for (const width of [390, 1280]) {
     expect(await obscuredFocus(page, 120), "investigate focus").toEqual([]);
 
     await openWithSave(page, pendingDecisionGame());
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.waitForTimeout(500);
     expect(await undersizedTargets(page), "report").toEqual([]);
     expect(await obscuredFocus(page, 30), "report focus").toEqual([]);
 
     await openWithSave(page, responsePhaseGame());
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.waitForTimeout(500);
     for (let phase = 0; phase < 3; phase++) {
       await page.locator(".response-options > button").first().click();
@@ -115,7 +115,7 @@ test("nothing on the page names the hidden objective before two stages are confi
   expect(game.revealed.length).toBeLessThan(2);
   const hidden = adversaryObjectives[game.objective].title.toLowerCase();
   await openWithSave(page, game);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.waitForTimeout(400);
   await page.keyboard.press("Escape");
   for (const workspace of ["Command", "Investigate", "Briefing"]) {

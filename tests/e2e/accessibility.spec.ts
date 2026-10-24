@@ -114,7 +114,7 @@ test.describe("accessibility audit", () => {
     await expect(index).toBeVisible();
     await index.getByRole("button", { name: "Hypothesis" }).click();
     await expect(page.locator("#debrief-hypothesis")).toBeVisible();
-    await expect(page.locator("#debrief-hypothesis").getByText(/Hypothesis accuracy/)).toBeVisible();
+    await expect(page.locator("#debrief-hypothesis").getByText(/Hypothesis testing/)).toBeVisible();
   });
 
   // Every topbar control keeps a name at the width where its label is hidden.
@@ -133,7 +133,7 @@ test.describe("accessibility audit", () => {
     test(`investigation prompts and the sector warning at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await openWithSave(page, { ...twoStagesGame(), sectorHealth: 28 }, true);
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
       await page.getByRole("button", { name: /Investigate/ }).first().click();
       await expect(page.locator(".sector-alert")).toBeVisible();
       if (width < 651) await page.locator(".sector-rule-fold > summary").click();
@@ -150,7 +150,7 @@ test.describe("accessibility audit", () => {
     test(`the map offer at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await openWithSave(page, mapOfferGame(), true);
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
       await page.getByRole("button", { name: /Investigate/ }).first().click();
       await expect(page.locator(".prompt-aside")).toBeVisible();
       await expectNoViolations(page, `map offer ${width}`);
@@ -164,7 +164,7 @@ test.describe("accessibility audit", () => {
     test(`the response, the ending and the review's folds at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await openWithSave(page, responsePhaseGame());
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
       await expect(page.locator(".response-effect").first()).toBeVisible();
       await expectNoViolations(page, `response ${width}`);
       for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
@@ -184,7 +184,7 @@ test.describe("accessibility audit", () => {
     await page.setViewportSize({ width: 375, height: 900 });
     await openWithSave(page, { ...twoStagesGame(), sectorHealth: 28 }, true, { highContrast: true });
     await expect(page.locator("html")).toHaveClass(/high-contrast/);
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: /Investigate/ }).first().click();
     await page.locator(".sector-rule-fold > summary").click();
     await expandMapNotes(page);
@@ -197,7 +197,7 @@ test.describe("accessibility audit", () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openWithSave(page, responsePhaseGame(), false, { highContrast: true });
     await expect(page.locator("html")).toHaveClass(/high-contrast/);
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await expectNoViolations(page, "response in high contrast");
     for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
     await page.getByRole("button", { name: /Open after-action review|Review the record|Review the drill/ }).click();

@@ -35,7 +35,7 @@ for (const [width, height] of widths) test(`practice desk at ${width}`, async ({
 const masked = (page: Page) => [page.locator(".variant-brief"), page.locator(".build-version")];
 
 async function resume(page: Page) {
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.waitForTimeout(600);
 }
 
@@ -191,7 +191,7 @@ test.describe("visual baselines", () => {
         } });
       });
       await openWithSave(page, pendingDecisionGame(), false, { voice: true, music: false, sound: false, haptics: false });
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
       await page.locator(".evidence-decision button").first().click();
       const voice = page.getByRole("region", { name: "Incident Captain" });
       await expect(voice).toContainText("Observation recorded.");
@@ -203,7 +203,7 @@ test.describe("visual baselines", () => {
     test(`resume recap at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await openWithSave(page, twoStagesGame(), false, { voice: false, music: false, sound: false });
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
       await page.locator(".resume-brief > summary").click();
       await expect(page.locator(".resume-brief")).toHaveScreenshot(`${width}-resume-recap.png`, { animations: "disabled", maxDiffPixelRatio: process.env.CI ? 0.01 : 0.03 });
     });
@@ -219,7 +219,7 @@ test.describe("visual baselines", () => {
     test(`opening plan at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await openWithSave(page, newGame(0, "training", () => 0), true, { voice: false, music: false, sound: false });
-      await page.getByRole("button", { name: "Resume", exact: true }).click();
+      await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
       await page.locator(".hypothesis-options > button").first().click();
       await page.locator('[data-procedure="identity"]').click();
       await expect(page.locator(".plan-options")).toHaveJSProperty("open", false);

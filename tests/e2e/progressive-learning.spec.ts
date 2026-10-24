@@ -10,7 +10,7 @@ for (const stages of [1, 2]) {
   test(`academy names the available task after ${stages} confirmed stages`, async ({ page }) => {
     const game = stages === 1 ? resolveDecision(pendingDecisionGame(), "observe") : twoStagesGame();
     await openWithSave(page, game, true, { voice: false, sound: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: "Game settings", exact: true }).click();
     await page.getByRole("button", { name: "Restart command tutorial", exact: true }).click();
     const coach = page.locator(".tutorial-coach");
@@ -45,7 +45,7 @@ for (const width of [375, 820, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     const saved = twoStagesGame();
     await openWithSave(page, saved, false, { voice: false, sound: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     const brief = page.locator(".resume-brief");
     await expect(brief.locator("summary")).toContainText("continue testing your working reading");
     await brief.locator("summary").focus();
@@ -74,14 +74,14 @@ test("Fast resolution can change during play and travels with the saved operatio
   await expect(page.locator("#resolution-setting")).toHaveAttribute("aria-checked", "true");
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("breach-command.session")!).fastResolve)).toBe(true);
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: "Game settings" }).click();
   await expect(page.locator("#resolution-setting")).toHaveAttribute("aria-checked", "true");
 });
 
 test("Undo does not resurrect the one-time Resume recap", async ({ page }) => {
   await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(page.locator(".resume-brief")).toBeVisible();
   const reference = page.locator(".reference-fold");
   if (!(await reference.evaluate(node => (node as HTMLDetailsElement).open))) await reference.locator(":scope > summary").click();
@@ -97,7 +97,7 @@ for (const width of [375, 820, 1280]) {
   test(`Tab keeps procedure plan controls above the commit footer at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 820 ? 1180 : 800 });
     await openWithSave(page, twoStagesGame(), false, { voice: false, sound: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.locator(".procedure-card:not(:disabled)").first().click();
     const sheet = page.locator(".action-sheet");
     await expect(sheet).toBeFocused();
@@ -192,6 +192,7 @@ for (const width of [375, 1280]) {
     await expect(report).toContainText("Stage tested");
     const details = report.locator(".report-collection-details");
     await expect(details).toHaveJSProperty("open", false);
+    await report.locator(".report-summary > summary").click();
     await expect(report.locator(".report-narrative")).toBeVisible();
     await expect(details.locator(".report-narrative")).toHaveCount(0);
     await expect(report.locator(".turn-movement")).toContainText("This turn");
@@ -207,7 +208,7 @@ for (const width of [375, 1180]) {
   test(`Training introduces reference concepts when useful at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await openWithSave(page, newGame(0, "training", () => 0), true, { voice: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: /Investigate/ }).first().click();
     await expect(page.locator("#hypothesis-heading")).toHaveText("How did they get in?");
     const reference = page.locator(".reference-fold");
@@ -228,7 +229,7 @@ test("early reference controls remain usable and expand after two checks without
   const first = proceduresFor(game).find(source => availableIn(game, source.id) === 0)!;
   game = playTurn(game, first.id, 1);
   await openWithSave(page, game, true, { voice: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: /^Investigate/ }).first().click();
   const reference = page.locator(".reference-fold");
   await expect(reference).toHaveJSProperty("open", false);
@@ -244,7 +245,7 @@ test("early reference controls remain usable and expand after two checks without
   if (game.pendingSetPiece) game = resolveSetPiece(game, "a");
   expect(game.evidence).toHaveLength(0);
   await openWithSave(page, game, true, { voice: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: /^Investigate/ }).first().click();
   await expect(reference).toHaveJSProperty("open", true);
   await page.locator(".procedure-card:not(:disabled)").first().click();
@@ -257,7 +258,7 @@ test("guidance-off and Expert retain the expanded desktop reference", async ({ p
   for (const expert of [false, true]) {
     const game = newGame(0, "training", () => 0);
     await openWithSave(page, expert ? { ...game, mode: "expert" } : game, expert, { voice: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.getByRole("button", { name: /^Investigate/ }).first().click();
     await expect(page.locator(".reference-fold")).toHaveJSProperty("open", true);
     await expect(page.locator(".training-prompt")).toHaveCount(0);
@@ -271,7 +272,7 @@ test("guidance-off and Expert retain the expanded desktop reference", async ({ p
 test("the simplified opening remains usable in the longer pseudo-locale", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 844 });
   await openWithSave(page, newGame(0, "training", () => 0), true, { voice: false }, "/play?locale=en-XA");
-  await page.locator(".phone-quick-start .primary-button").click();
+  await page.getByRole("button", { name: /^\[Réšümé “.+”·+\]$/ }).click();
   await page.keyboard.press("Escape");
   await page.locator(".workspace-tabs button").nth(1).click();
   const reference = page.locator(".reference-fold");
@@ -284,7 +285,7 @@ test("the simplified opening remains usable in the longer pseudo-locale", async 
 
 test("two confirmed stages expose theory and comparison, with the next stage question", async ({ page }) => {
   await openWithSave(page, { ...twoStagesGame(), difficulty: "training" }, true, { voice: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: /Investigate/ }).first().click();
   await expect(page.locator("#hypothesis-heading")).toHaveText("How do they keep access?");
   await expect(page.locator(".theory-guide")).toHaveJSProperty("open", true);
@@ -301,7 +302,7 @@ test("a successful check with no stage teaches bounded weak signal", async ({ pa
   expect(game.turns[0].success).toBe(true);
   expect(game.turns[0].revealed).toBeNull();
   await openWithSave(page, game, true, { voice: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: /^Briefing/ }).first().click();
   await page.locator(".log-entry").first().click();
   const report = page.locator(".report-dialog");
@@ -319,7 +320,7 @@ test("a chosen response reports actual changes before the roll disclosure", asyn
   const after = resolveDecision(before, "act");
   const recorded = after.decisions.at(-1)!;
   await openWithSave(page, before, false, { voice: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.locator('button[data-response="act"]').click();
   const feedback = page.locator(".decision-recorded");
   await expect(feedback).toBeVisible();

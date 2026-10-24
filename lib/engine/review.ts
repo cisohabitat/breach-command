@@ -47,6 +47,14 @@ export function getBeginnerReview(game: Game): BeginnerReview {
           ? emptySuccesses === 1 ? reviewMsg("noStageOneCheck") : reviewMsg("noStageChecks", { count: emptySuccesses })
           : reviewMsg("noCheckCompleted");
 
+  const unsupported = turnCredits(game).filter(item => item.reason === "prediction" || item.reason === "unverified").length;
+  if (game.scoringVersion === 2 && unsupported && unsupported * 2 >= tested.length) return {
+    strength,
+    gap: reviewMsg("predictionsUntested", { matched: aligned, count: tested.length, unsupported }),
+    concept: reviewMsg("predictionIsNotTesting"),
+    next: reviewMsg("nextOperationTestSource"),
+  };
+
   // Reading the route is the skill the game is built on, so a reading that was
   // wrong more often than right is named before an untested correlation. In the
   // other order a player who held a dead route for a whole operation was told
@@ -185,9 +193,9 @@ export function getBeginnerReview(game: Game): BeginnerReview {
   const weakest = [...game.decisions].sort((a, b) => a.quality - b.quality)[0];
   if (weakest && weakest.quality <= 2) return {
     strength,
-    gap: reviewMsg("weakestCall", { title: weakest.title, stage: attacks.find(item => item.id === weakest.stage) ? lit(attacks.find(item => item.id === weakest.stage)!.title, "lower") : reviewMsg("aConfirmedStage"), rationale: withForm(weakest.rationale, "lowerFirst") }),
+    gap: weakest.context ? reviewMsg("weakestMoment", { turn: weakest.context.turn, impact: weakest.context.impact, objective: weakest.context.objective, tempo: weakest.context.tempo, title: weakest.title, rationale: withForm(weakest.rationale, "lowerFirst") }) : reviewMsg("weakestCall", { title: weakest.title, stage: attacks.find(item => item.id === weakest.stage) ? lit(attacks.find(item => item.id === weakest.stage)!.title, "lower") : reviewMsg("aConfirmedStage"), rationale: withForm(weakest.rationale, "lowerFirst") }),
     concept: reviewMsg("noResponseIs"),
-    next: reviewMsg("nextOperationBefore2"),
+    next: game.scoringVersion === 2 ? reviewMsg(game.mode === "expert" ? "nextDecisionExpert" : game.difficulty === "training" ? "nextDecisionTraining" : game.difficulty === "operational" ? "nextDecisionOperational" : "nextDecisionCrisis") : reviewMsg("nextOperationBefore2"),
   };
   if (game.status === "lost") return {
     strength,
@@ -244,7 +252,8 @@ function freeTurns(game: Game) {
 }
 
 export function getScoreBreakdown(game: Game): ScoreBreakdown {
-  const investigation = clamp(25 - Math.max(0, game.turns.length - freeTurns(game)) * 3, 0, 25);
+  const pace = clamp(25 - Math.max(0, game.turns.length - freeTurns(game)) * 3, 0, 25);
+  const investigation = game.scoringVersion === 2 ? Math.round(pace * game.revealed.length / 4) : pace;
   const impact = Math.round((100 - game.impact) * 0.15);
   const continuity = Math.round(((game.continuity + game.sectorHealth) / 2) * 0.15);
   const decisionItems = [...game.decisions.map(item => item.quality), ...game.commandHistory.map(item => item.quality), ...game.setPieceHistory.map(item => item.quality)];
@@ -265,7 +274,8 @@ export function getScoreBreakdown(game: Game): ScoreBreakdown {
   // player choosing readings at random from 4.8 to 3.3 and one who never revises
   // from 5.4 to 4.4, while sound play stayed at 7.5.
   const credit = turnCredits(game).reduce((sum, item) => sum + item.credit, 0);
-  const hypothesis = tested.length ? Math.round(clamp(credit / tested.length, 0, 1) * 10) : 0;
+  const attempts = game.scoringVersion === 2 ? game.turns.length : tested.length;
+  const hypothesis = attempts ? Math.round(clamp(credit / attempts, 0, 1) * 10) : 0;
   // A drill stands down before the response phase, so containment and recovery
   // are not scored rather than scored zero: the other parts are scaled to 100.
   // The banner said "not scored" beside 0 of 20 inside the total.
@@ -285,6 +295,15 @@ export function getOutcome(game: Game) {
   const title = grade === "A" ? reviewMsg("controlledRecovery") : grade === "B" ? reviewMsg("stableWithResidual") : grade === "C" ? reviewMsg("costlyStabilisation") : reviewMsg("fragileRecovery");
   const detail = grade === "A" ? reviewMsg("youBalancedEvidence") : grade === "B" ? reviewMsg("theIncidentIs") : grade === "C" ? reviewMsg("servicesAreRecovering") : reviewMsg("theImmediateCrisis");
   return { grade, title, detail, breakdown };
+}
+
+// Availability and assurance are separate: zero current impact cannot prove
+// that the recorded recovery choice removed every unobserved access path.
+export function getRecoveryRemainder(game: Game): Message | null {
+  if (game.status !== "won") return null;
+  const recovery = responseOptionsFor(game).recovery.find(option => option.id === game.responseChoices[2]);
+  if (!recovery) return null;
+  return reviewMsg(recovery.id === "rebuild" ? "remainingRebuild" : recovery.id === "restore" ? "remainingRestore" : "remainingPatch", { impact: game.impact, title: recovery.title });
 }
 
 // Each part of the score, with the rule that produced it in the player's own
@@ -311,12 +330,12 @@ export function getScoreRows(game: Game) {
   const decided = game.decisions.length + game.commandHistory.length + game.setPieceHistory.length;
   // Each row has an id, so a caller can tell them apart without its words.
   return [
-    { id: "investigation", label: reviewMsg("investigation"), value: breakdown.investigation, maximum: 25, rule: reviewMsg("fullMarksFor", { freeTurns: freeTurns(game), difficultiesTitle: difficulties[game.difficulty].title, count: turns }) },
+    { id: "investigation", label: reviewMsg("investigation"), value: breakdown.investigation, maximum: 25, rule: game.scoringVersion === 2 ? reviewMsg("completionScore", { pace: clamp(25 - Math.max(0, turns - freeTurns(game)) * 3, 0, 25), confirmed: game.revealed.length, total: breakdown.investigation, free: freeTurns(game), count: turns }) : reviewMsg("fullMarksFor", { freeTurns: freeTurns(game), difficultiesTitle: difficulties[game.difficulty].title, count: turns }) },
     { id: "impact", label: reviewMsg("impactControl"), value: breakdown.impact, maximum: 15, rule: reviewMsg("risesAsFinal", { impact: game.impact }) },
     { id: "continuity", label: reviewMsg("continuity"), value: breakdown.continuity, maximum: 15, rule: reviewMsg("andTheSector", { scenarioDynamicsLabel: scenarioDynamics[game.scenario].label, continuity: game.continuity, sectorHealth: game.sectorHealth }) },
     { id: "decisions", label: reviewMsg("operationalDecisions"), value: breakdown.decisions, maximum: 15, rule: decided ? reviewMsg("averageQuality", { count: decided }) : reviewMsg("noDecisionsWere") },
     { id: "response", label: reviewMsg("containmentRecovery"), value: breakdown.response, maximum: 20, rule: game.responseChoices.length === 3 ? responseRule(game) : game.status === "exercise" ? reviewMsg("notScoredThe") : reviewMsg("theResponsePhase") },
-    { id: "hypothesis", label: reviewMsg("hypothesisAccuracy"), value: breakdown.hypothesis, maximum: 10, rule: reviewMsg("fullCreditFor") },
+    { id: "hypothesis", label: reviewMsg(game.scoringVersion === 2 ? "hypothesisTesting" : "hypothesisAccuracy"), value: breakdown.hypothesis, maximum: 10, rule: game.scoringVersion === 2 ? turns ? reviewMsg("testingScore", { matched: game.turns.filter(turn => turn.hypothesisMatched).length, count: turns, credit: turnCredits(game).reduce((sum, item) => sum + item.credit, 0), points: breakdown.hypothesis }) : reviewMsg("testingNoChecks") : reviewMsg("fullCreditFor") },
   ];
 }
 
@@ -360,23 +379,31 @@ export function getShareCard(game: Game): ShareCard {
 // What each turn earned toward hypothesis accuracy, and why. The score and the
 // ledger both read this, so a row can never say "no credit" for a turn the
 // score paid half for.
-type TurnCredit = { credit: number; reason: "none" | "matched" | "tested" | "failed" | "other-source" | "repeated" | "excluded" | "absent" };
+type TurnCredit = { credit: number; reason: "none" | "matched" | "prediction" | "unverified" | "tested" | "failed" | "other-source" | "repeated" | "excluded" | "absent" };
 function turnCredits(game: Game): TurnCredit[] {
   // Half credit is paid once per reading for each technique under test. It was
   // reset whenever a turn revealed anything, before that turn was graded, so a
   // partner disclosure or a later-stage find paid a reading twice at a stage
   // that was still open, against the ledger's own rule.
   const paid = new Set<string>();
+  const predicted = new Set<string>();
   return game.turns.map((turn, index): TurnCredit => {
     if (!turn.hypothesis || !turn.hypothesisTarget) return { credit: 0, reason: "none" };
-    if (turn.hypothesisMatched) return { credit: 1, reason: "matched" };
+    if (turn.hypothesisMatched) {
+      const useful = hypothesisSources(game, turn.hypothesis).includes(turn.procedure) || sourceSeesReading({ ...recordBefore(game, index), hypothesis: turn.hypothesis }, turn.procedure);
+      const key = `${attacks.find(attack => attack.id === turn.hypothesisTarget)?.stage}:${turn.hypothesis}`;
+      if (game.scoringVersion !== 2 || useful) { predicted.add(key); return { credit: 1, reason: "matched" }; }
+      if (predicted.has(key)) return { credit: 0, reason: "unverified" };
+      predicted.add(key);
+      return { credit: 0.25, reason: "prediction" };
+    }
     if (!turn.success) return { credit: 0, reason: "failed" };
     // A source outside the reading's list that could still see one of its open
     // techniques tests it as surely as its own: the card said "Can also test this
     // reading", the board ruled the route out on the empty result, and the ledger
     // once paid nothing for it.
     if (!hypothesisSources(game, turn.hypothesis).includes(turn.procedure) && !sourceSeesReading({ ...recordBefore(game, index), hypothesis: turn.hypothesis }, turn.procedure)) return { credit: 0, reason: "other-source" };
-    const key = `${turn.hypothesisTarget}:${turn.hypothesis}`;
+    const key = `${game.scoringVersion === 2 ? attacks.find(attack => attack.id === turn.hypothesisTarget)?.stage : turn.hypothesisTarget}:${turn.hypothesis}`;
     if (paid.has(key)) return { credit: 0, reason: "repeated" };
     paid.add(key);
     const before = getReadingOdds(recordBefore(game, index)).candidates[turn.hypothesis];
@@ -399,6 +426,8 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
     const missNote: Record<TurnCredit["reason"], Message> = {
       none: lit(""),
       matched: lit(""),
+      prediction: reviewMsg("predictionOnly"),
+      unverified: reviewMsg("predictionRepeated"),
       tested: reviewMsg("youTestedIt"),
       failed: reviewMsg("theRollFailed"),
       "other-source": reviewMsg("theProcedureWas"),
@@ -408,6 +437,8 @@ export function getHypothesisLedger(game: Game): HypothesisLedgerRow[] {
     };
     const verdict = !target ? reviewMsg("noStageLeft")
       : !turn.hypothesis ? reviewMsg("noWorkingHypothesis")
+      : turn.hypothesisMatched && game.scoringVersion === 2
+        ? reviewMsg(credits[index].reason === "matched" ? "predictionTested" : credits[index].reason === "prediction" ? "predictionOnly" : "predictionRepeated", { stage: withForm(stage, "inSentence"), actualRoute: lit(actualRoute!, "lower"), windfallNote })
       : turn.hypothesisMatched
         ? (turn.planningBonus > 0
           ? reviewMsg("correctWasOn", { stage: withForm(stage, "inSentence"), actualRoute: lit(actualRoute!, "lower"), windfallNote })

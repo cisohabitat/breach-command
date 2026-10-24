@@ -1661,7 +1661,7 @@
   color:#ccc6b7;
   text-align:start;
 }
-.mode-picker button.active small,.procedure-planner strong,.correlation-results p strong {
+.mode-picker button.active small,.procedure-planner strong,.correlation-results p strong,.decision-choice .decision-choice-label small {
   display:block;
 }
 .procedure-planner small {
@@ -2606,7 +2606,7 @@
   display:flex;
   flex-direction:column;
 }
-.backup-console b {
+.backup-console b,.compact>.effect>b {
   font-size:var(--type-body);
 }
 .backup-console small {
@@ -2789,7 +2789,7 @@
 /* The standing readout above already names the reading and how it is holding
    up, so the strip carries only what it does not: the sources this reading
    predicts. The premise is one tap away in the comparison. */
-.hypothesis-detail,.hypothesis-compare,.hypothesis-board.has-reading .hypothesis-options,.hypothesis-detail>strong,.hypothesis-detail>span {
+.hypothesis-detail,.hypothesis-compare,.hypothesis-board.has-reading .hypothesis-options,.hypothesis-detail>strong,.hypothesis-detail>span,.awaiting-decision .discovery>div>span {
   display:none;
 }
 .hypothesis-detail {
@@ -3413,15 +3413,107 @@
   max-width:var(--measure-prose);
   letter-spacing:.01em;
 }
-.report-dialog .evidence-decision {
-  padding:15px;
+.meter-calculations {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
 }
-.report-dialog .evidence-decision h3 {
-  margin:8px 0 11px;
+.meter-calculations :is(h4,dl) {
+  margin:8px 0;
 }
-.report-dialog .evidence-decision button {
-  min-height:0;
-  padding:11px 12px;
+.meter-calculations dl>div {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  font-size:var(--type-caption);
+}
+.meter-calculations dd {
+  margin:0;
+  font-variant-numeric:tabular-nums;
+}
+.complete-check-log .turn-calculation {
+  grid-column:2;
+  min-width:0;
+}
+.decision-comparison .decision-choice {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 44px;
+  gap:4px;
+  align-items:start;
+}
+.decision-choice>button {
+  width:100%;
+  gap:6px;
+}
+.report-dialog .decision-choice>button {
+  grid-template-columns:18px minmax(0,1fr) minmax(280px,1.2fr);
+}
+.report-dialog .evidence-decision .decision-choice>button {
+  padding:4px 8px;
+  min-height:52px;
+}
+.report-dialog .decision-choice>button>.compact {
+  grid-column:3;
+}
+.report-dialog .decision-choice .option-letter {
+  grid-row:auto;
+}
+.awaiting-decision .report-layout.with-briefing {
+  grid-template-columns:1fr;
+  gap:12px;
+}
+.awaiting-decision .report-summary {
+  grid-row:2;
+}
+.awaiting-decision .report-briefing {
+  border:0;
+  padding:0;
+}
+.awaiting-decision .discovery {
+  margin:0;
+  padding-block:4px;
+}
+.awaiting-decision .discovery>.story-art {
+  width:64px;
+  height:48px;
+}
+.awaiting-decision .evidence-decision {
+  padding:0;
+}
+.awaiting-decision .decision-pressure {
+  margin:6px 0;
+}
+.report-dialog.awaiting-decision {
+  gap:6px;
+}
+.awaiting-decision .report-fields {
+  margin-top:4px;
+}
+.report-dialog .evidence-decision .compact {
+  margin:0;
+  padding:0;
+  border:0;
+}
+.decision-choice>details>summary {
+  min-height:44px;
+  padding:8px 0;
+  text-align:center;
+}
+.effect-list.compact {
+  display:grid;
+  grid-template-columns:repeat(var(--effect-count),minmax(0,1fr));
+  gap:4px;
+  width:100%;
+}
+span.effect-list.compact>span.effect {
+  display:grid;
+  margin:0;
+  gap:1px 4px;
+  align-content:start;
+  grid-template-columns:auto 1fr;
+}
+.procedure-filter>button {
+  min-height:44px;
 }
 /* A glossary term inside prose: the sentence's own type, a dotted underline,
    and its meaning opened in place after it. */
@@ -3654,15 +3746,21 @@ span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   }
 }
 @media(max-width:650px) {
+  .report-dialog .decision-choice>button {
+    grid-template-columns:18px minmax(0,1fr);
+  }
+  .report-dialog .decision-choice>button>.compact {
+    grid-column:1/-1;
+  }
+  .effect-list.compact {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
   .topology-routes {
     display:grid;
     grid-template-columns:1fr;
   }
   .report-dialog {
     width:calc(100% - 1rem)!important;
-  }
-  .report-dialog .evidence-decision button {
-    min-height:88px;
   }
 }
 @media(max-width:380px) {
@@ -3821,7 +3919,7 @@ span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   .tutorial-next button {
     width:100%;
   }
-  .quick-start-guide {
+  span.effect-list.compact>span.effect,.quick-start-guide {
     grid-template-columns:1fr;
   }
 }
@@ -4142,7 +4240,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
 .tutorial-next>div,.bot-control-copy {
   min-width:0;
 }
-.bot-control-copy>.eyebrow {
+span.effect-list.compact>span.effect>:is(em,.compact-effect-label),.bot-control-copy>.eyebrow {
   font-size:var(--type-micro);
 }
 .bot-control-copy>strong {
@@ -4203,7 +4301,7 @@ still sees the meter marked as crossed once the ring is suppressed. */
   color:#dab6cd;
   font-size:var(--type-lead);
 }
-span.effect-list>span.effect.note>span,.objective-meter>[data-slot=progress] {
+.decision-choice>details[open],span.effect-list.compact>span.effect>.compact-effect-label,span.effect-list>span.effect.note>span,.objective-meter>[data-slot=progress] {
   grid-column:1/-1;
 }
 .objective-meter small {
@@ -4338,16 +4436,7 @@ they want without scrolling past the other nine. */
   color:var(--text-soft);
 }
 .hypothesis-ledger>details>div.matched b {
-  border-color:#383d45;
   color:var(--lime);
-}
-.hypothesis-ledger>details>div.missed b {
-  border-color:#383d45;
-  color:#f0a48c;
-}
-.hypothesis-ledger>details>div.half b {
-  border-color:#e4c260;
-  color:#e8c968;
 }
 @media(max-width:650px) {
   .hypothesis-ledger {
@@ -5774,7 +5863,7 @@ span.effect-list>span.effect.term>em {
   font-size:var(--type-caption);
   font-weight:400;
 }
-.first-read dd,.topology-nodes :is(small,em),.paper-dialog .rules-grid h3 {
+.decision-choice>details,.first-read dd,.topology-nodes :is(small,em),.paper-dialog .rules-grid h3 {
   margin:0;
 }
 /* The campaign tally reads as the review's other tally: two columns, the figure
@@ -6180,10 +6269,10 @@ body {
   background:#f1ece1;
   color:#1d1b18;
 }
-.chain-sheet li:nth-child(1) .chain-no {
+.hypothesis-ledger>details>div.missed b,.chain-sheet li:nth-child(1) .chain-no {
   color:#9e3220;
 }
-.chain-sheet li:nth-child(2) .chain-no {
+.hypothesis-ledger>details>div.half b,.chain-sheet li:nth-child(2) .chain-no {
   color:#6f5200;
 }
 .chain-sheet li:nth-child(3) .chain-no {

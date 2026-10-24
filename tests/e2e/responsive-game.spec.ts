@@ -224,7 +224,7 @@ test.describe("responsive interaction audit", () => {
       }, [SESSION_KEY, session] as const);
       await page.goto("/play", { waitUntil: "domcontentloaded" });
 
-      const resume = page.getByRole("button", { name: "Resume", exact: true });
+      const resume = page.getByRole("button", { name: /^Resume “.+”$/ });
       await expectReachableTarget(page, resume, "Resume saved operation");
       await resume.click();
 

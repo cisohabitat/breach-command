@@ -87,7 +87,7 @@ const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/
 test("voice status explains decision silence and actual speaking", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, pendingDecisionGame(), false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const voice = page.getByRole("region", { name: "Incident Captain" });
   await expect(voice.getByRole("status")).toContainText("Waiting for your decision");
   await voice.getByRole("button", { name: "Listen", exact: true }).click();
@@ -149,8 +149,8 @@ async function observeGesturePlayback(page: Page) {
 for (const entry of ["begin", "resume", "enable"] as const) test(`Captain auto-plays native audio after ${entry}, without Listen or other sound`, async ({ page }) => {
   await observeGesturePlayback(page);
   await openWithSave(page, entry === "enable" ? twoStagesGame() : entry === "resume" ? pendingDecisionGame() : null, false, { ...voicePreferences, voice: entry !== "enable" });
-  await page.getByRole("button", { name: entry !== "begin" ? "Resume" : /Begin investigation/i }).first().click();
-  if (entry === "resume") await page.locator(".evidence-decision > div > button").first().click();
+  await page.getByRole("button", { name: entry !== "begin" ? /^Resume “.+”$/ : /Begin investigation/i }).click();
+  if (entry === "resume") await page.locator(".evidence-decision button[data-response]").first().click();
   if (entry === "enable") {
     expect(await page.evaluate(() => (window as typeof window & { captainNativePlayback: { calls: number } }).captainNativePlayback.calls)).toBe(0);
     await page.getByRole("button", { name: "Game settings" }).click();
@@ -198,7 +198,7 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
   await page.setViewportSize({ width, height: 900 });
   await mockSpeech(page);
   await openWithSave(page, twoStagesGame(), false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(page.locator(".confidence-change")).toHaveCount(0);
   await compareFindings(page);
   const notice = page.locator(".confidence-change");
@@ -219,7 +219,7 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
   expect(violations).toEqual([]);
   const resumed = await page.context().newPage();
   await resumed.goto("/play", { waitUntil: "networkidle" });
-  await resumed.getByRole("button", { name: "Resume", exact: true }).click();
+  await resumed.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(resumed.locator(".evidence-cards [data-confidence=strong]")).toHaveCount(2);
   await expect(resumed.locator(".confidence-change")).toHaveCount(0);
   await resumed.close();
@@ -229,7 +229,7 @@ test("confidence gain animates when motion is allowed and stays visible with voi
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await mockSpeech(page);
   await openWithSave(page, twoStagesGame(), false, { ...voicePreferences, voice: false });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await compareFindings(page);
   await expect(page.locator(".confidence-change")).toContainText("Confidence strengthened");
   expect(await page.locator(".confidence-strengthened").first().evaluate(element => getComputedStyle(element).animationName)).toBe("confidence-strengthened");
@@ -248,7 +248,7 @@ test("confidence gain animates when motion is allowed and stays visible with voi
 test("an unsupported assessment never announces a confidence gain", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, twoStagesGame(), false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await compareFindings(page, "coincidental");
   await expect(page.locator(".correlation-results")).toContainText("Assessment challenged");
   await expect(page.locator(".confidence-change")).toHaveCount(0);
@@ -293,7 +293,7 @@ test("voice defaults on, explicit opt-out survives reload, and recordings can be
 test("routine findings wait during a decision, Listen works, and M mutes voice", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const voice = page.getByRole("region", { name: "Incident Captain" });
   await expect(voice).toContainText(captainVoiceMessages["captainVoice.firstFinding"]);
   await page.waitForTimeout(2000);
@@ -311,8 +311,9 @@ test("an urgent pressure warning speaks even while an evidence decision is pendi
   const game = pendingDecisionGame();
   game.impact = 76;
   game.turns.at(-1)!.impactChange = 8;
+  delete game.turns.at(-1)!.movement; // This synthetic pressure history has no recorded calculation.
   await openWithSave(page, game, true, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(page.locator(".report-gate")).toBeVisible();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([captainVoiceMessages["captainVoice.pressure"]]);
   await page.getByRole("button", { name: "Skip voice", exact: true }).click();
@@ -323,7 +324,7 @@ test("an urgent pressure warning speaks even while an evidence decision is pendi
 test("a recorded evidence choice receives a reaction after its decision is resolved", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: "Skip voice", exact: true }).waitFor();
   expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
   await page.locator(".evidence-decision button").first().click();
@@ -335,10 +336,11 @@ test("a quick evidence choice cannot replace an unheard pressure warning", async
   const game = pendingDecisionGame();
   game.impact = 76;
   game.turns.at(-1)!.impactChange = 8;
+  delete game.turns.at(-1)!.movement;
   await openWithSave(page, game, true, voicePreferences);
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(page.locator(".report-gate")).toBeVisible();
   await expect(page.getByRole("region", { name: "Incident Captain" })).toContainText(captainVoiceMessages["captainVoice.pressure"]);
   await page.locator(".evidence-decision button").first().click();
@@ -349,7 +351,7 @@ test("a quick evidence choice cannot replace an unheard pressure warning", async
 test("unavailable recordings leaves the text and game controls usable", async ({ page }) => {
   await mockSpeech(page, false);
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const voice = page.getByRole("region", { name: "Incident Captain" });
   await voice.getByRole("button", { name: "Listen", exact: true }).click();
   await expect(voice.getByRole("status")).toContainText("Voice is unavailable");
@@ -364,7 +366,7 @@ test("a browser that refuses audio playback still accepts the evidence decision"
   await mockSpeech(page);
   await openWithSave(page, pendingDecisionGame(), true, voicePreferences);
   await page.evaluate(() => { window.captainSpeechProbe.refuse = true; });
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: "Listen", exact: true }).click();
   await expect(page.locator(".captain-voice-status")).toContainText("Voice is unavailable");
   await page.locator(".evidence-decision button").first().click();
@@ -401,9 +403,9 @@ test("evidence choices get a matching reaction once, with replay and skip", asyn
   await mockSpeech(page);
   for (const [index, cue] of ["decisionObserve", "decisionAct", "decisionAttribute", "decisionContain", "decisionNotify"].entries()) {
     await openWithSave(page, pendingDecisionGame(), false, voicePreferences);
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
-    await expect(page.locator(".evidence-decision > div > button")).toHaveCount(5);
-    await page.locator(".evidence-decision > div > button").nth(index).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
+    await expect(page.locator(".evidence-decision button[data-response]")).toHaveCount(5);
+    await page.locator(".evidence-decision button[data-response]").nth(index).click();
     await expect(page.locator(".report-gate")).toHaveCount(0);
     const voice = page.getByRole("region", { name: "Incident Captain" });
     const text = captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages];
@@ -438,7 +440,7 @@ test("evidence choices get a matching reaction once, with replay and skip", asyn
 test("response guidance waits for Listen while closing assessments play once", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, responsePhaseGame(), false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.waitForTimeout(2000);
   expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
   await page.getByRole("button", { name: "Listen", exact: true }).click();
@@ -463,7 +465,7 @@ test("response guidance waits for Listen while closing assessments play once", a
 test("response reactions describe accepted risk without interrupting the next decision", async ({ page }) => {
   await mockSpeech(page);
   await openWithSave(page, responsePhaseGame(), false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   const voice = page.getByRole("region", { name: "Incident Captain" });
   await page.locator(".response-options > button").nth(2).click();
   await expect(voice).toContainText(captainVoiceMessages["captainVoice.containmentHigh"]);
@@ -480,7 +482,7 @@ test("response reactions describe accepted risk without interrupting the next de
 
   // Quickly advancing never starts stale reaction speech from an earlier phase.
   await openWithSave(page, responsePhaseGame(), false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.locator(".response-options > button").first().click();
   await page.locator(".response-options > button").first().click();
   await expect(voice).toContainText(captainVoiceMessages["captainVoice.assuranceLow"]);
@@ -494,7 +496,7 @@ test("resuming historical evidence choices does not replay their reactions", asy
   await mockSpeech(page);
   const game = resolveDecision(pendingDecisionGame(), "observe");
   await openWithSave(page, game, false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await expect(page.locator(".investigation-actions .captain-voice")).toHaveCount(0);
   await page.waitForTimeout(2000);
   expect(await page.evaluate(() => window.captainSpeechProbe.lines)).toEqual([]);
@@ -507,7 +509,7 @@ test("spoken debrief follows the result, plays three segments, and respects skip
   const lines = captainDebriefFor(finished, getOutcome(finished).grade, risk).map(cue => captainVoiceMessages[`captainVoice.${cue}` as keyof typeof captainVoiceMessages]);
   await mockSpeech(page);
   await openWithSave(page, initial, false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   for (let phase = 0; phase < 3; phase++) await page.locator(".response-options > button").first().click();
   await page.locator(".end-banner button").click();
   const voice = page.getByRole("dialog").getByRole("region", { name: "Incident Captain" });
@@ -537,7 +539,7 @@ test("all cases receive matching voiced findings and their own opening", async (
   await mockSpeech(page);
   const other = { ...pendingDecisionGame(), scenario: 1 };
   await openWithSave(page, other, true, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   await page.getByRole("button", { name: "Listen", exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.captainSpeechProbe.lines.at(-1))).toBe(captainVoiceMessages["captainVoice.firstFinding"]);
   for (let scenario = 0; scenario < 10; scenario++) {
@@ -555,7 +557,7 @@ test("an unsuccessful investigation check gets guidance without blocking another
   expect(failed.turns.at(-1)?.success).toBe(false);
   await mockSpeech(page);
   await openWithSave(page, failed, false, voicePreferences);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
   // Reopen the latest report from the investigation record.
   await page.getByRole("button", { name: /^Briefing/ }).first().click();
   await page.locator(".log-entry").first().click();

@@ -1,11 +1,12 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { Fragment, useEffect, useRef, type CSSProperties } from "react";
 import { operationChallenge } from "@/lib/challenge";
 import { StoryArt } from "./story-art";
+import { TurnCalculation } from "./turn-calculation";
 import { EvidenceAssessment } from "./evidence-assessment";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EffectList } from "@/components/game/effect-list";
 import { FacilitatorSheet } from "@/components/game/facilitator-sheet";
-import { OWN_SOURCE_BONUS, adversaryObjectives, attackMitre, countRevisions, mitreUrl, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, recommendNext, getOperationalLabel, getScoreRows, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, responseOptionScore, scenarios, sectorSystems, stages, meterEffect, type Game } from "@/lib/advanced-game";
+import { OWN_SOURCE_BONUS, adversaryObjectives, attackMitre, countRevisions, mitreUrl, attacks, getAdversaryProfile, getBeginnerReview, getCounterfactuals, getHypothesisLedger, getLossReason, recommendNext, getOperationalLabel, getScoreRows, getRecoveryRemainder, resolveDecision, decisionChoices, gameModes, hypotheses, infrastructureTopologies, inSentence, procedureIntensities, procedureScopes, procedureById, responseOptionsFor, responseOptionScore, scenarios, sectorSystems, stages, meterEffect, type Game } from "@/lib/advanced-game";
 import { namedSpecialists } from "@/lib/phase8";
 import { campaignRoutes, routeForCampaign, routeReason } from "@/lib/phase9";
 import { specialistArc, specialistReaction } from "@/lib/specialist-notes";
@@ -29,8 +30,30 @@ function UnavailableVoice() {
 
 register(debriefDialogMessages);
 
-// Decision records have no timestamp. Associate them with their finding;
-// never invent a turn for a command event, comparison or sector decision.
+function DecisionComparison({ game, record }: { game: Game; record: Game["decisions"][number] }) {
+  const { t, say } = useMessages("debriefDialog");
+  const context = record.context;
+  if (!context) return null;
+  const snapshot: Game = { ...game, status: "playing", pendingDecision: record.stage, pendingCommand: null, pendingSetPiece: null,
+    turns: game.turns.slice(0, context.turn), decisions: [], impact: context.impact, continuity: context.continuity,
+    sectorHealth: context.sector, objectiveProgress: context.objective, adversaryTempo: context.tempo };
+  const alternatives = decisionChoices.filter(choice => choice !== record.choice).map(choice => {
+    const projected = resolveDecision(snapshot, choice);
+    return { record: projected.decisions.at(-1)!, ends: projected.status === "lost" };
+  });
+  const safe = alternatives.filter(option => !option.ends);
+  const { record: alternative, ends } = (safe.length ? safe : alternatives).reduce((best, next) => next.record.quality > best.record.quality || next.record.quality === best.record.quality && next.record.continuityChange > best.record.continuityChange ? next : best);
+  return <details className="decision-primer decision-comparison-review">
+    <summary>{t("compareAtMoment")}</summary>
+    <p>{t("decisionMoment", context)}</p>
+    <p>{t(!ends && alternative.quality > record.quality ? "strongerAlternative" : "alternativeAtMoment", { title: say(alternative.title), quality: alternative.quality })}</p>
+    {ends && <p>{t("alternativeEnds")}</p>}
+    <EffectList compare items={([ ["impact", alternative.impactChange], ["continuity", alternative.continuityChange], ["sector", alternative.sectorChange], ["objective", alternative.objectiveChange] ] as const).map(([meter, amount]) => meterEffect(snapshot, meter, amount))} />
+  </details>;
+}
+
+// Associate decisions with their finding; only new evidence decisions have
+// recorded context. Never invent a turn for other kinds of history.
 function ReviewTimeline({ game }: { game: Game }) {
   const { t, say } = useMessages("debriefDialog");
   const milestones = game.turns.filter(turn => turn.revealed || turn.injectReveal);
@@ -66,6 +89,7 @@ function ReviewTimeline({ game }: { game: Game }) {
             <small>{procedureScopes[turn.plan.scope].title}{t("scopeAnalysis", { procedureIntensitiesTitle: procedureIntensities[turn.plan.intensity].title.toLowerCase() })}{say(turn.narrative)}</small>
             <EffectList items={([["impact", turn.impactChange], ["continuity", turn.continuityChange], ["sector", turn.sectorChange], ["objective", turn.objectiveChange]] as const).map(([meter, change]) => meterEffect(game, meter, change))} />
           </p>
+          <TurnCalculation game={game} turn={turn} />
         </div>)}
       </details>
     </details>
@@ -127,6 +151,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           <div className="eyebrow">{rich("formBc3002", {  }, { span: chunk => <span className="separator">{chunk}</span>, span2: chunk => <span>{chunk}</span> })}</div>
           <DialogTitle>{game?.status === "won" ? outcome && say(outcome.title) : game?.status === "exercise" ? t("exerciseConcluded") : game ? `${say(getLossReason(game).title)}.` : ""}</DialogTitle>
           <DialogDescription>{game?.status === "won" ? outcome && say(outcome.detail) : game ? <>{game.status === "lost" ? `${say(getLossReason(game).detail)} ` : ""}{game.status === "lost" && getLossReason(game).cause === "window" ? "" : t("stagesFoundIn", { found: game.revealed.length, count: game.turns.length })}{t("thisIsA")}</> : ""}</DialogDescription>
+          {game && getRecoveryRemainder(game) && <p className="recovery-remainder">{say(getRecoveryRemainder(game)!)}</p>}
           {/* The grade and the score are the review's headline. Below four other
               blocks, the score sat under the fold of a laptop screen. A grade is
               only given to a completed response. */}
@@ -187,17 +212,17 @@ export function DebriefDialog({ session }: { session: GameSession }) {
           </section>
           <section className="hypothesis-ledger" id="debrief-hypothesis">
             <details className="debrief-fold">
-              <summary>{t("hypothesisAccuracyOf", { hypothesis: outcome.breakdown.hypothesis })}<span>{t("ofTurnsNamed", { count: ledger.filter(row => row.matched).length, ledger: ledger.length })}{ledger.some(row => !row.matched && row.credit > 0) ? t("ruledAWrong", { count: ledger.filter(row => !row.matched && row.credit > 0).length }) : ""}</span></summary>
-            <p className="ledger-rule">{t("aTurnScores2", { ownSourceBonus: OWN_SOURCE_BONUS })}</p>
+              <summary>{t(game.scoringVersion === 2 ? "hypothesisTestingOf" : "hypothesisAccuracyOf", { hypothesis: outcome.breakdown.hypothesis })}<span>{t("ofTurnsNamed", { count: ledger.filter(row => row.matched).length, ledger: ledger.length })}{ledger.some(row => !row.matched && row.credit > 0) ? t("ruledAWrong", { count: ledger.filter(row => !row.matched && row.credit > 0).length }) : ""}</span></summary>
+            <p className="ledger-rule">{game.scoringVersion === 2 ? say(getScoreRows(game).find(row => row.id === "hypothesis")!.rule) : t("aTurnScores2", { ownSourceBonus: OWN_SOURCE_BONUS })}</p>
             {ledger.map(row => (
-              <div key={row.turn} className={row.matched ? "matched" : row.credit > 0 ? "half" : "missed"}>
+              <div key={row.turn} className={row.matched && row.credit === 1 ? "matched" : row.credit > 0 ? "half" : "missed"}>
                 <span>{String(row.turn)}</span>
                 <p>
                   <strong>{row.predicted ? t("predicted", { predicted: row.predicted }) : t("noHypothesisRecorded")}</strong>
                   <small>{t("testedAgainst2", { testedAgainst: say(withForm(row.testedAgainst, "inSentence")), procedure: row.procedure })}{row.discriminating ? t("couldHaveExposed") : t("couldNotHave")}{row.bonus > 0 ? t("ownSourceTo", { bonus: row.bonus }) : ""}</small>
                   <em>{say(row.verdict)}</em>
                 </p>
-                <b>{row.credit === 1 ? t("fullCredit") : row.credit > 0 ? t("halfCredit") : t("noCredit")}</b>
+                <b>{row.credit === 1 ? t("fullCredit") : row.credit === 0.25 ? t("predictionCredit") : row.credit > 0 ? t("halfCredit") : t("noCredit")}</b>
               </div>
             ))}
             </details>
@@ -230,7 +255,7 @@ export function DebriefDialog({ session }: { session: GameSession }) {
               <details className="debrief-fold">
                 <summary>{rich("yourDecisionsSpan", { decisions: game.decisions.length + game.commandHistory.length + game.setPieceHistory.length + game.responseChoices.length + game.mapHistory.length }, { span: chunk => <span>{chunk}</span> })}</summary>
               {/* A reason already given for the decision above is not repeated word for word. */}
-              {game.decisions.map((record, index) => <p key={`${record.stage}-${index}`}><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {say(record.title)}<span>{t("qualityOf5", { quality: record.quality })}</span>{(index === 0 || !sameMessage(game.decisions[index - 1].rationale, record.rationale)) && <em>{say(record.rationale)}</em>}<EffectList className="decision-effects" items={[...([["impact", record.impactChange], ["continuity", record.continuityChange], ["sector", record.sectorChange], ["objective", record.objectiveChange]] as const).filter(([, change]) => change).map(([meter, change]) => meterEffect(game, meter, change)), !!record.tempoChange && { kind: "pace", faster: record.tempoChange > 0 }, record.impactChange || record.continuityChange || record.sectorChange || record.objectiveChange || record.tempoChange ? "" : t("noMeterMoved")]} />{record.adaptedTo && <em>{t("actorAdaptation")}{record.adaptationReason ? say(record.adaptationReason) : t("theHiddenRoute", { title: String(attacks.find(attack => attack.id === record.adaptedTo)?.title) })}</em>}</p>)}
+              {game.decisions.map((record, index) => <Fragment key={`${record.stage}-${index}`}><p><strong>{attacks.find(attack => attack.id === record.stage)?.title}:</strong> {say(record.title)}<span>{t("qualityOf5", { quality: record.quality })}</span>{(index === 0 || !sameMessage(game.decisions[index - 1].rationale, record.rationale)) && <em>{say(record.rationale)}</em>}<EffectList className="decision-effects" items={[...([["impact", record.impactChange], ["continuity", record.continuityChange], ["sector", record.sectorChange], ["objective", record.objectiveChange]] as const).filter(([, change]) => change).map(([meter, change]) => meterEffect(game, meter, change)), !!record.tempoChange && { kind: "pace", faster: record.tempoChange > 0 }, record.impactChange || record.continuityChange || record.sectorChange || record.objectiveChange || record.tempoChange ? "" : t("noMeterMoved")]} />{record.adaptedTo && <em>{t("actorAdaptation")}{record.adaptationReason ? say(record.adaptationReason) : t("theHiddenRoute", { title: String(attacks.find(attack => attack.id === record.adaptedTo)?.title) })}</em>}</p><DecisionComparison game={game} record={record} /></Fragment>)}
               {game.commandHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>{t("commandEvent.commandEvent")}</strong> {say(record.title)}<span>{t("qualityOf5", { quality: record.quality })}</span><em>{say(record.effect)}</em></p>)}
               {game.setPieceHistory.map((record, index) => <p key={`${record.event}-${index}`}><strong>{t("sectorDecision")}</strong> {say(record.title)}<span>{t("qualityOf5", { quality: record.quality })}</span><em>{say(record.effect)}</em></p>)}
               {/* Each response phase graded against the best its sector offered, so

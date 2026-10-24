@@ -1,5 +1,10 @@
 # Saved-session corpus
 
+Version 22 adds optional scoring model 2, reconciled turn-meter calculations and
+actual evidence-decision snapshots. Older operations retain their original score
+model and receive no invented history. The version 22 opening exercises both new
+record types; malformed calculations and out-of-range context are rejected.
+
 One saved operation from each `SESSION_VERSION` since 10, each written by the
 code of its own era: the last commit at that version played the same opening
 (Energy support, Operational, two turns, a revision between them) with its own

@@ -6,6 +6,8 @@ export const effectListMessages = catalogue({
     "benefit": "benefit",
     "cost": "cost",
     "unchanged": "unchanged",
+    "compactSame": "same",
+    "compactCap": "cap {cap}",
     "better": "better",
     "worse": "worse",
     "faster": "faster",

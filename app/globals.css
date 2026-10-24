@@ -369,6 +369,21 @@ a {
   font-size:var(--type-body);
   min-height:54px;
 }
+.resume-primary {
+  grid-column:1/-1;
+  display:grid;
+  gap:16px;
+  padding:24px;
+}
+.resume-primary :is(h1,h2) {
+  margin:6px 0;
+}
+.resume-primary .resume-actions {
+  flex-wrap:wrap;
+}
+.resume-primary .resume-actions p {
+  flex-basis:100%;
+}
 .mission-meta {
   display:flex;
   justify-content:space-between;
@@ -983,9 +998,8 @@ a {
   margin:4px 0 17px;
 }
 .resume-card>div:first-child {
-  display:flex;
-  align-items:flex-start;
-  gap:11px;
+  display:grid;
+  gap:8px;
   color:var(--lime);
 }
 .resume-card strong {

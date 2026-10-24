@@ -9,7 +9,7 @@ import { openWithSave, responsePhaseGame, twoStagesGame } from "./fixtures";
 // one line.
 const widths = [320, 390, 820, 1280];
 
-test("the catalogued interface holds its layout with strings a third longer", async ({ page, browserName }) => {
+for (const width of widths) test(`the catalogued interface holds its layout with strings a third longer at ${width}px`, async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "measured in Chromium");
   // The page clips sideways overflow (overflow-x: clip), so its scroll width
   // never grows: measure how far past the viewport the furthest box reaches,
@@ -22,32 +22,30 @@ test("the catalogued interface holds its layout with strings a third longer", as
     const rights = [...document.body.querySelectorAll("*")].filter(element => element.getBoundingClientRect().width > 0 && !contained(element)).map(element => element.getBoundingClientRect().right);
     return Math.round(Math.max(0, ...rights)) - document.documentElement.clientWidth;
   });
-  for (const width of widths) {
-    await page.setViewportSize({ width, height: 844 });
-    await openWithSave(page, null, false, null, "/play?locale=en-XA");
-    await expect(page.locator(".topbar")).toContainText("[Fîéld güîdé");
-    expect(await overflow(), `assignment at ${width}`).toBeLessThanOrEqual(0);
+  await page.setViewportSize({ width, height: 844 });
+  await openWithSave(page, null, false, null, "/play?locale=en-XA");
+  await expect(page.locator(".topbar")).toContainText("[Fîéld güîdé");
+  expect(await overflow(), `assignment at ${width}`).toBeLessThanOrEqual(0);
 
-    await openWithSave(page, twoStagesGame(), false, null, "/play?locale=en-XA");
-    await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
-    await page.waitForTimeout(400);
-    await page.keyboard.press("Escape");
-    await page.waitForTimeout(300);
-    await expect(page.locator(".workspace-tabs")).toContainText("[Îñvéštîgáté");
-    expect(await overflow(), `investigate at ${width}`).toBeLessThanOrEqual(0);
-    const tabs = await page.locator(".workspace-tabs > button").evaluateAll(buttons => buttons.map(button => Math.round(button.getBoundingClientRect().top)));
-    expect(new Set(tabs).size, `tabs on one line at ${width}`).toBe(1);
+  await openWithSave(page, twoStagesGame(), false, null, "/play?locale=en-XA");
+  await page.getByRole("button", { name: /^\[Réšümé “.+”·+\]$/ }).click();
+  await page.waitForTimeout(400);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  await expect(page.locator(".workspace-tabs")).toContainText("[Îñvéštîgáté");
+  expect(await overflow(), `investigate at ${width}`).toBeLessThanOrEqual(0);
+  const tabs = await page.locator(".workspace-tabs > button").evaluateAll(buttons => buttons.map(button => Math.round(button.getBoundingClientRect().top)));
+  expect(new Set(tabs).size, `tabs on one line at ${width}`).toBe(1);
 
-    await openWithSave(page, responsePhaseGame(), false, null, "/play?locale=en-XA");
-    await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
-    await page.waitForTimeout(400);
-    for (let phase = 0; phase < 3; phase++) {
-      await page.locator(".response-options > button").first().click();
-      await page.waitForTimeout(250);
-    }
-    await expect(page.locator(".share-result")).toContainText("[Çöpý réšült");
-    expect(await overflow(), `ending at ${width}`).toBeLessThanOrEqual(0);
+  await openWithSave(page, responsePhaseGame(), false, null, "/play?locale=en-XA");
+  await page.getByRole("button", { name: /^\[Réšümé “.+”·+\]$/ }).click();
+  await page.waitForTimeout(400);
+  for (let phase = 0; phase < 3; phase++) {
+    await page.locator(".response-options > button").first().click();
+    await page.waitForTimeout(250);
   }
+  await expect(page.locator(".share-result")).toContainText("[Çöpý réšült");
+  expect(await overflow(), `ending at ${width}`).toBeLessThanOrEqual(0);
 });
 
 // Every word on a seeded screen is one the pseudo-locale wrote: the catalogue
@@ -89,7 +87,7 @@ test("every word on the seeded screens comes from the catalogue or the content o
   await expect(page.locator(".last-operation").first()).toBeVisible();
   await leftOver("returning player's assignment");
   await openWithSave(page, twoStagesGame(), false, null, "/play?locale=en-XA");
-  await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
+  await page.getByRole("button", { name: /^\[Réšümé “.+”·+\]$/ }).click();
   await page.waitForTimeout(400);
   await page.keyboard.press("Escape");
   await page.waitForTimeout(300);
@@ -99,7 +97,7 @@ test("every word on the seeded screens comes from the catalogue or the content o
     await leftOver(tab);
   }
   await openWithSave(page, responsePhaseGame(), false, null, "/play?locale=en-XA");
-  await page.getByRole("button", { name: pseudo("Resume"), exact: true }).click();
+  await page.getByRole("button", { name: /^\[Réšümé “.+”·+\]$/ }).click();
   await page.waitForTimeout(400);
   for (let phase = 0; phase < 3; phase++) {
     await page.locator(".response-options > button").first().click();

@@ -11,12 +11,13 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
   test(`the report exposes every response without committing it at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 320 ? 720 : width >= 1024 ? 757 : 900 });
     await openWithSave(page, { ...pendingDecisionGame(), difficulty: "training" }, true, { voice: true, sound: false, music: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     const report = page.locator(".report-dialog");
     const index = report.getByRole("navigation", { name: "Find a command response" });
     const finding = report.locator(".discovery");
     await expect(finding.getByRole("heading", { level: 3 })).toBeVisible();
     const findingBox = (await finding.boundingBox())!;
+    await report.locator(".report-response-index > summary").click();
     const indexBox = (await index.boundingBox())!;
     expect(findingBox.y + findingBox.height).toBeLessThanOrEqual(indexBox.y);
     await expect(index.getByRole("link")).toHaveCount(5);
@@ -35,14 +36,17 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     const details = report.locator(".report-collection-details");
     await expect(details).toHaveJSProperty("open", false);
     const assessment = report.locator(".evidence-assessment");
+    await report.locator(".decision-evidence > summary").click();
     await expect(assessment).toContainText("Signal: strong");
     await expect(assessment).toContainText("Confidence: weak");
     await expect(assessment.locator("small")).toBeVisible();
     const basis = assessment.locator("details");
     await expect(basis).toHaveJSProperty("open", false);
     await basis.locator("summary").click();
+
     await expect(basis.locator("p")).toBeVisible();
     await basis.locator("summary").click();
+    await report.locator(".decision-evidence > summary").click();
 
     // The index only navigates. Keyboard activation lands on the actual choice
     // above the sticky footer, with no decision committed by the jump itself.
@@ -52,14 +56,14 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     const lastChoice = report.locator("button[data-response]").last();
     await expect(lastChoice).toBeFocused();
     await expect(lastChoice).toBeInViewport({ ratio: 0.95 });
-    await expect(lastChoice.getByText("Uncertainty:", { exact: true })).toBeVisible();
-    await expect(lastChoice.locator(".effect-list")).toContainText(/benefit|cost|unchanged/);
+    await expect(lastChoice.locator(".decision-effect")).toContainText(/benefit|cost|unchanged/);
     await expect(report.locator("button[data-response]")).toHaveCount(5);
     const rationale = report.locator(".choice-rationale").last();
     await expect(rationale).toHaveJSProperty("open", false);
     await rationale.locator("summary").focus();
     await page.keyboard.press("Enter");
     await expect(rationale.locator("p").first()).toBeVisible();
+    await expect(rationale.getByText("Uncertainty:", { exact: true })).toBeVisible();
     await expect(report.locator("button[data-response]")).toHaveCount(5);
     await expect(lastChoice.locator(".decision-effect")).toBeVisible();
     await rationale.locator("summary").press("Enter");
@@ -71,11 +75,13 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
       return !hit || !element.contains(hit);
     });
     expect(covered).toBe(false);
+    await report.locator(".report-summary > summary").click();
     await details.locator("summary").click();
     await expect(details.locator(".result-roll")).toBeVisible();
     await expect(details).toContainText("Rolled 20 on the d20");
-    if (width === 1024) {
+    if (width === 320) {
       await details.locator("summary").click();
+      await report.locator(".report-summary > summary").click();
       await report.evaluate(element => { element.scrollTop = 0; });
       await report.locator(".options-below").click();
       await expect(lastChoice).toBeFocused();
@@ -98,7 +104,7 @@ for (const mode of ["campaign", "expert"] as const) for (const width of [375, 11
     expect(result.turns[0].success).toBe(false);
     const expected = proceduresFor(result).filter(procedure => availableIn(result, procedure.id) === 0 && sourceSeesReading(result, procedure.id) === true).map(procedure => procedure.title);
     await openWithSave(page, game, false, { voice: false, sound: false, music: false });
-    await page.getByRole("button", { name: "Resume", exact: true }).click();
+    await page.getByRole("button", { name: /^Resume “.+”$/ }).click();
     await page.locator('[data-procedure="identity"]').click();
     await page.getByRole("button", { name: "Run procedure", exact: true }).click();
     const report = page.locator(".report-dialog");

@@ -44,8 +44,8 @@ export function writeLedger(entries: LedgerEntry[]) {
   return writeStored(LEDGER_KEY, JSON.stringify(entries.slice(-KEEP)));
 }
 
-// Hypothesis accuracy over the last ten operations, against the ten before,
-// so the campaign record shows whether reading the route is improving.
+// The recorded hypothesis score over the last ten operations versus the ten
+// before. Historical operations keep the score their original rules awarded.
 export function hypothesisTrend(entries: LedgerEntry[]) {
   const mean = (list: LedgerEntry[]) => list.length ? Math.round(10 * list.reduce((sum, entry) => sum + entry.hypothesis, 0) / list.length) / 10 : null;
   return { recent: mean(entries.slice(-10)), recentCount: entries.slice(-10).length, before: mean(entries.slice(-20, -10)) };

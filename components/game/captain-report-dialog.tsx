@@ -1,5 +1,5 @@
 import { evidenceArtFor, StoryArt } from "./story-art";
-import { Fragment, useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Siren } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { attacks, availableIn, decisionRollShift, describePart, injectCard, hypotheses, getHypothesisStanding, getLossReason, procedureIntensities, procedureScopes, procedureById, proceduresFor, sourceSeesReading, getAdversaryState, resolveDecision, stages, type DecisionChoice, type Game, meterEffect, rollEffect } from "@/lib/advanced-game";
@@ -14,6 +14,7 @@ import { legacyText, say as sayIn, withForm } from "@/lib/i18n/message";
 import type { CaptainVoiceCue } from "@/lib/captain-voice";
 import { CaptainVoice } from "./captain-voice-lazy";
 import { EvidenceAssessment, SignalGuide } from "./evidence-assessment";
+import { TurnCalculation } from "./turn-calculation";
 
 register(captainReportDialogMessages);
 
@@ -70,7 +71,7 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
       <DialogContent
         ref={content}
         fadeOnly
-        className="game-dialog paper-dialog report-dialog"
+        className={`game-dialog paper-dialog report-dialog${awaitingDecision ? " awaiting-decision" : ""}`}
         showCloseButton={!awaitingDecision}
         onEscapeKeyDown={event => { if (awaitingDecision) event.preventDefault(); }}
         // With a decision pending there is no close button, so the first tabbable
@@ -97,15 +98,17 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
         {report && game && <>
           {report.revealed && <ConfirmedFinding report={report} scenario={game.scenario} />}
           {!decision && <p className="report-next"><strong>{t("next")}</strong> {game.status === "response" ? t("nextResponse") : ended ? t("nextDebrief") : game.pendingCommand || game.pendingSetPiece ? t("nextCommand") : t("nextInvestigation")}</p>}
-          {decision && <nav className="report-response-index" aria-label={t("findResponse")}>
-            <p className="eyebrow">{t("readResponses", { count: decision.options.length })}</p>
+          {decision && <details className="report-response-index">
+            <summary>{t("readResponses", { count: decision.options.length })}</summary>
+            <nav aria-label={t("findResponse")}>
             <ol>{decision.options.map((option, index) => <li key={option.id}><a href={`#report-response-${option.id}`} onClick={event => {
               event.preventDefault();
               const target = optionList.current?.querySelector<HTMLButtonElement>(`button[data-response="${option.id}"]`);
               target?.focus({ preventScroll: true });
               target?.scrollIntoView({ block: "nearest", behavior: "auto" });
             }}>{t("responseIndexEntry", { letter: "ABCDEFG"[index], title: option.title })}</a></li>)}</ol>
-          </nav>}
+            </nav>
+          </details>}
           {canReviewSources && <section className="report-available-sources" aria-label={t("availableSources")}>
             <h3>{t("availableSources")}</h3>
             {availableSources.length ? <><p>{t("sourcesCanTest")}</p><ul>{availableSources.map(procedure => <li key={procedure.id}>{procedure.title}</li>)}</ul></> : <p>{t("sourcesUnavailable")}</p>}
@@ -136,12 +139,13 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                 </div>
               ))}
           <div className={`report-layout ${report.inject || decision ? "with-briefing" : "single"}`}>
-            <section className="report-summary" aria-label={t("procedureResult")}>
+            <details className="report-summary" open={decision ? undefined : true}>
+              <summary>{t("procedureResult")}</summary>
               {report.success ? <p className="report-narrative"><Glossed text={say(report.narrative)} /></p> : <p className="report-narrative report-inconclusive" role="status">{t("failedSettlesNothing")}</p>}
               {!decision && report.success && game.evidence.filter(item => item.turn === report.number && !item.supports).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}
-              {!decision && report.success && !report.revealed && !report.injectReveal && game.difficulty === "training" && game.mode !== "expert" && game.evidence[0]?.turn === report.number && <SignalGuide />}
+              {session.guided && !decision && report.success && !report.revealed && !report.injectReveal && game.difficulty === "training" && game.mode !== "expert" && game.evidence[0]?.turn === report.number && <SignalGuide />}
               <div className="turn-movement"><b>{t("thisTurn")}</b><EffectList items={[meterEffect(game, "impact", report.impactChange), meterEffect(game, "continuity", report.continuityChange), meterEffect(game, "sector", report.sectorChange), meterEffect(game, "objective", report.objectiveChange)]} /></div>
-              {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
+              <TurnCalculation game={game} turn={report} />
               <details key={report.number} className="report-collection-details">
                 <summary>{t("collectionDetails")}</summary>
                 {!report.success && <p className="report-context"><Glossed text={say(report.narrative)} /></p>}
@@ -178,42 +182,47 @@ export function CaptainReportDialog({ session }: { session: GameSession }) {
                   options it pushed the last one under the fold and left this
                   column half empty. */}
               {decision && injectBox}
-            </section>
+            </details>
             {(report.inject || decision) && <section className="report-briefing" aria-label={t("operationalUpdate")}>
               {!decision && injectBox}
               {decision && (
                 <div className="evidence-decision">
-                  <span className="eyebrow">{t("operationalDecisionRequired")}</span>
-                  {game.evidence.filter(item => item.supports === game.pendingDecision).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}
-                  {game.difficulty === "training" && game.mode !== "expert" && game.decisions.length === 0 && <SignalGuide />}
+                  <span className="eyebrow sr-only">{t("operationalDecisionRequired")}</span>
+                  <details className="decision-evidence"><summary>{t("evidenceReview")}</summary>{game.evidence.filter(item => item.supports === game.pendingDecision).map(item => <EvidenceAssessment key={item.id} game={game} item={item} compact />)}</details>
                   {/* The count says how many there are: the last of five sat below the fold
                       of a laptop screen with nothing saying it was there. */}
-                  <h3>{t("chooseOneOf2", { attackTitle: decision.attack.title })}{["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length}{t("commandResponses")}</h3>
+                  <h3 className="sr-only">{t("chooseOneOf2", { attackTitle: decision.attack.title })}{["no", "one", "two", "three", "four", "five", "six"][decision.options.length] ?? decision.options.length}{t("commandResponses")}</h3>
                   {/* At every difficulty but Expert: the review grades every decision by this,
                       and an Operational playtest was graded on a rule it was never shown. */}
                   {game.mode !== "expert" && (
-                    <p className="decision-pressure">{t("pressureNowBusiness2", { impact: game.impact, objectiveProgress: game.objectiveProgress, getAdversaryState: say(withForm(getAdversaryState(game), "lower")) })}{game.impact >= 55 ? t("highImpact", { impact: game.impact, act: optionTitle(decision.options, "act"), contain: optionTitle(decision.options, "contain") }) : game.adversaryTempo >= 2 ? t("highPace", { pace: say(withForm(getAdversaryState(game), "lower")), progress: game.objectiveProgress, act: optionTitle(decision.options, "act"), contain: optionTitle(decision.options, "contain") }) : t("lowPressure", { observe: optionTitle(decision.options, "observe"), attribute: optionTitle(decision.options, "attribute") })}</p>
+                    <p className="decision-pressure">{session.guided && <strong>{t(game.difficulty === "training" ? "assistanceTraining" : game.difficulty === "operational" ? "assistanceOperational" : "assistanceCrisis")}</strong>} {t("pressureNowBusiness2", { impact: game.impact, objectiveProgress: game.objectiveProgress, getAdversaryState: say(withForm(getAdversaryState(game), "lower")) })}{session.guided && (game.difficulty === "operational" ? t("operationalPressure") : game.difficulty === "crisis" ? t("crisisPressure") : (game.impact >= 55 || game.adversaryTempo >= 2 ? ["act", "contain"] as const : ["observe", "attribute"] as const).some(choice => previewDecision(game, choice)?.ends) ? t("checkLossWarnings") : game.impact >= 55 ? t("highImpact", { impact: game.impact, act: optionTitle(decision.options, "act"), contain: optionTitle(decision.options, "contain") }) : game.adversaryTempo >= 2 ? t("highPace", { pace: say(withForm(getAdversaryState(game), "lower")), progress: game.objectiveProgress, act: optionTitle(decision.options, "act"), contain: optionTitle(decision.options, "contain") }) : t("lowPressure", { observe: optionTitle(decision.options, "observe"), attribute: optionTitle(decision.options, "attribute") }))}</p>
                   )}
-                  <div ref={optionList}>
+                  <div ref={optionList} className="decision-comparison">
                     {/* Lettered ruled entries on the report, like the readings: the
                         letter in the margin, the short tradeoff and exact effects.
                         Rationale is a sibling disclosure, never inside a button. */}
-                    {decision.options.map((option, index) => (
-                      <Fragment key={option.id}>
+                    {decision.options.map((option, index) => {
+                      const preview = previewDecision(game, option.id);
+                      const effects = preview?.effects ?? [];
+                      const labels = [t("impactShort"), t("serviceShort"), t("sectorShort"), t("actorShort"), t("rollShort")].slice(0, effects.filter(Boolean).length);
+                      return (
+                      <div className="decision-choice" key={option.id}>
                       <button id={`report-response-${option.id}`} data-response={option.id} onClick={() => decide(option.id)}>
                         <b className="option-letter" aria-hidden="true">{"ABCDEFG"[index]}</b>
-                        <strong>{option.title}</strong>
-                        <span>{t(primerTrade[option.id])}<EffectList compare className="decision-effect" items={previewDecision(game, option.id) ?? []} /><small><b>{t("uncertainty")}</b> {say(option.risk)}</small></span>
+                        <span className="decision-choice-label"><strong>{option.title}</strong><small>{t(primerTrade[option.id])}</small>{preview?.ends && <small className="decision-loss">{t("endsOperation")}</small>}</span>
+                        <EffectList compare compactLabels={labels} className="decision-effect" items={effects} />
                       </button>
-                      <details className="choice-rationale decision-primer"><summary>{t("whyChoose", { title: option.title })}</summary><p>{option.description}</p><p className="option-signals"><span>{say(option.evidence)}</span><span>{say(option.service)}</span></p></details>
-                      </Fragment>
-                    ))}
+                      <details className="choice-rationale decision-primer"><summary aria-label={t("whyChoose", { title: option.title })}>{t("optionDetails")}</summary><p>{option.description}</p><p><b>{t("uncertainty")}</b> {say(option.risk)}</p><p className="option-signals"><span>{say(option.evidence)}</span><span>{say(option.service)}</span></p></details>
+                      </div>
+                    ); })}
                   </div>
                   <OptionsBelow key={decision.attack.id} list={optionList} />
+                  {session.guided && game.difficulty === "training" && game.mode !== "expert" && game.decisions.length === 0 && <details className="decision-primer signal-primer"><summary>{t("signalGuide")}</summary><SignalGuide /></details>}
                 </div>
               )}
             </section>}
           </div>
+          {voiceCue && !session.botRun && <CaptainVoice cue={voiceCue} decisionPending={awaitingDecision} enabled={session.voiceEnabled && !session.settings && !session.rules && !session.debrief && !session.newConfirm} history={session.voiceHistory} />}
           {awaitingDecision ? <p className="report-gate" role="status">{t("resolveTheOperational")}</p> : <button className="primary-button full" onClick={dismissReport}>{game.status === "response" ? t("enterResponsePhase") : ended ? t("openDebrief") : t("continueInvestigation")}</button>}
         </>}
       </DialogContent>
@@ -248,13 +257,13 @@ function ConfirmedFinding({ report, scenario }: { report: Game["turns"][number];
 function previewDecision(game: Game, choice: DecisionChoice) {
   try {
     const next = resolveDecision(game, choice);
-    return [
+    return { ends: next.status === "lost", effects: [
       meterEffect(game, "impact", next.impact - game.impact),
       meterEffect(game, "continuity", next.continuity - game.continuity),
       meterEffect(game, "sector", next.sectorHealth - game.sectorHealth),
       meterEffect(game, "objective", next.objectiveProgress - game.objectiveProgress),
       next.status === "playing" && next.revealed.length < 4 && rollEffect(game.nextModifier, decisionRollShift[choice]),
-    ];
+    ] };
   } catch {
     return null;
   }
@@ -306,7 +315,7 @@ function OptionsBelow({ list }: { list: RefObject<HTMLDivElement | null> }) {
   }, [list]);
   if (!hidden) return null;
   const reveal = () => {
-    const last = list.current?.querySelector<HTMLButtonElement>("button[data-response]:last-of-type");
+    const last = [...(list.current?.querySelectorAll<HTMLButtonElement>("button[data-response]") ?? [])].at(-1);
     const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (last instanceof HTMLElement) last.focus({ preventScroll: true });
     last?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "nearest" });
