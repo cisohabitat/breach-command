@@ -48,6 +48,11 @@ Match the existing images in `public/art/`. In short:
 
 ## Set 1: evidence still lifes (8 images)
 
+Historical brief: this set was delivered and later replaced by the twelve
+finding miniatures in `public/art/findings/`. The unused still-life files were
+removed in 0.10.6; the source/sector mapping remains in `lib/art.ts`. The
+production report uses the miniature sizes in their README.
+
 When a check confirms a stage, the Captain's Report shows a small still life
 of the kind of source that found it, beside the finding (`.discovery` in
 `components/game/captain-report-dialog.tsx`). Four exist (`email`,

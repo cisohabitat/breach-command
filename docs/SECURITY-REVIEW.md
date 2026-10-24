@@ -32,6 +32,15 @@ state, not the unrevealed chain.
 
 ## Dependency update policy
 
+The 24 October 2026 release audit found three new Next.js advisories
+(`GHSA-2464-fhr4-w9xw`, `GHSA-p3m5-59mp-jv5r`, `GHSA-673q-mjm6-r5xr`)
+and the lint dependency's Zod advisory (`GHSA-mrhx-c7xc-m3w5`). Release
+0.10.6 uses Next.js / eslint-config-next 16.4.2 and a bounded Zod override
+to 4.6.7. The installed hooks plugin and zod-validation-error both support
+Zod 4 and already import their v4 entrypoints. These versions were published
+on 15 and 12 October respectively, preserving the seven-day age policy.
+The audit gate and its narrowly reviewed exception remain unchanged.
+
 The npm updater's seven-day cooldown matches pnpm's release-age policy.
 Earlier Dependabot jobs failed with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` after
 selecting releases published inside that window; the cooldown defers candidate
@@ -41,10 +50,10 @@ installer's age policy requires explicit review.
 
 ## Reviewed exception: development lint dependency
 
-The unfiltered audit still reports **one high advisory**:
+The original 16 October audit reported **one high advisory**:
 [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
 `braces` 3.0.3 stack exhaustion on deeply nested glob patterns. No patched
-version was published when reviewed. Its sole installed path is
+version was published when reviewed. Its installed path at that review was
 `eslint-config-next > @next/eslint-plugin-next > fast-glob > micromatch > braces`.
 It is a development lint tool, absent from production dependency paths. Lint
 patterns are repository-controlled; the game does not pass player input to it.
@@ -54,7 +63,8 @@ on an untrusted checkout with credentials or privileged access.
 `pnpm security:audit` accepts only that exact advisory, only on that lint path,
 and only while the registry reports no patched version. Any other advisory,
 new production path, published fix or registry/report error fails CI. The raw
-`pnpm audit` command deliberately continues to report the exception. Remove it
+`pnpm audit` command is unfiltered; the 24 October audit reports no advisories.
+Remove the exception
 when a compatible upstream fix is published; do not suppress all unfixable
 advisories. Package releases still observe the existing seven-day age policy.
 

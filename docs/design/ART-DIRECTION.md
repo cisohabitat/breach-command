@@ -350,3 +350,10 @@ finding's response and a disclosure of its recorded effects. The full check log 
 its readings, plans and exact changes. Records without timestamps stay in the
 decisions section; no chronology is invented. These are presentation changes,
 with no balance or save-schema change.
+
+## Unused artwork cleanup, 24 October 2026
+
+The twelve finding miniatures replaced the older evidence still lifes in the
+Captain’s Report. No other surface requests the old set, so its delivery files
+and the unused `StoryArt` evidence variant are removed. Preserve the miniature
+source/sector mapping and all current portraits, emblems and scenes.

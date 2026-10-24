@@ -12,7 +12,7 @@ test("every check has source art, with the OT exception and sector fallback", ()
       const expected = runsOperationalTechnology(scenario) && ["server", "endpoint"].includes(procedure.id)
         ? "maintenance" : procedure.id === "endpoint" ? "telemetry" : procedure.id;
       assert.equal(evidenceArtFor(procedure.id, scenario), expected);
-      assert.ok(readFileSync(new URL(`../public/art/evidence/${expected}.webp`, import.meta.url)).length);
+      assert.ok(readFileSync(new URL(`../public/art/findings/${expected}.webp`, import.meta.url)).length);
     }
     for (const procedure of sectorProcedures) assert.equal(evidenceArtFor(procedure.id, scenario), "telemetry");
     assert.equal(getShareCard(newGame(scenario, "training", () => 0)).scenarioId, scenarios[scenario].id);
@@ -50,7 +50,6 @@ function webp(path: string, width: number, height: number, budget: number) {
 test("new artwork meets its dimensions and budgets, and every scene has a phone copy", () => {
   for (const source of ["identity", "network", "email", "dns", "firewall", "server", "cloud", "forensic", "hunt", "intel", "maintenance", "telemetry"]) webp(`findings/${source}`, 192, 128, 9000);
   webp("icons/field-kit", 768, 512, 110000);
-  for (const source of ["network", "firewall", "dns", "server", "cloud", "forensic", "intel", "hunt"]) webp(`evidence/${source}`, 480, 320, 45000);
   for (const profile of Object.keys(adversaryProfiles)) webp(`adversaries/${profile}`, 256, 256, 15000);
   for (const id of ["resilience", "foothold", "fractured", "stability"]) {
     webp(`campaign/ending-${id}`, 960, 480, 110000);

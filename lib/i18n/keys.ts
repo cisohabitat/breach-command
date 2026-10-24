@@ -32,7 +32,6 @@ import type { knownFactsMessages } from "./en/known-facts.ts";
 import type { livingIncidentMessages } from "./en/living-incident.ts";
 import type { missionBriefingDialogMessages } from "./en/mission-briefing-dialog.ts";
 import type { newIncidentDialogMessages } from "./en/new-incident-dialog.ts";
-import type { operationsMapMessages } from "./en/operations-map.ts";
 import type { pageMessages } from "./en/page.ts";
 import type { procedureGridMessages } from "./en/procedure-grid.ts";
 import type { responsePanelMessages } from "./en/response-panel.ts";
@@ -73,7 +72,6 @@ export type MessageKey = keyof typeof en
   | keyof typeof livingIncidentMessages
   | keyof typeof missionBriefingDialogMessages
   | keyof typeof newIncidentDialogMessages
-  | keyof typeof operationsMapMessages
   | keyof typeof pageMessages
   | keyof typeof procedureGridMessages
   | keyof typeof responsePanelMessages
@@ -83,4 +81,4 @@ export type MessageKey = keyof typeof en
   | keyof typeof settingsDialogMessages
   | keyof typeof tutorialCoachMessages
   | keyof typeof titleScreenMessages;
-export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "decision-carry", "decision-carry-details", "effect-list", "engine", "end-state", "evidence-assessment", "evidence-links", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "learning", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "operations-map", "page", "practice-desk", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach", "title-screen"];
+export const catalogueFiles = ["action-sheet", "bot-control", "briefing-screen", "briefing-workspace", "captain-report-dialog", "captain-voice", "command-event", "command-workspace", "debrief-dialog", "decision-carry", "decision-carry-details", "effect-list", "engine", "end-state", "evidence-assessment", "evidence-links", "evidence-workspace", "facilitator-sheet", "fault-boundary", "field-guide-dialog", "game-screen", "hypothesis-board", "infrastructure-console", "investigate-workspace", "known-facts", "learning", "living-incident", "mission-briefing-dialog", "new-incident-dialog", "page", "practice-desk", "procedure-grid", "response-panel", "roll-dialog", "sector-board", "sector-set-piece", "session", "settings-dialog", "tutorial-coach", "title-screen"];

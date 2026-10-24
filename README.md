@@ -246,7 +246,7 @@ with tighter spacing. Meters, warnings, action costs and decisions stay visible.
 
 The game does not call an AI service, inspect real systems or transmit incident information.
 
-Artwork is decorative and local: source still lifes follow the procedure and
+Artwork is decorative and local: finding miniatures follow the procedure and
 sector, object emblems accompany adversary intent in the review, and all four
 campaign conclusions have scenes. Sector, act and ending scenes include 480 px
 phone copies selected by responsive image attributes. Images fade in on the
@@ -315,6 +315,8 @@ pnpm exec tsc --noEmit
 pnpm build
 ```
 
+Next.js and its lint configuration use 16.4.2; the lint tool's Zod dependency
+is pinned to patched 4.6.7 within the existing seven-day release-age policy.
 The [security review](docs/SECURITY-REVIEW.md) records the reviewed boundaries,
 production header policy and the one unfixed development-only lint advisory.
 The audit gate rejects new findings and a newly published fix for that exception.
@@ -338,7 +340,7 @@ Measure balance before and after a rule change. `pnpm balance` has the Bot Comma
 
 The terminal's schedule erosion was reduced after comparing collection, evidence-decision, sector-decision and specialist strategies. Its deadline still accelerates from turn four and adversary tempo still counts double. The [terminal balance review](docs/design/TERMINAL-BALANCE.md) records that tuning with the earlier bot policy. A later [government-service audit](docs/design/AUTHORITY-BALANCE.md) found that the bot was wasting turns on sources blind to its current reading. Correcting that policy, without changing any game rules, gives 95.9% / 88.9% / 73.7% wins across Training, Operational and Crisis in the default 9,000-operation run. These are results for a stronger bot on standard incidents, not a human completion target or evidence that difficulty was reduced.
 
-`pnpm test` runs the engine suites under `node --test` — one file per concern, so a failure reports rather than stopping the run — with deterministic rule checks and 1,290 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover. `pnpm test:a11y` runs an axe audit over the assignment screen at every supported width and over the field guide, settings and command surfaces at a phone width; the narrow widths matter because the topbar hides its button labels below 431 px. CI installs Firefox/WebKit system dependencies from Ubuntu's canonical HTTPS mirror, with bounded setup steps; Chromium visual references keep their existing runner environment.
+`pnpm test` runs the engine suites under `node --test` — one file per concern, so a failure reports rather than stopping the run — with deterministic rule checks and 1,290 complete simulated operations across scenarios, difficulties, modes, specialists and the Bot Commander. `pnpm test:responsive` drives a deterministic practice operation through assignment, investigation, decisions, containment, assurance, recovery and debrief at every supported phone, iPad and desktop audit width. It also checks horizontal fit, essential target size, pause/resume and manual takeover. `pnpm test:a11y` runs an axe audit over the assignment screen at every supported width and over the field guide, settings and command surfaces at a phone width; the narrow widths matter because the topbar hides its button labels below 431 px. CI installs browser system dependencies from Ubuntu's canonical HTTPS mirror, with bounded WebKit/Firefox setup steps; Chromium visual references keep their existing runner environment.
 
 ## Architecture
 

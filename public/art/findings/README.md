@@ -16,5 +16,5 @@ the OT maintenance exception and generic telemetry fallback. Hidden routes,
 confidence, roll values and recommended actions never select artwork.
 
 Images are decorative, keep an empty alt, reserve their frame on failure and
-accompany the full written finding. The older evidence illustrations remain
-available to other game surfaces.
+accompany the full written finding. These miniatures replace the older evidence
+still lifes; no game surface requests the retired set.

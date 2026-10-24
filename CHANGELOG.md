@@ -4,6 +4,13 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.6, 24 October 2026
+
+- Remove the unused operations-map component, its six-message catalogue and styles, and the unused stage-icon helper.
+- Remove twelve superseded evidence illustrations; reports retain the current finding miniatures and source/sector mapping.
+- Preserve the active infrastructure map, shared headings, gameplay, saves and challenge reproduction.
+- Update Next.js and its lint configuration to 16.4.2 and the lint tool's Zod dependency to 4.6.7 after the release audit reported new advisories; preserve the seven-day package-age policy.
+
 ## 0.10.5, 22 October 2026
 
 - Explain collection-plan roll and pressure tradeoffs, including that Rapid and Enterprise do not save a turn.
