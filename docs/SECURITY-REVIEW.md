@@ -50,10 +50,10 @@ installer's age policy requires explicit review.
 
 ## Reviewed exception: development lint dependency
 
-The unfiltered audit still reports **one high advisory**:
+The original 16 October audit reported **one high advisory**:
 [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm),
 `braces` 3.0.3 stack exhaustion on deeply nested glob patterns. No patched
-version was published when reviewed. Its sole installed path is
+version was published when reviewed. Its installed path at that review was
 `eslint-config-next > @next/eslint-plugin-next > fast-glob > micromatch > braces`.
 It is a development lint tool, absent from production dependency paths. Lint
 patterns are repository-controlled; the game does not pass player input to it.
@@ -63,7 +63,8 @@ on an untrusted checkout with credentials or privileged access.
 `pnpm security:audit` accepts only that exact advisory, only on that lint path,
 and only while the registry reports no patched version. Any other advisory,
 new production path, published fix or registry/report error fails CI. The raw
-`pnpm audit` command deliberately continues to report the exception. Remove it
+`pnpm audit` command is unfiltered; the 24 October audit reports no advisories.
+Remove the exception
 when a compatible upstream fix is published; do not suppress all unfixable
 advisories. Package releases still observe the existing seven-day age policy.
 
