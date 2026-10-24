@@ -3919,7 +3919,12 @@ span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   .tutorial-next button {
     width:100%;
   }
-  span.effect-list.compact>span.effect,.quick-start-guide {
+  .quick-start-guide {
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:1000px) {
+  span.effect-list.compact>span.effect {
     grid-template-columns:1fr;
   }
 }

@@ -6,7 +6,9 @@ useful tests, quarter-credit unsupported predictions and repeated guesses. Keep
 legacy saves' original scoring. Session 22 validates recorded meter calculations
 and actual evidence-decision snapshots; do not fabricate either for old history.
 The assignment has one named Resume card and explicit replacement setup. Reports
-retain exact costs with optional source/result/rationale details. Guided Training
+retain exact costs with optional source/result/rationale details. Keep cost cells
+within their available width; stacked tablet and phone labels are deliberate,
+and credit badges on paper require dark inks with AA contrast. Guided Training
 suggests affordable calls, Operational trade-offs and Crisis questions; Expert
 withholds coaching. Recovery explains remaining uncertainty separately from impact.
 Preserve unchanged pressure, dice and limits; see `docs/design/PLAYTEST-REMEDIATION.md`.

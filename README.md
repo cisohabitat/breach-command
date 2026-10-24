@@ -180,7 +180,7 @@ New operations multiply investigation pace credit by the fraction of four stages
 The assignment screen leads with one named Resume card showing the saved case,
 difficulty, turn, confirmed stages and next task. Choose **Start another incident**
 to open replacement setup. Reports offer concise exact-cost responses with optional
-rationale, plus expandable meter calculations that reconcile starting values, plan,
+rationale and stacked cost labels at narrower widths. Expandable meter calculations reconcile starting values, plan,
 discovery relief, incidents and limits. Guided Training suggests affordable responses;
 Operational describes trade-offs; Crisis asks a decision question. Expert withholds
 this coaching. Recorded decision snapshots support contextual debrief comparisons.

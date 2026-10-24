@@ -57,6 +57,7 @@ for (const width of [320, 375, 430, 768, 810, 820, 834, 1024, 1080, 1194, 1280])
     await expect(lastChoice).toBeFocused();
     await expect(lastChoice).toBeInViewport({ ratio: 0.95 });
     await expect(lastChoice.locator(".decision-effect")).toContainText(/benefit|cost|unchanged/);
+    expect(await report.locator(".compact > .effect").evaluateAll(cells => cells.every(cell => cell.scrollWidth <= cell.clientWidth + 1))).toBe(true);
     await expect(report.locator("button[data-response]")).toHaveCount(5);
     const rationale = report.locator(".choice-rationale").last();
     await expect(rationale).toHaveJSProperty("open", false);
