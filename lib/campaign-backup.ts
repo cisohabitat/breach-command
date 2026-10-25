@@ -15,7 +15,7 @@ export function isCampaignBackup(value: unknown, cases = 10): boolean {
     const entries = record[field];
     if (entries !== undefined && (!object(entries) || !Object.values(entries).every(n => number(n, max)))) return false;
   }
-  for (const field of ["routeHistory", "recentCommands", "recentInjects", "recentCrises"] as const) {
+  for (const field of ["routeHistory", "recentCommands", "recentInjects", "recentCrises", "rehearsed"] as const) {
     const entries = record[field];
     if (entries !== undefined && (!Array.isArray(entries) || !entries.every(id => typeof id === "string"))) return false;
   }

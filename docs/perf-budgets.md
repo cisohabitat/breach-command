@@ -1,5 +1,12 @@
 # Performance budgets
 
+Game review remediation (0.10.10) keeps every limit. The seventy authored
+variant notes, about 9 kB of the first load, are now composed from each
+variant's numbers by one catalogue pattern, and the discard confirmation loads
+with the game bundle. Local measurements: 654,842 B initial script, 1,180,753 B
+warmed assignment, 1,191,617 B operation script; linked/total style
+88,707/221,930 B. No budget is raised.
+
 Learning tranche (0.10.0) keeps all limits and the existing game/offline warm-up.
 Practice and opt-in reflection load separately; carry-forward details remain in
 the shared game bundle for offline play. Typed scoped writers factor 243 repeated

@@ -4,6 +4,17 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.10, 25 October 2026
+
+- Count a replayed Daily, Weekly or challenge-code operation once: its chain and dice are known, so a replay leaves the campaign unchanged and the review says so.
+- Record leaving an operation after its first turn — New incident, Start another incident over a save, or Discard — as a loss to trust, readiness, streak and unresolved access. Ironman records an operation left open on the next visit. Discard now asks first.
+- Save a resolved turn before its die is shown, so a reload cannot draw an unseeded roll again.
+- Bound restored decision qualities, the investigation window and map actions, and require named command and sector records; a forged backup could write any score into the campaign or erase its experience. Drop duplicate cleared cases.
+- Record results against the campaign and record in storage, follow other tabs' changes, and refuse a stale Resume card. Never overwrite a parked newer-build save. Resume on the operation's own collection plan.
+- Grant failure protection only on the hidden route, withhold the own-source +1 after a revision no evidence prompted, and keep a command event owed on a turn that found a stage.
+- Retune all thirty sector decisions so the decisive and narrow measures trade at the same net effect; let service above full lower starting impact; name variant readouts as the screen does.
+- New operations use rules version 2, BC13 and session 23; older operations keep their rules. Default-run wins move from 94.1% / 86.4% / 69.2% to 93.7% / 86.1% / 66.3%. See `docs/design/REVIEW-FIXES-2026-10-25.md`.
+
 ## 0.10.9, 24 October 2026
 
 - Scale investigation pace credit by confirmed stages and distinguish useful hypothesis tests from unverified correct guesses. The reported four-turn, one-stage loss now earns 6/25 investigation and 1/10 testing, rather than two perfect components.

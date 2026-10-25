@@ -3,7 +3,7 @@ import type { CarriedSource, NodePosture } from "./advanced-game";
 import { injects } from "./engine/content.ts";
 import { isMessage, legacy, msg, type Message } from "./i18n/message.ts";
 import { parseSaveJson } from "./safe-json.ts";
-import { campaignRoutes } from "./phase9.ts";
+import { campaignRoutes, variantModifier, variantModifierRef } from "./phase9.ts";
 
 export { PARKED_SESSION_KEY, SESSION_KEY } from "./session-keys.ts";
 export { isCampaignBackup } from "./campaign-backup.ts";
@@ -17,7 +17,8 @@ export { isCampaignBackup } from "./campaign-backup.ts";
 // retain their original comparison rules; never manufacture historical links.
 // 22: completion/testing-aware scoring, recorded meter calculations and
 // decision-time context. Older operations retain their original score rules.
-export const SESSION_VERSION = 22;
+// 23: rules version 2 (lib/engine/types.ts). Older operations keep their rules.
+export const SESSION_VERSION = 23;
 
 // A stored sentence: a message from version 19, or an older save's English,
 // kept as the player read it.
@@ -77,6 +78,10 @@ export function serialiseBackupSession(game: Game | null, savedSession: SavedSes
 const statuses: GameStatus[] = ["playing", "response", "won", "lost", "exercise"];
 const bounded = (value: unknown, fallback: number, min = 0, max = 100) =>
   Number.isFinite(value) ? Math.max(min, Math.min(max, Number(value))) : fallback;
+// A decision's quality is a 0–5 grade the review averages into the score. A
+// restored backup carrying 1e6 scored 500,037 into the campaign, and a
+// non-number made the score NaN, which stored the campaign's XP as null.
+const quality = (value: unknown) => bounded(value, 3, 0, 5);
 
 // A save written by a newer build may carry fields this version cannot migrate.
 // It is not this build's to read, and not this build's to delete either: an
@@ -110,6 +115,7 @@ export function parseSession(raw: string): SavedSession | null {
     const game = parsed.game as Game;
     if (game.comparisonVersion !== undefined && game.comparisonVersion !== 2) return null;
     if (game.scoringVersion !== undefined && game.scoringVersion !== 2) return null;
+    if (game.rulesVersion !== undefined && game.rulesVersion !== 2) return null;
     if (game.challengeVersion !== undefined && (!Number.isSafeInteger(game.challengeVersion) || game.challengeVersion < 1)) return null;
     if (!Number.isInteger(game.scenario) || !scenarios[game.scenario]) return null;
     if (!isKnown(difficulties, game.difficulty)) return null;
@@ -174,6 +180,11 @@ export function parseSession(raw: string): SavedSession | null {
       && (record.effects === undefined || (record.effects && typeof record.effects === "object" && !Array.isArray(record.effects)
         && [record.effects.impact, record.effects.objective, record.effects.roll].every(Number.isFinite)
         && Math.abs(record.effects.impact) <= 100 && Math.abs(record.effects.objective) <= 100 && Math.abs(record.effects.roll) <= 5 && typeof record.effects.rewarded === "boolean")))) return null;
+    // A record's event feeds the campaign's memory of recent events, which a
+    // backup must then carry as strings: an unnamed one left the campaign
+    // refusing its own export.
+    if (Array.isArray(game.commandHistory) && !game.commandHistory.every(record => isKnown(commandEvents, record.event) && ["a", "b"].includes(record.choice))) return null;
+    if (Array.isArray(game.setPieceHistory) && !game.setPieceHistory.every(record => typeof record.event === "string" && /^sector-\d+(-[bc])?$/.test(record.event) && ["a", "b", "c"].includes(record.choice))) return null;
     if (Array.isArray(game.mapHistory) && !game.mapHistory.every(record => idText(record.node)
       && ["monitor", "isolate"].includes(record.action) && Number.isFinite(record.turn))) return null;
     if (Array.isArray(game.hypothesisHistory) && !game.hypothesisHistory.every(record => Number.isFinite(record.turn)
@@ -236,13 +247,16 @@ export function parseSession(raw: string): SavedSession | null {
       ...(game.challengeVersion !== undefined ? { challengeVersion: game.challengeVersion } : {}),
       ...(game.comparisonVersion === 2 ? { comparisonVersion: 2 as const } : {}),
       ...(game.scoringVersion === 2 ? { scoringVersion: 2 as const } : {}),
+      ...(game.rulesVersion === 2 ? { rulesVersion: 2 as const } : {}),
       hypothesisHistory: Array.isArray(game.hypothesisHistory) ? game.hypothesisHistory : [],
       adversaryMemory: game.adversaryMemory ?? { procedureCounts: {}, observeChoices: 0, actChoices: 0, hypothesisChanges: 0 },
       pendingDecision: finished ? null : game.pendingDecision ?? null,
       pendingCommand: finished ? null : game.pendingCommand ?? null,
-      commandHistory: Array.isArray(game.commandHistory) ? game.commandHistory.map(record => ({ ...record, title: text(record.title, legacy("")), effect: text(record.effect, legacy("")) })) : [],
+      commandHistory: Array.isArray(game.commandHistory) ? game.commandHistory.map(record => ({ ...record, quality: quality(record.quality), title: text(record.title, legacy("")), effect: text(record.effect, legacy("")) })) : [],
       mode: game.mode ?? "campaign",
-      turnLimit: Number.isFinite(game.turnLimit) ? game.turnLimit : difficulties[game.difficulty].maxTurns,
+      // newGame sets the window within a turn of the difficulty's and the map
+      // actions between one and four; a restored backup may not widen either.
+      turnLimit: bounded(game.turnLimit, difficulties[game.difficulty].maxTurns, Math.max(5, difficulties[game.difficulty].maxTurns - 1), difficulties[game.difficulty].maxTurns + 1),
       specialist: game.specialist ?? "hunter",
       specialistFatigue: Number.isFinite(game.specialistFatigue) ? game.specialistFatigue : 0,
       sectorHealth: bounded(game.sectorHealth, 100),
@@ -259,16 +273,16 @@ export function parseSession(raw: string): SavedSession | null {
         finding: text(record.finding, legacy("")),
       })) : [],
       pendingSetPiece: finished ? null : game.pendingSetPiece ?? null,
-      setPieceHistory: Array.isArray(game.setPieceHistory) ? game.setPieceHistory.map(record => ({ ...record, title: text(record.title, legacy("")), effect: text(record.effect, legacy("")) })) : [],
+      setPieceHistory: Array.isArray(game.setPieceHistory) ? game.setPieceHistory.map(record => ({ ...record, quality: quality(record.quality), title: text(record.title, legacy("")), effect: text(record.effect, legacy("")) })) : [],
       campaignDoctrine: game.campaignDoctrine ?? "balanced",
       campaignRoute: game.campaignRoute ?? "common-ground",
       variant: game.variant
-        ? { ...game.variant, title: text(game.variant.title, msg("engine.variant.standardTitle")), briefing: text(game.variant.briefing, msg("engine.variant.standardBriefing")), modifier: text(game.variant.modifier, msg("engine.variant.standardModifier")) }
+        ? { ...game.variant, title: text(game.variant.title, msg("engine.variant.standardTitle")), briefing: text(game.variant.briefing, msg("engine.variant.standardBriefing")), modifier: isMessage(game.variant.modifier) && "ref" in game.variant.modifier && variantModifierRef.test(game.variant.modifier.ref) ? variantModifier(game.variant, game.rulesVersion !== 2) : text(game.variant.modifier, msg("engine.variant.standardModifier")) }
         : { id: `${game.scenario}-0`, title: msg("engine.variant.standardTitle"), briefing: msg("engine.variant.standardBriefing"), modifier: msg("engine.variant.standardModifier"), impact: 0, continuity: 0, objective: 0 },
       caseTheory: game.caseTheory ?? null,
       caseTheoryHistory: Array.isArray(game.caseTheoryHistory) ? game.caseTheoryHistory : [],
       nodePosture: Object.fromEntries(nodeIds.length ? nodeIds.map(id => [id, knownPosture.includes(storedPosture[id]) ? storedPosture[id] : "normal"]) : [["boundary", storedPosture.boundary ?? "normal"]]),
-      mapActionsRemaining: Number.isFinite(game.mapActionsRemaining) ? game.mapActionsRemaining : 3,
+      mapActionsRemaining: Math.round(bounded(game.mapActionsRemaining, 3, 0, 4)),
       graceRemaining: Number.isFinite(game.graceRemaining) ? Math.max(0, Math.min(1, Number(game.graceRemaining))) : 0,
       mapHistory: Array.isArray(game.mapHistory) ? game.mapHistory.map(record => ({ ...record, effect: text(record.effect, legacy("")) })) : [],
       turns: game.turns.map(turn => ({
@@ -301,7 +315,7 @@ export function parseSession(raw: string): SavedSession | null {
         effect: text(decision.effect, legacy("")),
         counterfactual: text(decision.counterfactual, legacy("")),
         adaptationReason: optionalText(decision.adaptationReason),
-        quality: Number.isFinite(decision.quality) ? decision.quality : 3,
+        quality: quality(decision.quality),
         rationale: text(decision.rationale, msg("engine.session.restoredDecision")),
         impactChange: Number.isFinite(decision.impactChange) ? decision.impactChange : 0,
         continuityChange: Number.isFinite(decision.continuityChange) ? decision.continuityChange : 0,

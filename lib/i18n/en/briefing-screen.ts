@@ -53,7 +53,7 @@ export const briefingScreenMessages = catalogue({
     "hideOtherSetup": "Hide other incident setup",
     "discard": "Discard",
     "beginNewInvestigation": "Begin a new investigation instead",
-    "beginningNewInvestigation": "Beginning a new investigation replaces the saved one.",
+    "beginningNewInvestigation": "Beginning a new investigation replaces the saved one, recorded as a loss once played.",
     "beginInvestigation": "Begin investigation",
     "2035MinutesSolo": "20–35 minutes solo",
     "noRealSystems": "No real systems",

@@ -160,6 +160,13 @@ test("offers a graduated measure in every sector decision", () => {
     // A narrow measure that improved every meter was no decision at all: two
     // laptop playtests took it every time and read it as free.
     assert.ok(c.impact > 0 || c.continuity < 0 || c.sector < 0 || c.objective > 0, `${piece.id}: the narrow measure costs something`);
+    // Nor may the decisive measure dominate it. In every one of the thirty it
+    // once moved the meters further at equal review quality, so "always take
+    // the first" was the answer. Their net effects now match: the decisive one
+    // buys threat reduction with service, and which is right depends on state.
+    const net = (option: typeof a) => -option.impact + option.continuity + option.sector - option.objective;
+    assert.ok(Math.abs(net(a) - net(c)) <= 1, `${piece.id}: the decisive and narrow measures trade at the same net effect`);
+    assert.ok(c.quality >= a.quality, `${piece.id}: the review does not prefer the decisive measure by itself`);
   }
 });
 

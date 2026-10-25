@@ -47,6 +47,14 @@ export const en = {
   "engine.variant.standardTitle": "Standard operating picture",
   "engine.variant.standardBriefing": "The incident opens without an additional campaign complication.",
   "engine.variant.standardModifier": "No starting modifier.",
+  "engine.variant.part": { one: "{meter} starts up to {count} point {direction}.", other: "{meter} starts up to {count} points {direction}." },
+  "engine.variant.impact": "Impact",
+  "engine.variant.continuity": "Service integrity",
+  "engine.variant.objective": "Adversary progress",
+  "engine.variant.higher": "higher",
+  "engine.variant.lower": "lower",
+  "engine.variant.surplus": "Above full service, impact starts lower instead.",
+  "engine.variant.join": "{first} {rest}",
   // An operation's ending, and what the review suggests next: the assignment
   // screen shows both from the last operation's record, before the game loads.
   "engine.reads.theAdversaryCompleted": "The adversary completed its objective",

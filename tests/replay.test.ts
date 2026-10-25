@@ -96,9 +96,10 @@ test("the mastery ladder records only what a won operation earned, and survives 
   assert.ok(!rungsEarned({ ...accurate, turns: accurate.turns.map((turn, index) => index ? turn : { ...turn, hypothesisMatched: false }) }).includes("accurate"), "holding a wrong reading earns no accuracy award");
   assert.ok(!rungsEarned({ ...accurate, turns: [] }).includes("accurate"));
 
-  let campaign = recordCampaignResult(defaultCampaign, { ...base, difficulty: "crisis" }, 80);
-  campaign = recordCampaignResult(campaign, { ...base, mode: "expert", scenario: 0 }, 80);
-  campaign = recordCampaignResult(campaign, { ...base, status: "lost" }, 20);
+  // Three separate operations: a replay of one code would count only once.
+  let campaign = recordCampaignResult(defaultCampaign, { ...base, difficulty: "crisis", seed: 1 }, 80);
+  campaign = recordCampaignResult(campaign, { ...base, mode: "expert", scenario: 0, seed: 2 }, 80);
+  campaign = recordCampaignResult(campaign, { ...base, status: "lost", seed: 3 }, 20);
   assert.ok(campaign.ladder["0"].includes("crisis") && campaign.ladder["0"].includes("expert"), "rungs accumulate and a loss takes none away");
   assert.deepEqual(parseCampaign(JSON.stringify(campaign)).ladder, campaign.ladder);
   assert.deepEqual(parseCampaign(JSON.stringify({ ...campaign, ladder: { "0": ["crisis", "flying"], x: ["expert"] } })).ladder, { "0": ["crisis"] }, "an unknown rung or case is dropped");

@@ -8,12 +8,13 @@ register(newIncidentDialogMessages);
 
 export function NewIncidentDialog({ session }: { session: GameSession }) {
   const { t } = useMessages();
-  const { newConfirm, setNewConfirm, resetToBriefing } = session;
+  const { newConfirm, setNewConfirm, resetToBriefing, game, botRun } = session;
+  const counted = !!game && !botRun && game.turns.length > 0;
 
   return (
     <AlertDialog open={newConfirm} onOpenChange={setNewConfirm}>
       <AlertDialogContent className="game-dialog">
-        <AlertDialogHeader><AlertDialogTitle>{t("newIncidentDialog.leaveThisInvestigation")}</AlertDialogTitle><AlertDialogDescription>{t("newIncidentDialog.yourCurrentCase")}</AlertDialogDescription></AlertDialogHeader>
+        <AlertDialogHeader><AlertDialogTitle>{t("newIncidentDialog.leaveThisInvestigation")}</AlertDialogTitle><AlertDialogDescription>{t(counted ? "newIncidentDialog.recordedAsLoss" : "newIncidentDialog.yourCurrentCase")}</AlertDialogDescription></AlertDialogHeader>
         <AlertDialogFooter><AlertDialogCancel>{t("newIncidentDialog.keepInvestigating")}</AlertDialogCancel><AlertDialogAction onClick={resetToBriefing}>{t("newIncidentDialog.chooseNewIncident")}</AlertDialogAction></AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

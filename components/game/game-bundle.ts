@@ -21,3 +21,4 @@ export { FieldGuideDialog } from "./field-guide-dialog";
 export { DebriefDialog } from "./debrief-dialog";
 export { SettingsDialog } from "./settings-dialog";
 export { NewIncidentDialog } from "./new-incident-dialog";
+export { DiscardDialog } from "./discard-dialog";

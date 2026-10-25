@@ -42,7 +42,7 @@ export const captainReportDialogMessages = catalogue({
     "stagesFound": "Stages confirmed this turn",
     "stageNumber": "Stage {number}: {title}",
     "findResponse": "Find a command response",
-    "readResponses": { one: "Next: read the response before choosing:", other: "Next: read the {count} responses before choosing:" },
+    "readResponses": { one: "Next: read the response before choosing.", other: "Next: read the {count} responses before choosing." },
     "responseIndexEntry": "{letter}. {title}",
     "failedSettlesNothing": "This check rules out no route or source; the reading remains untested.",
     "availableSources": "Available sources for this reading",
