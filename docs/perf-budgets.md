@@ -1,5 +1,8 @@
 # Performance budgets
 
+Compact effect alignment (0.10.11) adds one declaration; total style is
+221,950 B, 50 B under its limit. Script is unchanged.
+
 Game review remediation (0.10.10) keeps every limit. The seventy authored
 variant notes, about 9 kB of the first load, are now composed from each
 variant's numbers by one catalogue pattern, and the discard confirmation loads

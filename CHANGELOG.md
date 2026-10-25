@@ -4,6 +4,10 @@ Kept by hand, newest first. Each release's version is in `package.json`, shown
 in the footer and in Settings' diagnostics, and tagged `v<version>` by the
 release workflow once Verify passes on `main`. See `docs/RELEASING.md`.
 
+## 0.10.11, 25 October 2026
+
+- Align each response's figures under their meter names on phones and tablets. Stacked in a narrow cell, the figure sat at the cell's end beside the next meter's name and read as its value.
+
 ## 0.10.10, 25 October 2026
 
 - Count a replayed Daily, Weekly or challenge-code operation once: its chain and dice are known, so a replay leaves the campaign unchanged and the review says so.

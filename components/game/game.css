@@ -3924,8 +3924,11 @@ span.effect-list>span.effect.same>b,span.effect-list>span.effect.same>em {
   }
 }
 @media(max-width:1000px) {
+  /* Stacked, the figure starts where its name and word do: set at the end of
+     a narrow cell it sat against the next cell's name and read as its own. */
   span.effect-list.compact>span.effect {
     grid-template-columns:1fr;
+    justify-items:start;
   }
 }
 .skip-link {
