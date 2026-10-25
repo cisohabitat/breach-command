@@ -30,6 +30,8 @@ export const sessionMessages = catalogue({
     "saveUnreadable": "The saved operation on this device could not be read and has been removed. Campaign progress is not affected.",
     "storageVisit": "This browser is not allowing saved data, so progress from this visit will not be kept.",
     "campaignUnreadable": "Campaign progress on this device could not be read, so a new campaign has started.",
+    "resumeChanged": "That operation was finished or replaced in another tab.",
+    "ironmanWithdrawn": "An Ironman operation left unfinished is recorded as a loss.",
     "storageMemory": "This browser is not allowing saved data, so this operation is being played from memory only.",
     "botResponse": "Entering the three-stage response sequence.",
     "botClosing": "Closing the completed action report.",

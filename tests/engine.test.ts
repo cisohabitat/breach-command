@@ -27,13 +27,14 @@ test("resolves a turn, its decision and its cooldown", () => {
   assert.equal(availableIn(trained,"endpoint"),2,"which skips two turns, not three");
   assert.throws(()=>playTurn(n,"identity",20),/decision/);
   assert.equal(en(getDecisionOptions(n))?.observe.title,"Trace the access path");
-  n=resolveDecision(n,"observe");assert.equal(n.nextModifier,2);assert.equal(n.impact,30);assert.equal(n.pendingDecision,null);
+  // Common Ground's +3 service starts above full, so it starts impact 3 lower.
+  n=resolveDecision(n,"observe");assert.equal(n.nextModifier,2);assert.equal(n.impact,27);assert.equal(n.pendingDecision,null);
   n=playTurn(n,"dns",9);assert.equal(n.turns[1].total,12);assert.equal(n.nextModifier,0);n=resolveSetPiece(n,"a");assert.throws(()=>playTurn(n,"endpoint",15),/cooling/);
   g=baseline();g=setHypothesis(g,"endpoint");g=playTurn(g,"endpoint",7);assert.equal(g.turns[0].planningBonus,OWN_SOURCE_BONUS);assert.equal(g.turns[0].total,7+2+OWN_SOURCE_BONUS,"established and own source");
     // This deck opens with an unfavourable card. A natural 20 used to take it and
   // raise business pressure, which is the game contradicting its own loudest
   // signal; it now reaches past it to the relief card behind.
-  g=baseline();g=playTurn(g,"endpoint",20);assert.equal(say(g.turns[0].inject!.reason),"Natural 20");assert.equal(cardOf(g.turns[0])?.effect,"relief","a natural 20 never hands the player a penalty");const oldPivot=g.chain[1];g=resolveDecision(g,"act");assert.equal(g.nextModifier,-1);assert.equal(g.impact,2);assert.notEqual(g.chain[1],oldPivot);assert.ok(g.adversaryEvent);
+  g=baseline();g=playTurn(g,"endpoint",20);assert.equal(say(g.turns[0].inject!.reason),"Natural 20");assert.equal(cardOf(g.turns[0])?.effect,"relief","a natural 20 never hands the player a penalty");const oldPivot=g.chain[1];g=resolveDecision(g,"act");assert.equal(g.nextModifier,-1);assert.equal(g.impact,0);assert.notEqual(g.chain[1],oldPivot);assert.ok(g.adversaryEvent);
   g=baseline();g=playTurn(g,"email",2);g=playTurn(g,"cloud",2);g=resolveSetPiece(g,"a");g=playTurn(g,"dns",2);assert.equal(say(g.turns[2].inject!.reason),"Three failed rolls");assert.equal(g.failures,0);assert.ok(g.turns[2].adversaryEvent);assert.ok(g.continuity<100);
   // Three failed rolls never draw the authorised stand-down: it ended a newcomer's
   // climax twice under a banner saying the investigation had earned it.
@@ -172,7 +173,7 @@ test("holds the turn limit, modes, specialists and map actions", () => {
     {id:"E1",turn:1,title:legacy("Initial access"),source:legacy("Email"),system:legacy("User access"),confidence:"HIGH",supports:"phish",detail:legacy("A")},
     {id:"E2",turn:2,title:legacy("Unrelated exception"),source:legacy("Cloud"),system:legacy("Admin plane"),confidence:"MODERATE",supports:null,detail:legacy("B")},
   ];
-  g=correlateEvidence(g,["E1","E2"],"causal");assert.equal(g.correlations[0].correct,false);assert.equal(g.impact,26);
+  g=correlateEvidence(g,["E1","E2"],"causal");assert.equal(g.correlations[0].correct,false);assert.equal(g.impact,23);
   assert.equal(en(getAttributionRead(baseline())).title,"Unknown operator");
   const attributed=baseline();attributed.revealed=[...attributed.chain];assert.equal(en(getAttributionRead(attributed)).confidence,"ATTRIBUTED");
   const challenge=encodeChallenge({scenario:4,difficulty:"crisis",mode:"expert",specialist:"identity",seed:74219});assert.deepEqual(decodeChallenge(challenge),{scenario:4,difficulty:"crisis",mode:"expert",specialist:"identity",seed:74219});assert.equal(decodeChallenge(challenge.replace(/\d{2}$/, "00")),null);
@@ -323,24 +324,24 @@ test("moves each decision verb by its own terms", () => {
   const verbBase=(over:Partial<Game>={})=>({...baseline(),pendingDecision:"phish",...over});
   const observeVerb=resolveDecision(verbBase(),"observe");
   assert.equal(observeVerb.decisions[0].choice,"observe");
-  assert.deepEqual([observeVerb.impact,observeVerb.continuity,observeVerb.adversaryTempo,observeVerb.sectorHealth,observeVerb.objectiveProgress,observeVerb.nextModifier],[29,100,1,100,11,2]);
+  assert.deepEqual([observeVerb.impact,observeVerb.continuity,observeVerb.adversaryTempo,observeVerb.sectorHealth,observeVerb.objectiveProgress,observeVerb.nextModifier],[26,100,1,100,11,2]);
   assert.equal(observeVerb.decisions[0].quality,5);
   assert.deepEqual([observeVerb.decisions[0].impactChange,observeVerb.decisions[0].continuityChange,observeVerb.decisions[0].tempoChange,observeVerb.decisions[0].sectorChange,observeVerb.decisions[0].objectiveChange],[7,0,1,0,6]);
   const actVerb=resolveDecision(verbBase({adversaryTempo:1}),"act");
   assert.equal(actVerb.decisions[0].choice,"act");
-  assert.deepEqual([actVerb.impact,actVerb.continuity,actVerb.adversaryTempo,actVerb.sectorHealth,actVerb.objectiveProgress,actVerb.nextModifier],[9,96,0,98,0,-1]);
+  assert.deepEqual([actVerb.impact,actVerb.continuity,actVerb.adversaryTempo,actVerb.sectorHealth,actVerb.objectiveProgress,actVerb.nextModifier],[6,96,0,98,0,-1]);
   assert.equal(actVerb.decisions[0].quality,3);
   assert.deepEqual([actVerb.decisions[0].impactChange,actVerb.decisions[0].tempoChange,actVerb.decisions[0].sectorChange,actVerb.decisions[0].objectiveChange],[-13,-1,-2,-5]);
   assert.ok(actVerb.decisions[0].adaptedTo,"act presses the actor hard enough to force a route change");
   const attributeVerb=resolveDecision(verbBase(),"attribute");
   assert.equal(attributeVerb.decisions[0].choice,"attribute");
-  assert.deepEqual([attributeVerb.impact,attributeVerb.continuity,attributeVerb.adversaryTempo,attributeVerb.sectorHealth,attributeVerb.objectiveProgress,attributeVerb.nextModifier],[25,100,0,99,1,3]);
+  assert.deepEqual([attributeVerb.impact,attributeVerb.continuity,attributeVerb.adversaryTempo,attributeVerb.sectorHealth,attributeVerb.objectiveProgress,attributeVerb.nextModifier],[22,100,0,99,1,3]);
   assert.equal(attributeVerb.decisions[0].quality,4);
   assert.equal(attributeVerb.decisions[0].adaptedTo,null,"attribution does not force a route change");
   assert.deepEqual([attributeVerb.decisions[0].impactChange,attributeVerb.decisions[0].tempoChange,attributeVerb.decisions[0].sectorChange,attributeVerb.decisions[0].objectiveChange],[3,0,-1,-4]);
   const containVerb=resolveDecision(verbBase({sectorHealth:60}),"contain");
   assert.equal(containVerb.decisions[0].choice,"contain");
-  assert.deepEqual([containVerb.impact,containVerb.continuity,containVerb.adversaryTempo,containVerb.sectorHealth,containVerb.objectiveProgress],[12,97,0,63,0]);
+  assert.deepEqual([containVerb.impact,containVerb.continuity,containVerb.adversaryTempo,containVerb.sectorHealth,containVerb.objectiveProgress],[9,97,0,63,0]);
   assert.equal(containVerb.decisions[0].quality,4,"contain scores well when the sector is the binding constraint");
   assert.deepEqual([containVerb.decisions[0].sectorChange,containVerb.decisions[0].continuityChange,containVerb.decisions[0].tempoChange],[3,-3,0]);
   // Containment is not free: the actor is warned and the contained systems go
@@ -349,7 +350,7 @@ test("moves each decision verb by its own terms", () => {
   assert.equal(resolveDecision(verbBase(),"contain").decisions[0].quality,2);
   const notifyVerb=resolveDecision(verbBase({continuity:60}),"notify");
   assert.equal(notifyVerb.decisions[0].choice,"notify");
-  assert.deepEqual([notifyVerb.impact,notifyVerb.continuity,notifyVerb.adversaryTempo,notifyVerb.sectorHealth,notifyVerb.objectiveProgress,notifyVerb.nextModifier],[24,63,1,97,10,1]);
+  assert.deepEqual([notifyVerb.impact,notifyVerb.continuity,notifyVerb.adversaryTempo,notifyVerb.sectorHealth,notifyVerb.objectiveProgress,notifyVerb.nextModifier],[21,63,1,97,10,1]);
   assert.equal(notifyVerb.decisions[0].quality,4,"notify scores well when continuity is the binding constraint");
   assert.deepEqual([notifyVerb.decisions[0].continuityChange,notifyVerb.decisions[0].sectorChange,notifyVerb.decisions[0].tempoChange,notifyVerb.decisions[0].objectiveChange],[3,-3,1,5]);
   const verbOptions=en(getDecisionOptions(verbBase()));
@@ -374,7 +375,7 @@ test("moves each decision verb by its own terms", () => {
   assert.notDeepEqual(clearing.containment,responseOptionsFor(newGame(0,"operational",()=>0)).containment,"the same verb costs different service in different sectors");
   const responseRun=newGame(9,"operational",()=>0);responseRun.revealed=[...responseRun.chain];responseRun.status="response";
   const contained=resolveResponse(responseRun,"credential");
-  assert.deepEqual([contained.impact,contained.continuity,contained.status],[4,95,"response"],"the clearing sector's own containment numbers apply");
+  assert.deepEqual([contained.impact,contained.continuity,contained.status],[1,95,"response"],"the clearing sector's own containment numbers apply");
   assert.throws(()=>resolveResponse(contained,"rebuild"),/Unknown/,"the assurance gate cannot be skipped");
   const assured=resolveResponse(contained,"verify");
   assert.equal(assured.status,"response");

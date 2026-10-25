@@ -5,6 +5,10 @@ actual evidence-decision snapshots. Older operations retain their original score
 model and receive no invented history. The version 22 opening exercises both new
 record types; malformed calculations and out-of-range context are rejected.
 
+Version 23 adds rules version 2 (`docs/design/REVIEW-FIXES-2026-10-25.md`).
+Older operations keep their rules; its canonical opening was written by the
+code that introduced it.
+
 One saved operation from each `SESSION_VERSION` since 10, each written by the
 code of its own era: the last commit at that version played the same opening
 (Energy support, Operational, two turns, a revision between them) with its own

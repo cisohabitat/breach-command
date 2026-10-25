@@ -186,6 +186,10 @@ export type Game = {
   challengeVersion?: number;
   comparisonVersion?: 2;
   scoringVersion?: 2;
+  // 2: failure protection follows the hidden route, a command event owed on a
+  // turn that found a stage waits for its decision, and service above full
+  // lowers starting impact. Absent on older operations, which keep their rules.
+  rulesVersion?: 2;
 };
 
 export type GameSetup = {
@@ -204,6 +208,8 @@ export type GameSetup = {
   recentCommands?: string[];
   recentInjects?: string[];
   recentCrises?: string[];
+  // A historical record replays under the rules it was played with.
+  rulesVersion?: 1 | 2;
 };
 
 export type ResponsePhase = "containment" | "assurance" | "recovery";

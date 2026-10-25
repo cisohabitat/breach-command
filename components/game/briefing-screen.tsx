@@ -3,6 +3,8 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { SectorIllustration } from "./sector-illustration";
 import { Bot, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import dynamic from "next/dynamic";
+import { loadGame } from "@/lib/game-loader";
 import { difficulties, scenarios, stages, type Difficulty } from "@/lib/scenarios";
 import { SPECIALIST_EXHAUSTED_AT, gameModes, namedSpecialists, specialists, type GameMode, type SpecialistId } from "@/lib/command-systems";
 import { campaignRank, standingEffects } from "@/lib/campaign";
@@ -17,6 +19,8 @@ import { register, type MessageKey } from "@/lib/i18n";
 
 register(briefingScreenMessages);
 
+const DiscardDialog = dynamic(() => loadGame().then(m => m.DiscardDialog), { ssr: false });
+
 // What each stage of the chain answers, in the words a newcomer would ask it.
 const stageQuestions: readonly MessageKey[] = ["briefingScreen.howTheyGot", "briefingScreen.whereTheyWent", "briefingScreen.howTheyStay", "briefingScreen.whatLeavesAnd"];
 
@@ -29,9 +33,11 @@ export function BriefingScreen({ session }: { session: GameSession }) {
     challengeCode, challengeInput, setChallengeInput, challengeMessage, loadChallengeCode, generateSeed,
     guided, setGuided, fastResolve, setFastResolve,
     botEnabled, setBotEnabled,
-    savedSession, resume, clearStoredSession, start, lastOperation, playRecommended, ledger, replay,
+    savedSession, resume, discardSavedSession, start, lastOperation, playRecommended, ledger, replay,
   } = session;
   const [choosingAnother, setChoosingAnother] = useState(false);
+  // Discarding cannot be undone and, past the first turn, costs the campaign a loss.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const showAssignment = !savedSession || choosingAnother;
   const ResumeHeading = showAssignment ? "h2" : "h1";
   useEffect(() => {
@@ -50,9 +56,10 @@ export function BriefingScreen({ session }: { session: GameSession }) {
         </div>
         <div className="resume-actions">
           <button className="text-action" aria-expanded={showAssignment} aria-controls="assignment-panel" onClick={() => setChoosingAnother(value => !value)}>{t(showAssignment ? "hideOtherSetup" : "startAnother")}</button>
-          <button className="text-action" onClick={clearStoredSession}>{t("discard")}</button>
+          <button className="text-action" onClick={() => setConfirmDiscard(true)}>{t("discard")}</button>
           <p>{t("beginningNewInvestigation")}</p>
         </div>
+        {confirmDiscard && <DiscardDialog open={confirmDiscard} onOpenChange={setConfirmDiscard} turns={savedSession.game.turns.length} onDiscard={discardSavedSession} />}
       </section>}
       {showAssignment && <div className="briefing-main">
         <p className="desk-line">{t("soloTabletop")}</p>

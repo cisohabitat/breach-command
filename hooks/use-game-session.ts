@@ -22,14 +22,14 @@ import { countRevisions } from "@/lib/engine/revisions";
 import { loadGame, loadedGame } from "@/lib/game-loader";
 import { PARKED_SESSION_KEY, SESSION_KEY } from "@/lib/session-keys";
 import type { SavedSession } from "@/lib/session";
-import { campaignAct, campaignChanges, campaignEnding, campaignStory, campaignReadable, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
+import { campaignAct, campaignChanges, campaignEnding, campaignStory, campaignReadable, defaultCampaign, nextCase, parseCampaign, recordCampaignResult, recordCampaignWithdrawal, CAMPAIGN_KEY, type CampaignState } from "@/lib/campaign";
 import { operationCampaign, operationSetup } from "@/lib/operation-setup";
 import { playDiceRoll, playFeedback, setAdaptiveScore } from "@/lib/feedback-lazy";
 import { unlockCaptainAudio } from "@/lib/captain-media";
 import { clearTelemetry, parseTelemetry, readTelemetry, recordTelemetry, writeTelemetry, type BalanceTelemetry } from "@/lib/telemetry";
 import { readStored, removeStored, storageWritable, writeStored } from "@/lib/storage";
 import { readLastOperation, writeLastOperation, type LastOperation } from "@/lib/last-operation";
-import { parseLedger, readLedger, writeLedger, type LedgerEntry } from "@/lib/ledger";
+import { LEDGER_KEY, parseLedger, readLedger, writeLedger, type LedgerEntry } from "@/lib/ledger";
 import { operationChallenge, seededChallengeRandom } from "@/lib/challenge";
 import { lit, msg, type Message } from "@/lib/i18n/message";
 import { register } from "@/lib/i18n";
@@ -48,6 +48,11 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, useMeterPulse } from "@/hooks/use-meter-pulse";
 
 type WorkspaceView = "command" | "investigate" | "briefing";
+
+// Ironman keeps no save, so an Ironman operation past its first turn leaves
+// this marker until it ends. One still present on the next visit was left
+// unfinished, and is recorded as a withdrawal.
+const IRONMAN_OPEN_KEY = "breach-command.ironman-open";
 
 export { CONTINUITY_AT_RISK, IMPACT_CRITICAL, OBJECTIVE_IMMINENT, type MeterPulse } from "@/hooks/use-meter-pulse";
 
@@ -144,6 +149,9 @@ export function useGameSession() {
   // in play stops overwriting the save, and returning to assignments offers the
   // restored one instead of deleting it.
   const importedRef = useRef<SavedSession | null>(null);
+  // A saved operation this visit holds only in memory, because storing it
+  // failed. The slot cannot vouch for it, so Resume does not ask the slot.
+  const unsavedRef = useRef<SavedSession | null>(null);
 
   const activeScenario = scenarios[game?.scenario ?? scenarioChoice];
   const ScenarioIcon = activeScenario.icon;
@@ -172,7 +180,11 @@ export function useGameSession() {
   const newerSaveRef = useRef<string | null>(null);
   function parkNewerSave() {
     if (!newerSaveRef.current) return true;
-    if (!writeStored(PARKED_SESSION_KEY, newerSaveRef.current)) return false;
+    // The parked slot may already hold another newer build's save. Neither may
+    // be overwritten, so this operation is played from memory instead.
+    const parked = readStored(PARKED_SESSION_KEY);
+    if (parked !== null && parked !== newerSaveRef.current) return false;
+    if (parked === null && !writeStored(PARKED_SESSION_KEY, newerSaveRef.current)) return false;
     newerSaveRef.current = null;
     return true;
   }
@@ -183,6 +195,48 @@ export function useGameSession() {
     setSavedSession(null);
   }
 
+  // The campaign as storage holds it now. Another tab may have recorded an
+  // operation since this one loaded, and writing from the copy read on mount
+  // erased that tab's result.
+  function freshCampaign() {
+    const stored = readStored(CAMPAIGN_KEY);
+    return stored !== null && campaignReadable(stored) ? parseCampaign(stored, scenarios.length) : campaignRef.current;
+  }
+
+  function freshLedger() {
+    return readStored(LEDGER_KEY) !== null ? readLedger(scenarios.length) : ledger;
+  }
+
+  // Leaving an operation after its first turn records it as a loss would be.
+  // Before any turn nothing hidden has been seen, so changing one's mind is free.
+  function withdraw(left: Game | null) {
+    if (!left || botRunRef.current || left.turns.length === 0 || (left.status !== "playing" && left.status !== "response")) return;
+    removeStored(IRONMAN_OPEN_KEY);
+    const updated = recordCampaignWithdrawal(freshCampaign(), left);
+    campaignRef.current = updated;
+    setCampaign(updated);
+    if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice(msg("session.campaignNotKept"));
+  }
+
+  // Discarding a saved operation is leaving it.
+  function discardSavedSession() {
+    if (savedSession) withdraw(savedSession.game);
+    clearStoredSession();
+  }
+
+  // What the save slot holds for an operation. Written as soon as a turn
+  // resolves, before its die is shown: saving only once the reveal ended let a
+  // reload in between draw an unseeded roll again.
+  function persist(next: Game) {
+    if (next.mode === "ironman" || botRunRef.current || importedRef.current) return true;
+    if (!parkNewerSave()) return false;
+    if (next.status === "won" || next.status === "lost" || next.status === "exercise") {
+      removeStored(SESSION_KEY);
+      return true;
+    }
+    return writeStored(SESSION_KEY, loadedGame().session.serialiseSession(next, guided, fastResolve, learningId.current));
+  }
+
 
   async function start(index = scenarioChoice) {
     if (busyRef.current) return;
@@ -191,6 +245,8 @@ export function useGameSession() {
       setStorageNotice(msg("session.gameLoadFailed"));
       return;
     }
+    // Starting another incident replaces a saved one, which is leaving it.
+    if (savedSession) withdraw(savedSession.game);
     clearStoredSession();
     importedRef.current = null;
     recordedRef.current = false;
@@ -245,6 +301,16 @@ export function useGameSession() {
   }
 
   function resume(session: SavedSession) {
+    // Another tab may have finished or replaced this operation since the card
+    // was shown; resuming it would record the same operation a second time.
+    const stored = readStored(SESSION_KEY);
+    const current = stored === null ? null : loadedGame().session.parseSession(stored);
+    const same = !!current && current.learningId === session.learningId && current.game.scenario === session.game.scenario && current.game.turns.length === session.game.turns.length;
+    if (storageWritable() && !same && session !== unsavedRef.current) {
+      setSavedSession(current && (current.game.status === "playing" || current.game.status === "response") ? current : null);
+      setStorageNotice(msg("session.resumeChanged"));
+      return;
+    }
     setCampaignChange([]);
     if (voiceEnabled) unlockCaptainAudio();
     importedRef.current = null;
@@ -260,6 +326,11 @@ export function useGameSession() {
     setResumedGame(session.game);
     setGuided(session.guided);
     setFastResolve(session.fastResolve);
+    // The plan carries within an operation, never from another one: a resumed
+    // operation continues on its own last plan.
+    const plan = session.game.turns.at(-1)?.plan;
+    setActionScope(plan?.scope ?? "focused");
+    setActionIntensity(plan?.intensity ?? "balanced");
     setDifficulty(session.game.difficulty);
     setScenarioChoice(session.game.scenario);
     setReport(session.game.pendingDecision ? session.game.turns.at(-1) ?? null : null);
@@ -312,6 +383,8 @@ export function useGameSession() {
         // Resolve once, then hold that exact number before opening the report.
         // Keep the turn locked until the reveal finishes; never reroll it.
         const next = engine().playTurn(current, id, undefined, plan);
+        if (!persist(next)) setStorageNotice(msg("session.storageMemory"));
+        if (next.status !== "playing" && next.status !== "response") recordProgress(next);
         if (quick) finish(next);
         else {
           setDie(next.turns.at(-1)!.raw);
@@ -532,6 +605,7 @@ export function useGameSession() {
       if (restoredSession) {
         storedSession = parkNewerSave() && writeStored(SESSION_KEY, loadedGame().session.serialiseSession(restoredSession.game, restoredSession.guided, restoredSession.fastResolve, restoredSession.learningId));
         if (!storedSession) setStorageNotice(msg("session.storageMemory"));
+        unsavedRef.current = storedSession ? null : restoredSession;
         setSavedSession(restoredSession);
         // While an operation is in play its own saves would overwrite the restored
         // one, and returning to assignments would delete it. Hold it until then.
@@ -576,13 +650,15 @@ export function useGameSession() {
     const score = engine().getOutcome(result).breakdown.total;
     // The updater stays pure; the campaign is persisted from the value it
     // produced rather than from inside the reducer.
-    const updated = recordCampaignResult(campaignRef.current, result, score);
-    setCampaignChange(campaignChanges(campaignRef.current, updated, result, score));
+    removeStored(IRONMAN_OPEN_KEY);
+    const before = freshCampaign();
+    const updated = recordCampaignResult(before, result, score);
+    setCampaignChange(campaignChanges(before, updated, result, score));
     campaignRef.current = updated;
     setCampaign(updated);
     if (!writeStored(CAMPAIGN_KEY, JSON.stringify(updated))) setStorageNotice(msg("session.campaignNotKept"));
     // What the review suggests next, kept so a returning player is met with it.
-    const previousLedger = ledger;
+    const previousLedger = freshLedger();
     const next = engine().recommendNext(result, nextCase(updated, scenarios.length), previousLedger.length === 0);
     const record: LastOperation = { scenario: result.scenario, difficulty: result.difficulty, outcome: result.status as LastOperation["outcome"], ending: result.status === "lost" ? engine().getLossReason(result).title : result.status === "exercise" ? msg("record.endingExercise") : msg("record.endingStoodDown"), score, endedAt: Date.now(), next };
     writeLastOperation(record);
@@ -627,7 +703,10 @@ export function useGameSession() {
       if (parkNewerSave()) writeStored(SESSION_KEY, loadedGame().session.serialiseSession(imported.game, imported.guided, imported.fastResolve, imported.learningId));
       else setStorageNotice(msg("session.storageMemory"));
       setSavedSession(imported);
-    } else clearStoredSession();
+    } else {
+      withdraw(stateRef.current);
+      clearStoredSession();
+    }
     setGame(null);
     setNewConfirm(false);
     setQuestion(null);
@@ -751,7 +830,19 @@ export function useGameSession() {
   useEffect(() => {
     const loadTimer = setTimeout(() => {
       const stored = readStored(CAMPAIGN_KEY);
-      const loaded = parseCampaign(stored);
+      let loaded = parseCampaign(stored, scenarios.length);
+      const ironman = readStored(IRONMAN_OPEN_KEY);
+      if (ironman !== null) {
+        try {
+          const left = parseSaveJson(ironman) as { scenario?: unknown; seed?: unknown };
+          if (Number.isInteger(left.scenario) && (left.seed === null || Number.isSafeInteger(left.seed))) {
+            loaded = recordCampaignWithdrawal(loaded, { scenario: left.scenario as number, seed: left.seed as number | null });
+            if (writeStored(CAMPAIGN_KEY, JSON.stringify(loaded))) setStorageNotice(msg("session.ironmanWithdrawn"));
+          }
+        } catch { /* An unreadable marker records nothing. */ }
+        removeStored(IRONMAN_OPEN_KEY);
+      }
+      campaignRef.current = loaded;
       setCampaign(loaded);
       // The assignment offered on arrival is the campaign's next case. It began
       // at case 01 on every load, a case already cleared.
@@ -794,24 +885,46 @@ export function useGameSession() {
     if (game && musicEnabled) setAdaptiveScore(true, Math.max(game.impact, game.objectiveProgress, 100 - game.sectorHealth) / 100, game.scenario);
   }, [game, musicEnabled]);
 
+  // The save follows the operation and its two saved preferences; persist reads
+  // them as they are now.
+  const persistGame = useEffectEvent((next: Game) => persist(next));
   useEffect(() => {
-    if (!game || game.mode === "ironman" || botRunRef.current || importedRef.current) return;
-    // If parking failed, neither saving nor finishing the in-memory operation
-    // may replace the protected slot. Keep the reference so a later write retries.
-    if (!parkNewerSave()) {
-      const notice = setTimeout(() => setStorageNotice(msg("session.storageMemory")), 0);
-      return () => clearTimeout(notice);
-    }
-    // A finished operation has nothing to resume, so its save is cleared rather
-    // than offered on the next visit.
-    if (game.status === "won" || game.status === "lost" || game.status === "exercise") {
-      removeStored(SESSION_KEY);
+    if (!game || botRunRef.current) return;
+    if (game.mode === "ironman") {
+      // Ironman has no save to resume, only the mark that one is open.
+      if (game.turns.length && (game.status === "playing" || game.status === "response")) writeStored(IRONMAN_OPEN_KEY, JSON.stringify({ scenario: game.scenario, seed: game.seed }));
+      else if (game.status !== "playing" && game.status !== "response") removeStored(IRONMAN_OPEN_KEY);
       return;
     }
-    if (writeStored(SESSION_KEY, loadedGame().session.serialiseSession(game, guided, fastResolve, learningId.current))) return;
+    // If parking failed, neither saving nor finishing the in-memory operation
+    // may replace the protected slot. Keep the reference so a later write retries.
+    // A finished operation has nothing to resume, so its save is cleared rather
+    // than offered on the next visit.
+    if (persistGame(game)) return;
     const notice = setTimeout(() => setStorageNotice(msg("session.storageMemory")), 0);
     return () => clearTimeout(notice);
   }, [game, guided, fastResolve]);
+
+  // Another tab's finished operation changes the campaign, the record and the
+  // save slot; this tab follows rather than writing over them from its copy.
+  useEffect(() => {
+    const changed = (event: StorageEvent) => {
+      if (event.key === CAMPAIGN_KEY && event.newValue !== null && campaignReadable(event.newValue)) {
+        const next = parseCampaign(event.newValue, scenarios.length);
+        campaignRef.current = next;
+        setCampaign(next);
+      } else if (event.key === LEDGER_KEY) setLedger(readLedger(scenarios.length));
+      else if (event.key === SESSION_KEY && !stateRef.current) {
+        if (event.newValue === null) setSavedSession(null);
+        else void loadGame().then(({ session: saves }) => {
+          const session = saves.parseSession(event.newValue!);
+          setSavedSession(session && (session.game.status === "playing" || session.game.status === "response") ? session : null);
+        }).catch(() => {});
+      }
+    };
+    window.addEventListener("storage", changed);
+    return () => window.removeEventListener("storage", changed);
+  }, []);
 
   useEffect(() => {
     if (!game || !botActive || botPaused || rolling || missionBriefing || settings || rules || newConfirm || debrief || tutorial || selected) return;
@@ -977,6 +1090,7 @@ export function useGameSession() {
     exportProgress,
     importProgress,
     clearStoredSession,
+    discardSavedSession,
     dismissReport,
     resetToBriefing,
     lastOperation,

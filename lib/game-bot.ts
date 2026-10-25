@@ -49,11 +49,16 @@ function chooseSetPiece(game: Game): BotAction {
     // With the sector margin low enough to be named on screen, protecting it
     // outweighs the rest, as it would for a player reading that alert.
     const sectorWeight = game.sectorHealth <= SECTOR_ALERT_AT ? 3 : 1;
-    return option.quality * 4 - option.impact - Math.max(0, -option.continuity) * continuityWeight + option.sector * sectorWeight - option.objective;
+    // Rising impact or an actor well along is what the decisive measure buys
+    // down; without that pressure, its service cost is not worth paying.
+    const impactWeight = game.impact >= 40 ? 2 : 1;
+    const objectiveWeight = game.objectiveProgress >= 40 ? 2 : 1;
+    return option.quality * 4 - option.impact * impactWeight - Math.max(0, -option.continuity) * continuityWeight + option.sector * sectorWeight - option.objective * objectiveWeight;
   };
-  // The graduated measure is often the best available trade, so it is weighed on
-  // the same terms as the two extremes rather than treated as a tie-breaker.
-  const choice = (["a", "c", "b"] as const).reduce((best, item) => utility(item) > utility(best) ? item : best);
+  // The decisive and narrow measures trade at the same net effect, so which is
+  // better depends on the pressures. On an even trade the narrow measure, the
+  // one a real incident usually uses, is taken.
+  const choice = (["c", "a", "b"] as const).reduce((best, item) => utility(item) > utility(best) ? item : best);
   return { type: "set-piece", choice, reason: botMsg("setPiece", { choice: lit(event[choice].title, "lower") }) };
 }
 

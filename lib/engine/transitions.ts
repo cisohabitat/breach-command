@@ -96,10 +96,15 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
   const routeObjective = mode === "campaign" && campaignRoute === "watchtower" ? 5 : 0;
   const startingImpact = difficulties[difficulty].startImpact + (mode === "escalation" ? 12 : 0) - (campaignTier >= 2 ? 5 : 0) + threads * 2 + (campaignTrust < 35 ? 5 : campaignTrust >= 75 ? -3 : 0) + variant.impact + routeImpact;
   const startingContinuity = 100 + (campaignTier >= 3 ? 5 : 0) + (campaignReadiness >= 60 ? 3 : campaignReadiness < 30 ? -5 : 0) + variant.continuity + routeContinuity;
+  // Service starts at full, so every bonus to it was clamped away unless a
+  // penalty came first. What would rise above full lowers starting impact.
+  const legacyRules = setup.rulesVersion === 1;
+  const continuitySurplus = legacyRules ? 0 : Math.max(0, startingContinuity - 100);
   return {
     scenario,
     comparisonVersion: 2,
     scoringVersion: 2,
+    ...(legacyRules ? {} : { rulesVersion: 2 as const }),
     ...(setup.seed == null ? {} : { challengeVersion: CHALLENGE_VERSION }),
     difficulty,
     chain: scenarios[scenario].choices.map(options => options[random(options.length)]),
@@ -112,7 +117,7 @@ export function newGame(scenario: number, difficulty: Difficulty = "operational"
     nextModifierSources: [],
     injectDeck: recentLast(shuffle(injects.map((_, i) => i), random), index => injects[index].id, remembered.injects),
     status: "playing",
-    impact: clamp(startingImpact),
+    impact: clamp(startingImpact - continuitySurplus),
     continuity: clamp(startingContinuity),
     pendingDecision: null,
     decisions: [],
@@ -252,6 +257,10 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   // stage under test, regardless of how the roll landed.
   const discriminating = !!nextHidden && attacks.find(item => item.id === nextHidden)!.detect.includes(procedure);
   const planningBonus = ownSourceBonus(game, procedure);
+  // The +1 is the declared reading's, and shown before the roll. The protection
+  // below is the hidden route's: re-declaring whichever reading listed the
+  // chosen source before every roll once earned it on every failure.
+  const protectedFailure = planningBonus > 0 && (g.rulesVersion !== 2 || hypothesisMatched);
   const specialist = specialists[g.specialist];
   const specialistBonus = specialist.procedures.includes(procedure as never) && g.specialistFatigue < SPECIALIST_EXHAUSTED_AT ? 1 : 0;
   const scope = procedureScopes[plan.scope];
@@ -285,7 +294,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   } else if (success) {
     narrative = transitionMsg("turn.noStage");
     g.adversaryTempo = Math.min(3, g.adversaryTempo + 1);
-  } else if (planningBonus > 0) {
+  } else if (protectedFailure) {
     // A sound action that the dice refused. The route under test was the one
     // predicted and the source was one that hypothesis relies on, so the team
     // keeps its footing: the actor takes no tempo it did not earn, and its
@@ -467,7 +476,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   // losses, on a meter a beginner is the least likely to be watching.
   const trainingRelief = g.difficulty === "training" ? 1 : 0;
   const sectorChange = Math.min(5, Math.max(-14, -(sector.baseLoss - trainingRelief + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)) + (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0) + protection + scopeSector + sectorSpecific + (g.specialist === "communications" ? sector.commsRecovery : 0)));
-  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success || planningBonus > 0 ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
+  const objectiveChange = Math.max(1, 6 + g.adversaryTempo * 3 + (success || protectedFailure ? 0 : 4) - (revealed ? 6 : 0) + scope.objective + objectiveSpecific + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0));
   g.sectorHealth = clamp(g.sectorHealth + sectorChange);
   g.sectorHistory.push(g.sectorHealth);
   g.objectiveProgress = clamp(g.objectiveProgress + objectiveChange);
@@ -477,7 +486,7 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   const movement = g.scoringVersion === 2 ? turnMovement(game, g, {
     turn: { impact: success ? 3 : 10, continuity: success ? 0 : -1,
       sector: -(sector.baseLoss - trainingRelief + g.adversaryTempo * sector.tempoWeight + (success ? 0 : sector.failureCost) + (identityLed ? sector.exposureBias : 0) + (number >= 4 ? sector.lateBias : 0)),
-      objective: 6 + g.adversaryTempo * 3 + (success || planningBonus > 0 ? 0 : 4) + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) },
+      objective: 6 + g.adversaryTempo * 3 + (success || protectedFailure ? 0 : 4) + (g.difficulty === "crisis" ? 2 : g.difficulty === "training" ? -2 : 0) },
     plan: { impact: scope.impact + intensity.impact, continuity: plan.intensity === "exhaustive" ? -sector.exhaustiveContinuity : 0, sector: scopeSector, objective: scope.objective + (plan.scope === "enterprise" ? sector.enterpriseObjective : 0) },
     discovery: { impact: revealed ? 1 - (success ? 3 : 10) - scope.impact - intensity.impact : 0, continuity: 0, sector: (revealed ? sector.revealRelief : 0) + (boundarySuccess ? sector.boundaryRelief : 0), objective: revealed ? -6 : 0 },
     specialist: { impact: g.specialist === "communications" ? -2 : 0, continuity: 0, sector: protection + (g.specialist === "communications" ? sector.commsRecovery : 0), objective: 0 },
@@ -489,20 +498,22 @@ export function playTurn(game: Game, procedure: string, forcedRoll?: number, pla
   else if (exerciseEnd) settle(g, "exercise");
   else if (number >= g.turnLimit && g.revealed.length < 4) settle(g, "lost");
   else if (!g.pendingDecision && number === 2 && g.revealed.length < 4) g.pendingSetPiece = setPieceFor(g.scenario, g.variant.id, g.recentCrises).id;
-  else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) {
-    // Events fire every third turn, and with three of them the index stepped by
-    // the deck's own length: most operations met the same event every time. An
-    // event the operation has not met comes first, in the same fixed order.
-    const ids = Object.keys(commandEvents) as CommandEventId[];
-    const start = commandEventStart(g.scenario, number, g.adversaryTempo, ids.length);
-    const order = ids.map((_, index) => ids[(start + index) % ids.length]);
-    // Then one the campaign has not met lately, and among those it has, the
-    // longest ago.
-    const met = new Set(g.commandHistory.map(record => record.event));
-    const rank = (id: CommandEventId) => met.has(id) ? 1000 : g.recentCommands.includes(id) ? 100 + g.recentCommands.indexOf(id) : 0;
-    g.pendingCommand = [...order].sort((a, b) => rank(a) - rank(b))[0];
-  }
+  else if (!g.pendingDecision && number % 3 === 0 && g.revealed.length < 4) g.pendingCommand = nextCommandEvent(g, number);
   return g;
+}
+
+function nextCommandEvent(g: Game, number: number): CommandEventId {
+  // Events fire every third turn, and with three of them the index stepped by
+  // the deck's own length: most operations met the same event every time. An
+  // event the operation has not met comes first, in the same fixed order.
+  const ids = Object.keys(commandEvents) as CommandEventId[];
+  const start = commandEventStart(g.scenario, number, g.adversaryTempo, ids.length);
+  const order = ids.map((_, index) => ids[(start + index) % ids.length]);
+  // Then one the campaign has not met lately, and among those it has, the
+  // longest ago.
+  const met = new Set(g.commandHistory.map(record => record.event));
+  const rank = (id: CommandEventId) => met.has(id) ? 1000 : g.recentCommands.includes(id) ? 100 + g.recentCommands.indexOf(id) : 0;
+  return [...order].sort((a, b) => rank(a) - rank(b))[0];
 }
 
 // Where an operation's search for an event begins: the case, the turn and the
@@ -659,6 +670,9 @@ export function resolveDecision(game: Game, choice: DecisionChoice): Game {
   else if (g.pendingDecision) return g;
   else if (g.revealed.length === 4) g.status = "response";
   else if (g.turns.length === 2 && !g.setPieceHistory.length) g.pendingSetPiece = setPieceFor(g.scenario, g.variant.id, g.recentCrises).id;
+  // A turn that found a stage on an event turn owed its decision first; the
+  // event waits for it rather than being skipped for the operation.
+  else if (g.rulesVersion === 2 && g.turns.length % 3 === 0 && g.turns.length > 0) g.pendingCommand = nextCommandEvent(g, g.turns.length);
   return g;
 }
 

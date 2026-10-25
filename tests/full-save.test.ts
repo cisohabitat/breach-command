@@ -50,7 +50,7 @@ function replay(): Game {
     }
   };
   const { difficulty, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute } = fixture.setup;
-  let game = newGame(scenario, difficulty, historicalRandom, { seed, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute, variant: incidentVariant(scenario, campaignRoute, seed) });
+  let game = newGame(scenario, difficulty, historicalRandom, { seed, mode, campaignTier, readiness, leadershipTrust, unresolvedThreads, campaignRoute, variant: incidentVariant(scenario, campaignRoute, seed), rulesVersion: 1 });
   // Keep the historical comparison model too; new incidents use recorded provenance.
   game = { ...game, comparisonVersion: undefined, scoringVersion: undefined };
   // Since 0.9.19 an operation's search for an event starts elsewhere
@@ -105,10 +105,11 @@ test("the recorded choices retain version 18's sentences except the reviewed var
   assert.deepEqual(game.turns.map(turn => [turn.procedure, turn.raw, turn.total, turn.revealed]), old.turns.map((turn: Game["turns"][number]) => [turn.procedure, turn.raw, turn.total, turn.revealed]));
   const before = sentences(old as Game, english);
   for (const [index, turn] of (old as { turns: { inject: { effectLabel: string } | null }[] }).turns.entries()) if (turn.inject) before[`turns.${index}.inject.effectLabel`] = turn.inject.effectLabel;
-  // 0.9.61's scenario review states the actual three starting effects. Preserve
+  // 0.9.61's scenario review states the actual three starting effects, and
+  // 0.10.10 names them as the readouts do. Preserve
   // the historical fixture and every other sentence and gameplay assertion.
   assert.equal(before["variant.modifier"], "Decision latency raises impact; actor progress begins higher.");
-  before["variant.modifier"] = "Impact starts up to 4 points higher. Continuity starts up to 2 points lower. Actor progress starts up to 6 points higher.";
+  before["variant.modifier"] = "Impact starts up to 4 points higher. Service integrity starts up to 2 points lower. Adversary progress starts up to 6 points higher.";
   assert.deepEqual(sentences(game, english), before);
   assert.equal(game.nextModifierSources.length ? say(carriedLabel(game.nextModifierSources, game.nextModifier)) : null, old.nextModifierSource, "and the carried change is named as it was");
   assert.ok(Object.keys(before).length > 60, `${Object.keys(before).length} sentences compared`);

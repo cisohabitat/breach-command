@@ -28,9 +28,12 @@ export type CampaignState = {
   recentCrises: string[];
   // Each case's mastery ladder: the rungs this command has climbed on it.
   ladder: Record<string, LadderRungId[]>;
+  // Reproducible operations already recorded, as "scenario:seed". The same code
+  // draws the same chain and dice, so only its first finish counts.
+  rehearsed: string[];
 };
 
-export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {}, specialistBonds: {}, routeHistory: [], recentCommands: [], recentInjects: [], recentCrises: [], ladder: {} };
+export const defaultCampaign: CampaignState = { completed: [], xp: 0, bestScores: {}, operations: 0, leadershipTrust: 50, readiness: 50, streak: 0, specialistFatigue: {}, mastery: {}, commandPosture: { observe: 0, act: 0 }, unresolvedThreads: 0, actorSightings: {}, specialistBonds: {}, routeHistory: [], recentCommands: [], recentInjects: [], recentCrises: [], ladder: {}, rehearsed: [] };
 
 // Whether stored text is a campaign record at all. parseCampaign defaults every
 // missing field and falls back to a new campaign on anything unreadable, so this
@@ -49,6 +52,7 @@ export function campaignReadable(raw: string): boolean {
 export const RECENT_COMMANDS = 26;
 export const RECENT_INJECTS = 20;
 const RECENT_CRISES = 10;
+const REHEARSED = 200;
 // Newest last, each id once.
 const remember = (list: string[], met: string[], keep: number) => [...list.filter(id => !met.includes(id)), ...met.filter((id, index) => met.indexOf(id) === index)].slice(-keep);
 
@@ -84,13 +88,15 @@ function parseLadder(value: unknown): Record<string, LadderRungId[]> {
     .map(([key, rungs]) => [key, (rungs as unknown[]).filter((id): id is LadderRungId => typeof id === "string" && known.has(id))]));
 }
 
-export function parseCampaign(raw: string | null): CampaignState {
+export function parseCampaign(raw: string | null, cases = 10): CampaignState {
   if (!raw) return defaultCampaign;
   try {
     const value = parseSaveJson(raw) as Partial<CampaignState>;
     const posture = numericRecord(value.commandPosture);
     return {
-      completed: Array.isArray(value.completed) ? value.completed.filter(Number.isInteger) : [],
+      // Each case once and only cases that exist: eleven copies of case 0 read as
+      // a finished campaign after one operation, and then refused to export.
+      completed: Array.isArray(value.completed) ? [...new Set(value.completed.filter(id => Number.isInteger(id) && id >= 0 && id < cases))] : [],
       xp: Number.isFinite(value.xp) ? Math.max(0, Number(value.xp)) : 0,
       bestScores: numericRecord(value.bestScores, 100),
       operations: Number.isFinite(value.operations) ? Math.max(0, Number(value.operations)) : 0,
@@ -111,6 +117,7 @@ export function parseCampaign(raw: string | null): CampaignState {
       recentInjects: Array.isArray(value.recentInjects) ? value.recentInjects.filter(item => typeof item === "string").slice(-RECENT_INJECTS) : [],
       recentCrises: Array.isArray(value.recentCrises) ? value.recentCrises.filter(item => typeof item === "string").slice(-RECENT_CRISES) : [],
       ladder: parseLadder(value.ladder),
+      rehearsed: Array.isArray(value.rehearsed) ? value.rehearsed.filter(item => typeof item === "string" && /^\d+:-?\d+$/.test(item)).slice(-REHEARSED) : [],
     };
   } catch {
     return defaultCampaign;
@@ -142,7 +149,7 @@ export function campaignRank(xp: number) {
 const campaignCapabilities = [
   { id: "fusion", title: "Evidence fusion", at: 75, detail: "One additional evidence procedure begins established." },
   { id: "coordination", title: "Rapid coordination", at: 200, detail: "One more command action, five less starting impact, and the first unlucky action of an operation no longer hands the actor tempo." },
-  { id: "continuity", title: "Continuity command", at: 450, detail: "A sixth established procedure and a deeper continuity reserve." },
+  { id: "continuity", title: "Continuity command", at: 450, detail: "A sixth established procedure and 5 more service at the start." },
 ];
 
 export function unlockedCapabilities(xp: number) {
@@ -175,6 +182,7 @@ export function campaignChanges(before: CampaignState, after: CampaignState, gam
   // The sign is a figure's, not a word: "+5", "−3", "±0".
   const signed = (value: number) => `${value > 0 ? "+" : value < 0 ? "−" : "±"}${Math.abs(value)}`;
   const lines: Message[] = [];
+  if (before === after && isRehearsal(before, game)) return [changeMsg("rehearsal")];
   const trust = { change: signed(after.leadershipTrust - before.leadershipTrust), now: after.leadershipTrust, score };
   lines.push(game.status === "won" ? changeMsg("trustWon", trust) : game.status === "exercise" ? changeMsg("trustDrill", trust) : changeMsg("trustLost", trust));
   const readiness = { change: signed(after.readiness - before.readiness), now: after.readiness };
@@ -270,7 +278,44 @@ export function campaignEnding(state: CampaignState): { id: string; title: strin
   return { id: ending.id, title: ending.title, detail };
 }
 
+// A reproducible operation (Daily, Weekly, a challenge code) is identified by
+// its case and seed: the difficulty, mode and specialist do not change the chain.
+export function rehearsalKey(game: Pick<Game, "scenario" | "seed">): string | null {
+  return game.seed == null ? null : `${game.scenario}:${game.seed}`;
+}
+
+export function isRehearsal(current: CampaignState, game: Pick<Game, "scenario" | "seed">): boolean {
+  const key = rehearsalKey(game);
+  return !!key && (current.rehearsed ?? []).includes(key);
+}
+
+const rehearse = (current: CampaignState, game: Pick<Game, "scenario" | "seed">) => {
+  const key = rehearsalKey(game);
+  return key ? [...(current.rehearsed ?? []).filter(item => item !== key), key].slice(-REHEARSED) : current.rehearsed ?? [];
+};
+
+// An operation left unfinished after its first turn is recorded as a loss:
+// leaving one turn from defeat kept trust, readiness and the streak, and the
+// case came back with a fresh chain. Experience and the case are unchanged.
+// Ironman, which keeps no save, records it on the next visit.
+export function recordCampaignWithdrawal(current: CampaignState, game: Pick<Game, "scenario" | "seed">): CampaignState {
+  if (isRehearsal(current, game)) return current;
+  return {
+    ...current,
+    operations: current.operations + 1,
+    leadershipTrust: Math.max(0, current.leadershipTrust - 8),
+    readiness: Math.max(0, current.readiness - 3),
+    streak: 0,
+    unresolvedThreads: current.unresolvedThreads + 1,
+    rehearsed: rehearse(current, game),
+  };
+}
+
 export function recordCampaignResult(current: CampaignState, game: Game, score: number): CampaignState {
+  // A replayed code already counted once; the player knows its chain and dice.
+  if (isRehearsal(current, game)) return current;
+  if (!Number.isFinite(score)) score = 0;
+  score = Math.max(0, Math.min(100, score));
   const prior = current.bestScores[String(game.scenario)] ?? 0;
   // An authorised exercise is a conclusion the investigation earned, so it clears
   // the case as a win does; left open, a player who earned it saw "0/10 incidents"
@@ -334,6 +379,7 @@ export function recordCampaignResult(current: CampaignState, game: Game, score: 
     recentCommands: remember(current.recentCommands ?? [], game.commandHistory.map(record => record.event), RECENT_COMMANDS),
     recentInjects: remember(current.recentInjects ?? [], game.turns.flatMap(turn => turn.inject ? [turn.inject.id] : []), RECENT_INJECTS),
     recentCrises: remember(current.recentCrises ?? [], game.setPieceHistory.map(record => record.event), RECENT_CRISES),
+    rehearsed: rehearse(current, game),
   };
 }
 

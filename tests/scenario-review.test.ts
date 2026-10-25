@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { attacks, attackMitre, difficulties, infrastructureTopologies, newGame, playTurn, proceduresFor, resolveResponse, responseProfiles, scenarios, type Difficulty } from "../lib/advanced-game.ts";
-import { variantTemplates } from "../lib/phase9.ts";
+import { variantModifier, variantTemplates } from "../lib/phase9.ts";
 import { legacy } from "../lib/i18n/message.ts";
 import { en } from "./english.ts";
 
@@ -51,9 +51,10 @@ test("all seventy variants change only the advertised starting readouts and resp
       for (const mode of ["daily", "campaign"] as const) {
         const setup = { mode, campaignRoute: "breakwater" as const, campaignReadiness: 20 };
         const base = newGame(scenario, difficulty, () => 0, setup);
-        const modified = newGame(scenario, difficulty, () => 0, { ...setup, variant: { ...variant, id: `${scenario}-${index}`, title: legacy(variant.title), briefing: legacy(variant.briefing), modifier: legacy(variant.modifier) } });
+        const modified = newGame(scenario, difficulty, () => 0, { ...setup, variant: { ...variant, id: `${scenario}-${index}`, title: legacy(variant.title), briefing: legacy(variant.briefing), modifier: variantModifier(variant) } });
         assert.equal(modified.continuity, clamp(base.continuity + variant.continuity));
-        assert.equal(modified.impact, clamp(base.impact + variant.impact));
+        // Service above full is not lost: it lowers starting impact instead.
+        assert.equal(modified.impact, clamp(base.impact + variant.impact - Math.max(0, base.continuity + variant.continuity - 100)));
         assert.equal(modified.objectiveProgress, clamp(base.objectiveProgress + variant.objective));
         const omitStartingValues = (game: typeof base) => Object.fromEntries(Object.entries(game).filter(([key]) => !["variant", "impact", "continuity", "objectiveProgress"].includes(key)));
         assert.deepEqual(omitStartingValues(modified), omitStartingValues(base), "no hidden change to evidence, attribution, containment options or sector margin");

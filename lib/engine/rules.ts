@@ -161,7 +161,17 @@ export function effectText(effect: Effect): string {
 export const OWN_SOURCE_BONUS = 1;
 
 export function ownSourceBonus(game: Game, procedure: string) {
-  return game.hypothesis && hypothesisSources(game, game.hypothesis).includes(procedure) ? OWN_SOURCE_BONUS : 0;
+  return game.hypothesis && hypothesisSources(game, game.hypothesis).includes(procedure) && !unpromptedRevision(game) ? OWN_SOURCE_BONUS : 0;
+}
+
+// A reading changed since the last roll when that roll settled nothing: it
+// failed, so no check completed and no stage was confirmed. Re-declaring
+// whichever reading listed the chosen source before every roll earned the +1
+// on every turn; a revision that follows new evidence still earns it.
+export function unpromptedRevision(game: Game) {
+  const last = game.turns.at(-1);
+  if (game.rulesVersion !== 2 || !last || !last.hypothesis || last.hypothesis === game.hypothesis) return false;
+  return !last.success && !last.revealed && !last.injectReveal;
 }
 
 // Everything waiting for the next roll adds up under one cap, -2 to +3. A
@@ -243,7 +253,9 @@ export function getModifierBreakdown(game: Game, procedure: string, plan: Proced
   for (let index = game.turns.length - 1; index >= 0 && !game.turns[index].success; index--) consecutiveFailures++;
   const parts: ModifierPart[] = [
     { label: ruleMsg("part.established"), value: game.established.includes(procedure) ? 2 : 0, detail: ruleMsg("rules.thisEvidenceSource") },
-    { label: ruleMsg("part.ownSource"), value: ownSourceBonus(game, procedure), detail: ruleMsg("rules.oneOfThe") },
+    game.hypothesis && hypothesisSources(game, game.hypothesis).includes(procedure) && unpromptedRevision(game)
+      ? { label: ruleMsg("part.ownSource"), value: 0, suppressed: true, detail: ruleMsg("rules.revisedWithoutEvidence") }
+      : { label: ruleMsg("part.ownSource"), value: ownSourceBonus(game, procedure), detail: ruleMsg("rules.oneOfThe") },
     { label: carriedLabel(game.nextModifierSources, game.nextModifier), value: game.nextModifier, shown: game.nextModifierSources.length > 0, sources: game.nextModifierSources, detail: ruleMsg("rules.setUpBy") },
     { label: ruleMsg("part.afterFailures"), value: consecutiveFailures >= 2 ? 2 : 0, detail: ruleMsg("rules.theLastProcedures", { consecutiveFailures }) },
     specialist.procedures.includes(procedure as never) && game.specialistFatigue >= SPECIALIST_EXHAUSTED_AT
