@@ -16,7 +16,9 @@ updates:
         patterns: ["next", "react", "react-dom", "@types/react", "@types/react-dom", "eslint-config-next"]
       playwright:
         patterns: ["@playwright/test", "playwright"]
+  # The shared setup in .github/actions pins actions too, and the root entry
+  # reads only .github/workflows.
   - package-ecosystem: github-actions
-    directory: /
+    directories: ["/", "/.github/actions/*"]
     schedule:
       interval: monthly

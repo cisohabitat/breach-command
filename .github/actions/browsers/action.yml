@@ -1,0 +1,40 @@
+# Playwright's browsers from their cache, and the system libraries they need.
+# Run after the setup action, which installs the Playwright the lockfile pins.
+name: Install Playwright browsers
+description: Restore or install Playwright browsers and their system dependencies.
+inputs:
+  browsers:
+    description: Space-separated Playwright browser names.
+    required: true
+  cache-key:
+    description: Prefix of the browser cache key; the lockfile hash is added.
+    required: true
+  https-mirror:
+    description: >-
+      Fetch system packages from Ubuntu's canonical HTTPS archive instead of the
+      runner's Azure mirror. The visual baselines keep the runner's own sources,
+      the environment their references were recorded in.
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - id: cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ inputs.cache-key }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+    - if: inputs.https-mirror == 'true'
+      shell: bash
+      run: sudo python3 "$GITHUB_ACTION_PATH/ubuntu-https-mirror.py"
+    # A cached browser still needs its system libraries on a fresh runner.
+    # The bound keeps a stalled package mirror from holding the whole job.
+    - shell: bash
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+        CACHED: ${{ steps.cache.outputs.cache-hit }}
+      run: |
+        if [ "$CACHED" = "true" ]; then
+          timeout 10m pnpm exec playwright install-deps $BROWSERS
+        else
+          timeout 10m pnpm exec playwright install --with-deps $BROWSERS
+        fi

@@ -19,38 +19,17 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/browsers
         with:
-          node-version: 22
-      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: .sites-runtime/pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-store-${{ runner.os }}-
-      - run: pnpm install --frozen-lockfile
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        id: browsers
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - name: Install Chromium
-        if: steps.browsers.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Install Chromium system dependencies
-        if: steps.browsers.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
+          browsers: chromium
+          cache-key: playwright
+          https-mirror: "false"
       - run: pnpm build
       - name: Record
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:3000
-        run: |
-          pnpm start -p 3000 > next-start.log 2>&1 &
-          for attempt in $(seq 1 60); do
-            curl -sf http://localhost:3000 > /dev/null && break
-            sleep 1
-          done
-          pnpm exec playwright test tests/e2e/visual.spec.ts --update-snapshots=all
+        run: .github/scripts/with-production-server.sh pnpm exec playwright test tests/e2e/visual.spec.ts --update-snapshots=all
       - name: Push to ci/visual-baselines
         run: |
           git config user.name "github-actions[bot]"

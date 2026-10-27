@@ -1,0 +1,31 @@
+# pnpm, Node and the project's dependencies, from the store cache. One job
+# writes the cache (save: "true"); the others only restore it, because two
+# jobs saving the same key race for it.
+name: Set up the project
+description: Install pnpm, Node 22 and the locked dependencies.
+inputs:
+  save:
+    description: Whether this job saves the pnpm store cache.
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      with:
+        node-version: 22
+    # pnpm-workspace.yaml keeps the store inside the checkout.
+    - if: inputs.save == 'true'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: .sites-runtime/pnpm-store
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: pnpm-store-${{ runner.os }}-
+    - if: inputs.save != 'true'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: .sites-runtime/pnpm-store
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: pnpm-store-${{ runner.os }}-
+    - shell: bash
+      run: pnpm install --frozen-lockfile

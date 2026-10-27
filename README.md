@@ -310,7 +310,7 @@ pnpm install
 pnpm dev
 ```
 
-Run the verification suite. GitHub Actions (`.github/workflows/verify.yml`) runs it on every push to `main` and every pull request, with the browser suites against a production build:
+Run the verification suite. GitHub Actions (`.github/workflows/verify.yml`) runs it on every push to `main` and every pull request, with the browser suites against a production build; its jobs share the setup in `.github/actions` and `.github/scripts`:
 
 ```bash
 pnpm test
