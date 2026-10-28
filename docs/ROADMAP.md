@@ -256,6 +256,14 @@ The educator pack's rules, sent to the game's sheet by the split and so
 missing from /educators since 0.9.15, now load with that page
 (`app/educators/educators.css`), identical to 0.9.14 on screen and in print.
 
+*28 October 2026 (`claude/css-consolidation`): the generated part.* The
+consolidation tools find nothing left (no dead or overridden declaration, no
+mergeable rule). Restricting Tailwind's sources to the markup removes eleven
+utilities that words in the content had generated: 2,538 B of the linked
+sheet, which left the total style budget 50 B from its limit. The 310 rules
+both sheets hold (about 27 kB) are the cascade copies `scripts/split-css.ts`
+requires; removing any needs the same proof per rule.
+
 What 6,000 lines would take: the sheets hold 5,757 declarations, 1,407 of
 them distinct, which is 5,757 lines at one declaration a line before any
 selector or brace, so no merging reaches 6,000. The merges left undone (56

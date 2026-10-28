@@ -1,6 +1,12 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
+/* Utilities are generated only from the markup. Scanning the whole project
+   turned words in the content tables and docs ("visible", "static", "table")
+   into classes the first paint downloaded. */
+@source "../app";
+@source "../components";
+@source "../hooks";
 /* Breach Command typography: a 16px body, readable 14px captions and 12px
 metadata, with a 1.25 scale above body size and a 66ch prose measure.
 Responsive overrides use the same roles instead of shrinking essential text. */

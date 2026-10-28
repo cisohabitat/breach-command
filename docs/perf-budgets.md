@@ -1,5 +1,12 @@
 # Performance budgets
 
+Tailwind source scope (unreleased): utilities are generated from `app`,
+`components` and `hooks` only. Words in the content tables and docs had
+produced eleven unused classes (`collapse`, `container`, `table` …); the linked
+sheet falls from 88,707 B to 86,169 B, and total style by the same 2,538 B.
+Computed styles on all 135 recorded screens are unchanged apart from Tailwind's
+unused `--tw-drop-shadow-alpha` variable.
+
 Compact effect alignment (0.10.11) adds one declaration; total style is
 221,950 B, 50 B under its limit. Script is unchanged.
 
