@@ -17,10 +17,14 @@ concurrency:
 permissions:
   contents: read
 
+# Jobs name their image rather than ubuntu-latest: the visual baselines were
+# recorded on 24.04, and Playwright's WebKit is built for its libraries. Move
+# every workflow to a new image together, and re-record the baselines then.
+
 jobs:
   checks:
     name: Engine suite, balance, lint, types and build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -43,7 +47,7 @@ jobs:
 
   browser:
     name: Browser suites
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -74,7 +78,7 @@ jobs:
   # browsers are all WebKit; before this job nothing ran outside Chromium.
   other-browsers:
     name: WebKit and Firefox
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -18,11 +18,17 @@ inputs:
 runs:
   using: composite
   steps:
+    # Browsers are built against the image's system libraries, so the cache is
+    # keyed by the image (ubuntu24), not only "Linux": when ubuntu-latest moved
+    # to 26.04, a WebKit restored from 24.04 could not find libicudata.so.74.
+    - id: image
+      shell: bash
+      run: echo "os=${ImageOS:-$(. /etc/os-release && echo "$ID$VERSION_ID")}" >> "$GITHUB_OUTPUT"
     - id: cache
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: ~/.cache/ms-playwright
-        key: ${{ inputs.cache-key }}-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        key: ${{ inputs.cache-key }}-${{ steps.image.outputs.os }}-${{ hashFiles('pnpm-lock.yaml') }}
     - if: inputs.https-mirror == 'true'
       shell: bash
       run: sudo python3 "$GITHUB_ACTION_PATH/ubuntu-https-mirror.py"
